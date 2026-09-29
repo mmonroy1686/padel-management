@@ -78,6 +78,9 @@ export async function addPricingRule(_previous: ActionState, form: FormData): Pr
 
   const supabase = await createClient()
   const { error } = await supabase.from('pricing_rules').insert({ club_id: clubId, ...parsed.value })
+  if (error?.message === 'pricing_rule_overlap') {
+    return failed('Ya hay una franja que empieza a esa hora en alguno de esos días. Borrala o elegí otra hora.')
+  }
   if (error) return failed('No pudimos guardar el precio.')
   revalidateBookings()
   return ok('Precio agregado.')

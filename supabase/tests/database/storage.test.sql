@@ -30,8 +30,8 @@ select throws_ok(
 -- Carla, reception
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000c1", "role": "authenticated"}';
 
-select is((select count(*)::int from storage.objects where bucket_id = 'receipts'), 3,
-  'reception reads the receipts of club members');
+select is((select count(*)::int from storage.objects where bucket_id = 'receipts'), 0,
+  'reception reads no receipt that no payment to the club uses (security_fixes.test.sql covers the ones it does)');
 
 -- Omar, not a member
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000f1", "role": "authenticated"}';

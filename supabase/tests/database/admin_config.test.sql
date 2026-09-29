@@ -31,7 +31,7 @@ set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000d1", 
 
 select lives_ok(
   $$ insert into public.pricing_rules (club_id, weekdays, from_time, to_time, price)
-     values ('a0000000-0000-0000-0000-000000000001', '{6}', '08:00', '12:00', 1500) $$,
+     values ('a0000000-0000-0000-0000-000000000001', '{6}', '09:30', '12:00', 1500) $$,
   'admin adds a price band');
 select lives_ok(
   $$ delete from public.pricing_rules
@@ -46,7 +46,7 @@ set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000c1", 
 
 select throws_ok(
   $$ insert into public.pricing_rules (club_id, weekdays, from_time, to_time, price)
-     values ('a0000000-0000-0000-0000-000000000001', '{6}', '08:00', '12:00', 1) $$,
+     values ('a0000000-0000-0000-0000-000000000001', '{6}', '09:30', '12:00', 1) $$,
   '42501', null, 'reception cannot add price bands');
 select throws_ok(
   $$ insert into public.courts (club_id, name) values ('a0000000-0000-0000-0000-000000000001', 'Cancha 4') $$,
