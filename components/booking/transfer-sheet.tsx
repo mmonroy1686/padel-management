@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { failed, IDLE, type ActionState } from '@/lib/actions/result'
@@ -35,10 +35,13 @@ export function TransferSheet({
   onClose,
   onDone,
 }: TransferSheetProps) {
-  const [state, formAction, pending] = useActionState(async (_previous: ActionState, form: FormData) => {
-    const file = form.get('receipt')
+  const receiptInput = useRef<HTMLInputElement>(null)
+  const [state, formAction, pending] = useActionState(async (): Promise<ActionState> => {
+    // Read the file from the input itself: FormData serialization of file inputs differs between
+    // environments (jsdom sends an empty File), while input.files is the same everywhere.
+    const file = receiptInput.current?.files?.[0] ?? null
     let path: string | null = null
-    if (file instanceof File && file.size > 0) {
+    if (file && file.size > 0) {
       const uploaded = await upload(userId, bookingId, file)
       if ('error' in uploaded) return failed(uploaded.error)
       path = uploaded.path
@@ -67,6 +70,7 @@ export function TransferSheet({
           {/* aria-required, not required: the action above already asks for the receipt with a clear
               message, and native validation of file inputs varies between browsers. */}
           <input
+            ref={receiptInput}
             id="receipt"
             name="receipt"
             type="file"
