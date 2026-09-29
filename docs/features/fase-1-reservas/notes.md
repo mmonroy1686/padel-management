@@ -17,3 +17,11 @@ branch: feat/fase-1-reservas
   - `extend_all_series` aísla cada serie (un error inesperado se loguea como warning y no frena al resto).
   - Test de catálogo: `anon` no ejecuta ninguna función de `public`/`private`; `authenticated` no ejecuta los escritores privados. Se revocó el EXECUTE por defecto de `private.handle_new_user()`.
   - Confirmado por Miguel: recepción y admin validan categorías; solo admin cambia roles.
+- 2026-09-29: cortes 3 y 4 terminados (Tasks 21–41). Revisión de disciplina → arreglos en commits aparte:
+  - `transfer-sheet` lee el comprobante de `input.files` (jsdom serializa los file inputs vacíos en FormData) y usa `aria-required`.
+  - E2E: `localSupabase()` se niega a correr contra un Supabase que no sea `localhost`/`127.0.0.1`; la limpieza pagina `listUsers`.
+  - `loadDayGrid(club, date, { userId, audience })`: las notas de bloqueo solo viajan al navegador del staff (`toOccupancy`).
+  - Migración `20260929000820_save_my_profile.sql`: perfil y categoría se guardan en una transacción; misma categoría conserva la validación.
+  - Tests de validación de Server Actions (`tests/unit/lib/actions/server-actions.test.ts`).
+  - Cobros lee con `lib/data/payments.ts`; listas "sin pagar" y "a devolver" en `lib/domain/payments-overview.ts`.
+  - Pendiente conocido: por RLS, un miembro todavía puede leer `court_occupancy.note` y `created_by` llamando a la API directo (la app ya no los manda). Resolver con columnas por rol o una vista antes de exponer más datos en Realtime.
