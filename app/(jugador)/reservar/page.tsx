@@ -22,7 +22,7 @@ export default async function ReservarPage({ searchParams }: { searchParams: Sea
   const today = localDateOf(now, club.timezone)
   const days = Array.from({ length: 7 }, (_, index) => addDays(today, index))
   const date = isLocalDate(dia) && days.includes(dia) ? dia : today
-  const grid = await loadDayGrid(club, date, viewer.userId, now)
+  const grid = await loadDayGrid(club, date, { userId: viewer.userId, audience: 'player' }, now)
 
   return (
     <>

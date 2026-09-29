@@ -1,6 +1,6 @@
 import type { PaymentState } from './payments'
 import { priceFor, type PricingRule, type Slot } from './slots'
-import { formatMinutes, type LocalDate } from './time'
+import { formatMinutes, toDate, type LocalDate } from './time'
 
 export type OccupancyKind = 'booking' | 'recurring' | 'tournament' | 'block' | 'match' | 'day_use'
 export type Court = { id: string; name: string; isCovered: boolean }
@@ -96,6 +96,27 @@ export function buildDayGrid(input: {
   })
   const outside = input.occupancies.filter((o) => !input.slots.some((slot) => overlaps(o, slot)))
   return { date: input.date, courts: input.courts, rows, outside }
+}
+
+export type OccupancyRow = {
+  id: string
+  court_id: string
+  kind: OccupancyKind
+  starts_at: string | null
+  ends_at: string | null
+  note: string | null
+}
+
+// Block reasons are for staff only: a player's grid never carries them to the browser.
+export function toOccupancy(row: OccupancyRow, audience: 'player' | 'staff'): Occupancy {
+  return {
+    id: row.id,
+    courtId: row.court_id,
+    kind: row.kind,
+    note: audience === 'staff' ? row.note : null,
+    startsAt: toDate(row.starts_at),
+    endsAt: toDate(row.ends_at),
+  }
 }
 
 export function visibleRows(rows: GridRow[], options: { onlyFree: boolean; showPast: boolean }): GridRow[] {

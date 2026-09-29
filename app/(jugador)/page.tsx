@@ -20,7 +20,7 @@ export default async function HomePage() {
   const now = new Date()
   const supabase = await createClient()
   const [grid, next] = await Promise.all([
-    loadDayGrid(club, localDateOf(now, club.timezone), viewer.userId, now),
+    loadDayGrid(club, localDateOf(now, club.timezone), { userId: viewer.userId, audience: 'player' }, now),
     supabase
       .from('bookings')
       .select('id, starts_at, ends_at, court:courts(name)')

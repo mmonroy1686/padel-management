@@ -26,7 +26,7 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
   const stripStart = date >= today && date <= addDays(today, 6) ? today : date
   const days = Array.from({ length: 7 }, (_, index) => addDays(stripStart, index))
 
-  const [grid, members] = await Promise.all([loadDayGrid(club, date, viewer.userId, now), loadMemberOptions(club.id)])
+  const [grid, members] = await Promise.all([loadDayGrid(club, date, { userId: viewer.userId, audience: 'staff' }, now), loadMemberOptions(club.id)])
   const stats = dayStats(grid)
 
   return (

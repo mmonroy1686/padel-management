@@ -1,9 +1,9 @@
 import 'server-only'
 import type { Club } from '@/lib/auth/viewer'
-import { buildDayGrid, holderName, type DayGrid, type GridBooking } from '@/lib/domain/grid'
+import { buildDayGrid, holderName, toOccupancy, type DayGrid, type GridBooking } from '@/lib/domain/grid'
 import { amountDue, paymentState, type PaymentStatus } from '@/lib/domain/payments'
 import { daySlots, type ClubSchedule } from '@/lib/domain/slots'
-import { addDays, toDate, zonedTime, type LocalDate } from '@/lib/domain/time'
+import { addDays, zonedTime, type LocalDate } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
 
 export function scheduleOf(club: Club): ClubSchedule {
@@ -41,8 +41,15 @@ function toGridBooking(row: BookingRow, occupancyId: string, viewerId: string): 
 }
 
 // Everything the grid needs for one day, read with the viewer's session: RLS decides whose
-// bookings come back (a player gets only hers; staff get the whole club).
-export async function loadDayGrid(club: Club, date: LocalDate, viewerId: string, now = new Date()): Promise<DayGrid> {
+// bookings come back (a player gets only hers; staff get the whole club). Block reasons only
+// go to staff (toOccupancy).
+export async function loadDayGrid(
+  club: Club,
+  date: LocalDate,
+  viewer: { userId: string; audience: 'player' | 'staff' },
+  now = new Date(),
+): Promise<DayGrid> {
+  const { userId: viewerId, audience } = viewer
   const supabase = await createClient()
   const dayStart = zonedTime(date, 0, club.timezone).toISOString()
   const dayEnd = zonedTime(addDays(date, 1), 0, club.timezone).toISOString()
@@ -87,14 +94,7 @@ export async function loadDayGrid(club: Club, date: LocalDate, viewerId: string,
       toTime: rule.to_time,
       price: rule.price,
     })),
-    occupancies: occupancies.data.map((o) => ({
-      id: o.id,
-      courtId: o.court_id,
-      kind: o.kind,
-      note: o.note,
-      startsAt: toDate(o.starts_at),
-      endsAt: toDate(o.ends_at),
-    })),
+    occupancies: occupancies.data.map((row) => toOccupancy(row, audience)),
     bookings: bookings.data.flatMap((row: BookingRow) =>
       row.occupancy_id ? [toGridBooking(row, row.occupancy_id, viewerId)] : [],
     ),
