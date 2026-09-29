@@ -5,9 +5,13 @@ import { adminClient, E2E_DOMAIN } from './admin'
 // adminClient only ever points at the local stack.
 export default async function globalSetup(): Promise<void> {
   const admin = adminClient()
-  const { data, error } = await admin.auth.admin.listUsers({ perPage: 1000 })
-  if (error) throw error
-  const ids = data.users.filter((user) => user.email?.endsWith(`@${E2E_DOMAIN}`)).map((user) => user.id)
+  const ids: string[] = []
+  for (let page = 1; ; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
+    if (error) throw error
+    ids.push(...data.users.filter((user) => user.email?.endsWith(`@${E2E_DOMAIN}`)).map((user) => user.id))
+    if (data.users.length < 1000) break
+  }
   if (ids.length === 0) return
   const idList = `(${ids.join(',')})`
 
