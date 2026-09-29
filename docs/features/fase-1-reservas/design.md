@@ -1,7 +1,7 @@
 ---
 feature: fase-1-reservas
 type: design
-status: design
+status: approved
 date: 2026-09-29
 branch: feat/fase-1-reservas
 references: ../../plan-general.md, ../../prototipo.html, ../fase-0-base/design.md

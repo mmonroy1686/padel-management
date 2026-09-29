@@ -10681,3 +10681,4 @@ Cambiar `status: in-progress` → `status: done` en este plan y `status: approve
 
 - **v1 (2026-09-29)**: scaffold.
 - **v2 (2026-09-29)**: plan completo por los 7 cortes del diseño (57 tasks).
+- **v3 (2026-09-29)**: ejecución completa de las Tasks 1–54. Desvíos (detalle en notes.md): migraciones extra `000810` (integridad de pagos, canchas inactivas, series), `000820` (`save_my_profile`), `000850` (privilegios por columna de `court_occupancy` + `occupancy_notes`), `000860` (comprobantes por pago, franjas sin choque); motivo de salteo `court_inactive`; `LiveOccupancy` con `realtime.setAuth`; comprobante leído de `input.files`; scripts `demo:users` y `dev:local`.
