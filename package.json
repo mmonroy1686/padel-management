@@ -13,7 +13,9 @@
     "test:db": "supabase test db",
     "test:e2e": "playwright test",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local --schema public > lib/supabase/database.types.ts"
+    "db:types": "supabase gen types typescript --local --schema public > lib/supabase/database.types.ts",
+    "dev:local": "node scripts/dev-local.mjs",
+    "demo:users": "node scripts/demo-users.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

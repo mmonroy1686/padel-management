@@ -18,6 +18,17 @@ npm run dev                    # http://localhost:3000
 
 `.env.local` puede apuntar al Supabase local o al de producción. `npm run test:e2e` siempre usa el stack local, sin importar qué diga `.env.local`.
 
+### Probar en local con usuarios demo
+
+```bash
+npx supabase start
+npm run db:reset       # esquema + club Rustic con los valores del prototipo
+npm run demo:users     # admin@rustic.test, recepcion@rustic.test, jugador@rustic.test
+npm run dev:local      # la app contra Supabase local, sin tocar .env.local
+```
+
+Ingresá en http://localhost:3000/auth/ingreso con uno de esos emails y abrí el enlace que llega a Mailpit (http://127.0.0.1:54324). Admin y recepción ven el panel en `/club/grilla`.
+
 Los emails de ingreso locales llegan a Mailpit: http://127.0.0.1:54324.
 
 ## Scripts
