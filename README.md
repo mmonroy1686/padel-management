@@ -16,6 +16,8 @@ cp .env.example .env.local     # pegar API_URL y PUBLISHABLE_KEY de `npx supabas
 npm run dev                    # http://localhost:3000
 ```
 
+`.env.local` puede apuntar al Supabase local o al de producción. `npm run test:e2e` siempre usa el stack local, sin importar qué diga `.env.local`.
+
 Los emails de ingreso locales llegan a Mailpit: http://127.0.0.1:54324.
 
 ## Scripts
@@ -39,4 +41,4 @@ Los emails de ingreso locales llegan a Mailpit: http://127.0.0.1:54324.
 
 ## Funciones disponibles
 
-- Fase 0: ingreso por enlace mágico y Google, esquema núcleo con RLS, doble reserva imposible por constraint.
+- Fase 0: ingreso por enlace mágico y Google, esquema núcleo con RLS, doble reserva imposible por constraint, límites de reserva y cancelación por club.

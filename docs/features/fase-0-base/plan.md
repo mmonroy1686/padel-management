@@ -2894,6 +2894,7 @@ Expected: `quality` y `db-and-e2e` en verde. `migrate.yml` no corre (no es push 
 | `SUPABASE_DB_PASSWORD` | Contraseña de la base (Task 28 Step 1) |
 | `SUPABASE_PROJECT_REF` | Project ref (Task 28 Step 2) |
 | `SUPABASE_PUBLISHABLE_KEY` | Publishable key (Task 28 Step 2) |
+| `BACKUP_PASSPHRASE` | Frase larga y aleatoria para cifrar los backups con GPG. Guardarla en el gestor de contraseñas: sin ella los backups no se pueden abrir |
 
 ---
 
