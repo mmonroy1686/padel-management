@@ -285,7 +285,84 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "book_slot":
+{ Args: { "p_court_id": string,"p_starts_at": string }; Returns: {
+              "cancelled_at": string | null,
+"cancelled_by": string | null,
+"club_id": string,
+"court_id": string,
+"created_at": string,
+"created_by": string | null,
+"ends_at": string | null,
+"guest_name": string | null,
+"id": string,
+"occupancy_id": string | null,
+"period": unknown,
+"player_id": string | null,
+"price": number,
+"series_id": string | null,
+"source": Database["public"]['Enums']["booking_source"],
+"starts_at": string | null,
+"status": Database["public"]['Enums']["booking_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "bookings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"cancel_booking":
+{ Args: { "p_booking_id": string }; Returns: {
+              "cancelled_at": string | null,
+"cancelled_by": string | null,
+"club_id": string,
+"court_id": string,
+"created_at": string,
+"created_by": string | null,
+"ends_at": string | null,
+"guest_name": string | null,
+"id": string,
+"occupancy_id": string | null,
+"period": unknown,
+"player_id": string | null,
+"price": number,
+"series_id": string | null,
+"source": Database["public"]['Enums']["booking_source"],
+"starts_at": string | null,
+"status": Database["public"]['Enums']["booking_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "bookings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"cancel_my_booking":
+{ Args: { "p_booking_id": string }; Returns: {
+              "cancelled_at": string | null,
+"cancelled_by": string | null,
+"club_id": string,
+"court_id": string,
+"created_at": string,
+"created_by": string | null,
+"ends_at": string | null,
+"guest_name": string | null,
+"id": string,
+"occupancy_id": string | null,
+"period": unknown,
+"player_id": string | null,
+"price": number,
+"series_id": string | null,
+"source": Database["public"]['Enums']["booking_source"],
+"starts_at": string | null,
+"status": Database["public"]['Enums']["booking_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "bookings"
+        isOneToOne: true
+        isSetofReturn: false
+      } }
           }
           Enums: {
             "booking_source": "online"|"reception","booking_status": "confirmed"|"cancelled","club_role": "admin"|"reception"|"player","dominant_hand": "right"|"left","occupancy_kind": "booking"|"recurring"|"tournament"|"block"|"match"|"day_use","payment_method": "cash"|"transfer","payment_status": "reported"|"confirmed"|"rejected"|"refunded","player_side": "drive"|"backhand"|"both"
