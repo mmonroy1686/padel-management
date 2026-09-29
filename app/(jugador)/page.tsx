@@ -2,22 +2,19 @@ import Link from 'next/link'
 import { Logo } from '@/components/brand/logo'
 import { buttonClasses } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/server'
+import { getViewer } from '@/lib/auth/viewer'
 
 export default async function HomePage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const viewer = await getViewer()
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-lg flex-col gap-6 px-4 py-10">
+    <>
       <Logo className="size-16" />
       <h1 className="font-display text-4xl font-bold uppercase">Rustic Pádel</h1>
       <Card>
-        {user ? (
+        {viewer ? (
           <p>
-            Sesión iniciada como <strong>{user.email}</strong>.
+            Sesión iniciada como <strong>{viewer.email}</strong>.
           </p>
         ) : (
           <>
@@ -28,6 +25,6 @@ export default async function HomePage() {
           </>
         )}
       </Card>
-    </main>
+    </>
   )
 }
