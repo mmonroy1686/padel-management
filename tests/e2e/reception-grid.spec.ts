@@ -55,6 +55,10 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
     'Turno fijo',
   )
 
+  // Live: a booking made elsewhere shows up without reloading the page.
+  const other = await bookFirstFreeSlot(player, day)
+  await expect(page.getByRole('button', { name: `${other.courtName}, ${other.time}: ${player.name}` })).toBeVisible()
+
   // Cancel the player's booking: the slot is free again.
   await bookedCell.click()
   await page.getByRole('dialog', { name: player.name }).getByRole('button', { name: 'Cancelar reserva' }).click()
