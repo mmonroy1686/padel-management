@@ -1,5 +1,6 @@
 'use client'
 
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -13,23 +14,35 @@ export function LiveOccupancy({ clubId, debounceMs = 300 }: { clubId: string; de
   useEffect(() => {
     const supabase = createClient()
     let timer: ReturnType<typeof setTimeout> | undefined
+    let channel: RealtimeChannel | undefined
+    let stopped = false
     const reload = () => {
       clearTimeout(timer)
       timer = setTimeout(() => router.refresh(), debounceMs)
     }
-    const channel = supabase
-      .channel(`occupancy:${clubId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'court_occupancy', filter: `club_id=eq.${clubId}` },
-        reload,
-      )
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'court_occupancy' }, reload)
-      .subscribe()
+
+    async function start() {
+      // Join with the viewer's token: otherwise the channel runs as anon, which may not read
+      // court_occupancy, and Realtime rejects the subscription (RLS and column privileges apply).
+      const { data } = await supabase.auth.getSession()
+      if (data.session) await supabase.realtime.setAuth(data.session.access_token)
+      if (stopped) return
+      channel = supabase
+        .channel(`occupancy:${clubId}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'court_occupancy', filter: `club_id=eq.${clubId}` },
+          reload,
+        )
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'court_occupancy' }, reload)
+        .subscribe()
+    }
+    void start()
 
     return () => {
+      stopped = true
       clearTimeout(timer)
-      void supabase.removeChannel(channel)
+      if (channel) void supabase.removeChannel(channel)
     }
   }, [clubId, debounceMs, router])
 
