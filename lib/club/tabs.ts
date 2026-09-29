@@ -8,5 +8,6 @@ export function clubTabs(role: Role): TabItem[] {
     { href: '/club/grilla', label: 'Grilla' },
     { href: '/club/calendario', label: 'Calendario' },
     { href: '/club/cobros', label: 'Cobros' },
+    { href: '/club/jugadores', label: 'Jugadores' },
   ]
 }
