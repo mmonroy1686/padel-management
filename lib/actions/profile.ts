@@ -9,8 +9,8 @@ import { readBoolean, readEnum, readInt, readText } from '@/lib/domain/input'
 import { HANDS, SIDES } from '@/lib/domain/profile'
 import { createClient } from '@/lib/supabase/server'
 
-// Saves name, side, hand and visibility (direct update, RLS: own profile only) and, when it
-// changed, the category through set_my_category, which also joins the club the first time.
+// Saves name, side, hand, visibility and category in one transaction (save_my_profile), which
+// also joins the club the first time.
 export async function saveProfile(_previous: ActionState, form: FormData): Promise<ActionState> {
   const viewer = await getViewer()
   if (!viewer) return failed('Tu sesión venció. Volvé a ingresar.')
@@ -22,16 +22,15 @@ export async function saveProfile(_previous: ActionState, form: FormData): Promi
   if (!displayName || !side || !hand || category === null) return INVALID_INPUT
 
   const supabase = await createClient()
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .update({ display_name: displayName, side, hand, is_public: readBoolean(form, 'isPublic') })
-    .eq('id', viewer.userId)
-  if (profileError) return failed('No pudimos guardar tu perfil. Probá de nuevo.')
-
-  if (viewer.membership?.category !== category) {
-    const { error } = await supabase.rpc('set_my_category', { p_club_id: viewer.club.id, p_category: category })
-    if (error) return fromRpc(error, '')
-  }
+  const { error } = await supabase.rpc('save_my_profile', {
+    p_club_id: viewer.club.id,
+    p_display_name: displayName,
+    p_side: side,
+    p_hand: hand,
+    p_is_public: readBoolean(form, 'isPublic'),
+    p_category: category,
+  })
+  if (error) return fromRpc(error, '')
 
   revalidateBookings()
   const next = form.get('next')

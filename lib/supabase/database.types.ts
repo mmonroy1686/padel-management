@@ -505,6 +505,21 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"save_my_profile":
+{ Args: { "p_category": number,"p_club_id": string,"p_display_name": string,"p_hand": Database["public"]['Enums']["dominant_hand"],"p_is_public": boolean,"p_side": Database["public"]['Enums']["player_side"] }; Returns: {
+              "category": number | null,
+"category_validated": boolean,
+"club_id": string,
+"created_at": string,
+"role": Database["public"]['Enums']["club_role"],
+"user_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "club_members"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "set_member_role":
 { Args: { "p_club_id": string,"p_role": Database["public"]['Enums']["club_role"],"p_user_id": string }; Returns: {
               "category": number | null,
