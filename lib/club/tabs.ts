@@ -6,6 +6,7 @@ export function clubTabs(role: Role): TabItem[] {
   void role
   return [
     { href: '/club/grilla', label: 'Grilla' },
+    { href: '/club/calendario', label: 'Calendario' },
     { href: '/club/cobros', label: 'Cobros' },
   ]
 }
