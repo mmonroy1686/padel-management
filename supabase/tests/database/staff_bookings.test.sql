@@ -44,8 +44,10 @@ select lives_ok(
        test_helpers.at(2, '13:00'), 'Clase de Pablo') $$,
   'reception blocks a court for any length');
 select results_eq(
-  $$ select kind::text, note from public.court_occupancy
-     where court_id = 'c0000000-0000-0000-0000-000000000001' and starts_at = test_helpers.at(2, '10:00') $$,
+  $$ select o.kind::text, n.note from public.court_occupancy o
+     join public.occupancy_notes('a0000000-0000-0000-0000-000000000001', test_helpers.at(2, '00:00'),
+                                 test_helpers.at(3, '00:00')) n on n.id = o.id
+     where o.court_id = 'c0000000-0000-0000-0000-000000000001' and o.starts_at = test_helpers.at(2, '10:00') $$,
   $$ values ('block', 'Clase de Pablo') $$,
   'the block keeps its reason');
 select throws_ok(

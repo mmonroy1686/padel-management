@@ -54,7 +54,7 @@ export async function loadDayGrid(
   const dayStart = zonedTime(date, 0, club.timezone).toISOString()
   const dayEnd = zonedTime(addDays(date, 1), 0, club.timezone).toISOString()
 
-  const [courts, rules, occupancies, bookings] = await Promise.all([
+  const [courts, rules, occupancies, bookings, notes] = await Promise.all([
     supabase
       .from('courts')
       .select('id, name, is_covered')
@@ -64,7 +64,7 @@ export async function loadDayGrid(
     supabase.from('pricing_rules').select('weekdays, from_time, to_time, price').eq('club_id', club.id),
     supabase
       .from('court_occupancy')
-      .select('id, court_id, kind, starts_at, ends_at, note')
+      .select('id, court_id, kind, starts_at, ends_at')
       .eq('club_id', club.id)
       .lt('starts_at', dayEnd)
       .gt('ends_at', dayStart),
@@ -77,11 +77,17 @@ export async function loadDayGrid(
       .eq('status', 'confirmed')
       .lt('starts_at', dayEnd)
       .gt('ends_at', dayStart),
+    // Members cannot read court_occupancy.note (column privileges); staff get it from this RPC.
+    audience === 'staff'
+      ? supabase.rpc('occupancy_notes', { p_club_id: club.id, p_from: dayStart, p_to: dayEnd })
+      : Promise.resolve({ data: [] as { id: string; note: string }[], error: null }),
   ])
   if (courts.error) throw courts.error
   if (rules.error) throw rules.error
   if (occupancies.error) throw occupancies.error
   if (bookings.error) throw bookings.error
+  if (notes.error) throw notes.error
+  const noteById = new Map((notes.data ?? []).map((row) => [row.id, row.note]))
 
   return buildDayGrid({
     date,
@@ -94,7 +100,7 @@ export async function loadDayGrid(
       toTime: rule.to_time,
       price: rule.price,
     })),
-    occupancies: occupancies.data.map((row) => toOccupancy(row, audience)),
+    occupancies: occupancies.data.map((row) => toOccupancy({ ...row, note: noteById.get(row.id) ?? null }, audience)),
     bookings: bookings.data.flatMap((row: BookingRow) =>
       row.occupancy_id ? [toGridBooking(row, row.occupancy_id, viewerId)] : [],
     ),

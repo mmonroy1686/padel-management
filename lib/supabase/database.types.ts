@@ -421,6 +421,11 @@ isOneToOne: false
 "end_series":
 { Args: { "p_from_date": string,"p_series_id": string }; Returns: number
                            },
+"occupancy_notes":
+{ Args: { "p_club_id": string,"p_from": string,"p_to": string }; Returns: {
+              "id": string,"note": string
+            }[]
+                           },
 "record_cash":
 { Args: { "p_amount": number,"p_booking_id": string }; Returns: {
               "amount": number,
