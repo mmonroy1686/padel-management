@@ -9,7 +9,7 @@ import { blockEndOptions, type GridCell, type GridRow } from '@/lib/domain/grid'
 import type { MemberOption } from '@/lib/domain/members'
 import type { LocalDate } from '@/lib/domain/time'
 
-type LoadKind = 'booking' | 'block'
+type LoadKind = 'booking' | 'series' | 'block'
 
 // What reception loads on a free cell: a booking (for a member or a name) or a block.
 export function LoadSheet({
@@ -45,6 +45,7 @@ export function LoadSheet({
         <input type="hidden" name="courtId" value={cell.court.id} />
         <input type="hidden" name="startsAt" value={cell.slot.startsAt.toISOString()} />
         <input type="hidden" name="date" value={date} />
+        <input type="hidden" name="startTime" value={cell.slot.label} />
         <Field label="Tipo" htmlFor="kind">
           <select
             id="kind"
@@ -54,6 +55,7 @@ export function LoadSheet({
             className={inputClasses}
           >
             <option value="booking">Reserva</option>
+            <option value="series">Turno fijo</option>
             <option value="block">Bloqueo</option>
           </select>
         </Field>
@@ -73,7 +75,19 @@ export function LoadSheet({
             </Field>
           </>
         ) : (
-          <HolderFields holder={holder} onHolderChange={setHolder} members={members} />
+          <>
+            <HolderFields holder={holder} onHolderChange={setHolder} members={members} />
+            {kind === 'series' ? (
+              <>
+                <Field label="Hasta (opcional)" htmlFor="endsOn">
+                  <input id="endsOn" name="endsOn" type="date" min={date} className={inputClasses} />
+                </Field>
+                <p className="text-sm text-fg-muted">
+                  Se repite todas las semanas a esta hora. Reservamos 8 semanas adelante y seguimos cada día.
+                </p>
+              </>
+            ) : null}
+          </>
         )}
       </ActionForm>
     </BottomSheet>

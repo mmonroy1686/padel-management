@@ -6,12 +6,14 @@ import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Field, inputClasses } from '@/components/ui/field'
 import { formatPrice, timeIn } from '@/lib/domain/format'
 import { KIND_LABELS, type GridCell, type Occupancy } from '@/lib/domain/grid'
+import type { LocalDate } from '@/lib/domain/time'
 
-export type DetailActions = { cancel: FormAction; unblock: FormAction; cash: FormAction }
+export type DetailActions = { cancel: FormAction; unblock: FormAction; cash: FormAction; endSeries: FormAction }
 
 export function OccupancyDetailSheet({
   cell,
   occupancy,
+  date,
   dayText,
   timezone,
   acceptsCash,
@@ -21,6 +23,7 @@ export function OccupancyDetailSheet({
 }: {
   cell: GridCell
   occupancy: Occupancy
+  date: LocalDate
   dayText: string
   timezone: string
   acceptsCash: boolean
@@ -75,6 +78,19 @@ export function OccupancyDetailSheet({
             >
               <input type="hidden" name="bookingId" value={booking.id} />
             </ActionForm>
+            {booking.seriesId ? (
+              <ActionForm
+                action={actions.endSeries}
+                submitLabel="Terminar turno fijo desde esta fecha"
+                pendingLabel="Terminando…"
+                variant="ghost"
+                onDone={onDone}
+              >
+                <input type="hidden" name="seriesId" value={booking.seriesId} />
+                <input type="hidden" name="fromDate" value={date} />
+                <p className="text-sm text-fg-muted">Cancela esta fecha y las siguientes de este turno fijo.</p>
+              </ActionForm>
+            ) : null}
           </>
         ) : null}
         {occupancy.kind === 'block' ? (

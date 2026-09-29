@@ -8,7 +8,7 @@ import { dayLabel, dayLongLabel, formatPrice } from '@/lib/domain/format'
 import { dayStats } from '@/lib/domain/grid'
 import { isLocalDate } from '@/lib/domain/input'
 import { addDays, localDateOf } from '@/lib/domain/time'
-import { cancelBooking, loadSlot, recordCash, unblockCourt } from './actions'
+import { cancelBooking, endSeries, loadSlot, recordCash, unblockCourt } from './actions'
 import { ClubBoard } from './club-board'
 
 export const metadata: Metadata = { title: 'Grilla' }
@@ -51,7 +51,7 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
         members={members}
         acceptsCash={club.accepts_cash}
         loadAction={loadSlot}
-        detailActions={{ cancel: cancelBooking, unblock: unblockCourt, cash: recordCash }}
+        detailActions={{ cancel: cancelBooking, unblock: unblockCourt, cash: recordCash, endSeries }}
       />
     </>
   )

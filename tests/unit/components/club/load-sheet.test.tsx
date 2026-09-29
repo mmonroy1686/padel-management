@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { LoadSheet } from '@/components/club/load-sheet'
@@ -56,6 +56,23 @@ describe('LoadSheet', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
     await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
     expect(sent()).toMatchObject({ kind: 'booking', holder: 'player', playerId: 'u-ana' })
+  })
+
+  it('loads a recurring slot, optionally with an end date', async () => {
+    const { action, sent } = renderSheet()
+    await userEvent.selectOptions(screen.getByLabelText('Tipo'), 'Turno fijo')
+    await userEvent.type(screen.getByLabelText('A nombre de', { exact: true }), 'Rodríguez')
+    // jsdom does not type into input[type=date] like a browser does.
+    fireEvent.change(screen.getByLabelText('Hasta (opcional)'), { target: { value: '2026-12-31' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
+    expect(sent()).toMatchObject({
+      kind: 'series',
+      guestName: 'Rodríguez',
+      date: DATE,
+      startTime: '08:00',
+      endsOn: '2026-12-31',
+    })
   })
 
   it('blocks the court until the chosen time, with a reason', async () => {

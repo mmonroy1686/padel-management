@@ -20,12 +20,14 @@ function renderDetail(cell: GridCell, acceptsCash = true) {
     cancel: vi.fn<FormAction>(done),
     unblock: vi.fn<FormAction>(done),
     cash: vi.fn<FormAction>(done),
+    endSeries: vi.fn<FormAction>(done),
   }
   const onDone = vi.fn()
   render(
     <OccupancyDetailSheet
       cell={cell}
       occupancy={cell.occupancy!}
+      date="2026-10-01"
       dayText="jueves 1 de octubre"
       timezone={TIMEZONE}
       acceptsCash={acceptsCash}
@@ -65,6 +67,17 @@ describe('OccupancyDetailSheet', () => {
   it('hides cash when the club does not take it', () => {
     renderDetail(booked, false)
     expect(screen.queryByRole('button', { name: 'Cobrar en efectivo' })).not.toBeInTheDocument()
+  })
+
+  it('ends a recurring slot from this date on', async () => {
+    const recurring = makeGrid({
+      occupancies: [occupancy('r1', 'court-1', '08:00', '09:30', 'recurring')],
+      bookings: [booking('r1', { holderName: 'Rodríguez', seriesId: 's1' })],
+    }).rows[0].cells[0]
+    const { actions, sent } = renderDetail(recurring)
+    await userEvent.click(screen.getByRole('button', { name: 'Terminar turno fijo desde esta fecha' }))
+    await waitFor(() => expect(actions.endSeries).toHaveBeenCalledTimes(1))
+    expect(sent(actions.endSeries)).toEqual({ seriesId: 's1', fromDate: '2026-10-01' })
   })
 
   it('frees a blocked court', async () => {

@@ -91,6 +91,7 @@ export function ClubBoard({
         <OccupancyDetailSheet
           cell={selected}
           occupancy={selected.occupancy}
+          date={date}
           dayText={dayText}
           timezone={timezone}
           acceptsCash={acceptsCash}

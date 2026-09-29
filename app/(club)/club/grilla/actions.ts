@@ -1,11 +1,13 @@
 'use server'
 
-import { fromRpc, INVALID_INPUT, type ActionState } from '@/lib/actions/result'
+import { fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
 import { revalidateBookings } from '@/lib/actions/revalidate'
-import { readEnum, readInstant, readInt, readText, readUuid } from '@/lib/domain/input'
+import { readEnum, readInstant, readInt, readLocalDate, readText, readTime, readUuid } from '@/lib/domain/input'
+import { seriesCreatedMessage } from '@/lib/domain/series'
+import { weekdayOf } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
 
-const LOAD_KINDS = ['booking', 'block'] as const
+const LOAD_KINDS = ['booking', 'series', 'block'] as const
 
 function readHolder(form: FormData): { p_player_id: string } | { p_guest_name: string } | null {
   if (form.get('holder') === 'player') {
@@ -34,6 +36,26 @@ export async function loadSlot(_previous: ActionState, form: FormData): Promise<
     })
     revalidateBookings()
     return fromRpc(error, 'Bloqueo cargado.')
+  }
+
+  if (kind === 'series') {
+    const date = readLocalDate(form, 'date')
+    const startTime = readTime(form, 'startTime')
+    const holder = readHolder(form)
+    const endsOnRaw = form.get('endsOn')
+    const endsOn = endsOnRaw ? readLocalDate(form, 'endsOn') : null
+    if (!date || !startTime || !holder || (endsOnRaw && !endsOn)) return INVALID_INPUT
+    const { data, error } = await supabase.rpc('create_series', {
+      p_court_id: courtId,
+      p_weekday: weekdayOf(date),
+      p_start_time: startTime,
+      p_starts_on: date,
+      p_ends_on: endsOn ?? undefined,
+      ...holder,
+    })
+    revalidateBookings()
+    if (error) return fromRpc(error, '')
+    return ok(seriesCreatedMessage(data ?? []))
   }
 
   const holder = readHolder(form)
@@ -69,4 +91,15 @@ export async function recordCash(_previous: ActionState, form: FormData): Promis
   const { error } = await supabase.rpc('record_cash', { p_booking_id: bookingId, p_amount: amount })
   revalidateBookings()
   return fromRpc(error, 'Pago en efectivo registrado.')
+}
+
+export async function endSeries(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const seriesId = readUuid(form, 'seriesId')
+  const fromDate = readLocalDate(form, 'fromDate')
+  if (!seriesId || !fromDate) return INVALID_INPUT
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('end_series', { p_series_id: seriesId, p_from_date: fromDate })
+  revalidateBookings()
+  if (error) return fromRpc(error, '')
+  return ok(data === 1 ? 'Turno fijo terminado. Cancelamos 1 reserva.' : `Turno fijo terminado. Cancelamos ${data} reservas.`)
 }
