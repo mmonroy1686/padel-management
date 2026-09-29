@@ -21,8 +21,9 @@ export async function sendMagicLink(_previous: MagicLinkState, formData: FormDat
   })
 
   if (error) {
-    // The reason goes to the server log (Vercel / terminal), without the address.
-    console.error('signInWithOtp failed', { status: error.status, code: error.code, message: error.message })
+    // The reason goes to the server log (Vercel / terminal). Only status and code: GoTrue's
+    // message can include the email address.
+    console.error('signInWithOtp failed', { status: error.status, code: error.code })
     return { status: 'error', message: magicLinkErrorMessage(error.code) }
   }
   return { status: 'sent' }
