@@ -382,6 +382,24 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_series":
+{ Args: { "p_court_id": string,"p_ends_on"?: string,"p_guest_name"?: string,"p_player_id"?: string,"p_start_time": string,"p_starts_on": string,"p_weekday": number }; Returns: {
+              "club_id": string,
+"created_at": string,
+"id": string,
+"on_date": string,
+"reason": string,
+"series_id": string
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "recurring_series_skips"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
+"end_series":
+{ Args: { "p_from_date": string,"p_series_id": string }; Returns: number
+                           },
 "staff_book":
 { Args: { "p_court_id": string,"p_guest_name"?: string,"p_player_id"?: string,"p_starts_at": string }; Returns: {
               "cancelled_at": string | null,
