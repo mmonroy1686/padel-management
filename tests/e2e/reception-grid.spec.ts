@@ -11,7 +11,7 @@ async function openFirstFreeSlot(page: Page): Promise<{ court: string; time: str
   return { court, time }
 }
 
-test('reception confirms a transfer, blocks a court and cancels a booking', async ({ page }) => {
+test('reception confirms a transfer, loads a block and a recurring slot, and cancels a booking', async ({ page }) => {
   const club = await clubRow()
   const player = await createMember({ name: 'Martina E2E', prefix: 'flujo2-jugadora' })
   const reception = await createMember({ name: 'Recepción E2E', prefix: 'flujo2-recepcion', role: 'reception' })
@@ -44,6 +44,16 @@ test('reception confirms a transfer, blocks a court and cancels a booking', asyn
   await load.getByLabel('Motivo').fill('Mantenimiento')
   await load.getByRole('button', { name: 'Guardar' }).click()
   await expect(page.getByRole('button', { name: `${blocked.court}, ${blocked.time}: Mantenimiento` })).toContainText('Bloqueo')
+
+  // Load a recurring slot under a name.
+  const recurring = await openFirstFreeSlot(page)
+  await load.getByLabel('Tipo').selectOption('Turno fijo')
+  await load.getByLabel('A nombre de', { exact: true }).fill('Rodríguez E2E')
+  await load.getByRole('button', { name: 'Guardar' }).click()
+  await expect(page.getByRole('status')).toContainText('Turno fijo cargado')
+  await expect(page.getByRole('button', { name: `${recurring.court}, ${recurring.time}: Rodríguez E2E` })).toContainText(
+    'Turno fijo',
+  )
 
   // Cancel the player's booking: the slot is free again.
   await bookedCell.click()
