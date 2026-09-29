@@ -11,18 +11,29 @@ const redirect = vi.fn((path: string) => {
   throw new Error(`NEXT_REDIRECT ${path}`)
 })
 
+const state = vi.hoisted(() => ({
+  role: 'player' as 'player' | 'reception' | 'admin',
+  insertError: null as { message: string; code?: string } | null,
+}))
+const insert = vi.fn<(row: Record<string, unknown>) => Promise<{ error: typeof state.insertError }>>(async () => ({
+  error: state.insertError,
+}))
+const from = vi.fn<(table: string) => { insert: typeof insert }>(() => ({ insert }))
+
 vi.mock('server-only', () => ({}))
 vi.mock('next/navigation', () => ({ redirect: (path: string) => redirect(path) }))
 vi.mock('@/lib/actions/revalidate', () => ({ revalidateBookings: vi.fn() }))
-vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ rpc }) }))
+vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ rpc, from }) }))
 vi.mock('@/lib/auth/viewer', () => ({
-  getViewer: async () => ({ userId: 'u1', club: { id: 'club-1' }, membership: { category: 5 } }),
+  getViewer: async () => ({ userId: 'u1', club: { id: 'club-1' }, membership: { category: 5, role: state.role } }),
 }))
 
 const { bookSlot } = await import('@/app/(jugador)/reservar/actions')
 const { cancelMyBooking, reportTransfer } = await import('@/app/(jugador)/reservas/actions')
-const { loadSlot } = await import('@/app/(club)/club/grilla/actions')
+const { endSeries, loadSlot } = await import('@/app/(club)/club/grilla/actions')
+const { addPricingRule, updateClubSettings } = await import('@/app/(club)/club/ajustes/actions')
 const { saveProfile } = await import('@/lib/actions/profile')
+const { errorMessage } = await import('@/lib/domain/errors')
 
 const COURT = '22222222-2222-2222-2222-222222222201'
 const BOOKING = '44444444-4444-4444-4444-444444444444'
@@ -37,6 +48,56 @@ function form(entries: Record<string, string>): FormData {
 beforeEach(() => {
   rpc.mockClear()
   redirect.mockClear()
+  from.mockClear()
+  insert.mockClear()
+  state.role = 'player'
+  state.insertError = null
+})
+
+describe('recurring slots', () => {
+  it('rejects a series with a bad end date and an end without a valid series or date', async () => {
+    const base = { courtId: COURT, startsAt: '2026-10-01T11:00:00Z', kind: 'series', date: '2026-10-01' }
+    expect(
+      await loadSlot(IDLE, form({ ...base, startTime: '08:00', guestName: 'Rodríguez', endsOn: 'mañana' })),
+    ).toEqual(INVALID_INPUT)
+    expect(await endSeries(IDLE, form({ seriesId: 's1', fromDate: '2026-10-01' }))).toEqual(INVALID_INPUT)
+    expect(await endSeries(IDLE, form({ seriesId: BOOKING, fromDate: '2026-02-30' }))).toEqual(INVALID_INPUT)
+    expect(rpc).not.toHaveBeenCalled()
+  })
+})
+
+describe('settings actions', () => {
+  const band = [
+    ['weekdays', '3'],
+    ['from_time', '18:30'],
+    ['to_time', '24:00'],
+    ['price', '1600'],
+  ] as const
+  const bandForm = () => {
+    const data = new FormData()
+    for (const [key, value] of band) data.append(key, value)
+    return data
+  }
+
+  it('refuses anyone who is not an admin before touching the database', async () => {
+    state.role = 'reception'
+    expect(await updateClubSettings(IDLE, form({ opens_at: '08:00' }))).toEqual({
+      status: 'error',
+      message: errorMessage('forbidden'),
+    })
+    expect(await addPricingRule(IDLE, bandForm())).toMatchObject({ status: 'error' })
+    expect(from).not.toHaveBeenCalled()
+  })
+
+  it('explains a band that starts at the same time as another one', async () => {
+    state.role = 'admin'
+    state.insertError = { message: 'pricing_rule_overlap', code: '23514' }
+    expect(await addPricingRule(IDLE, bandForm())).toEqual({
+      status: 'error',
+      message: 'Ya hay una franja que empieza a esa hora en alguno de esos días. Borrala o elegí otra hora.',
+    })
+    expect(insert).toHaveBeenCalledWith({ club_id: 'club-1', weekdays: [3], from_time: '18:30', to_time: '24:00', price: 1600 })
+  })
 })
 
 describe('bookSlot', () => {
