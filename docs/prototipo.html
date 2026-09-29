@@ -1,0 +1,1522 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Costanera Pádel, prototipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9F0F4; --surface:#FFFFFF; --surface-2:#F3F7FA; --ink:#0F2438; --muted:#587086; --line:#D3DEE6;
+  --court:#1D5DAE; --court-deep:#123E78; --ball:#D6EE3A; --ball-ink:#243000; --ball-edge:#93A812;
+  --tourn:#6A4FA3; --du:#2A8C84; --block:#9AA9B6; --danger:#B83A26; --ok:#2C7A4B; --warn-bg:#FFF4D2; --warn-ink:#634800;
+  --font:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B1520; --surface:#12212F; --surface-2:#182B3C; --ink:#E4EDF4; --muted:#93A8BA; --line:#24394C;
+    --court:#2F6FC4; --court-deep:#1C4C8E; --ball-edge:#C4DC2C; --tourn:#8E73C9; --du:#46B8AE; --block:#51647A;
+    --danger:#E4735E; --ok:#5DBB86; --warn-bg:#3A3212; --warn-ink:#F2D98A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B1520; --surface:#12212F; --surface-2:#182B3C; --ink:#E4EDF4; --muted:#93A8BA; --line:#24394C;
+  --court:#2F6FC4; --court-deep:#1C4C8E; --ball-edge:#C4DC2C; --tourn:#8E73C9; --du:#46B8AE; --block:#51647A;
+  --danger:#E4735E; --ok:#5DBB86; --warn-bg:#3A3212; --warn-ink:#F2D98A; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--court);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.1;margin:0}
+h1{font-size:32px;letter-spacing:.2px}
+h2{font-size:23px}
+h3{font-size:19px}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.stack>*+*{margin-top:12px}
+.stack-lg>*+*{margin-top:24px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+
+/* barra del prototipo */
+.proto{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--court-deep);color:#fff}
+.proto-in{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-family:var(--display);font-size:21px;font-weight:700;display:flex;align-items:center;gap:8px}
+.brand .dot{width:14px;height:14px;border-radius:50%;background:var(--ball);box-shadow:inset -2px -2px 0 rgba(0,0,0,.18)}
+.seg{display:inline-flex;background:rgba(255,255,255,.12);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:#fff;padding:6px 14px;border-radius:999px;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--court-deep)}
+
+.shell{max-width:460px;margin:0 auto;padding:18px 16px 110px}
+.shell.wide{max-width:1100px;padding-bottom:48px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
+.section-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px}
+
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:600;background:var(--court);color:#fff}
+.btn.block{width:100%}
+.btn.ghost{background:transparent;color:var(--court);border:1.5px solid var(--court)}
+.btn.ball{background:var(--ball);color:var(--ball-ink)}
+.btn.small{padding:7px 12px;font-size:14px;border-radius:10px}
+.btn.danger{background:transparent;color:var(--danger);border:1.5px solid var(--danger)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.link{border:0;background:none;color:var(--court);font-weight:600;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;padding:3px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink)}
+.chip.hit{background:color-mix(in srgb,var(--ball) 38%,var(--surface));border-color:transparent;color:var(--ink)}
+.chip.warn{background:var(--warn-bg);border-color:transparent;color:var(--warn-ink)}
+.pill{font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px}
+.pill.forming{background:color-mix(in srgb,var(--ball) 45%,var(--surface));color:var(--ball-ink)}
+.pill.ok{background:color-mix(in srgb,var(--ok) 18%,var(--surface));color:var(--ok)}
+.pill.off{background:var(--surface-2);color:var(--muted)}
+:root[data-theme="dark"] .pill.forming{color:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.forming{color:var(--ink)}}
+
+.notice{border-radius:12px;padding:10px 12px;font-size:14px;background:var(--warn-bg);color:var(--warn-ink)}
+.notice.bad{background:color-mix(in srgb,var(--danger) 14%,var(--surface));color:var(--danger)}
+.notice.good{background:color-mix(in srgb,var(--ok) 14%,var(--surface));color:var(--ok)}
+
+/* la cancha: elemento central del prototipo */
+.court{background:var(--court);border:3px solid var(--court-deep);border-radius:14px;padding:10px;display:grid;grid-template-rows:1fr auto 1fr;gap:7px}
+.court .half{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.court .net{height:3px;background:#fff;border-radius:2px;opacity:.9}
+.pos{border:1.5px solid rgba(255,255,255,.5);border-radius:10px;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#fff;background:transparent;padding:6px;text-align:center}
+.pos .av{width:34px;height:34px;border-radius:50%;background:#fff;color:var(--court-deep);font-weight:600;display:grid;place-items:center;font-size:13px}
+.pos.me .av{background:var(--ball);color:var(--ball-ink)}
+.pos .nm{font-size:13px;line-height:1.1;font-weight:500}
+.pos .sd{font-size:11px;opacity:.85}
+.pos.open{border:2px dashed var(--ball);color:var(--ball)}
+.pos.open .ballico{width:20px;height:20px;border-radius:50%;background:var(--ball);box-shadow:inset -3px -3px 0 rgba(0,0,0,.14)}
+.pos.open .nm{color:var(--ball)}
+button.pos.joinable{background:rgba(214,238,58,.16)}
+button.pos.joinable:hover{background:rgba(214,238,58,.3)}
+.court.compact{padding:6px;gap:4px;border-width:2px;border-radius:10px}
+.court.compact .half{gap:4px}
+.court.compact .pos{min-height:34px;padding:3px;border-radius:7px}
+.court.compact .av{width:22px;height:22px;font-size:10px}
+.court.compact .nm,.court.compact .sd{display:none}
+.court.compact .ballico{width:14px;height:14px}
+
+.mcard{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:center}
+.when{font-family:var(--display);font-weight:700;font-size:22px;line-height:1}
+.facts{font-size:14px;color:var(--muted)}
+
+/* días */
+.days{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.days button{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 12px;font-weight:600;font-size:14px}
+.days button[aria-pressed="true"]{background:var(--court);color:#fff;border-color:var(--court)}
+
+/* grilla jugador */
+.slotgrid{display:grid;grid-template-columns:52px repeat(3,minmax(0,1fr));gap:6px;align-items:stretch}
+.slotgrid .hd{font-size:13px;font-weight:600;color:var(--muted);text-align:center;padding-bottom:2px}
+.slotgrid .tm{font-family:var(--display);font-weight:700;font-size:17px;display:flex;align-items:center}
+.cell{border-radius:10px;padding:7px 6px;min-height:50px;font-size:13px;border:1px solid var(--line);background:var(--surface);text-align:center;display:flex;flex-direction:column;justify-content:center}
+button.cell.free:hover{border-color:var(--court)}
+.cell.free b{font-weight:600}
+.cell.taken{background:var(--surface-2);color:var(--muted)}
+.cell.mine{background:var(--court);color:#fff;border-color:var(--court)}
+.cell.forming{border:2px dashed var(--ball-edge);background:color-mix(in srgb,var(--ball) 16%,var(--surface))}
+
+/* grilla club */
+.cgrid{display:grid;grid-template-columns:64px repeat(3,minmax(140px,1fr));gap:6px;min-width:520px}
+.scroll-x{overflow-x:auto}
+.cg{border-radius:10px;min-height:54px;padding:7px 9px;font-size:13px;border:1px solid var(--line);background:var(--surface);text-align:left;display:flex;flex-direction:column;justify-content:center}
+.cg .t{font-weight:600}
+.occ-reserva{background:var(--court);color:#fff;border-color:var(--court)}
+.occ-fijo{background:var(--court-deep);color:#fff;border-color:var(--court-deep)}
+.occ-torneo{background:var(--tourn);color:#fff;border-color:var(--tourn)}
+.occ-bloqueo{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--block) 45%,transparent) 0 6px,transparent 6px 12px);border-color:var(--block)}
+.occ-abierto{background:var(--ball);color:var(--ball-ink);border-color:var(--ball-edge)}
+.cg.ghost{border:2px dashed var(--ball-edge)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid var(--line)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.stat .n{font-family:var(--display);font-weight:700;font-size:30px;line-height:1}
+.club-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+@media (max-width:860px){.club-layout{grid-template-columns:1fr}}
+
+/* sugeridos */
+.sug{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.sug:first-child{border-top:0}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--court);color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px}
+.meter{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-top:6px;max-width:160px}
+.meter i{display:block;height:100%;background:var(--ball-edge)}
+
+/* perfil */
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;font-weight:600;font-size:14px}
+.opt[aria-pressed="true"]{border-color:var(--court);background:var(--court);color:#fff}
+.avail{display:grid;grid-template-columns:44px repeat(3,1fr);gap:5px;font-size:13px}
+.avail .opt{padding:6px 4px;text-align:center}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--surface-2);border-radius:12px;padding:12px}
+.tile .n{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.05}
+.bigav{width:64px;height:64px;border-radius:50%;background:var(--ball);color:var(--ball-ink);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:26px}
+
+/* navegación inferior */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabbar-in{max-width:460px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tabbar button{border:0;background:none;padding:10px 4px 12px;font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabbar button[aria-current="page"]{color:var(--court)}
+.tabbar svg{width:22px;height:22px}
+
+/* hoja inferior */
+.scrim{position:fixed;inset:0;background:rgba(6,18,30,.45);z-index:30}
+.sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--surface);z-index:31;border-radius:22px 22px 0 0;padding:18px 18px calc(24px + env(safe-area-inset-bottom,0px));animation:up .22s ease-out}
+@keyframes up{from{transform:translate(-50%,24px);opacity:.6}to{transform:translate(-50%,0);opacity:1}}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:14px;font-weight:600}
+.field select,.field input,.field textarea{border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);font-weight:400;font-size:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+textarea{width:100%;min-height:150px;resize:vertical;font:inherit}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:500;font-size:14px;max-width:calc(100% - 32px)}
+.empty{padding:18px;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:14px}
+
+/* sub-secciones del club */
+.subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.subtabs button{border:0;background:none;padding:10px 14px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.subtabs button[aria-current="page"]{color:var(--court);border-bottom-color:var(--court)}
+
+/* sellos de day use: pelotitas que se van llenando */
+.stamps{display:flex;flex-wrap:wrap;gap:8px}
+.stamp{width:34px;height:34px;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--muted)}
+.stamp.on{border:0;background:var(--ball);color:var(--ball-ink);box-shadow:inset -4px -4px 0 rgba(0,0,0,.13)}
+.stamp.gift{border:2px solid var(--court);color:var(--court);font-size:11px}
+.stepper{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.stepper button{border:0;background:var(--surface-2);width:38px;height:38px;font-size:18px;font-weight:600}
+.stepper span{min-width:44px;text-align:center;font-family:var(--display);font-weight:700;font-size:22px}
+.qr{width:180px;height:180px;margin:0 auto;display:block;background:#fff;padding:10px;border-radius:12px}
+.prod{border:1.5px solid var(--line);border-radius:14px;padding:12px;text-align:left;background:var(--surface);width:100%}
+.prod[aria-pressed="true"]{border-color:var(--court);box-shadow:0 0 0 1px var(--court)}
+
+/* torneo americano */
+table.rank{width:100%;border-collapse:collapse;font-size:14px}
+table.rank th{text-align:left;font-weight:600;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line)}
+table.rank td{padding:7px 4px;border-bottom:1px solid var(--line)}
+table.rank td.n{font-family:var(--display);font-weight:700;font-size:18px;text-align:right}
+table.rank tr.me td{background:color-mix(in srgb,var(--ball) 22%,transparent)}
+.round{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.round h3{font-size:17px;margin-bottom:6px}
+.game{display:grid;grid-template-columns:70px 1fr auto;gap:8px;align-items:center;padding:6px 0;font-size:14px;border-top:1px solid var(--line)}
+.game:first-of-type{border-top:0}
+.score{font-family:var(--display);font-weight:700;font-size:18px;white-space:nowrap}
+.score input{width:52px;border:1.5px solid var(--line);border-radius:8px;padding:4px;text-align:center;font:inherit;background:var(--surface)}
+.checks{display:flex;flex-wrap:wrap;gap:12px;font-weight:400}
+
+/* vuelta de rosca de usabilidad */
+.btn,.opt{min-height:44px}
+.btn.small{min-height:38px}
+.proto .caption{font-size:12px;opacity:.75;margin-right:6px}
+.xbtn{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:50%;border:0;background:var(--surface-2);font-size:22px;line-height:1;color:var(--ink)}
+.sheet{position:fixed}
+.sheet .sheet-body{padding-top:6px}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qa{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;min-height:112px}
+.qa:hover{border-color:var(--court)}
+.qa .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--court) 12%,var(--surface));color:var(--court)}
+.qa .ico svg{width:20px;height:20px}
+.qa b{font-size:16px}
+.qa span.small{color:var(--muted);line-height:1.3}
+.qa.hl{background:var(--court);border-color:var(--court);color:#fff}
+.qa.hl .ico{background:rgba(255,255,255,.18);color:#fff}
+.qa.hl span.small{color:rgba(255,255,255,.85)}
+.next{border-left:5px solid var(--ball-edge)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:500}
+.back{border:0;background:none;color:var(--court);font-weight:600;padding:6px 0;display:inline-flex;align-items:center;gap:4px;min-height:40px}
+.teamlbl{font-size:12px;font-weight:600;color:var(--muted);text-align:center;letter-spacing:.3px;text-transform:uppercase}
+.hint{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:500}
+.hint .ballico{width:16px;height:16px;border-radius:50%;background:var(--ball);box-shadow:inset -2px -2px 0 rgba(0,0,0,.14);flex:0 0 auto;border:1px solid var(--ball-edge)}
+.legend-p{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted)}
+.legend-p span{display:inline-flex;align-items:center;gap:6px}
+.legend-p i{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid var(--line);background:var(--surface)}
+.cell.past,.cg.past{opacity:.45}
+.cell.free{border-color:color-mix(in srgb,var(--court) 35%,var(--line))}
+.slotgrid .hd small{display:block;font-weight:400;font-size:11px}
+.missing{font-weight:600}
+.avail .opt[aria-pressed="true"]::before{content:'✓'}
+.passrow[hidden]{display:none}
+.searchbox{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);font-size:15px}
+.now-mark{font-size:11px;font-weight:600;color:var(--danger);display:block}
+@media (max-width:480px){.brand{font-size:18px}.proto .caption{display:none}.seg button{padding:6px 11px}}
+.occ-dayuse,.cell.du{background:color-mix(in srgb,var(--du) 18%,var(--surface));border:1px solid var(--du);color:var(--ink)}
+.days button:disabled{opacity:.45;cursor:not-allowed;text-decoration:line-through}
+.weekcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.wd{border:1px solid var(--line);border-radius:12px;padding:8px;font-size:12px;display:flex;flex-direction:column;gap:4px;min-height:120px}
+.wd b{font-size:13px}
+.wd.closed{background:var(--surface-2);color:var(--muted)}
+.wd .tag{border-radius:6px;padding:2px 5px;background:color-mix(in srgb,var(--du) 18%,var(--surface));border-left:3px solid var(--du)}
+.wd button{margin-top:auto;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 2px;font-size:12px;font-weight:600;min-height:32px}
+@media (max-width:700px){.weekcal{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.calbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.calnav{display:flex;align-items:center;gap:6px}
+.calnav .icon{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:20px;font-weight:600}
+.seg2{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg2 button{border:0;background:var(--surface);padding:9px 16px;font-weight:600;font-size:14px}
+.seg2 button[aria-pressed="true"]{background:var(--court);color:#fff}
+.cal-head{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;font-size:12px;font-weight:600;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.3px}
+.cal-month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.mday{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px;min-height:104px;text-align:left;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.mday .num{font-family:var(--display);font-weight:700;font-size:17px;line-height:1}
+.mday.other{opacity:.4}
+.mday.past{background:var(--surface-2)}
+.mday.today .num{background:var(--court);color:#fff;border-radius:6px;padding:2px 6px;align-self:flex-start}
+.mday[aria-pressed="true"]{border:2px solid var(--court);padding:5px}
+.ev{font-size:11px;line-height:1.25;border-radius:5px;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.du{background:color-mix(in srgb,var(--du) 18%,var(--surface));border-left:3px solid var(--du)}
+.ev.tr{background:color-mix(in srgb,var(--tourn) 18%,var(--surface));border-left:3px solid var(--tourn)}
+.ev.off{background:var(--surface-2);color:var(--muted);text-decoration:line-through}
+.ev.extra{border-left-style:dashed}
+.cal-week{display:grid;grid-template-columns:48px repeat(7,minmax(70px,1fr));gap:0 4px;min-width:560px}
+.wk-h{text-align:center;padding:6px 2px;border-radius:10px;border:1px solid transparent;background:none;font-weight:600;font-size:13px}
+.wk-h b{display:block;font-family:var(--display);font-size:20px}
+.wk-h[aria-pressed="true"]{border-color:var(--court);color:var(--court)}
+.wk-h.today b{color:var(--court)}
+.wk-times div{height:46px;font-size:12px;color:var(--muted);font-weight:600;padding-top:2px}
+.wk-col{position:relative;border-left:1px solid var(--line);background:repeating-linear-gradient(to bottom,transparent 0 45px,var(--line) 45px 46px)}
+.wk-col.past{background-color:var(--surface-2)}
+.blk{position:absolute;border-radius:8px;padding:5px 6px;font-size:12px;line-height:1.25;text-align:left;overflow:hidden;border:0}
+.blk.du{background:color-mix(in srgb,var(--du) 22%,var(--surface));border-left:4px solid var(--du);color:var(--ink)}
+.blk.tr{background:var(--tourn);color:#fff}
+.blk b{display:block;font-size:12.5px}
+.caldetail .prodrow{border-top:1px solid var(--line);padding-top:10px}
+@media (max-width:700px){.mday{min-height:64px;padding:4px}.mday .ev{font-size:0;height:6px;padding:0;border-left-width:0}.mday .ev.off{display:none}}
+.subtabs{overflow-x:auto;scrollbar-width:none}
+.subtabs button{white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ---------- datos base ---------- */
+const CLUB = 'Costanera Pádel';
+const TIMES = ['08:00','09:30','11:00','12:30','14:00','15:30','17:00','18:30','20:00','21:30'];
+const COURTS = [
+  {id:1,name:'Cancha 1',desc:'Cristal, techada'},
+  {id:2,name:'Cancha 2',desc:'Cristal, techada'},
+  {id:3,name:'Cancha 3',desc:'Muro, al aire libre'}
+];
+const DOW = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const DOW_PL = ['domingos','lunes','martes','miércoles','jueves','viernes','sábados'];
+const DOW_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const CAT = {1:'1ra',2:'2da',3:'3ra',4:'4ta',5:'5ta',6:'6ta',7:'7ma',8:'8va'};
+const SIDE = {drive:'Drive',reves:'Revés',ambos:'Los dos lados'};
+const SIDE_LOW = {drive:'drive',reves:'revés',ambos:'los dos lados'};
+const GENDER = {M:'Masculino',F:'Femenino',X:'Mixto'};
+const FRANJAS = ['mañana','tarde','noche'];
+
+const today = new Date(); today.setHours(0,0,0,0);
+const DAYS = Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(d.getDate()+i);return d;});
+const dowOf = i => DAYS[i].getDay();
+function dayLabel(i,long){
+  if(i===0) return 'Hoy';
+  if(i===1) return 'Mañana';
+  const d = DAYS[i];
+  return long ? DOW[d.getDay()].charAt(0).toUpperCase()+DOW[d.getDay()].slice(1)+' '+d.getDate() : DOW_SHORT[d.getDay()]+' '+d.getDate();
+}
+const nowHM = () => { const n=new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); };
+const isPast = (d,t) => d===0 && t < nowHM();
+const franja = t => { const h=parseInt(t,10); return h<13?'mañana':h<18?'tarde':'noche'; };
+const price = t => t>='18:30' ? 1600 : 1200;
+const fmt = n => '$ ' + n.toLocaleString('es-UY');
+const k = (d,t,c) => `${d}|${t}|${c}`;
+const rangeLabel = (a,b) => a===b ? CAT[a] : `${CAT[a]} a ${CAT[b]}`;
+const initials = n => n.split(' ').map(x=>x[0]).slice(0,2).join('');
+const first = n => n.split(' ')[0];
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const rng = mulberry32(20260927);
+const pick = arr => arr[Math.floor(rng()*arr.length)];
+
+/* ---------- jugadores ---------- */
+const P = {};
+function addP(id,name,g,cat,side,hand,rel,pref,avail){ P[id]={id,name,g,cat,side,hand,rel,pref,avail:avail||{},hist:{}}; }
+addP('me','Santiago Pereira','M',5,'reves','diestro',97,[1],{0:['tarde','noche'],2:['noche'],4:['noche']});
+addP('p1','Martín Silva','M',5,'drive','diestro',95,[1,2]);
+addP('p2','Diego Fernández','M',5,'reves','diestro',92,[1]);
+addP('p3','Nicolás Acosta','M',6,'drive','diestro',90,[2]);
+addP('p4','Federico Rodríguez','M',4,'reves','zurdo',88,[1]);
+addP('p5','Joaquín Méndez','M',5,'ambos','diestro',84,[3]);
+addP('p6','Bruno Techera','M',6,'reves','diestro',93,[2,3]);
+addP('p7','Matías Sosa','M',4,'drive','diestro',96,[1]);
+addP('p8','Gonzalo Píriz','M',5,'drive','diestro',89,[2]);
+addP('p9','Emiliano Da Silva','M',6,'ambos','zurdo',91,[2]);
+addP('p10','Rodrigo Cabrera','M',3,'drive','diestro',98,[1]);
+addP('p11','Lucía Barreto','F',5,'reves','diestro',94,[1]);
+addP('p12','Valentina Gómez','F',6,'drive','diestro',90,[1,2]);
+addP('p13','Florencia Olivera','F',5,'drive','diestro',97,[1]);
+addP('p14','Camila Suárez','F',7,'reves','zurdo',86,[3]);
+addP('p15','Andrés Laborde','M',5,'reves','diestro',71,[2]);
+addP('p16','Pablo Ferreira','M',7,'drive','diestro',83,[3]);
+addP('p17','Sebastián Varela','M',6,'drive','diestro',94,[2]);
+addP('p18','Ignacio Bentancur','M',5,'drive','zurdo',78,[1,3]);
+
+// disponibilidad declarada e historial aleatorio (determinista)
+Object.values(P).forEach(p=>{
+  if(p.id==='me') return;
+  const n = 2 + Math.floor(rng()*2);
+  for(let i=0;i<n;i++){ const d=Math.floor(rng()*7); p.avail[d]=Array.from(new Set([...(p.avail[d]||[]), pick(FRANJAS)])); }
+  for(let i=0;i<3;i++){ const d=Math.floor(rng()*7); const t=pick(TIMES.slice(5)); p.hist[`${d}|${t}`]=(p.hist[`${d}|${t}`]||0)+1+Math.floor(rng()*3); }
+});
+function habit(pid,dayIdx,t,count,fr){ const dw=dowOf(dayIdx); P[pid].hist[`${dw}|${t}`]=count; if(fr){ P[pid].avail[dw]=Array.from(new Set([...(P[pid].avail[dw]||[]),fr])); } }
+// perfiles pensados para que la demo tenga sugerencias claras
+habit('me',0,'20:00',8,'noche'); habit('me',1,'18:30',3);
+habit('p1',1,'18:30',7,'noche'); habit('p9',1,'18:30',2,'noche'); habit('p17',1,'18:30',4);
+habit('p8',1,'18:30',1); habit('p15',1,'18:30',5,'noche'); habit('p2',1,'18:30',2,'noche');
+habit('p5',1,'18:30',0,'noche'); habit('p18',1,'18:30',3);
+P.me.stats = {played:48, wins:27, courts:{1:31,2:12,3:5}, partners:[['p1',12],['p2',9],['p8',6]]};
+
+/* ---------- ocupación de canchas ---------- */
+const OCC = {};
+const SURN = ['Rodríguez','González','Martínez','López','Pérez','Sosa','Da Rosa','Benítez','Castro','Olivera','Suárez','Viera','Correa','Ramos','Silveira','Núñez','Cardozo','Larrosa'];
+for(let d=0;d<7;d++) for(const t of TIMES) for(const c of COURTS){
+  const hh=parseInt(t,10); const p = hh<12?0.22:hh<17?0.3:0.58;
+  if(rng()<p){ const fijo = rng()<0.3; OCC[k(d,t,c.id)] = {type:fijo?'fijo':'reserva', label:(fijo?'Turno fijo ':'')+pick(SURN), players:[], src:rng()<0.55?'online':'recepción'}; }
+}
+const sat = DAYS.findIndex(x=>x.getDay()===6);
+if(sat>=0) ['14:00','15:30','17:00','18:30'].forEach(t=>OCC[k(sat,t,3)]={type:'torneo',label:'Relámpago 6ta',players:[]});
+['08:00','09:30'].forEach(t=>OCC[k(2,t,3)]={type:'bloqueo',label:'Mantenimiento',players:[]});
+
+/* ---------- partidos abiertos ---------- */
+let seq = 10;
+const M = [];
+function mkMatch(o){ const m=Object.assign({id:'m'+(++seq),fallback:true,cancelH:3,status:'formando',court:null,invited:[],slots:[]},o); M.push(m); return m; }
+const S = (a,b,c,d) => [{team:'A',side:'drive',pid:a},{team:'A',side:'reves',pid:b},{team:'B',side:'drive',pid:c},{team:'B',side:'reves',pid:d}];
+
+// 1: hoy 20:00. La cancha preferida ya se reservó completa: al completarse pasa a otra
+OCC[k(0,'20:00',1)] = {type:'reserva',label:'Correa',players:[],src:'online'};
+delete OCC[k(0,'20:00',2)];
+OCC[k(0,'20:00',3)] = {type:'fijo',label:'Turno fijo Viera',players:[],src:'recepción'};
+mkMatch({d:0,t:'20:00',pref:1,catMin:4,catMax:6,gender:'M',slots:S('p1','p2','p8',null),createdBy:'p1'});
+// 2: mañana 18:30, faltan dos
+delete OCC[k(1,'18:30',2)];
+mkMatch({d:1,t:'18:30',pref:2,catMin:5,catMax:6,gender:'M',slots:S('p3',null,null,'p6'),createdBy:'p3'});
+// 3: fuera de mi categoría
+delete OCC[k(2,'20:00',3)];
+mkMatch({d:2,t:'20:00',pref:3,catMin:3,catMax:4,gender:'M',slots:S('p10',null,null,null),createdBy:'p10'});
+// 4: femenino
+delete OCC[k(3,'17:00',1)];
+mkMatch({d:3,t:'17:00',pref:1,catMin:5,catMax:7,gender:'F',slots:S('p13','p11','p12',null),createdBy:'p13'});
+// una reserva propia
+OCC[k(4,'20:00',1)] = {type:'reserva',label:'Santiago Pereira',players:['me'],src:'online'};
+
+/* ---------- torneos americanos ---------- */
+const T = [];
+let tseq = 0;
+// método del círculo: cada jugador comparte pareja con cada otro una vez (n-1 rondas)
+function americano(pids){
+  const n=pids.length, fixed=pids[0]; let rest=pids.slice(1); const rounds=[];
+  for(let r=0;r<n-1;r++){
+    const pairs=[[fixed,rest[0]]];
+    for(let i=1;i<n/2;i++) pairs.push([rest[i],rest[n-1-i]]);
+    const games=[]; for(let i=0;i<pairs.length;i+=2) games.push({a:pairs[i],b:pairs[i+1],sa:null,sb:null});
+    rounds.push(games);
+    rest=[rest[rest.length-1],...rest.slice(0,-1)];
+  }
+  return rounds;
+}
+const waves = tr => Math.ceil((tr.size/4)/tr.courts.length);
+const durationOf = tr => tr.rounds*waves(tr)*tr.minRound;
+function slotsOf(tr){ const i=TIMES.indexOf(tr.t); return TIMES.slice(i,i+Math.ceil(durationOf(tr)/90)); }
+function endTime(tr){ const [h,mm]=tr.t.split(':').map(Number); const tot=h*60+mm+durationOf(tr); return `${String(Math.floor(tot/60)).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`; }
+function conflictsOf(tr){
+  const out=[]; const n=Math.ceil(durationOf(tr)/90), i=TIMES.indexOf(tr.t);
+  if(i+n>TIMES.length) out.push('El torneo terminaría después del cierre del club.');
+  slotsOf(tr).forEach(t=>tr.courts.forEach(c=>{const o=OCC[k(tr.d,t,c)]; if(o&&(!tr.id||o.tid!==tr.id)) out.push(`Cancha ${c} a las ${t}: ${o.label}`);}));
+  M.filter(m=>m.status==='formando'&&m.d===tr.d&&slotsOf(tr).includes(m.t)&&tr.courts.includes(m.pref)).forEach(m=>out.push(`Partido abierto armándose en Cancha ${m.pref} a las ${m.t}`));
+  return out;
+}
+function blockT(tr){ slotsOf(tr).forEach(t=>tr.courts.forEach(c=>OCC[k(tr.d,t,c)]={type:'torneo',label:tr.name,players:[],tid:tr.id})); }
+function mkT(o){ const tr=Object.assign({id:'t'+(++tseq),format:'Americano',status:'inscripcion',players:[],fixture:null,price:400},o); T.push(tr); blockT(tr); return tr; }
+function genFixture(tr){
+  const r=americano(tr.players).slice(0,tr.rounds);
+  r.forEach(games=>games.forEach((g,j)=>{g.court=tr.courts[j%tr.courts.length]; g.wave=Math.floor(j/tr.courts.length);}));
+  tr.fixture=r; tr.status='en juego';
+}
+function ranking(tr){
+  const R={}; tr.players.forEach(p=>R[p]={pid:p,pts:0,pj:0,pg:0,dif:0});
+  (tr.fixture||[]).forEach(games=>games.forEach(g=>{ if(g.sa===null) return;
+    g.a.forEach(p=>{R[p].pts+=g.sa;R[p].pj++;R[p].dif+=g.sa-g.sb;if(g.sa>g.sb)R[p].pg++;});
+    g.b.forEach(p=>{R[p].pts+=g.sb;R[p].pj++;R[p].dif+=g.sb-g.sa;if(g.sb>g.sa)R[p].pg++;});
+  }));
+  return Object.values(R).sort((a,b)=>b.pts-a.pts||b.pg-a.pg||b.dif-a.dif);
+}
+const allScored = tr => tr.fixture && tr.fixture.every(r=>r.every(g=>g.sa!==null));
+function tCanJoin(tr){
+  const me=P.me;
+  if(tr.players.includes('me')) return {ok:false,why:'Ya estás inscripto'};
+  if(tr.status!=='inscripcion') return {ok:false,why:'Las inscripciones cerraron'};
+  if(tr.players.length>=tr.size) return {ok:false,why:'Cupo completo'};
+  if(!(tr.gender==='X'||tr.gender===me.g)) return {ok:false,why:`Torneo ${GENDER[tr.gender].toLowerCase()}`};
+  if(me.cat<tr.catMin||me.cat>tr.catMax) return {ok:false,why:`Es para ${rangeLabel(tr.catMin,tr.catMax)} y vos sos ${CAT[me.cat]}`};
+  return {ok:true,why:`Quedan ${tr.size-tr.players.length} lugares`};
+}
+
+// torneo con inscripción abierta
+mkT({name:'Americano de 5ta y 6ta',d:5,t:'18:30',courts:[2,3],size:8,points:24,minRound:20,rounds:7,catMin:5,catMax:6,gender:'M',players:['p1','p2','p8','p15','p5']});
+// torneo en juego hoy, con resultados cargados
+const t2 = mkT({name:'Americano mixto',d:0,t:'14:00',courts:[1,2],size:8,points:24,minRound:20,rounds:5,catMin:4,catMax:7,gender:'X',players:['me','p11','p1','p13','p2','p12','p8','p6']});
+genFixture(t2);
+t2.fixture.slice(0,3).forEach(games=>games.forEach(g=>{g.sa=8+Math.floor(rng()*9); g.sb=t2.points-g.sa;}));
+
+/* ---------- day use con recompensas ---------- */
+const DU = {
+  products:[
+    {id:'du1',name:'Day use completo',price:450,cupo:30,days:[5,6,0],from:'08:00',to:'12:30',courts:[3],includes:['Vestuarios y duchas','Pileta','Cancha libre']},
+    {id:'du2',name:'Day use pádel',price:300,cupo:20,days:[0,1,2,3,4,5,6],from:'14:00',to:'17:00',courts:[3],includes:['Vestuarios y duchas','Cancha libre en horario valle']}
+  ],
+  overrides:{}, // { 'AAAA-MM-DD': { du1:false, du2:true } } cambios puntuales sobre la regla semanal
+  loyalty:{on:true,every:5,reward:'gratis',scope:'todos',expiry:6,freeCounts:false},
+  visits:[], passes:[]
+};
+const daysAgo = n => { const d=new Date(today); d.setDate(d.getDate()-n); return d; };
+const visit = (pid,ago,product,free) => DU.visits.push({pid,date:daysAgo(ago),product,free:!!free});
+[40,26,12].forEach(a=>visit('me',a,'du1'));
+[60,45,30,20,9].forEach(a=>visit('p1',a,'du1'));
+[90,80,70,55,50,41,20].forEach(a=>visit('p11',a,'du2')); visit('p11',35,'du2',true);
+[33,21,14,7].forEach(a=>visit('p13',a,'du1'));
+[240,230,220,210].forEach(a=>visit('p6',a,'du1'));
+let pseq=100;
+const passCode = () => 'DU-'+(++pseq)+'-'+Math.floor(1000+rng()*9000);
+DU.passes.push({id:'x1',pid:'p1',product:'du1',free:false,price:450,status:'pendiente',code:passCode(),src:'online'});
+DU.passes.push({id:'x2',pid:'p13',product:'du1',free:false,price:450,status:'adentro',code:passCode(),src:'recepción'});
+visit('p13',0,'du1');
+[['p2','du1'],['p11','du2'],['p5','du2'],['p14','du1']].forEach(([pid,pr])=>{DU.passes.push({id:'x'+(++pseq),pid,product:pr,free:false,price:DU.products.find(x=>x.id===pr).price,status:'adentro',code:passCode(),src:'online'}); visit(pid,0,pr);});
+DU.passes.push({id:'x'+(++pseq),pid:'p17',product:'du1',free:false,price:450,status:'pendiente',code:passCode(),src:'online'});
+P.p14.showDU=false; // eligió no aparecer en la lista
+
+/* calendario del day use: qué días y horarios, y qué canchas bloquea */
+const END_TIMES = ['09:30','11:00','12:30','14:00','15:30','17:00','18:30','20:00','21:30','23:00'];
+const duSlots = pr => TIMES.filter(t=>t>=pr.from && t<pr.to);
+const iso = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+const fromIso = sIso => { const [y,m,d]=sIso.split('-').map(Number); return new Date(y,m-1,d); };
+const addDays = (dt,n) => { const x=new Date(dt); x.setDate(x.getDate()+n); return x; };
+const idxOf = dt => { const i=Math.round((dt-today)/86400000); return i>=0&&i<7?i:-1; };
+const cap = x => x.charAt(0).toUpperCase()+x.slice(1);
+const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const longDate = dt => `${DOW[dt.getDay()].charAt(0).toUpperCase()+DOW[dt.getDay()].slice(1)} ${dt.getDate()} de ${MONTHS[dt.getMonth()]}`;
+const defaultOn = (pr,dt) => pr.days.includes(dt.getDay());
+function enabledOnDate(pr,dt){ const o=DU.overrides[iso(dt)]; return (o && pr.id in o) ? o[pr.id] : defaultOn(pr,dt); }
+const productsOnDate = dt => DU.products.filter(pr=>enabledOnDate(pr,dt));
+const soldOnDate = dt => { const i=idxOf(dt); return i<0?0:passesOn(i).length; };
+const toursOnDate = dt => { const i=idxOf(dt); return i<0?[]:T.filter(tr=>tr.d===i); };
+const enabledOn = (pr,d) => enabledOnDate(pr,DAYS[d]);
+const productsOn = d => DU.products.filter(pr=>enabledOn(pr,d));
+const soldOn = (id,d) => DU.passes.filter(x=>x.product===id && (x.d||0)===d).length;
+const passesOn = d => DU.passes.filter(x=>(x.d||0)===d);
+function daysText(days){
+  if(days.length===7) return 'Todos los días';
+  if(!days.length) return 'Ningún día';
+  return [1,2,3,4,5,6,0].filter(x=>days.includes(x)).map(x=>DOW_SHORT[x]).join(', ');
+}
+function scheduleText(pr){
+  return `${daysText(pr.days)}, de ${pr.from} a ${pr.to}. ${pr.courts.length?`Bloquea la${pr.courts.length>1?'s canchas':' Cancha'} ${pr.courts.join(' y ')}`:'No bloquea canchas'}.`;
+}
+let DU_CONFLICTS = [];
+function applyDayUse(initial){
+  for(const key in OCC) if(OCC[key].du) delete OCC[key];
+  DU_CONFLICTS = [];
+  for(let d=0;d<7;d++) for(const pr of productsOn(d)) for(const t of duSlots(pr)) for(const c of pr.courts){
+    const key=k(d,t,c);
+    let o=OCC[key];
+    // la primera vez simulamos que el horario ya estaba configurado antes de que entraran reservas
+    if(o && initial && (o.type==='reserva'||o.type==='fijo') && !o.players.length){ delete OCC[key]; o=null; }
+    if(!o) OCC[key]={type:'dayuse',label:pr.name,players:[],du:pr.id};
+    else if(!o.du) DU_CONFLICTS.push({d,t,c,label:o.label,pr:pr.name});
+  }
+}
+// los pases de ejemplo de hoy usan un pase que esté habilitado hoy
+DU.passes.forEach(x=>{ const pr=DU.products.find(q=>q.id===x.product); if(!enabledOn(pr,0)){ const alt=productsOn(0)[0]; if(alt){ x.product=alt.id; x.price=alt.price; } } });
+DU.visits.forEach(v=>{ if(v.date.getTime()===today.getTime()){ const pr=DU.products.find(q=>q.id===v.product); if(!enabledOn(pr,0)&&productsOn(0)[0]) v.product=productsOn(0)[0].id; } });
+applyDayUse(true);
+
+function spotsHTML(d=0){
+  const list=productsOn(d);
+  if(!list.length) return `<p class="small muted">Ese día no hay day use.</p>`;
+  return list.map(pr=>{const sold=soldOn(pr.id,d), left=pr.cupo-sold;
+    return `<div><div class="row between small"><span><b>${pr.name}</b> <span class="muted">${pr.from} a ${pr.to}</span></span><span>${left>0?`Quedan <b>${left}</b> de ${pr.cupo}`:'<b>Agotado</b>'}</span></div><div class="meter" style="max-width:none"><i style="width:${Math.round(sold/pr.cupo*100)}%"></i></div></div>`;}).join('');
+}
+function insideHTML(){
+  const inside=DU.passes.filter(x=>x.status==='adentro');
+  const vis=inside.filter(x=>x.pid==='me'||P[x.pid].showDU!==false), hidden=inside.length-vis.length;
+  const coming=passesOn(0).filter(x=>x.status==='pendiente').length;
+  if(!inside.length) return `<p class="small muted">Todavía no ingresó nadie hoy.${coming?` ${coming} ${coming===1?'persona compró su pase':'personas compraron su pase'} y todavía no llegó.`:''}</p>`;
+  return `<div class="stack" style="--g:6px">${vis.map(x=>{const p=P[x.pid];return `<div class="row"><div class="avatar" style="width:34px;height:34px;font-size:12px;${x.pid==='me'?'background:var(--ball);color:var(--ball-ink)':''}">${initials(p.name)}</div><div><b>${x.pid==='me'?'Vos':p.name}</b><p class="small muted">${CAT[p.cat]}, ${SIDE_LOW[p.side]}, ${productOf(x.product).name.toLowerCase()}</p></div></div>`;}).join('')}</div>
+    <p class="small muted">${hidden?`Y ${hidden} ${hidden===1?'persona más que prefiere':'personas más que prefieren'} no aparecer. `:''}${coming?`${coming} ${coming===1?'compró su pase y todavía no llegó':'compraron su pase y todavía no llegaron'}.`:''}</p>`;
+}
+function loyaltyOf(pid){
+  const L=DU.loyalty;
+  const cutoff = L.expiry ? new Date(today.getFullYear(),today.getMonth()-L.expiry,today.getDate()) : null;
+  const v = DU.visits.filter(x=>x.pid===pid && (!cutoff||x.date>=cutoff) && (L.scope==='todos'||x.product===L.scope));
+  const counted = v.filter(x=>!x.free||L.freeCounts).length;
+  const used = v.filter(x=>x.free).length + DU.passes.filter(x=>x.pid===pid&&x.free&&x.status==='pendiente').length;
+  const earned = Math.floor(counted/L.every);
+  return {counted,available:Math.max(0,earned-used),progress:counted%L.every,left:L.every-(counted%L.every)};
+}
+const rewardLabel = () => DU.loyalty.reward==='gratis' ? 'un day use gratis' : 'un day use a mitad de precio';
+const rewardApplies = pid => DU.loyalty.on && loyaltyOf(pid).available>0;
+const rewardPrice = p => DU.loyalty.reward==='gratis' ? 0 : Math.round(p.price/2);
+const productOf = id => DU.products.find(p=>p.id===id);
+const soldToday = id => soldOn(id,0);
+function loyaltyRuleText(){
+  const L=DU.loyalty; if(!L.on) return 'El programa de recompensas está apagado.';
+  return `Cada ${L.every} day use${L.scope==='todos'?'':' de "'+productOf(L.scope).name+'"'}, ${rewardLabel()}. ${L.expiry?`Los sellos vencen a los ${L.expiry} meses.`:'Los sellos no vencen.'} ${L.freeCounts?'El day use de regalo también suma sello.':'El day use de regalo no suma sello.'}`;
+}
+function qrSVG(code){
+  let h=0; for(const ch of code) h=(h*31+ch.charCodeAt(0))>>>0;
+  const r=mulberry32(h), n=21; let cells='';
+  const finder=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#0F2438"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#0F2438"/>`;
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){ const inF=(x<8&&y<8)||(x>12&&y<8)||(x<8&&y>12); if(!inF&&r()<0.48) cells+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#0F2438"/>`; }
+  return `<svg class="qr" viewBox="0 0 ${n} ${n}" role="img" aria-label="Código QR del pase ${code}" shape-rendering="crispEdges">${cells}${finder(0,0)}${finder(14,0)}${finder(0,14)}</svg>`;
+}
+
+/* ---------- reglas ---------- */
+const genderOk = (p,m) => m.gender==='X' || p.g===m.gender;
+const catOk = (p,m) => p.cat>=m.catMin && p.cat<=m.catMax;
+const fits = (p,side) => p.side==='ambos' || p.side===side;
+const openSlots = m => m.slots.filter(s=>!s.pid);
+const inMatch = (pid,m) => m.slots.some(s=>s.pid===pid);
+function isBusy(pid,d,t){
+  if(COURTS.some(c=>{const o=OCC[k(d,t,c.id)]; return o && o.players.includes(pid);})) return true;
+  if(T.some(tr=>tr.d===d && tr.players.includes(pid) && slotsOf(tr).includes(t))) return true;
+  return M.some(m=>m.d===d && m.t===t && m.status!=='cancelado' && inMatch(pid,m));
+}
+const freeCourts = (d,t) => COURTS.filter(c=>!OCC[k(d,t,c.id)]).map(c=>c.id);
+function canJoin(m,i){
+  const me=P.me, s=m.slots[i];
+  if(s.pid) return {ok:false};
+  if(m.status!=='formando') return {ok:false,why:'El partido ya no está abierto'};
+  if(inMatch('me',m)) return {ok:false,why:'Ya estás en este partido'};
+  if(!genderOk(me,m)) return {ok:false,why:`Partido ${GENDER[m.gender].toLowerCase()}`};
+  if(!catOk(me,m)) return {ok:false,why:`Es para ${rangeLabel(m.catMin,m.catMax)} y vos sos ${CAT[me.cat]}`};
+  if(!fits(me,s.side)) return {ok:false,why:`Este lugar es de ${SIDE_LOW[s.side]}`};
+  if(isBusy('me',m.d,m.t)) return {ok:false,why:'Ya tenés un partido a esa hora'};
+  return {ok:true};
+}
+function myStatus(m){
+  if(inMatch('me',m)) return {ok:false,why:'Ya estás anotado'};
+  const idx = m.slots.map((s,i)=>i).filter(i=>!m.slots[i].pid);
+  const ok = idx.find(i=>canJoin(m,i).ok);
+  if(ok!==undefined) return {ok:true,why:`Podés sumarte de ${SIDE_LOW[m.slots[ok].side]}`};
+  const reasons = idx.map(i=>canJoin(m,i).why);
+  return {ok:false,why:reasons[0]||'Completo'};
+}
+function risk(m){
+  if(m.status!=='formando') return null;
+  if(!OCC[k(m.d,m.t,m.pref)]) return null;
+  const free = freeCourts(m.d,m.t);
+  if(free.length && m.fallback) return {level:'warn',text:`La Cancha ${m.pref} ya se reservó. Si el partido se completa, se asigna otra cancha libre (${free.length===1?'queda 1':'quedan '+free.length}).`};
+  return {level:'bad',text:'No quedan canchas libres a esa hora. Si nadie libera una, el partido se cae.'};
+}
+function complete(m){
+  const free = freeCourts(m.d,m.t);
+  m.moved=false;
+  if(free.includes(m.pref)) m.court=m.pref;
+  else if(m.fallback && free.length){ m.court=free[0]; m.moved=true; }
+  else { m.status='cancelado'; m.cancelReason='Se completaron los 4, pero no quedaba ninguna cancha libre a esa hora.'; return; }
+  m.status='confirmado';
+  OCC[k(m.d,m.t,m.court)] = {type:'abierto',label:`Partido ${rangeLabel(m.catMin,m.catMax)}`,players:m.slots.map(s=>s.pid),mid:m.id,src:'online'};
+}
+
+/* sugerencia inteligente de jugadores para un partido */
+function suggestions(m){
+  if(m.status!=='formando') return [];
+  const open = m.slots.map((s,i)=>({s,i})).filter(x=>!x.s.pid);
+  const dw = dowOf(m.d), fr = franja(m.t), out=[];
+  for(const p of Object.values(P)){
+    if(p.id==="me" || inMatch(p.id,m)) continue;
+    if(!genderOk(p,m) || !catOk(p,m) || isBusy(p.id,m.d,m.t)) continue;
+    const slot = open.find(x=>p.side===x.s.side) || open.find(x=>fits(p,x.s.side));
+    if(!slot) continue;
+    const n = p.hist[`${dw}|${m.t}`]||0;
+    const free = (p.avail[dw]||[]).includes(fr);
+    if(!n && !free) continue;
+    let score=0; const why=[];
+    if(p.side===slot.s.side){score+=30; why.push({t:`Juega de ${SIDE_LOW[p.side]}`,hit:true});}
+    else {score+=18; why.push({t:'Juega en los dos lados'});}
+    why.push({t:CAT[p.cat]});
+    if(n){score+=Math.min(25,n*5); why.push({t:`Jugó ${n} ${n===1?'vez':'veces'} los ${DOW_PL[dw]} a las ${m.t}`,hit:n>=3});}
+    if(free){score+=20; why.push({t:`Suele estar libre los ${DOW_PL[dw]} de ${fr}`,hit:true});}
+    if(p.pref.includes(m.pref)){score+=8; why.push({t:`Prefiere la Cancha ${m.pref}`});}
+    score+=Math.round((p.rel-70)/2);
+    why.push({t:`Asiste al ${p.rel}%`,hit:p.rel>=93,warn:p.rel<80});
+    out.push({p,score,why,slot:slot.i});
+  }
+  return out.sort((a,b)=>b.score-a.score).slice(0,6);
+}
+/* partidos recomendados para el jugador actual */
+function forMe(){
+  const me=P.me;
+  return M.filter(m=>m.status==='formando' && myStatus(m).ok).map(m=>{
+    const dw=dowOf(m.d), n=me.hist[`${dw}|${m.t}`]||0, free=(me.avail[dw]||[]).includes(franja(m.t));
+    let score=0; const why=[];
+    if(n>=3){score+=30; why.push({t:'Tu horario de siempre',hit:true});}
+    else if(free){score+=18; why.push({t:'Estás libre a esa hora',hit:true});}
+    if(me.pref.includes(m.pref)){score+=10; why.push({t:'Tu cancha preferida',hit:true});}
+    return {m,score,why,habit:n>=3};
+  }).sort((a,b)=>b.score-a.score);
+}
+function myUpcoming(){
+  const list=[];
+  for(const key in OCC){ const o=OCC[key]; if(o.players.includes('me')){ const [d,t,c]=key.split('|'); list.push({d:+d,t,c:+c,kind:o.type==='abierto'?'Partido abierto confirmado':'Reserva de cancha',mid:o.mid}); } }
+  T.filter(tr=>tr.players.includes('me')&&tr.status!=='finalizado').forEach(tr=>list.push({d:tr.d,t:tr.t,c:tr.courts.join(' y '),kind:`${tr.name}, hasta las ${endTime(tr)}`,tid:tr.id}));
+  M.filter(m=>m.status==='formando' && inMatch('me',m)).forEach(m=>list.push({d:m.d,t:m.t,c:m.pref,kind:`Partido armándose, ${4-openSlots(m).length} de 4`,mid:m.id,forming:true}));
+  return list.sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));
+}
+function shareText(m){
+  const falta=openSlots(m).map(s=>SIDE_LOW[s.side]);
+  return `🎾 ${falta.length===1?'Falta 1':'Faltan '+falta.length} para ${dayLabel(m.d,true).toLowerCase()} a las ${m.t}\n${CLUB}, Cancha ${m.pref}\nCategoría ${rangeLabel(m.catMin,m.catMax)}, ${GENDER[m.gender].toLowerCase()}\nFalta: ${falta.join(', ')}\n${fmt(price(m.t)/4)} por persona\n\nSumate acá: https://costanerapadel.uy/p/${m.id}`;
+}
+
+/* ---------- estado y render ---------- */
+const state = {role:'jugador',tab:'inicio',clubTab:'grilla',duDay:0,day:0,clubDay:0,sheet:null,toast:null,onlyMine:true,visibility:'club'};
+const app = document.getElementById('app');
+let toastTimer;
+function toast(msg){ state.toast=msg; render(); clearTimeout(toastTimer); toastTimer=setTimeout(()=>{state.toast=null;render();},2800); }
+
+const ICONS = {
+  inicio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  reservar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  partidos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 12h14"/><circle cx="17.5" cy="17.5" r="2.5" fill="currentColor" stroke="none"/></svg>',
+  torneos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M12 14v4M8 21h8"/></svg>',
+  perfil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>'
+};
+
+function courtHTML(m,compact){
+  const pos = i => {
+    const s=m.slots[i];
+    if(s.pid){ const p=P[s.pid]; return `<div class="pos ${s.pid==='me'?'me':''}"><span class="av">${initials(p.name)}</span><span class="nm">${s.pid==='me'?'Vos':first(p.name)}</span><span class="sd">${SIDE[s.side]}</span></div>`; }
+    const c = canJoin(m,i);
+    if(!compact && c.ok) return `<button class="pos open joinable" data-action="join" data-mid="${m.id}" data-slot="${i}" aria-label="Sumarme de ${SIDE_LOW[s.side]}"><span class="ballico"></span><span class="nm">Sumarme</span><span class="sd">${SIDE[s.side]}</span></button>`;
+    return `<div class="pos open"><span class="ballico"></span><span class="nm">Falta</span><span class="sd">${SIDE[s.side]}</span></div>`;
+  };
+  const court=`<div class="court ${compact?'compact':''}" aria-label="Cancha con ${4-openSlots(m).length} de 4 jugadores"><div class="half">${pos(0)}${pos(1)}</div><div class="net"></div><div class="half">${pos(3)}${pos(2)}</div></div>`;
+  return compact ? court : `<div class="stack" style="--g:4px"><div class="teamlbl">Pareja 1</div>${court}<div class="teamlbl" style="margin-top:6px">Pareja 2</div></div>`;
+}
+const chips = arr => `<div class="chips">${arr.map(w=>`<span class="chip ${w.hit?'hit':''} ${w.warn?'warn':''}">${w.t}</span>`).join('')}</div>`;
+function statusPill(m){
+  if(m.status==='confirmado') return `<span class="pill ok">Confirmado, Cancha ${m.court}</span>`;
+  if(m.status==='cancelado') return `<span class="pill off">Cancelado</span>`;
+  return `<span class="pill forming">${4-openSlots(m).length} de 4</span>`;
+}
+const missingText = m => { const c={}; openSlots(m).forEach(s=>c[s.side]=(c[s.side]||0)+1); return Object.entries(c).map(([sd,n])=>`${n} de ${SIDE_LOW[sd]}`).join(' y '); };
+const firstJoinable = m => m.slots.findIndex((s,i)=>canJoin(m,i).ok);
+function matchCard(m,extraWhy){
+  const st=myStatus(m), r=risk(m), ji=firstJoinable(m);
+  return `<article class="card stack">
+    <div class="row between"><div class="when">${dayLabel(m.d)} ${m.t}</div>${statusPill(m)}</div>
+    <div class="mcard">
+      <div>${courtHTML(m,true)}</div>
+      <div class="stack" style="--g:6px">
+        <p class="facts">Cancha ${m.pref}<br>${rangeLabel(m.catMin,m.catMax)}, ${GENDER[m.gender].toLowerCase()}<br>${fmt(price(m.t)/4)} por persona</p>
+        ${m.status==='formando'?`<p class="small missing">Falta ${missingText(m)}</p>`:''}
+      </div>
+    </div>
+    ${extraWhy&&extraWhy.length?chips(extraWhy):(st.ok?'':`<p class="small muted">${st.why}</p>`)}
+    ${r?`<div class="notice ${r.level==='bad'?'bad':''}">${r.text}</div>`:''}
+    <div class="row">${ji>=0?`<button class="btn ball" style="flex:1" data-action="join" data-mid="${m.id}" data-slot="${ji}">Sumarme de ${SIDE_LOW[m.slots[ji].side]}</button>`:''}<button class="btn ghost" style="flex:${ji>=0?'0 0 auto':'1'}" data-action="open-match" data-mid="${m.id}">${ji>=0?'Detalle':'Ver partido'}</button></div>
+  </article>`;
+}
+
+/* ----- vistas jugador ----- */
+const QICON = {
+  reservar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  partidos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20c.8-3.3 3.2-5 6-5s5.2 1.7 6 5"/><path d="M17 8v6M14 11h6"/></svg>',
+  dayuse:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  torneos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M12 14v4M8 21h8"/></svg>'
+};
+function freeLeftToday(){ let n=0; for(const t of TIMES){ if(isPast(0,t)) continue; COURTS.forEach(c=>{ if(!OCC[k(0,t,c.id)]) n++; }); } return n; }
+function upItem(u,big){
+  const btn = u.mid?`<button class="btn small ${big?'':'ghost'}" data-action="open-match" data-mid="${u.mid}">Ver</button>`:u.tid?`<button class="btn small ${big?'':'ghost'}" data-action="open-tourn" data-tid="${u.tid}">Ver</button>`:'';
+  return `<div class="row between"><div><div class="when" style="font-size:${big?24:19}px">${dayLabel(u.d)} ${u.t}</div><p class="small muted">Cancha${String(u.c).includes(" y ")?"s":""} ${u.c}. ${u.kind}</p></div>${btn}</div>`;
+}
+function viewInicio(){
+  const up=myUpcoming(), rec=forMe(), top=rec[0];
+  const inside=DU.passes.filter(x=>x.status==='adentro').length;
+  const duLeft=productsOn(0).reduce((a,p)=>a+p.cupo-soldToday(p.id),0);
+  const openT=T.filter(t=>t.status==='inscripcion'&&tCanJoin(t).ok).length;
+  const fl=freeLeftToday();
+  const qa=(tab,ico,title,sub,hl)=>`<button class="qa ${hl?'hl':''}" data-action="tab" data-tab="${tab}"><span class="ico">${QICON[ico]}</span><b>${title}</b><span class="small">${sub}</span></button>`;
+  return `<div class="stack-lg">
+    <div><h1>Hola, ${first(P.me.name)}</h1><p class="muted">Sos ${CAT[P.me.cat]} y jugás de ${SIDE_LOW[P.me.side]}. <button class="link" data-action="tab" data-tab="perfil">Cambiar</button></p></div>
+    <div class="quick">
+      ${qa('reservar','reservar','Reservar cancha',fl?`${fl} turnos libres hoy`:'Hoy no quedan turnos, mirá otros días',false)}
+      ${qa('partidos','partidos','Buscar partido',rec.length?`${rec.length} ${rec.length===1?'partido te espera':'partidos te esperan'}`:'Armá uno y te ayudamos a completarlo',rec.length>0)}
+      ${qa('dayuse','dayuse','Day use',productsOn(0).length?`Hoy: ${inside} en el club, quedan ${duLeft} lugares`:'Hoy no hay, mirá otros días',false)}
+      ${qa('torneos','torneos','Torneos',openT?`${openT} con inscripción abierta`:'Mirá el ranking de los torneos',false)}
+    </div>
+    ${top&&top.habit?`<div class="notice good">Se está armando un partido en tu horario de siempre: ${dayLabel(top.m.d).toLowerCase()} a las ${top.m.t}. <button class="link" data-action="open-match" data-mid="${top.m.id}">Ver partido</button></div>`:''}
+    <section><div class="section-title"><h2>Tu próximo partido</h2>${up.length>1?`<button class="link" data-action="toggle-up">${state.showAllUp?'Ver menos':`Ver los ${up.length}`}</button>`:''}</div>
+      ${up.length?`<div class="card next stack">${upItem(up[0],true)}</div>
+        ${state.showAllUp&&up.length>1?`<div class="card stack" style="margin-top:10px">${up.slice(1).map(u=>upItem(u)).join('<hr style="border:0;border-top:1px solid var(--line);margin:12px 0">')}</div>`:''}`
+      :`<div class="empty">No tenés nada agendado esta semana.<br><button class="link" data-action="tab" data-tab="reservar">Reservá una cancha</button> o <button class="link" data-action="tab" data-tab="partidos">sumate a un partido</button>.</div>`}
+    </section>
+    <section><div class="section-title"><h2>Partidos para vos</h2>${rec.length>2?`<button class="link" data-action="tab" data-tab="partidos">Ver todos</button>`:''}</div>
+      ${rec.length?`<div class="stack">${rec.slice(0,2).map(x=>matchCard(x.m,x.why)).join('')}</div>`:`<div class="empty">Ahora no hay partidos armándose para tu categoría y lado. <button class="link" data-action="create">Armá uno</button></div>`}
+    </section></div>`;
+}
+function viewDayUse(){
+  const L=DU.loyalty, s=loyaltyOf('me'), d=state.duDay||0;
+  const pass=DU.passes.find(x=>x.pid==='me'&&(x.d||0)===d);
+  const inside=DU.passes.filter(x=>x.status==='adentro').length;
+  const list=productsOn(d);
+  const strip=`<div class="days" role="group" aria-label="Día">${DAYS.map((_,i)=>{const on=productsOn(i).length>0;return `<button aria-pressed="${d===i}" data-action="day" data-key="duDay" data-day="${i}" ${on?'':'disabled'} title="${on?'':'Sin day use'}">${dayLabel(i)}</button>`;}).join('')}</div>`;
+  return `<div class="stack-lg">
+    <div><button class="back" data-action="tab" data-tab="inicio">‹ Inicio</button><h1>Day use</h1><p class="muted">Pase diario para disfrutar el club. Elegí el día; los días tachados no hay day use.</p></div>
+    ${strip}
+    <section class="card stack">
+      ${pass?`<div class="row between"><h2>Tu pase para ${dayLabel(d).toLowerCase()}</h2><span class="pill ${pass.status==='adentro'?'ok':'forming'}">${pass.status==='adentro'?'Ya ingresaste':'Listo para usar'}</span></div>
+        <p class="small">${pass.status==='adentro'?'Tu ingreso ya quedó registrado.':`Mostrá el QR en recepción al llegar, de ${productOf(pass.product).from} a ${productOf(pass.product).to}.`}</p>
+        <button class="btn block" data-action="du-pass" data-id="${pass.id}">Ver mi QR</button>`
+      :list.length?`<h2>${d===0?'Comprá tu pase de hoy':'Comprá tu pase para '+dayLabel(d,true).toLowerCase()}</h2>
+        ${s.available&&L.on?`<div class="notice good">Tenés ${rewardLabel()} para usar.</div>`:''}
+        <button class="btn ball block" data-action="du-buy">Comprar pase</button>`
+      :`<h2>Ese día no hay day use</h2><p class="small muted">Elegí otro día de la semana.</p>`}
+    </section>
+    <section class="card stack"><h2>Horarios y lugares libres</h2>${spotsHTML(d)}</section>
+    ${d===0?`<section class="card stack"><h2>Ya están en el club, ${inside}</h2>${insideHTML()}</section>`
+      :`<section class="card stack"><h2>Ya compraron para ese día</h2><p class="small muted">${passesOn(d).length?`${passesOn(d).length} ${passesOn(d).length===1?'persona':'personas'}. La lista de quién está en el club se ve el mismo día.`:'Todavía nadie.'}</p></section>`}
+    ${L.on?`<section class="card stack"><h2>Tus sellos</h2>${stampsHTML('me')}
+      <p class="small">${s.available?`<b>Tenés ${rewardLabel()} para usar.</b>`:`Te ${s.left===1?'falta 1 day use':'faltan '+s.left+' day use'} para ${rewardLabel()}.`}</p>
+      <p class="small muted">${loyaltyRuleText()} El sello se suma cuando registran tu ingreso.</p></section>`:''}
+  </div>`;
+}
+function dayStrip(key){
+  return `<div class="days" role="group" aria-label="Día">${DAYS.map((_,i)=>`<button aria-pressed="${state[key]===i}" data-action="day" data-key="${key}" data-day="${i}">${dayLabel(i)}</button>`).join('')}</div>`;
+}
+function viewReservar(){
+  const d=state.day;
+  let cells='', shown=0, hiddenPast=0;
+  for(const t of TIMES){
+    const past=isPast(d,t);
+    if(past && !state.showPast){ hiddenPast++; continue; }
+    const anyFree=COURTS.some(c=>!OCC[k(d,t,c.id)]);
+    if(state.onlyFree && (past||!anyFree)) continue;
+    shown++;
+    cells+=`<div class="tm">${t}</div>`;
+    for(const c of COURTS){
+      const o=OCC[k(d,t,c.id)];
+      const fm=M.find(m=>m.d===d&&m.t===t&&m.pref===c.id&&m.status==='formando'&&!o);
+      if(o&&o.players.includes('me')) cells+=`<div class="cell mine"><b>Tuya</b>${o.type==='abierto'?'Partido':'Reserva'}</div>`;
+      else if(o&&o.type==='dayuse') cells+=`<div class="cell du ${past?'past':''}"><b>Day use</b>Cancha libre</div>`;
+      else if(o) cells+=`<div class="cell taken ${past?'past':''}">Ocupada</div>`;
+      else if(past) cells+=`<div class="cell taken past">Ya pasó</div>`;
+      else if(fm) cells+=`<button class="cell forming" data-action="open-match" data-mid="${fm.id}"><b>Falta ${openSlots(fm).length}</b>${rangeLabel(fm.catMin,fm.catMax)}</button>`;
+      else cells+=`<button class="cell free" data-action="book" data-d="${d}" data-t="${t}" data-c="${c.id}" aria-label="Reservar ${c.name} a las ${t}, ${fmt(price(t))}"><b>${fmt(price(t))}</b>Libre</button>`;
+    }
+  }
+  return `<div class="stack-lg"><div><h1>Reservar cancha</h1><p class="muted">Elegí el día y tocá un horario libre. Turnos de 90 minutos, precio por cancha completa.</p></div>
+    ${dayStrip('day')}
+    <div class="row between wrap"><div class="legend-p"><span><i style="border-color:var(--court)"></i>Libre</span><span><i style="border:2px dashed var(--ball-edge)"></i>Falta gente</span><span><i style="background:var(--court)"></i>Tuya</span><span><i style="background:var(--surface-2)"></i>Ocupada</span><span><i class="occ-dayuse"></i>Day use</span></div>
+      <button class="opt" aria-pressed="${!!state.onlyFree}" data-action="only-free">Solo libres</button></div>
+    ${hiddenPast?`<p class="small muted">Ocultamos ${hiddenPast} ${hiddenPast===1?'horario que ya pasó':'horarios que ya pasaron'}. <button class="link" data-action="show-past">Mostrar</button></p>`:state.showPast&&d===0?`<p class="small"><button class="link" data-action="show-past">Ocultar horarios que ya pasaron</button></p>`:''}
+    ${shown?`<div class="slotgrid"><div></div>${COURTS.map(c=>`<div class="hd">${c.name}<small>${c.desc.split(',')[0]}</small></div>`).join('')}${cells}</div>`
+      :`<div class="empty">No quedan horarios libres este día. Probá con otro día o <button class="link" data-action="tab" data-tab="partidos">sumate a un partido</button>.</div>`}
+  </div>`;
+}
+function viewPartidos(){
+  let list=M.filter(m=>m.status==='formando');
+  if(state.onlyMine) list=list.filter(m=>myStatus(m).ok||inMatch('me',m));
+  list.sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));
+  return `<div class="stack-lg">
+    <div class="row between wrap"><div><h1>Partidos abiertos</h1><p class="muted">Sumate a un partido al que le falta gente.</p></div><button class="btn ball" data-action="create">Armar partido</button></div>
+    <div class="opts"><button class="opt" aria-pressed="${state.onlyMine}" data-action="filter" data-v="1">Donde puedo sumarme</button><button class="opt" aria-pressed="${!state.onlyMine}" data-action="filter" data-v="0">Todos</button></div>
+    ${list.length?`<div class="stack">${list.map(m=>matchCard(m)).join('')}</div>`:`<div class="empty">No hay partidos armándose para tu categoría y lado. <button class="link" data-action="create">Armá uno</button> y te sugerimos jugadores.</div>`}
+  </div>`;
+}
+function viewPerfil(){
+  const me=P.me, st=me.stats;
+  const topCourt=Object.entries(st.courts).sort((a,b)=>b[1]-a[1])[0];
+  const topHabit=Object.entries(me.hist).sort((a,b)=>b[1]-a[1])[0];
+  const [hd,ht]=topHabit?topHabit[0].split('|'):[null,null];
+  const opt=(action,v,cur,label)=>`<button class="opt" aria-pressed="${cur===v}" data-action="${action}" data-v="${v}">${label}</button>`;
+  const order=[1,2,3,4,5,6,0];
+  return `<div class="stack-lg">
+    <div class="row"><div class="bigav">${initials(me.name)}</div><div><h1 style="font-size:28px">${me.name}</h1><p class="muted">${CAT[me.cat]}, validada por el club. ${SIDE[me.side]}, ${me.hand}.</p></div></div>
+    <section class="card stack"><h2>Cómo jugás</h2>
+      <p class="small muted">Esto lo definís vos. Lo usamos para sugerirte partidos y para sugerirte a otros jugadores.</p>
+      <div class="field">Lado<div class="opts">${opt('set-side','drive',me.side,'Drive')}${opt('set-side','reves',me.side,'Revés')}${opt('set-side','ambos',me.side,'Los dos')}</div></div>
+      <div class="field">Mano hábil<div class="opts">${opt('set-hand','diestro',me.hand,'Diestro')}${opt('set-hand','zurdo',me.hand,'Zurdo')}</div></div>
+      <div class="field">Canchas preferidas<div class="opts">${COURTS.map(c=>`<button class="opt" aria-pressed="${me.pref.includes(c.id)}" data-action="toggle-court" data-v="${c.id}">${c.name}</button>`).join('')}</div></div>
+      <div class="field">Cuándo solés poder jugar
+        <span class="small muted" style="font-weight:400">Tocá los momentos de la semana en que normalmente estás libre. Te avisamos de partidos en esos horarios.</span>
+        <div class="avail"><span></span>${FRANJAS.map(f=>`<span class="muted" style="text-align:center">${f.charAt(0).toUpperCase()+f.slice(1)}</span>`).join('')}
+        ${order.map(dw=>`<span style="align-self:center">${DOW_SHORT[dw]}</span>${FRANJAS.map(f=>`<button class="opt" aria-pressed="${(me.avail[dw]||[]).includes(f)}" data-action="toggle-avail" data-dw="${dw}" data-f="${f}" aria-label="${DOW[dw]} a la ${f}"></button>`).join('')}`).join('')}</div>
+      </div>
+    </section>
+    <section class="card stack"><h2>Lo que muestra tu juego</h2>
+      <p class="small muted">Se calcula con tus partidos en el club y se actualiza una vez por día.</p>
+      <div class="tiles">
+        <div class="tile"><div class="n">${st.played}</div><div class="small muted">Partidos jugados</div></div>
+        <div class="tile"><div class="n">${Math.round(st.wins/st.played*100)}%</div><div class="small muted">Victorias</div></div>
+        <div class="tile"><div class="n">Cancha ${topCourt[0]}</div><div class="small muted">La que más jugás, ${topCourt[1]} de ${st.played}</div></div>
+        <div class="tile"><div class="n">${me.rel}%</div><div class="small muted">Asistencia a partidos abiertos</div></div>
+      </div>
+      ${hd!==null?`<p>Horario más jugado: <b>${DOW_PL[hd]} a las ${ht}</b>.</p>`:''}
+      <div><p class="small muted" style="margin-bottom:6px">Con quién más jugás</p><div class="chips">${st.partners.map(([id,n])=>`<span class="chip">${P[id].name}, ${n} partidos</span>`).join('')}</div></div>
+    </section>
+    <section class="card stack"><h2>Quién ve tu perfil</h2>
+      <div class="opts">${opt('set-vis','publico',state.visibility,'Todos')}${opt('set-vis','club',state.visibility,'Jugadores del club')}${opt('set-vis','admin',state.visibility,'Solo el club')}</div>
+      <p class="small muted">Tu categoría y tu lado siempre se muestran en los partidos abiertos. Las estadísticas siguen esta opción.</p>
+      <div class="field">Aparecer en "Ya están en el club" cuando hago day use<div class="opts">${opt('set-showdu','1',P.me.showDU===false?'0':'1','Sí')}${opt('set-showdu','0',P.me.showDU===false?'0':'1','No')}</div></div>
+    </section></div>`;
+}
+
+function stampsHTML(pid){
+  const L=DU.loyalty, s=loyaltyOf(pid); let h='';
+  for(let i=0;i<L.every;i++) h+=`<span class="stamp ${i<s.progress?'on':''}">${i<s.progress?'':i+1}</span>`;
+  h+=`<span class="stamp gift" title="Recompensa">${L.reward==='gratis'?'Gratis':'50%'}</span>`;
+  return `<div class="stamps" aria-label="${s.progress} de ${L.every} sellos">${h}</div>`;
+}
+function dayUseCard(){
+  const L=DU.loyalty, s=loyaltyOf('me');
+  const pass=DU.passes.find(x=>x.pid==='me');
+  return `<section class="card stack"><div class="row between"><h2>Day use</h2>${pass?`<span class="pill ${pass.status==='adentro'?'ok':'forming'}">${pass.status==='adentro'?'Ya ingresaste hoy':'Pase de hoy listo'}</span>`:''}</div>
+    ${L.on?`${stampsHTML('me')}
+      <p class="small">${s.available?`<b>Tenés ${rewardLabel()} para usar.</b>`:`Te ${s.left===1?'falta 1 day use':'faltan '+s.left+' day use'} para ${rewardLabel()}.`}</p>
+      <p class="small muted">${loyaltyRuleText()}</p>`:`<p class="small muted">Pase diario para usar las instalaciones del club.</p>`}
+    <div class="row wrap">${pass?`<button class="btn" data-action="du-pass" data-id="${pass.id}">Ver mi pase</button>`:`<button class="btn" data-action="du-buy">Comprar pase de hoy</button>`}</div>
+    <div class="stack" style="border-top:1px solid var(--line);padding-top:12px"><h3>Lugares libres hoy</h3>${spotsHTML()}</div>
+    <div class="stack" style="border-top:1px solid var(--line);padding-top:12px"><h3>Ya están en el club, ${DU.passes.filter(x=>x.status==='adentro').length}</h3>${insideHTML()}</div>
+  </section>`;
+}
+function tournCard(tr,role){
+  const j=tCanJoin(tr);
+  const pill = tr.status==='inscripcion'?`<span class="pill forming">${tr.players.length} de ${tr.size}</span>`:tr.status==='en juego'?`<span class="pill ok">En juego</span>`:`<span class="pill off">Finalizado</span>`;
+  return `<article class="card stack">
+    <div class="row between"><div><div class="when">${dayLabel(tr.d)} ${tr.t} a ${endTime(tr)}</div><h3 style="margin-top:4px">${tr.name}</h3></div>${pill}</div>
+    <p class="facts">${tr.format}, ${rangeLabel(tr.catMin,tr.catMax)}, ${GENDER[tr.gender].toLowerCase()}. Canchas ${tr.courts.join(' y ')}. ${tr.rounds} rondas a ${tr.points} puntos. ${fmt(tr.price)} la inscripción.</p>
+    ${role==='jugador'&&tr.status==='inscripcion'?`<p class="small ${j.ok?'':'muted'}">${j.why}</p>`:''}
+    <div><button class="btn small ${role==='jugador'&&j.ok?'ball':'ghost'}" data-action="open-tourn" data-tid="${tr.id}">${tr.status==='inscripcion'?(role==='club'?'Gestionar':'Ver torneo'):'Ver ranking'}</button></div>
+  </article>`;
+}
+function viewTorneos(){
+  const list=[...T].sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));
+  return `<div class="stack-lg"><div><h1>Torneos</h1><p class="muted">Americanos cortos: te anotás solo y cada ronda jugás con otra pareja.</p></div>
+    ${list.length?`<div class="stack">${list.map(tr=>tournCard(tr,'jugador')).join('')}</div>`:'<div class="empty">No hay torneos publicados esta semana.</div>'}</div>`;
+}
+function viewClubTorneos(){
+  const list=[...T].sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));
+  return `<div class="stack-lg"><div class="row between wrap"><div><h2>Torneos americanos</h2><p class="muted small">Al crear un torneo se bloquean sus canchas en la grilla.</p></div><button class="btn ball" data-action="tourn-create">Nuevo americano</button></div>
+    <div class="stack" style="max-width:720px">${list.map(tr=>tournCard(tr,'club')).join('')||'<div class="empty">Todavía no hay torneos.</div>'}</div></div>`;
+}
+function viewClubDayUse(){
+  const L=DU.loyalty;
+  const todayP=passesOn(0);
+  const rev=todayP.reduce((a,x)=>a+x.price,0);
+  const month=DU.visits.filter(v=>v.free&&v.date>=daysAgo(30)).length;
+  const opt=(action,v,cur,label)=>`<button class="opt" aria-pressed="${String(cur)===String(v)}" data-action="${action}" data-v="${v}">${label}</button>`;
+  const regulars=[...new Set(DU.visits.map(v=>v.pid))].map(pid=>({pid,l:loyaltyOf(pid)})).filter(x=>x.l.counted).sort((a,b)=>b.l.available-a.l.available||b.l.progress-a.l.progress);
+  return `<div class="stack-lg">
+    <div class="stats">
+      <div class="card stat"><div class="n">${todayP.length}</div><div class="small muted">Pases vendidos hoy</div></div>
+      <div class="card stat"><div class="n">${fmt(rev)}</div><div class="small muted">Ingresos por day use hoy</div></div>
+      <div class="card stat"><div class="n">${month}</div><div class="small muted">Recompensas usadas, últimos 30 días</div></div>
+    </div>
+    <div class="club-layout">
+      <div class="stack-lg">
+        <section class="card stack"><div class="row between wrap"><h2>Pases de hoy</h2><button class="btn small" data-action="du-sell">Vender en recepción</button></div>
+          ${todayP.length>3?`<input class="searchbox" type="search" placeholder="Buscar por nombre o código del QR" data-filter="passes" aria-label="Buscar pase">`:''}
+          ${todayP.length?[...todayP].sort((a,b)=>(a.status==='pendiente'?0:1)-(b.status==='pendiente'?0:1)).map(x=>{const p=P[x.pid],pr=productOf(x.product);return `<div class="row between wrap passrow" data-q="${(p.name+' '+x.code).toLowerCase()}" style="border-top:1px solid var(--line);padding-top:10px"><div><b>${p.name}</b><p class="small muted">${pr.name}, ${x.free?'con recompensa':fmt(x.price)}, ${x.src}</p></div>${x.status==='pendiente'?`<button class="btn small ball" data-action="du-checkin" data-id="${x.id}">Registrar ingreso</button>`:'<span class="pill ok">Adentro</span>'}</div>`;}).join(''):'<div class="empty">Todavía no se vendieron pases hoy.</div>'}
+          <p class="small muted">El sello se suma cuando se registra el ingreso, no al comprar.</p>
+        </section>
+        <section class="card stack"><div class="row between wrap"><h2>Calendario</h2><button class="btn small ghost" data-action="club-tab" data-v="calendario">Abrir calendario</button></div>
+          <p class="small muted">Qué días y horarios se vende cada pase, cierres puntuales y días especiales se manejan desde la sección Calendario.</p>
+          ${DU_CONFLICTS.length?`<div class="notice"><b>${DU_CONFLICTS.length} ${DU_CONFLICTS.length===1?'turno ya ocupado cae':'turnos ya ocupados caen'} dentro del horario de day use.</b> Esas canchas se bloquean cuando se liberen.</div>`:''}
+        </section>
+        <section class="card stack"><h2>Pases que ofrece el club</h2>
+          ${DU.products.map(pr=>`<div style="border-top:1px solid var(--line);padding-top:10px" class="stack"><div class="row between"><b>${pr.name}</b><span class="score">${fmt(pr.price)}</span></div>
+            <p class="small">${scheduleText(pr)}</p>${chips(pr.includes.map(t=>({t})))}
+            <div class="row between wrap"><span class="small muted">${soldToday(pr.id)} de ${pr.cupo} vendidos hoy</span><button class="btn small ghost" data-action="du-edit" data-v="${pr.id}">Editar días y horarios</button></div></div>`).join('')}
+        </section>
+      </div>
+      <aside class="stack-lg">
+        <section class="card stack"><h2>Recompensas</h2>
+          <div class="field">Programa<div class="opts">${opt('loy-on','1',L.on?1:0,'Activado')}${opt('loy-on','0',L.on?1:0,'Apagado')}</div></div>
+          ${L.on?`
+          <div class="field">Cada cuántos day use<div class="row"><div class="stepper"><button data-action="loy-every" data-v="-1" aria-label="Menos">−</button><span>${L.every}</span><button data-action="loy-every" data-v="1" aria-label="Más">+</button></div></div></div>
+          <div class="field">Recompensa<div class="opts">${opt('loy-reward','gratis',L.reward,'Day use gratis')}${opt('loy-reward','50',L.reward,'50% de descuento')}</div></div>
+          <div class="field">Cuentan<div class="opts">${opt('loy-scope','todos',L.scope,'Todos los pases')}${DU.products.map(p=>opt('loy-scope',p.id,L.scope,p.name)).join('')}</div></div>
+          <div class="field">Los sellos vencen<div class="opts">${opt('loy-exp',3,L.expiry,'3 meses')}${opt('loy-exp',6,L.expiry,'6 meses')}${opt('loy-exp',12,L.expiry,'12 meses')}${opt('loy-exp',0,L.expiry,'Nunca')}</div></div>
+          <div class="field">El pase de regalo suma sello<div class="opts">${opt('loy-free','1',L.freeCounts?1:0,'Sí')}${opt('loy-free','0',L.freeCounts?1:0,'No')}</div></div>`:''}
+          <div class="notice good">${loyaltyRuleText()}</div>
+        </section>
+        <section class="card stack"><h2>Clientes de day use</h2>
+          ${regulars.map(x=>`<div style="border-top:1px solid var(--line);padding-top:10px"><div class="row between"><b>${P[x.pid].name}</b>${x.l.available?'<span class="pill forming">Tiene recompensa</span>':`<span class="small muted">${x.l.progress} de ${L.every}</span>`}</div></div>`).join('')||'<div class="empty">Sin visitas en el período.</div>'}
+        </section>
+      </aside>
+    </div></div>`;
+}
+
+/* ----- vista club ----- */
+function calState(){
+  const sel = state.calSel ? fromIso(state.calSel) : today;
+  const month = state.calMonth ? fromIso(state.calMonth) : new Date(sel.getFullYear(),sel.getMonth(),1);
+  return {sel,month,view:state.calView||'mes'};
+}
+function monthCell(dt,month,sel){
+  const other=dt.getMonth()!==month.getMonth(), past=dt<today, isToday=iso(dt)===iso(today);
+  const evs=[];
+  DU.products.forEach(pr=>{ const on=enabledOnDate(pr,dt), def=defaultOn(pr,dt);
+    if(on) evs.push(`<span class="ev du ${def?'':'extra'}" title="${pr.name}, ${pr.from} a ${pr.to}">${cap(pr.name.replace('Day use ',''))} ${pr.from}</span>`);
+    else if(def) evs.push(`<span class="ev off" title="${pr.name} cerrado este día">${cap(pr.name.replace('Day use ',''))}</span>`);
+  });
+  toursOnDate(dt).forEach(tr=>evs.push(`<span class="ev tr" title="${tr.name}">${tr.name}</span>`));
+  return `<button class="mday ${other?'other':''} ${past?'past':''} ${isToday?'today':''}" aria-pressed="${iso(dt)===iso(sel)}" data-action="cal-sel" data-v="${iso(dt)}" aria-label="${longDate(dt)}"><span class="num">${dt.getDate()}</span>${evs.join('')}</button>`;
+}
+function monthView(month,sel){
+  const start=addDays(month,-((month.getDay()+6)%7));
+  const end=new Date(month.getFullYear(),month.getMonth()+1,0);
+  const weeks=Math.ceil((Math.round((end-start)/86400000)+1)/7);
+  let cells=''; for(let i=0;i<weeks*7;i++) cells+=monthCell(addDays(start,i),month,sel);
+  return `<div class="stack" style="--g:6px"><div class="cal-head">${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(x=>`<span>${x}</span>`).join('')}</div><div class="cal-month">${cells}</div></div>`;
+}
+function weekView(sel){
+  const ws=addDays(sel,-((sel.getDay()+6)%7)), ROW=46;
+  const days=Array.from({length:7},(_,i)=>addDays(ws,i));
+  const cols=days.map(dt=>{
+    const ev=[];
+    productsOnDate(dt).forEach(pr=>{ const sl=duSlots(pr); if(!sl.length) return; ev.push({s:TIMES.indexOf(sl[0]),n:sl.length,html:(st)=>`<button class="blk du" style="${st}" data-action="du-edit" data-v="${pr.id}" title="Editar ${pr.name}"><b>${pr.name}</b>${pr.from} a ${pr.to}<br>${pr.courts.length?'Cancha '+pr.courts.join(' y '):'Sin canchas'}</button>`}); });
+    toursOnDate(dt).forEach(tr=>{ const sl=slotsOf(tr); ev.push({s:TIMES.indexOf(sl[0]),n:sl.length,html:(st)=>`<button class="blk tr" style="${st}" data-action="open-tourn" data-tid="${tr.id}"><b>${tr.name}</b>${tr.t} a ${endTime(tr)}<br>Cancha ${tr.courts.join(' y ')}</button>`}); });
+    // carriles cuando dos cosas se superponen
+    ev.sort((a,b)=>a.s-b.s); const laneEnd=[];
+    ev.forEach(e=>{ let l=laneEnd.findIndex(x=>x<=e.s); if(l<0){l=laneEnd.length;laneEnd.push(0);} laneEnd[l]=e.s+e.n; e.l=l; });
+    const lanes=Math.max(1,laneEnd.length);
+    const blocks=ev.map(e=>e.html(`top:${e.s*ROW+2}px;height:${e.n*ROW-4}px;left:calc(${e.l*100/lanes}% + 3px);width:calc(${100/lanes}% - 6px)`)).join('');
+    return `<div class="wk-col ${dt<today?'past':''}" style="height:${TIMES.length*ROW}px">${blocks}</div>`;
+  }).join('');
+  return `<div class="scroll-x"><div class="cal-week">
+    <div></div>${days.map(dt=>`<button class="wk-h ${iso(dt)===iso(today)?'today':''}" aria-pressed="${iso(dt)===iso(sel)}" data-action="cal-sel" data-v="${iso(dt)}">${DOW_SHORT[dt.getDay()]}<b>${dt.getDate()}</b></button>`).join('')}
+    <div class="wk-times">${TIMES.map(t=>`<div>${t}</div>`).join('')}</div>${cols}
+  </div></div>`;
+}
+function dayDetail(dt){
+  const i=idxOf(dt), o=DU.overrides[iso(dt)], past=dt<today;
+  const tours=toursOnDate(dt), sold=soldOnDate(dt);
+  const anyOn=productsOnDate(dt).length;
+  const conf=DU_CONFLICTS.filter(x=>i>=0&&x.d===i);
+  let used=0; if(i>=0) for(const t of TIMES) for(const c of COURTS) if(OCC[k(i,t,c.id)]) used++;
+  return `<aside class="card stack caldetail">
+    <h2>${longDate(dt)}</h2>
+    ${o?`<span class="pill forming" style="align-self:flex-start">Día con cambios</span>`:''}
+    <h3>Day use</h3>
+    ${DU.products.map(pr=>{const on=enabledOnDate(pr,dt), def=defaultOn(pr,dt), n=i<0?0:soldOn(pr.id,i);
+      return `<div class="prodrow stack" style="--g:6px"><div class="row between"><b>${pr.name}</b>${past?'':`<button class="opt" style="min-height:36px" aria-pressed="${on}" data-action="cal-toggle" data-v="${iso(dt)}" data-pid="${pr.id}">${on?'Se vende':'No se vende'}</button>`}</div>
+        <p class="small ${on?'':'muted'}">${on?`De ${pr.from} a ${pr.to}. ${pr.courts.length?'Bloquea la Cancha '+pr.courts.join(' y '):'No bloquea canchas'}.`:'Este día no se vende.'}${n?` ${n} ${n===1?'vendido':'vendidos'}.`:''}</p>
+        ${on!==def?`<p class="small" style="color:var(--du)">${on?'Abierto solo este día (normalmente no se vende).':'Cerrado solo este día.'}</p>`:''}</div>`;}).join('')}
+    ${past?'':`<div class="row wrap">${anyOn?`<button class="btn small danger" data-action="cal-close" data-v="${iso(dt)}">Cerrar todo el day use</button>`:''}${o?`<button class="btn small ghost" data-action="cal-reset" data-v="${iso(dt)}">Volver a lo habitual</button>`:''}</div>`}
+    ${conf.length?`<div class="notice">${conf.length} ${conf.length===1?'turno ya ocupado cae':'turnos ya ocupados caen'} en el horario de day use: ${conf.map(x=>`${x.t}, Cancha ${x.c} (${x.label})`).join('; ')}.</div>`:''}
+    <h3>Torneos</h3>
+    ${tours.length?tours.map(tr=>`<div class="row between"><div><b>${tr.name}</b><p class="small muted">${tr.t} a ${endTime(tr)}, Cancha ${tr.courts.join(' y ')}</p></div><button class="btn small ghost" data-action="open-tourn" data-tid="${tr.id}">Ver</button></div>`).join(''):`<p class="small muted">${i<0?'Los torneos se ven para los próximos 7 días.':'No hay torneos.'}</p>`}
+    ${i>=0?`<h3>Canchas</h3><p class="small">${used} de ${TIMES.length*COURTS.length} turnos ocupados.</p><button class="btn small ghost" data-action="cal-grid" data-v="${i}">Ver en la grilla</button>`:''}
+    ${sold&&!past?`<p class="small muted">Si cerrás el day use de un día con pases vendidos, avisamos a esos jugadores.</p>`:''}
+  </aside>`;
+}
+function viewClubCal(){
+  const {sel,month,view}=calState();
+  const ws=addDays(sel,-((sel.getDay()+6)%7)), we=addDays(ws,6);
+  const title = view==='mes' ? `${MONTHS[month.getMonth()].charAt(0).toUpperCase()+MONTHS[month.getMonth()].slice(1)} ${month.getFullYear()}`
+    : `${ws.getDate()} ${ws.getMonth()!==we.getMonth()?'de '+MONTHS[ws.getMonth()]+' ':''}al ${we.getDate()} de ${MONTHS[we.getMonth()]}`;
+  return `<div class="stack-lg">
+    <div class="calbar">
+      <div class="calnav"><button class="icon" data-action="cal-prev" aria-label="Anterior">‹</button><button class="btn small ghost" data-action="cal-today">Hoy</button><button class="icon" data-action="cal-next" aria-label="Siguiente">›</button><h2 style="margin-left:8px">${title}</h2></div>
+      <div class="seg2" role="group" aria-label="Vista"><button aria-pressed="${view==='mes'}" data-action="cal-view" data-v="mes">Mes</button><button aria-pressed="${view==='semana'}" data-action="cal-view" data-v="semana">Semana</button></div>
+    </div>
+    <div class="legend"><span><i class="occ-dayuse"></i>Day use</span><span><i style="border-left:3px dashed var(--du)"></i>Abierto solo ese día</span><span><i style="background:var(--surface-2)"></i><s>Cerrado ese día</s></span><span><i class="occ-torneo"></i>Torneo</span></div>
+    <div class="club-layout">
+      <section class="card">${view==='mes'?monthView(month,sel):weekView(sel)}
+        <p class="small muted" style="margin-top:10px">${view==='mes'?'Tocá un día para ver el detalle y hacer cambios solo para esa fecha.':'Tocá un bloque de day use para cambiar su horario habitual, o un torneo para verlo.'}</p></section>
+      ${dayDetail(sel)}
+    </div>
+  </div>`;
+}
+function viewClub(){
+  const tabs={grilla:['Grilla',viewClubGrilla],calendario:['Calendario',viewClubCal],torneos:['Torneos',viewClubTorneos],dayuse:['Day use',viewClubDayUse]};
+  return `<div class="stack-lg"><div><h1>Panel del club</h1><p class="muted">${CLUB}, Paysandú.</p></div>
+    <nav class="subtabs">${Object.entries(tabs).map(([id,[l]])=>`<button data-action="club-tab" data-v="${id}" ${state.clubTab===id?'aria-current="page"':''}>${l}</button>`).join('')}</nav>
+    ${tabs[state.clubTab][1]()}</div>`;
+}
+function viewClubGrilla(){
+  const d=state.clubDay;
+  let occ=0, rev=0;
+  let cells='';
+  for(const t of TIMES){
+    const past=isPast(d,t), nowSlot=d===0&&!past&&TIMES.find(x=>!isPast(0,x))===t;
+    cells+=`<div class="tm" style="font-family:var(--display);font-weight:700;font-size:17px;display:flex;flex-direction:column;justify-content:center;${past?'opacity:.45':''}">${t}${nowSlot?'<span class="now-mark">Próximo</span>':''}</div>`;
+    for(const c of COURTS){
+      const o=OCC[k(d,t,c.id)];
+      const fm=M.find(m=>m.d===d&&m.t===t&&m.pref===c.id&&m.status==='formando');
+      if(o){ occ++; if(o.type==='reserva'||o.type==='fijo'||o.type==='abierto') rev+=price(t);
+        cells+=`<button class="cg occ-${o.type}" data-action="club-occ" data-d="${d}" data-t="${t}" data-c="${c.id}"><span class="t">${o.label}</span><span style="opacity:.85">${({reserva:'Reserva',fijo:'Turno fijo',torneo:'Torneo',bloqueo:'Bloqueo',abierto:'Partido abierto',dayuse:'Cancha libre de day use'})[o.type]}${o.src?', '+o.src:''}</span></button>`; }
+      else if(fm) cells+=`<button class="cg ghost" data-action="open-match" data-mid="${fm.id}"><span class="t">Armándose ${4-openSlots(fm).length}/4</span><span class="muted">Todavía no bloquea</span></button>`;
+      else if(past) cells+=`<div class="cg past"><span class="muted">Sin uso</span></div>`;
+      else cells+=`<button class="cg" data-action="club-add" data-d="${d}" data-t="${t}" data-c="${c.id}"><span class="muted">+ Cargar</span></button>`;
+    }
+  }
+  const total=TIMES.length*COURTS.length;
+  const forming=M.filter(m=>m.status==='formando').sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));
+  return `<div class="stack-lg">
+    ${dayStrip('clubDay')}
+    <div class="stats">
+      <div class="card stat"><div class="n">${Math.round(occ/total*100)}%</div><div class="small muted">Ocupación del día</div></div>
+      <div class="card stat"><div class="n">${fmt(rev)}</div><div class="small muted">Ingresos por canchas</div></div>
+      <div class="card stat"><div class="n">${forming.length}</div><div class="small muted">Partidos armándose esta semana</div></div>
+    </div>
+    <div class="club-layout">
+      <section class="card stack"><div class="row between wrap"><h2>Grilla de canchas</h2>
+        <div class="legend"><span><i class="occ-reserva"></i>Reserva</span><span><i class="occ-fijo"></i>Turno fijo</span><span><i class="occ-abierto"></i>Partido abierto</span><span><i class="occ-torneo"></i>Torneo</span><span><i class="occ-bloqueo"></i>Bloqueo</span><span><i class="occ-dayuse"></i>Day use</span></div></div>
+        <div class="scroll-x"><div class="cgrid"><div></div>${COURTS.map(c=>`<div><b>${c.name}</b><div class="small muted">${c.desc}</div></div>`).join('')}${cells}</div></div>
+        <p class="small muted">Tocá una cancha libre para cargar una reserva, o una ocupada para liberarla.</p>
+      </section>
+      <aside class="card stack"><h2>Partidos armándose</h2>
+        <p class="small muted">No bloquean la cancha hasta que se anotan los 4.</p>
+        ${forming.length?forming.map(m=>{const r=risk(m);return `<div class="stack" style="border-top:1px solid var(--line);padding-top:12px"><div class="row between"><b>${dayLabel(m.d)} ${m.t}, Cancha ${m.pref}</b>${statusPill(m)}</div><p class="small muted">${rangeLabel(m.catMin,m.catMax)}, ${GENDER[m.gender].toLowerCase()}</p>${r?`<div class="notice ${r.level==='bad'?'bad':''}">${r.text}</div>`:''}<div><button class="link" data-action="open-match" data-mid="${m.id}">Ver detalle</button></div></div>`;}).join(''):'<div class="empty">No hay partidos armándose.</div>'}
+      </aside>
+    </div></div>`;
+}
+
+/* ----- hojas ----- */
+function sheetHTML(){
+  const s=state.sheet; if(!s) return '';
+  let body='';
+  if(s.kind==='match'){
+    const m=M.find(x=>x.id===s.mid), r=risk(m), sug=suggestions(m), st=myStatus(m);
+    body=`<div class="stack-lg">
+      <div class="row between" style="padding-right:44px"><div class="when" style="font-size:28px">${dayLabel(m.d,true)} ${m.t}</div>${statusPill(m)}</div>
+      <dl class="kv">
+        <dt>Cancha</dt><dd>${m.status==='confirmado'?`Cancha ${m.court}`:`Cancha ${m.pref}${m.fallback?', o la que quede libre':''}`}</dd>
+        <dt>Categoría</dt><dd>${rangeLabel(m.catMin,m.catMax)}, ${GENDER[m.gender].toLowerCase()}</dd>
+        <dt>Precio</dt><dd>${fmt(price(m.t)/4)} por persona, se paga en el club</dd>
+        ${m.status==='formando'?`<dt>Falta</dt><dd>${missingText(m)}</dd>`:''}
+      </dl>
+      ${m.status==='formando'&&st.ok?`<p class="hint"><span class="ballico"></span>Tocá el lugar amarillo para sumarte.</p>`:''}
+      ${courtHTML(m,false)}
+      <div class="stack">
+        ${m.status==='formando'&&!st.ok&&!inMatch('me',m)?`<div class="notice">No podés sumarte: ${st.why.charAt(0).toLowerCase()+st.why.slice(1)}.</div>`:''}
+        ${r?`<div class="notice ${r.level==='bad'?'bad':''}">${r.text}</div>`:''}
+        ${m.status==='formando'?`<details><summary class="small" style="cursor:pointer;font-weight:600">¿Cómo funciona?</summary><p class="small muted" style="margin-top:6px">La cancha se reserva recién cuando están los 4 jugadores. Si ${m.cancelH} horas antes no se completó, el partido se cancela solo y avisamos a todos. No se cobra nada hasta que se juega.</p></details>`:''}
+        ${m.status==='cancelado'?`<div class="notice bad">${m.cancelReason}</div>`:''}
+        ${m.moved&&m.status==='confirmado'?`<div class="notice good">La Cancha ${m.pref} estaba reservada, así que el partido se jugó en la Cancha ${m.court}.</div>`:''}
+        <div class="row wrap">
+          ${m.status==='formando'?`<button class="btn" data-action="share" data-mid="${m.id}">Compartir en WhatsApp</button>`:''}
+          ${inMatch('me',m)&&m.status==='formando'?`<button class="btn danger" data-action="leave" data-mid="${m.id}">Salir del partido</button>`:''}
+        </div>
+      </div>
+      ${m.status==='formando'&&(inMatch('me',m)||state.role==='club')?`<section><h3>Invitá a quien le puede servir</h3>
+        <p class="small muted" style="margin:4px 0 6px">Cumplen la categoría y el lado que falta, y suelen jugar o estar libres a esta hora.</p>
+        ${sug.length?sug.map(x=>{const inv=m.invited.includes(x.p.id);return `<div class="sug"><div class="avatar">${initials(x.p.name)}</div><div><b>${x.p.name}</b>${chips(x.why)}<div class="meter" aria-label="Afinidad"><i style="width:${Math.min(100,x.score)}%"></i></div></div><div class="stack" style="text-align:right">${inv?`<span class="pill forming">Invitado</span><button class="link small" data-action="accept" data-mid="${m.id}" data-pid="${x.p.id}">Simular que acepta</button>`:`<button class="btn small ghost" data-action="invite" data-mid="${m.id}" data-pid="${x.p.id}">Invitar</button>`}</div></div>`;}).join(''):'<div class="empty">No encontramos jugadores disponibles con ese perfil. Compartilo en el grupo del club.</div>'}
+      </section>`:''}
+    </div>`;
+  }
+  if(s.kind==='join'){
+    const m=M.find(x=>x.id===s.mid), sl=m.slots[s.slot];
+    const willComplete=openSlots(m).length===1;
+    body=`<div class="stack"><h2>Sumarte de ${SIDE_LOW[sl.side]}</h2>
+      <dl class="kv"><dt>Cuándo</dt><dd>${dayLabel(m.d,true)} a las ${m.t}</dd><dt>Dónde</dt><dd>Cancha ${m.pref}${m.fallback?' (o la que quede libre)':''}</dd><dt>Con quién</dt><dd>${m.slots.filter(x=>x.pid).map(x=>P[x.pid].name).join(', ')}</dd><dt>Precio</dt><dd>${fmt(price(m.t)/4)}, se paga en el club</dd></dl>
+      ${willComplete?`<div class="notice good">Sos el cuarto: al confirmar se reserva la cancha y el partido queda confirmado.</div>`:`<p class="small muted">Te avisamos por WhatsApp cuando se complete. Si no se completa, se cancela solo y no pagás nada.</p>`}
+      <button class="btn ball block" data-action="confirm-join" data-mid="${m.id}" data-slot="${s.slot}">Confirmar lugar</button>
+      <button class="btn ghost block" data-action="back-match" data-mid="${m.id}">Volver</button></div>`;
+  }
+  if(s.kind==='result'){
+    const m=M.find(x=>x.id===s.mid);
+    body=m.status==='confirmado'?`<div class="stack"><h2>Partido confirmado</h2>
+      <p>${dayLabel(m.d,true)} a las ${m.t} en la <b>Cancha ${m.court}</b>. Avisamos a los 4 jugadores.</p>
+      ${m.moved?`<div class="notice">La Cancha ${m.pref} se había reservado entera, así que el partido pasó a la Cancha ${m.court}.</div>`:''}
+      ${courtHTML(m,false)}
+      <button class="btn block" data-action="close">Listo</button></div>`
+      :`<div class="stack"><h2>El partido se canceló</h2><div class="notice bad">${m.cancelReason}</div><button class="btn block" data-action="close">Entendido</button></div>`;
+  }
+  if(s.kind==='share'){
+    const m=M.find(x=>x.id===s.mid), txt=shareText(m);
+    body=`<div class="stack"><h2>Compartir en el grupo</h2>
+      <p class="small muted">Pegalo en el grupo de WhatsApp del club. Quien toque el link se anota directo en la app.</p>
+      <textarea id="sharetxt" readonly>${txt}</textarea>
+      <div class="row wrap"><button class="btn" data-action="copy">Copiar mensaje</button><a class="btn ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(txt)}">Abrir WhatsApp</a></div>
+      <button class="link" data-action="back-match" data-mid="${m.id}">Volver al partido</button></div>`;
+  }
+  if(s.kind==='book'){
+    const {d,t,c}=s;
+    body=`<div class="stack"><h2>Cancha ${c}, ${dayLabel(d).toLowerCase()} ${t}</h2>
+      <p class="muted">${COURTS[c-1].desc}. 90 minutos.</p>
+      <button class="btn block" data-action="confirm-book" data-d="${d}" data-t="${t}" data-c="${c}">Reservar cancha completa, ${fmt(price(t))}</button>
+      <button class="btn ball block" data-action="create" data-d="${d}" data-t="${t}" data-c="${c}">Armar partido abierto, ${fmt(price(t)/4)} c/u</button>
+      <p class="small muted">Con el partido abierto la cancha no se bloquea hasta que estén los 4. Se paga en el club.</p></div>`;
+  }
+  if(s.kind==='create'){
+    const pf=s.prefill||{d:state.day,t:'20:00',c:P.me.pref[0]||1};
+    const catOpts=sel=>[3,4,5,6,7].map(n=>`<option value="${n}" ${n===sel?'selected':''}>${CAT[n]}</option>`).join('');
+    body=`<div class="stack"><h2>Armar partido abierto</h2>
+      <div class="grid2">
+        <label class="field">Día<select id="f-d">${DAYS.map((_,i)=>`<option value="${i}" ${i==pf.d?'selected':''}>${dayLabel(i,true)}</option>`).join('')}</select></label>
+        <label class="field">Hora<select id="f-t">${TIMES.map(t=>`<option ${t===pf.t?'selected':''}>${t}</option>`).join('')}</select></label>
+        <label class="field">Cancha preferida<select id="f-c">${COURTS.map(c=>`<option value="${c.id}" ${c.id==pf.c?'selected':''}>${c.name}</option>`).join('')}</select></label>
+        <label class="field">Partido<select id="f-g"><option value="M" ${P.me.g==='M'?'selected':''}>Masculino</option><option value="F" ${P.me.g==='F'?'selected':''}>Femenino</option><option value="X">Mixto</option></select></label>
+        <label class="field">Categoría desde<select id="f-min">${catOpts(Math.max(3,P.me.cat-1))}</select></label>
+        <label class="field">hasta<select id="f-max">${catOpts(Math.min(7,P.me.cat+1))}</select></label>
+      </div>
+      <label class="field">Vos jugás de<select id="f-s"><option value="reves" ${P.me.side!=='drive'?'selected':''}>Revés</option><option value="drive" ${P.me.side==='drive'?'selected':''}>Drive</option></select></label>
+      <label class="row small"><input type="checkbox" id="f-fb" checked> Si mi cancha se ocupa, usar otra libre</label>
+      ${s.error?`<div class="notice bad">${s.error}</div>`:''}
+      <button class="btn ball block" data-action="confirm-create">Publicar partido</button></div>`;
+  }
+  if(s.kind==='club-add'){
+    const {d,t,c}=s;
+    body=`<div class="stack"><h2>Cancha ${c}, ${dayLabel(d).toLowerCase()} ${t}</h2>
+      <label class="field">Tipo<select id="ca-type"><option value="reserva">Reserva</option><option value="fijo">Turno fijo</option><option value="bloqueo">Bloqueo</option></select></label>
+      <label class="field">Nombre o motivo<input id="ca-name" placeholder="Ej: Rodríguez, o Clase de Pablo"></label>
+      <button class="btn block" data-action="club-save" data-d="${d}" data-t="${t}" data-c="${c}">Guardar</button></div>`;
+  }
+  if(s.kind==='club-occ'){
+    const {d,t,c}=s, o=OCC[k(d,t,c)];
+    body=`<div class="stack"><h2>${o.label}</h2><p class="muted">Cancha ${c}, ${dayLabel(d).toLowerCase()} ${t}${o.src?', cargada '+(o.src==='online'?'online':'en recepción'):''}.</p>
+      ${o.du?`<p>Esta cancha queda libre para quienes compraron el day use. El bloqueo sale de la configuración del pase.</p><button class="btn block" data-action="du-edit" data-v="${o.du}">Cambiar días y horarios</button>`:o.tid?`<button class="btn block" data-action="open-tourn" data-tid="${o.tid}">Ver torneo</button>`:o.type==='abierto'?`<p class="small">Partido abierto confirmado con 4 jugadores.</p>`:`<button class="btn danger block" data-action="club-free" data-d="${d}" data-t="${t}" data-c="${c}">Liberar cancha</button><p class="small muted">Si hay un partido armándose para esta cancha, vuelve a quedar como su primera opción.</p>`}</div>`;
+  }
+  if(s.kind==='tourn'){
+    const tr=T.find(x=>x.id===s.tid), club=state.role==='club', j=tCanJoin(tr);
+    const nm=pid=>pid==='me'?'Vos':first(P[pid].name);
+    const rank=ranking(tr);
+    body=`<div class="stack-lg">
+      <div><div class="when" style="font-size:26px">${dayLabel(tr.d,true)} ${tr.t} a ${endTime(tr)}</div><h2 style="margin-top:4px">${tr.name}</h2>
+      <p class="muted small">${rangeLabel(tr.catMin,tr.catMax)}, ${GENDER[tr.gender].toLowerCase()}. Canchas ${tr.courts.join(' y ')}, ${tr.size} jugadores, ${tr.rounds} rondas de ${tr.minRound} minutos a ${tr.points} puntos. ${fmt(tr.price)} la inscripción.</p></div>
+      <p class="small">Formato americano: te anotás solo, cada ronda cambiás de compañero y sumás los puntos que hace tu pareja. Gana quien más puntos junta.</p>
+      ${tr.status==='inscripcion'?`<section class="stack"><h3>Inscriptos, ${tr.players.length} de ${tr.size}</h3>
+        <div class="chips">${tr.players.map(p=>`<span class="chip ${p==='me'?'hit':''}">${p==='me'?'Vos':P[p].name}, ${CAT[P[p].cat]}</span>`).join('')}</div>
+        ${club?`<div class="row wrap">${tr.players.length<tr.size?`<button class="btn ghost" data-action="tourn-fill" data-tid="${tr.id}">Completar con jugadores de prueba</button>`:''}<button class="btn ball" data-action="tourn-gen" data-tid="${tr.id}" ${tr.players.length<tr.size?'disabled':''}>Generar fixture</button></div>
+          ${tr.players.length<tr.size?`<p class="small muted">El fixture se genera cuando están los ${tr.size}. Cada jugador comparte pareja con cada otro una sola vez.</p>`:''}`
+        :tr.players.includes('me')?`<button class="btn danger" data-action="tourn-leave" data-tid="${tr.id}">Darme de baja</button>`
+        :`${j.ok?`<button class="btn ball block" data-action="tourn-join" data-tid="${tr.id}">Inscribirme, ${fmt(tr.price)}</button>`:`<p class="small muted">${j.why}.</p>`}`}
+      </section>`:''}
+      ${tr.fixture?`<section class="stack"><h3>Ranking</h3>
+        <table class="rank"><thead><tr><th>#</th><th>Jugador</th><th style="text-align:right">PJ</th><th style="text-align:right">PG</th><th style="text-align:right">Puntos</th></tr></thead>
+        <tbody>${rank.map((r,i)=>`<tr class="${r.pid==='me'?'me':''}"><td>${i+1}</td><td>${r.pid==='me'?'Vos':P[r.pid].name}</td><td style="text-align:right">${r.pj}</td><td style="text-align:right">${r.pg}</td><td class="n">${r.pts}</td></tr>`).join('')}</tbody></table>
+        ${club&&tr.status==='en juego'?(allScored(tr)?`<button class="btn block" data-action="tourn-end" data-tid="${tr.id}">Cerrar torneo</button>`:`<p class="small muted">Cargá los puntos de la pareja de la izquierda; el resto se completa solo hasta ${tr.points}.</p>`):''}
+        ${tr.status==='finalizado'?`<div class="notice good">Ganó ${rank[0].pid==='me'?'vos':P[rank[0].pid].name} con ${rank[0].pts} puntos.</div>`:''}
+      </section>
+      <section class="stack"><h3>Rondas</h3>${tr.fixture.map((games,ri)=>`<div class="round"><h3>Ronda ${ri+1}</h3>${games.map((g,gi)=>`<div class="game"><span class="muted">Cancha ${g.court}${g.wave?`, turno ${g.wave+1}`:''}</span><span>${g.a.map(nm).join(' y ')} <span class="muted">vs</span> ${g.b.map(nm).join(' y ')}</span><span class="score">${club&&tr.status==='en juego'?`<input type="number" min="0" max="${tr.points}" value="${g.sa??''}" data-change="score" data-tid="${tr.id}" data-r="${ri}" data-g="${gi}" aria-label="Puntos de ${g.a.map(nm).join(' y ')}"> a ${g.sb??'–'}`:(g.sa===null?'<span class="muted">Pendiente</span>':`${g.sa} a ${g.sb}`)}</span></div>`).join('')}</div>`).join('')}</section>`:''}
+    </div>`;
+  }
+  if(s.kind==='tourn-create'){
+    const f=s.form||{name:'Americano del viernes',d:4,t:'18:30',courts:[1,2],size:8,points:24,minRound:20,rounds:7,catMin:4,catMax:6,gender:'M',price:400};
+    const sel=(id,opts,cur)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${v}" ${String(v)===String(cur)?'selected':''}>${l}</option>`).join('')}</select>`;
+    const cats=[3,4,5,6,7].map(n=>[n,CAT[n]]);
+    body=`<div class="stack"><h2>Nuevo americano</h2>
+      <label class="field">Nombre<input id="tc-name" value="${f.name}"></label>
+      <div class="grid2">
+        <label class="field">Día${sel('tc-d',DAYS.map((_,i)=>[i,dayLabel(i,true)]),f.d)}</label>
+        <label class="field">Empieza${sel('tc-t',TIMES.map(t=>[t,t]),f.t)}</label>
+        <label class="field">Jugadores${sel('tc-size',[[8,'8'],[12,'12'],[16,'16']],f.size)}</label>
+        <label class="field">Rondas${sel('tc-rounds',[3,4,5,6,7,9,11,15].map(n=>[n,n]),f.rounds)}</label>
+        <label class="field">Puntos por partido${sel('tc-pts',[[16,'16'],[21,'21'],[24,'24'],[32,'32']],f.points)}</label>
+        <label class="field">Minutos por ronda${sel('tc-min',[[15,'15'],[20,'20'],[25,'25']],f.minRound)}</label>
+        <label class="field">Categoría desde${sel('tc-cmin',cats,f.catMin)}</label>
+        <label class="field">hasta${sel('tc-cmax',cats,f.catMax)}</label>
+        <label class="field">Género${sel('tc-g',[['M','Masculino'],['F','Femenino'],['X','Mixto']],f.gender)}</label>
+        <label class="field">Inscripción ($)<input id="tc-price" type="number" min="0" step="50" value="${f.price}"></label>
+      </div>
+      <div class="field">Canchas<div class="checks">${COURTS.map(c=>`<label class="row"><input type="checkbox" class="tc-court" value="${c.id}" ${f.courts.includes(c.id)?'checked':''}> ${c.name}</label>`).join('')}</div></div>
+      ${s.error?`<div class="notice bad">${s.error}</div>`:''}
+      <p class="small muted">Con 8 jugadores y 2 canchas se juega una ronda completa a la vez. Con menos canchas, cada ronda se divide en turnos y el torneo dura más.</p>
+      <button class="btn ball block" data-action="tourn-save">Crear torneo y bloquear canchas</button></div>`;
+  }
+  if(s.kind==='cal-confirm'){
+    const dt=fromIso(s.v), n=soldOnDate(dt);
+    body=`<div class="stack"><h2>¿Cerrar ${s.pid?productOf(s.pid).name.toLowerCase():'el day use'} el ${longDate(dt).toLowerCase()}?</h2>
+      <div class="notice">Ya se ${n===1?'vendió 1 pase':'vendieron '+n+' pases'} para ese día. Si lo cerrás, les avisamos por WhatsApp y se les devuelve el dinero o se les ofrece otro día.</div>
+      <p class="small muted">Las canchas bloqueadas por el day use quedan libres para reservar.</p>
+      <button class="btn danger block" data-action="${s.pid?'cal-toggle':'cal-close'}" data-v="${s.v}" ${s.pid?`data-pid="${s.pid}"`:''} data-ok="1">Cerrar y avisar</button>
+      <button class="btn ghost block" data-action="close">Mantener abierto</button></div>`;
+  }
+  if(s.kind==='du-edit'){
+    const f=s.draft, sel=(opts,cur,field)=>`<select data-change="du-draft" data-f="${field}">${opts.map(t=>`<option ${t===cur?'selected':''}>${t}</option>`).join('')}</select>`;
+    const hit=[]; if(f.from<f.to) for(let d=0;d<7;d++) if((()=>{const o=DU.overrides[iso(DAYS[d])]; return (o&&f.id in o)?o[f.id]:f.days.includes(dowOf(d));})()) TIMES.filter(t=>t>=f.from&&t<f.to).forEach(t=>f.courts.forEach(c=>{const o=OCC[k(d,t,c)]; if(o&&o.du!==f.id) hit.push(`${dayLabel(d).toLowerCase()} ${t}, Cancha ${c}`);}));
+    body=`<div class="stack"><h2>${f.name}</h2>
+      <div class="field">Qué días se vende<div class="opts">${[1,2,3,4,5,6,0].map(x=>`<button class="opt" aria-pressed="${f.days.includes(x)}" data-action="du-d-day" data-v="${x}">${DOW_SHORT[x]}</button>`).join('')}</div></div>
+      <div class="grid2"><label class="field">Desde${sel(TIMES,f.from,'from')}</label><label class="field">Hasta${sel(END_TIMES,f.to,'to')}</label></div>
+      <div class="field">Canchas que quedan libres para el day use<div class="opts">${COURTS.map(c=>`<button class="opt" aria-pressed="${f.courts.includes(c.id)}" data-action="du-d-court" data-v="${c.id}">${c.name}</button>`).join('')}</div>
+        <span class="small muted" style="font-weight:400">Si no elegís ninguna, el pase no bloquea canchas (por ejemplo, un pase solo de pileta).</span></div>
+      <div class="grid2"><label class="field">Cupo por día<input id="de-cupo" type="number" min="1" value="${f.cupo}"></label><label class="field">Precio ($)<input id="de-price" type="number" min="0" step="50" value="${f.price}"></label></div>
+      ${f.from>=f.to?`<div class="notice bad">El horario "hasta" tiene que ser posterior a "desde".</div>`
+        :`<div class="notice good">${scheduleText(f)}</div>${hit.length?`<div class="notice">Hay ${hit.length} ${hit.length===1?'turno ocupado':'turnos ocupados'} en ese horario (${hit.slice(0,3).join('; ')}${hit.length>3?'…':''}). Se respetan y se bloquean cuando se liberen.</div>`:''}`}
+      <button class="btn ball block" data-action="du-save" ${f.from>=f.to||!f.days.length?'disabled':''}>Guardar y actualizar la grilla</button></div>`;
+  }
+  if(s.kind==='du-buy'){
+    const dd=state.duDay||0, avail=productsOn(dd);
+    const sel=(s.product&&avail.some(p=>p.id===s.product))?s.product:avail[0].id, pr=productOf(sel);
+    const canReward=rewardApplies('me') && (DU.loyalty.scope==='todos'||DU.loyalty.scope===sel);
+    const useR=canReward && s.useReward!==false;
+    body=`<div class="stack"><h2>Pase para ${dayLabel(dd,true).toLowerCase()}</h2>
+      ${avail.map(p=>`<button class="prod" aria-pressed="${p.id===sel}" data-action="du-pick" data-v="${p.id}"><div class="row between"><b>${p.name}</b><span class="score">${fmt(p.price)}</span></div><p class="small">De ${p.from} a ${p.to}</p>${chips(p.includes.map(t=>({t})))}<p class="small muted" style="margin-top:6px">Quedan ${p.cupo-soldOn(p.id,dd)} lugares</p></button>`).join('')}
+      ${canReward?`<label class="row small"><input type="checkbox" data-change="du-reward" ${useR?'checked':''}> Usar mi recompensa: ${rewardLabel()}</label>`:''}
+      <button class="btn ball block" data-action="du-confirm">${useR?(rewardPrice(pr)?`Comprar a ${fmt(rewardPrice(pr))}`:'Usar mi day use gratis'):`Comprar, ${fmt(pr.price)}`}</button>
+      <p class="small muted">Te damos un QR para mostrar en recepción.${DU.loyalty.on&&!useR?' El sello se suma cuando entrás.':''}</p></div>`;
+  }
+  if(s.kind==='du-pass'){
+    const x=DU.passes.find(p=>p.id===s.id), pr=productOf(x.product), l=loyaltyOf(x.pid);
+    body=`<div class="stack" style="text-align:center"><h2>${pr.name}</h2><p class="muted">${dayLabel(x.d||0,true)}, de ${pr.from} a ${pr.to}. Mostralo en recepción.</p>
+      ${qrSVG(x.code)}<p class="score">${x.code}</p>
+      ${chips(pr.includes.map(t=>({t})))}
+      ${x.status==='adentro'?'<div class="notice good">Ingreso registrado. Disfrutá el día.</div>':'<p class="small muted">El sello se suma cuando registran tu ingreso.</p>'}
+      ${DU.loyalty.on?`<div style="display:flex;justify-content:center">${stampsHTML(x.pid)}</div><p class="small">${l.available?`Tenés ${rewardLabel()} para la próxima.`:`Te ${l.left===1?'falta 1':'faltan '+l.left} para ${rewardLabel()}.`}</p>`:''}
+      <div class="stack" style="text-align:left;border-top:1px solid var(--line);padding-top:12px"><h3>Ya están en el club</h3>${insideHTML()}</div>
+      <button class="btn block" data-action="close">Listo</button></div>`;
+  }
+  if(s.kind==='du-sell'){
+    const opts=Object.values(P).filter(p=>p.id!=='me').map(p=>{const l=loyaltyOf(p.id);return `<option value="${p.id}" ${s.pid===p.id?'selected':''}>${p.name}${DU.loyalty.on?(l.available?', tiene recompensa':`, ${l.progress} de ${DU.loyalty.every}`):''}</option>`;}).join('');
+    const pid=s.pid||'p1', canR=rewardApplies(pid);
+    body=`<div class="stack"><h2>Vender day use en recepción</h2>
+      <label class="field">Cliente<select id="ds-p" data-change="du-sell-p">${opts}</select></label>
+      <label class="field">Pase<select id="ds-prod">${productsOn(0).map(p=>`<option value="${p.id}">${p.name}, ${fmt(p.price)}</option>`).join('')}</select></label>
+      ${canR?`<label class="row small"><input type="checkbox" id="ds-r" checked> Usar su recompensa: ${rewardLabel()}</label>`:DU.loyalty.on?`<p class="small muted">${P[pid].name} lleva ${loyaltyOf(pid).progress} de ${DU.loyalty.every} sellos.</p>`:''}
+      <button class="btn ball block" data-action="du-sell-ok">Vender y registrar ingreso</button></div>`;
+  }
+  return `<div class="scrim" data-action="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div><button class="xbtn" data-action="close" aria-label="Cerrar">×</button><div class="sheet-body">${body}</div></div>`;
+}
+
+function render(){
+  const player = state.role==='jugador';
+  const views={inicio:viewInicio,reservar:viewReservar,partidos:viewPartidos,torneos:viewTorneos,perfil:viewPerfil,dayuse:viewDayUse};
+  app.innerHTML = `
+    <header class="proto"><div class="proto-in"><div class="brand"><span class="dot"></span>${CLUB}</div>
+      <div class="row" style="gap:4px"><span class="caption">Ver como</span><div class="seg" role="group" aria-label="Ver como"><button aria-pressed="${player}" data-action="role" data-v="jugador">Jugador</button><button aria-pressed="${!player}" data-action="role" data-v="club">Club</button></div></div></div></header>
+    <main class="shell ${player?'':'wide'}">${player?views[state.tab]():viewClub()}</main>
+    ${player?`<nav class="tabbar"><div class="tabbar-in">${['inicio','reservar','partidos','torneos','perfil'].map(t=>`<button data-action="tab" data-tab="${t}" ${(state.tab===t||(t==='inicio'&&state.tab==='dayuse'))?'aria-current="page"':''}>${ICONS[t]}${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}</div></nav>`:''}
+    ${sheetHTML()}
+    ${state.toast?`<div class="toast" role="status">${state.toast}</div>`:''}`;
+}
+
+/* ---------- acciones ---------- */
+const findM = id => M.find(m=>m.id===id);
+function fillSlot(m,i,pid){
+  m.slots[i].pid=pid;
+  if(!openSlots(m).length){ complete(m); state.sheet={kind:'result',mid:m.id}; }
+}
+const A = {
+  role:e=>{state.role=e.v;state.sheet=null;},
+  tab:e=>{state.tab=e.tab;state.sheet=null;window.scrollTo(0,0);},
+  day:e=>{state[e.key]=+e.day;},
+  filter:e=>{state.onlyMine=e.v==='1';},
+  close:()=>{state.sheet=null;},
+  'open-match':e=>{state.sheet={kind:'match',mid:e.mid};},
+  'back-match':e=>{state.sheet={kind:'match',mid:e.mid};},
+  join:e=>{state.sheet={kind:'join',mid:e.mid,slot:+e.slot};},
+  'confirm-join':e=>{
+    const m=findM(e.mid), i=+e.slot;
+    if(!canJoin(m,i).ok){ toast(canJoin(m,i).why||'Ese lugar ya no está libre'); return; }
+    fillSlot(m,i,'me');
+    if(m.status==='formando'){ state.sheet={kind:'match',mid:m.id}; toast(`Te sumaste de ${SIDE_LOW[m.slots[i].side]}. Faltan ${openSlots(m).length}.`); }
+  },
+  leave:e=>{ const m=findM(e.mid); m.slots.forEach(s=>{if(s.pid==='me')s.pid=null;}); if(!m.slots.some(s=>s.pid)) m.status='cancelado', m.cancelReason='Se canceló porque no quedó nadie anotado.'; state.sheet=null; toast('Saliste del partido'); },
+  invite:e=>{ const m=findM(e.mid); m.invited.push(e.pid); toast(`Le avisamos a ${P[e.pid].name} por WhatsApp`); },
+  accept:e=>{
+    const m=findM(e.mid), p=P[e.pid];
+    const i=m.slots.findIndex(s=>!s.pid&&s.side===p.side); const j=i>=0?i:m.slots.findIndex(s=>!s.pid&&fits(p,s.side));
+    if(j<0){ toast('Ya no hay lugar para su lado'); return; }
+    fillSlot(m,j,p.id);
+    if(m.status==='formando') toast(`${first(p.name)} se sumó de ${SIDE_LOW[m.slots[j].side]}`);
+  },
+  share:e=>{state.sheet={kind:'share',mid:e.mid};},
+  copy:()=>{ const t=document.getElementById('sharetxt'); try{ navigator.clipboard.writeText(t.value).then(()=>toast('Mensaje copiado'),()=>{t.select();toast('Seleccioná y copiá el texto');}); }catch(err){ t.select(); toast('Seleccioná y copiá el texto'); } },
+  book:e=>{state.sheet={kind:'book',d:+e.d,t:e.t,c:+e.c};},
+  'confirm-book':e=>{
+    const d=+e.d,c=+e.c;
+    if(OCC[k(d,e.t,c)]){ toast('Esa cancha se acaba de ocupar'); state.sheet=null; return; }
+    if(isBusy('me',d,e.t)){ toast('Ya tenés un partido a esa hora'); return; }
+    OCC[k(d,e.t,c)]={type:'reserva',label:P.me.name,players:['me'],src:'online'};
+    state.sheet=null; toast(`Reservaste la Cancha ${c}, ${dayLabel(d).toLowerCase()} ${e.t}`);
+  },
+  create:e=>{ state.sheet={kind:'create',prefill:e.d!==undefined?{d:+e.d,t:e.t,c:+e.c}:null}; },
+  'confirm-create':()=>{
+    const v=id=>document.getElementById(id).value;
+    const d=+v('f-d'), t=v('f-t'), c=+v('f-c'), g=v('f-g'), mn=+v('f-min'), mx=+v('f-max'), side=v('f-s'), fb=document.getElementById('f-fb').checked;
+    const err = mn>mx ? 'La categoría "desde" tiene que ser igual o mejor que "hasta".'
+      : (g!=='X' && g!==P.me.g) ? 'No podés armar un partido de otro género.'
+      : (P.me.cat<mn||P.me.cat>mx) ? `Tu categoría (${CAT[P.me.cat]}) tiene que estar dentro del rango.`
+      : isBusy('me',d,t) ? 'Ya tenés un partido a esa hora.'
+      : !freeCourts(d,t).length ? 'No hay canchas libres a esa hora. Probá otro horario.'
+      : (!fb && OCC[k(d,t,c)]) ? `La Cancha ${c} ya está ocupada a esa hora.` : null;
+    if(err){ state.sheet={kind:'create',prefill:{d,t,c},error:err}; return; }
+    const m=mkMatch({d,t,pref:c,catMin:mn,catMax:mx,gender:g,fallback:fb,createdBy:'me',slots:S(side==='drive'?'me':null,side==='reves'?'me':null,null,null)});
+    state.sheet={kind:'match',mid:m.id}; toast('Partido publicado. Mirá a quién invitar.');
+  },
+  'set-side':e=>{P.me.side=e.v;},
+  'set-hand':e=>{P.me.hand=e.v;},
+  'set-vis':e=>{state.visibility=e.v;},
+  'set-showdu':e=>{P.me.showDU=e.v==='1';},
+  'toggle-court':e=>{ const id=+e.v, a=P.me.pref; P.me.pref=a.includes(id)?a.filter(x=>x!==id):[...a,id]; },
+  'toggle-avail':e=>{ const a=P.me.avail[e.dw]||[]; P.me.avail[e.dw]=a.includes(e.f)?a.filter(x=>x!==e.f):[...a,e.f]; },
+  'club-add':e=>{state.sheet={kind:'club-add',d:+e.d,t:e.t,c:+e.c};},
+  'club-save':e=>{
+    const type=document.getElementById('ca-type').value, name=document.getElementById('ca-name').value.trim()||({reserva:'Reserva',fijo:'Turno fijo',bloqueo:'Bloqueo'})[type];
+    OCC[k(+e.d,e.t,+e.c)]={type,label:type==='fijo'?'Turno fijo '+name:name,players:[],src:type==='bloqueo'?null:'recepción'};
+    state.sheet=null; toast('Guardado en la grilla');
+  },
+  'club-occ':e=>{state.sheet={kind:'club-occ',d:+e.d,t:e.t,c:+e.c};},
+  'club-free':e=>{ delete OCC[k(+e.d,e.t,+e.c)]; state.sheet=null; toast('Cancha liberada'); },
+  'club-tab':e=>{state.clubTab=e.v;},
+  'toggle-up':()=>{state.showAllUp=!state.showAllUp;},
+  'only-free':()=>{state.onlyFree=!state.onlyFree;},
+  'show-past':()=>{state.showPast=!state.showPast;},
+  /* torneos */
+  'open-tourn':e=>{state.sheet={kind:'tourn',tid:e.tid};},
+  'tourn-join':e=>{
+    const tr=T.find(x=>x.id===e.tid), j=tCanJoin(tr);
+    if(!j.ok){toast(j.why);return;}
+    if(slotsOf(tr).some(t=>isBusy('me',tr.d,t))){toast('Ya tenés un partido en ese horario');return;}
+    tr.players.push('me'); toast(`Te inscribiste. Quedan ${tr.size-tr.players.length} lugares.`);
+  },
+  'tourn-leave':e=>{ const tr=T.find(x=>x.id===e.tid); tr.players=tr.players.filter(p=>p!=='me'); toast('Te diste de baja del torneo'); },
+  'tourn-fill':e=>{
+    const tr=T.find(x=>x.id===e.tid); let g=0;
+    const pool=Object.values(P).filter(p=>p.id!=='me'&&!tr.players.includes(p.id)&&(tr.gender==='X'||p.g===tr.gender)&&p.cat>=tr.catMin&&p.cat<=tr.catMax&&!slotsOf(tr).some(t=>isBusy(p.id,tr.d,t)));
+    while(tr.players.length<tr.size){
+      const p=pool.shift();
+      if(p) tr.players.push(p.id);
+      else { const id='g'+(++seq); addP(id,`Invitado ${++g}`,tr.gender==='F'?'F':'M',tr.catMin,'ambos','diestro',90,[]); tr.players.push(id); }
+    }
+    toast('Cupo completo. Ya podés generar el fixture.');
+  },
+  'tourn-gen':e=>{ const tr=T.find(x=>x.id===e.tid); genFixture(tr); toast(`Fixture listo: ${tr.rounds} rondas`); },
+  'tourn-end':e=>{ const tr=T.find(x=>x.id===e.tid); tr.status='finalizado'; toast('Torneo cerrado. Ranking publicado.'); },
+  'tourn-create':()=>{
+    // proponer el primer horario de la semana con dos canchas libres durante todo el torneo
+    const base={name:'Americano de la semana',size:8,points:24,minRound:20,rounds:7,catMin:4,catMax:6,gender:'M',price:400};
+    let form=null;
+    for(let d=1;d<7&&!form;d++) for(const t of ['18:30','17:00','20:00','15:30','14:00']){
+      for(const cs of [[1,2],[2,3],[1,3]]){ const f={...base,d,t,courts:cs}; if(!conflictsOf(f).length){form=f;break;} }
+      if(form) break;
+    }
+    state.sheet={kind:'tourn-create',form:form||{...base,d:1,t:'18:30',courts:[1,2]}};
+  },
+  'tourn-save':()=>{
+    const v=id=>document.getElementById(id).value;
+    const f={name:v('tc-name').trim()||'Americano',d:+v('tc-d'),t:v('tc-t'),size:+v('tc-size'),rounds:+v('tc-rounds'),points:+v('tc-pts'),minRound:+v('tc-min'),catMin:+v('tc-cmin'),catMax:+v('tc-cmax'),gender:v('tc-g'),price:+v('tc-price')||0,
+      courts:[...document.querySelectorAll('.tc-court:checked')].map(x=>+x.value)};
+    let err=null;
+    if(!f.courts.length) err='Elegí al menos una cancha.';
+    else if(f.rounds>f.size-1) err=`Con ${f.size} jugadores el máximo es ${f.size-1} rondas (cada uno juega una vez con cada otro).`;
+    else if(f.catMin>f.catMax) err='La categoría "desde" tiene que ser igual o mejor que "hasta".';
+    else { const c=conflictsOf(f); if(c.length) err='No se puede bloquear: '+c.join('; ')+'.'; }
+    if(err){ state.sheet={kind:'tourn-create',form:f,error:err}; return; }
+    const tr=mkT(f); state.sheet={kind:'tourn',tid:tr.id};
+    toast(`Torneo creado. Canchas ${tr.courts.join(' y ')} bloqueadas de ${tr.t} a ${endTime(tr)}.`);
+  },
+  /* day use */
+  'du-buy':()=>{state.sheet={kind:'du-buy'};},
+  'du-pick':e=>{state.sheet={...state.sheet,product:e.v};},
+  'du-confirm':()=>{
+    const s=state.sheet, dd=state.duDay||0, avail=productsOn(dd);
+    const pr=productOf((s.product&&avail.some(p=>p.id===s.product))?s.product:avail[0].id);
+    if(soldOn(pr.id,dd)>=pr.cupo){toast('No quedan lugares para ese pase');return;}
+    const useR=rewardApplies('me')&&(DU.loyalty.scope==='todos'||DU.loyalty.scope===pr.id)&&s.useReward!==false;
+    const code=passCode();
+    const x={id:'x'+(++pseq),pid:'me',product:pr.id,free:useR,price:useR?rewardPrice(pr):pr.price,status:'pendiente',code,src:'online',d:dd};
+    DU.passes.push(x); state.sheet={kind:'du-pass',id:x.id};
+  },
+  'du-pass':e=>{state.sheet={kind:'du-pass',id:e.id};},
+  'du-edit':e=>{ const pr=productOf(e.v); if(state.role!=='club'){ state.role='club'; state.clubTab='dayuse'; } state.sheet={kind:'du-edit',draft:{...pr,days:[...pr.days],courts:[...pr.courts]}}; },
+  'du-d-day':e=>{ const f=state.sheet.draft, x=+e.v; f.days=f.days.includes(x)?f.days.filter(y=>y!==x):[...f.days,x]; },
+  'du-d-court':e=>{ const f=state.sheet.draft, x=+e.v; f.courts=f.courts.includes(x)?f.courts.filter(y=>y!==x):[...f.courts,x].sort(); },
+  'du-save':()=>{
+    const f=state.sheet.draft, pr=productOf(f.id);
+    f.cupo=Math.max(1,+document.getElementById('de-cupo').value||pr.cupo); f.price=Math.max(0,+document.getElementById('de-price').value||0);
+    Object.assign(pr,{days:f.days,from:f.from,to:f.to,courts:f.courts,cupo:f.cupo,price:f.price});
+    applyDayUse(false); state.sheet=null;
+    toast(`Guardado. ${pr.courts.length?`La grilla ya muestra ${pr.courts.length>1?'las canchas '+pr.courts.join(' y ')+' bloqueadas':'la Cancha '+pr.courts[0]+' bloqueada'}: ${daysText(pr.days).toLowerCase()}, de ${pr.from} a ${pr.to}.`:'Este pase no bloquea canchas.'}`);
+  },
+  'cal-view':e=>{ state.calView=e.v; },
+  'cal-sel':e=>{ state.calSel=e.v; const dt=fromIso(e.v); state.calMonth=iso(new Date(dt.getFullYear(),dt.getMonth(),1)); },
+  'cal-today':()=>{ state.calSel=iso(today); state.calMonth=iso(new Date(today.getFullYear(),today.getMonth(),1)); },
+  'cal-prev':()=>A['cal-shift']({v:-1}),
+  'cal-next':()=>A['cal-shift']({v:1}),
+  'cal-shift':e=>{
+    const {sel,month,view}=calState();
+    if(view==='mes'){ const m=new Date(month.getFullYear(),month.getMonth()+e.v,1); state.calMonth=iso(m); state.calSel=iso(m.getMonth()===today.getMonth()&&m.getFullYear()===today.getFullYear()?today:m); }
+    else { const d=addDays(sel,7*e.v); state.calSel=iso(d); state.calMonth=iso(new Date(d.getFullYear(),d.getMonth(),1)); }
+  },
+  'cal-grid':e=>{ state.clubDay=+e.v; state.clubTab='grilla'; },
+  'cal-toggle':e=>{
+    const dt=fromIso(e.v), pr=productOf(e.pid), on=enabledOnDate(pr,dt), i=idxOf(dt);
+    if(on && i>=0 && soldOn(pr.id,i) && !e.ok){ state.sheet={kind:'cal-confirm',v:e.v,pid:e.pid}; return; }
+    state.sheet=null;
+    const o=DU.overrides[e.v]||{};
+    if(!on===defaultOn(pr,dt)) delete o[pr.id]; else o[pr.id]=!on;
+    if(Object.keys(o).length) DU.overrides[e.v]=o; else delete DU.overrides[e.v];
+    applyDayUse(false);
+    toast(`${pr.name}: ${!on?'se vende':'no se vende'} el ${longDate(dt).toLowerCase()}${on&&i>=0&&soldOn(pr.id,i)?'. Avisamos a quienes ya compraron':''}`);
+  },
+  'cal-close':e=>{
+    const dt=fromIso(e.v);
+    if(soldOnDate(dt) && !e.ok){ state.sheet={kind:'cal-confirm',v:e.v}; return; }
+    state.sheet=null;
+    const o={}; DU.products.forEach(pr=>{ if(defaultOn(pr,dt)) o[pr.id]=false; });
+    if(Object.keys(o).length) DU.overrides[e.v]=o; else delete DU.overrides[e.v];
+    applyDayUse(false);
+    toast(`Day use cerrado el ${longDate(dt).toLowerCase()}. Las canchas quedan libres para reservar.`);
+  },
+  'cal-reset':e=>{ delete DU.overrides[e.v]; applyDayUse(false); toast('Ese día vuelve a su horario habitual'); },
+  'du-checkin':e=>{
+    const x=DU.passes.find(p=>p.id===e.id); x.status='adentro'; visit(x.pid,0,x.product,x.free);
+    const l=loyaltyOf(x.pid), n=first(P[x.pid].name);
+    toast(!DU.loyalty.on?`Ingreso de ${n} registrado`:x.free?`${n} usó su recompensa`:l.progress===0?`${n} completó ${DU.loyalty.every} y ganó ${rewardLabel()}`:`Ingreso registrado. ${n} lleva ${l.progress} de ${DU.loyalty.every}.`);
+  },
+  'du-sell':()=>{state.sheet={kind:'du-sell',pid:'p1'};},
+  'du-sell-ok':()=>{
+    const pid=document.getElementById('ds-p').value, pr=productOf(document.getElementById('ds-prod').value);
+    const r=document.getElementById('ds-r'); const useR=!!(r&&r.checked)&&(DU.loyalty.scope==='todos'||DU.loyalty.scope===pr.id);
+    if(soldToday(pr.id)>=pr.cupo){toast('No quedan pases de ese tipo hoy');return;}
+    const code=passCode(), id='x'+(++pseq);
+    DU.passes.push({id,pid,product:pr.id,free:useR,price:useR?rewardPrice(pr):pr.price,status:'pendiente',code,src:'recepción'});
+    state.sheet=null; A['du-checkin']({id});
+  },
+  'loy-on':e=>{DU.loyalty.on=e.v==='1';},
+  'loy-every':e=>{DU.loyalty.every=Math.min(20,Math.max(2,DU.loyalty.every+(+e.v)));},
+  'loy-reward':e=>{DU.loyalty.reward=e.v;},
+  'loy-scope':e=>{DU.loyalty.scope=e.v;},
+  'loy-exp':e=>{DU.loyalty.expiry=+e.v;},
+  'loy-free':e=>{DU.loyalty.freeCounts=e.v==='1';}
+};
+document.addEventListener('change',ev=>{
+  const el=ev.target.closest('[data-change]'); if(!el) return;
+  const c=el.dataset.change;
+  if(c==='score'){
+    const tr=T.find(x=>x.id===el.dataset.tid), g=tr.fixture[+el.dataset.r][+el.dataset.g], n=parseInt(el.value,10);
+    if(isNaN(n)){g.sa=null;g.sb=null;} else {g.sa=Math.max(0,Math.min(tr.points,n)); g.sb=tr.points-g.sa;}
+  }
+  if(c==='du-reward') state.sheet.useReward=el.checked;
+  if(c==='du-sell-p') state.sheet.pid=el.value;
+  if(c==='du-draft') state.sheet.draft[el.dataset.f]=el.value;
+  render();
+});
+document.addEventListener('click',ev=>{
+  const el=ev.target.closest('[data-action]'); if(!el) return;
+  const fn=A[el.dataset.action]; if(!fn) return;
+  if(el.tagName==='A') return;
+  ev.preventDefault(); fn(el.dataset); render();
+});
+document.addEventListener('input',ev=>{
+  const el=ev.target.closest('[data-filter="passes"]'); if(!el) return;
+  const q=el.value.trim().toLowerCase();
+  document.querySelectorAll('.passrow').forEach(r=>{ r.hidden = q && !r.dataset.q.includes(q); });
+});
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'&&state.sheet){ state.sheet=null; render(); } });
+render();
+</script>
+</body>
+</html>
