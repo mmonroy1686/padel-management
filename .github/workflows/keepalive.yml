@@ -1,0 +1,20 @@
+name: Keep Supabase awake
+
+# Free projects pause after a week without activity. We ping every three days.
+on:
+  schedule:
+    - cron: '0 12 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query the REST API
+        env:
+          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          curl --fail --silent --show-error \
+            "https://${PROJECT_REF}.supabase.co/rest/v1/clubs?select=id&limit=1" \
+            -H "apikey: ${PUBLISHABLE_KEY}" > /dev/null
