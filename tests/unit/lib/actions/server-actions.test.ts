@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { INVALID_INPUT } from '@/lib/actions/result'
 
 // Server Actions are reachable by any POST: bad input must stop before any RPC.
-const rpc = vi.fn(async (..._args: unknown[]) => ({ data: null, error: null as { message: string } | null }))
+type RpcResult = { data: null; error: { message: string } | null }
+const rpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<RpcResult>>(async () => ({
+  data: null,
+  error: null,
+}))
 const redirect = vi.fn((path: string) => {
   throw new Error(`NEXT_REDIRECT ${path}`)
 })
