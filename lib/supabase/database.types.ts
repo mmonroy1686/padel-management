@@ -382,6 +382,27 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"confirm_payment":
+{ Args: { "p_payment_id": string }; Returns: {
+              "amount": number,
+"booking_id": string,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_series":
 { Args: { "p_court_id": string,"p_ends_on"?: string,"p_guest_name"?: string,"p_player_id"?: string,"p_start_time": string,"p_starts_on": string,"p_weekday": number }; Returns: {
               "club_id": string,
@@ -400,6 +421,120 @@ isOneToOne: false
 "end_series":
 { Args: { "p_from_date": string,"p_series_id": string }; Returns: number
                            },
+"record_cash":
+{ Args: { "p_amount": number,"p_booking_id": string }; Returns: {
+              "amount": number,
+"booking_id": string,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"refund_payment":
+{ Args: { "p_payment_id": string }; Returns: {
+              "amount": number,
+"booking_id": string,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"reject_payment":
+{ Args: { "p_payment_id": string,"p_reason"?: string }; Returns: {
+              "amount": number,
+"booking_id": string,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"report_transfer":
+{ Args: { "p_booking_id": string,"p_receipt_path"?: string }; Returns: {
+              "amount": number,
+"booking_id": string,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"set_member_role":
+{ Args: { "p_club_id": string,"p_role": Database["public"]['Enums']["club_role"],"p_user_id": string }; Returns: {
+              "category": number | null,
+"category_validated": boolean,
+"club_id": string,
+"created_at": string,
+"role": Database["public"]['Enums']["club_role"],
+"user_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "club_members"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"set_my_category":
+{ Args: { "p_category": number,"p_club_id": string }; Returns: {
+              "category": number | null,
+"category_validated": boolean,
+"club_id": string,
+"created_at": string,
+"role": Database["public"]['Enums']["club_role"],
+"user_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "club_members"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "staff_book":
 { Args: { "p_court_id": string,"p_guest_name"?: string,"p_player_id"?: string,"p_starts_at": string }; Returns: {
               "cancelled_at": string | null,
@@ -428,7 +563,22 @@ isOneToOne: false
       } },
 "unblock":
 { Args: { "p_occupancy_id": string }; Returns: undefined
-                           }
+                           },
+"validate_category":
+{ Args: { "p_category": number,"p_club_id": string,"p_user_id": string }; Returns: {
+              "category": number | null,
+"category_validated": boolean,
+"club_id": string,
+"created_at": string,
+"role": Database["public"]['Enums']["club_role"],
+"user_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "club_members"
+        isOneToOne: true
+        isSetofReturn: false
+      } }
           }
           Enums: {
             "booking_source": "online"|"reception","booking_status": "confirmed"|"cancelled","club_role": "admin"|"reception"|"player","dominant_hand": "right"|"left","occupancy_kind": "booking"|"recurring"|"tournament"|"block"|"match"|"day_use","payment_method": "cash"|"transfer","payment_status": "reported"|"confirmed"|"rejected"|"refunded","player_side": "drive"|"backhand"|"both"
