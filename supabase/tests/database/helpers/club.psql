@@ -1,0 +1,51 @@
+-- Shared fixture for the fase 1 booking tests. Include it after slot.psql:
+--   \ir helpers/slot.psql
+--   \ir helpers/club.psql
+-- Club T: grid 08:00-23:00 every 90 minutes (08:00 ... 21:30), 14-day window, 24 h notice,
+-- 2 active bookings, cash and transfer with receipt. Prices: 1200, and 1600 from 18:30.
+-- Ana (a1, category 5 validated) and Bruno (b1) are players, Carla (c1) is reception,
+-- Dani (d1) is admin, Omar (f1) is not a member.
+insert into public.clubs (id, slug, name, opens_at, closes_at, slot_minutes, booking_window_days,
+                          cancellation_notice_hours, max_active_bookings, transfer_details) values
+  ('a0000000-0000-0000-0000-000000000001', 'test-club', 'Club T', '08:00', '23:00', 90, 14, 24, 2,
+   'Banco Test, cuenta 123, a nombre de Club T');
+
+insert into public.courts (id, club_id, name, sort_order) values
+  ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'Cancha 1', 1),
+  ('c0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'Cancha 2', 2);
+
+insert into public.pricing_rules (club_id, weekdays, from_time, to_time, price) values
+  ('a0000000-0000-0000-0000-000000000001', '{0,1,2,3,4,5,6}', '08:00', '18:30', 1200),
+  ('a0000000-0000-0000-0000-000000000001', '{0,1,2,3,4,5,6}', '18:30', '24:00', 1600);
+
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000000a1', 'ana@test.local'),
+  ('00000000-0000-0000-0000-0000000000b1', 'bruno@test.local'),
+  ('00000000-0000-0000-0000-0000000000c1', 'carla@test.local'),
+  ('00000000-0000-0000-0000-0000000000d1', 'dani@test.local'),
+  ('00000000-0000-0000-0000-0000000000f1', 'omar@test.local');
+
+insert into public.club_members (club_id, user_id, role, category, category_validated) values
+  ('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a1', 'player', 5, true),
+  ('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000b1', 'player', 6, false),
+  ('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000c1', 'reception', null, false),
+  ('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000d1', 'admin', null, false);
+
+-- A confirmed booking and its occupancy, inserted as postgres (skips the RPC rules on purpose).
+create procedure test_helpers.make_booking(
+  p_id uuid, p_court_id uuid, p_period tstzrange, p_player_id uuid, p_price integer default 1200
+)
+language plpgsql
+as $$
+declare
+  v_occupancy_id uuid;
+begin
+  insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
+  values ('a0000000-0000-0000-0000-000000000001', p_court_id, 'booking', p_period, p_player_id)
+  returning id into v_occupancy_id;
+
+  insert into public.bookings (id, club_id, court_id, period, player_id, source, price, occupancy_id, created_by)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', p_court_id, p_period, p_player_id, 'online', p_price,
+          v_occupancy_id, p_player_id);
+end;
+$$;

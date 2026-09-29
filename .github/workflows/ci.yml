@@ -48,9 +48,14 @@ jobs:
       - name: pgTAP
         run: supabase test db
 
-      - name: Expose local Supabase to the app
+      - name: Expose local Supabase to the app and the e2e tests
+        # Local stack only: these keys exist just inside this job's Docker containers.
         run: |
-          supabase status -o json | jq -r '"NEXT_PUBLIC_SUPABASE_URL=\(.API_URL)", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=\(.PUBLISHABLE_KEY // .ANON_KEY)"' >> "$GITHUB_ENV"
+          supabase status -o json | jq -r '
+            "NEXT_PUBLIC_SUPABASE_URL=\(.API_URL)",
+            "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=\(.PUBLISHABLE_KEY // .ANON_KEY)",
+            "SUPABASE_SERVICE_ROLE_KEY=\(.SERVICE_ROLE_KEY // .SECRET_KEY)",
+            "MAILPIT_URL=\(.MAILPIT_URL // .INBUCKET_URL)"' >> "$GITHUB_ENV"
 
       - run: npm ci
       - run: npx playwright install --with-deps chromium

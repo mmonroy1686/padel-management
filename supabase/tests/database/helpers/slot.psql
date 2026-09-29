@@ -15,3 +15,21 @@ as $$
       at time zone 'America/Montevideo' as s
   ) start;
 $$;
+
+-- at(1, '20:00') = tomorrow at 20:00 in the club timezone: where a slot starts.
+create function test_helpers.at(days_ahead int, start_time time)
+returns timestamptz
+language sql
+stable
+as $$
+  select lower(test_helpers.slot(days_ahead, start_time, 1));
+$$;
+
+-- The club's today, for date arguments.
+create function test_helpers.today()
+returns date
+language sql
+stable
+as $$
+  select (now() at time zone 'America/Montevideo')::date;
+$$;

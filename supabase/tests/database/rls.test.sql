@@ -63,11 +63,11 @@ update public.profiles set display_name = 'hacked' where id = '00000000-0000-000
 update public.profiles set display_name = 'Ana P' where id = '00000000-0000-0000-0000-0000000000a1';
 update public.club_members set role = 'admin' where user_id = '00000000-0000-0000-0000-0000000000a1';
 
-select lives_ok(
+select throws_ok(
   $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
      values ('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'booking',
              test_helpers.slot(1, '21:00', 90), '00000000-0000-0000-0000-0000000000a1') $$,
-  'player books for themselves');
+  '42501', null, 'player cannot write occupancies directly, not even their own (book_slot does it)');
 select throws_ok(
   $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
      values ('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'booking',
@@ -95,13 +95,9 @@ select lives_ok(
 -- Bruno, player in club X
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000b1", "role": "authenticated"}';
 
-delete from public.court_occupancy where id = 'e0000000-0000-0000-0000-000000000001';
-
 select throws_ok(
-  $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
-     values ('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'booking',
-             test_helpers.slot(1, '21:30', 60), '00000000-0000-0000-0000-0000000000b1') $$,
-  '23P01', null, 'double booking fails across players');
+  $$ delete from public.court_occupancy where id = 'e0000000-0000-0000-0000-000000000001' $$,
+  '42501', null, 'player cannot delete occupancies directly');
 
 -- Carla, reception in club X
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000c1", "role": "authenticated"}';
@@ -112,11 +108,11 @@ select is((select count(*)::int from public.profiles where id = '00000000-0000-0
   'reception reads private profiles of their club members');
 select is((select count(*)::int from public.profiles where id = '00000000-0000-0000-0000-0000000000d1'), 0,
   'reception cannot read private profiles outside their club');
-select lives_ok(
+select throws_ok(
   $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
      values ('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'block',
              test_helpers.slot(2, '08:00', 60), '00000000-0000-0000-0000-0000000000c1') $$,
-  'reception can block a court');
+  '42501', null, 'reception cannot write occupancies directly either (block_court does it)');
 
 -- Back to postgres: the writes RLS filtered out left no trace.
 reset role;

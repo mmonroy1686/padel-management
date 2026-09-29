@@ -20,8 +20,23 @@ export async function sendMagicLink(_previous: MagicLinkState, formData: FormDat
     options: { emailRedirectTo: callbackUrl(safeNextPath(formData.get('next'))) },
   })
 
-  if (error) return { status: 'error', message: 'No pudimos enviar el enlace. Probá de nuevo en un minuto.' }
+  if (error) {
+    // The reason goes to the server log (Vercel / terminal). Only status and code: GoTrue's
+    // message can include the email address.
+    console.error('signInWithOtp failed', { status: error.status, code: error.code })
+    return { status: 'error', message: magicLinkErrorMessage(error.code) }
+  }
   return { status: 'sent' }
+}
+
+function magicLinkErrorMessage(code: string | undefined): string {
+  if (code === 'over_email_send_rate_limit') {
+    return 'Se mandaron demasiados enlaces en poco tiempo. Probá de nuevo en un rato.'
+  }
+  if (code === 'email_address_not_authorized') {
+    return 'Todavía no podemos mandar emails a esa dirección. Avisá al club.'
+  }
+  return 'No pudimos enviar el enlace. Probá de nuevo en un minuto.'
 }
 
 export async function signInWithGoogle(formData: FormData): Promise<void> {

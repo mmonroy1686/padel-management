@@ -1,7 +1,7 @@
 ---
 feature: fase-0-base
 type: design
-status: design
+status: done
 date: 2026-09-28
 branch: main
 references: ../../plan-general.md
