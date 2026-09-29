@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { DayStrip } from '@/components/booking/day-strip'
+import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { Card } from '@/components/ui/card'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadDayGrid } from '@/lib/data/day'
@@ -31,6 +32,7 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
 
   return (
     <>
+      <LiveOccupancy clubId={club.id} />
       <DayStrip days={days.map((day) => ({ date: day, label: dayLabel(day, today) }))} selected={date} basePath="/club/grilla" />
       <div className="grid grid-cols-2 gap-3">
         <Card>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { DayStrip } from '@/components/booking/day-strip'
+import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { loadDayGrid } from '@/lib/data/day'
 import { cancellationRule } from '@/lib/domain/cancellation'
@@ -26,6 +27,7 @@ export default async function ReservarPage({ searchParams }: { searchParams: Sea
 
   return (
     <>
+      <LiveOccupancy clubId={club.id} />
       <div>
         <h1 className="font-display text-4xl font-bold uppercase">Reservar cancha</h1>
         <p className="text-fg-muted">
