@@ -1,5 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
+\ir helpers/slot.psql
 select plan(23);
 
 -- Fixture as postgres (bypasses RLS).
@@ -30,9 +31,9 @@ insert into public.club_members (club_id, user_id, role) values
 
 insert into public.court_occupancy (id, club_id, court_id, kind, period, created_by) values
   ('e0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
-   'booking', tstzrange('2026-10-01 19:00-03', '2026-10-01 20:30-03'), '00000000-0000-0000-0000-0000000000a1'),
+   'booking', test_helpers.slot(1, '19:00', 90), '00000000-0000-0000-0000-0000000000a1'),
   ('e0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002',
-   'booking', tstzrange('2026-10-01 19:00-03', '2026-10-01 20:30-03'), '00000000-0000-0000-0000-0000000000d1');
+   'booking', test_helpers.slot(1, '19:00', 90), '00000000-0000-0000-0000-0000000000d1');
 
 -- Anonymous visitor
 set local role anon;
@@ -65,22 +66,22 @@ update public.club_members set role = 'admin' where user_id = '00000000-0000-000
 select lives_ok(
   $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
      values ('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'booking',
-             tstzrange('2026-10-01 21:00-03', '2026-10-01 22:30-03'), '00000000-0000-0000-0000-0000000000a1') $$,
+             test_helpers.slot(1, '21:00', 90), '00000000-0000-0000-0000-0000000000a1') $$,
   'player books for themselves');
 select throws_ok(
   $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
      values ('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'booking',
-             tstzrange('2026-10-01 23:00-03', '2026-10-02 00:30-03'), '00000000-0000-0000-0000-0000000000b1') $$,
+             test_helpers.slot(2, '19:00', 90), '00000000-0000-0000-0000-0000000000b1') $$,
   '42501', null, 'player cannot book in someone else''s name');
 select throws_ok(
   $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
      values ('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'block',
-             tstzrange('2026-10-02 08:00-03', '2026-10-02 09:00-03'), '00000000-0000-0000-0000-0000000000a1') $$,
+             test_helpers.slot(2, '08:00', 60), '00000000-0000-0000-0000-0000000000a1') $$,
   '42501', null, 'player cannot block a court');
 select throws_ok(
   $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
      values ('a0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002', 'booking',
-             tstzrange('2026-10-02 19:00-03', '2026-10-02 20:30-03'), '00000000-0000-0000-0000-0000000000a1') $$,
+             test_helpers.slot(2, '19:00', 90), '00000000-0000-0000-0000-0000000000a1') $$,
   '42501', null, 'player cannot book in a club they do not belong to');
 select throws_ok(
   $$ insert into public.club_members (club_id, user_id, role)
@@ -99,7 +100,7 @@ delete from public.court_occupancy where id = 'e0000000-0000-0000-0000-000000000
 select throws_ok(
   $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
      values ('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'booking',
-             tstzrange('2026-10-01 21:30-03', '2026-10-01 22:00-03'), '00000000-0000-0000-0000-0000000000b1') $$,
+             test_helpers.slot(1, '21:30', 60), '00000000-0000-0000-0000-0000000000b1') $$,
   '23P01', null, 'double booking fails across players');
 
 -- Carla, reception in club X
@@ -114,7 +115,7 @@ select is((select count(*)::int from public.profiles where id = '00000000-0000-0
 select lives_ok(
   $$ insert into public.court_occupancy (club_id, court_id, kind, period, created_by)
      values ('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'block',
-             tstzrange('2026-10-02 08:00-03', '2026-10-02 09:00-03'), '00000000-0000-0000-0000-0000000000c1') $$,
+             test_helpers.slot(2, '08:00', 60), '00000000-0000-0000-0000-0000000000c1') $$,
   'reception can block a court');
 
 -- Back to postgres: the writes RLS filtered out left no trace.

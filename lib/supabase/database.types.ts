@@ -32,13 +32,13 @@ isOneToOne: false
                   ]
                 },"clubs": {
                   Row: {
-                    "cancellation_notice_hours": number,"created_at": string,"id": string,"name": string,"slug": string,"timezone": string
+                    "booking_window_days": number,"cancellation_notice_hours": number,"closes_at": string,"created_at": string,"id": string,"max_booking_minutes": number,"min_booking_minutes": number,"name": string,"opens_at": string,"slug": string,"timezone": string
                   }
                   Insert: {
-                    "cancellation_notice_hours"?: number,"created_at"?: string,"id"?: string,"name": string,"slug": string,"timezone"?: string
+                    "booking_window_days"?: number,"cancellation_notice_hours"?: number,"closes_at"?: string,"created_at"?: string,"id"?: string,"max_booking_minutes"?: number,"min_booking_minutes"?: number,"name": string,"opens_at"?: string,"slug": string,"timezone"?: string
                   }
                   Update: {
-                    "cancellation_notice_hours"?: number,"created_at"?: string,"id"?: string,"name"?: string,"slug"?: string,"timezone"?: string
+                    "booking_window_days"?: number,"cancellation_notice_hours"?: number,"closes_at"?: string,"created_at"?: string,"id"?: string,"max_booking_minutes"?: number,"min_booking_minutes"?: number,"name"?: string,"opens_at"?: string,"slug"?: string,"timezone"?: string
                   }
                   Relationships: [
                     

@@ -1,0 +1,17 @@
+-- Test helper, included with \ir. Lives inside each test's transaction, so it is rolled back.
+-- slot(1, '19:00', 90) = tomorrow 19:00-20:30 in the club timezone, relative to now(),
+-- so tests never go stale as the calendar moves.
+create schema if not exists test_helpers;
+grant usage on schema test_helpers to anon, authenticated;
+
+create function test_helpers.slot(days_ahead int, start_time time, minutes int)
+returns tstzrange
+language sql
+stable
+as $$
+  select tstzrange(s, s + make_interval(mins => minutes))
+  from (
+    select ((now() at time zone 'America/Montevideo')::date + days_ahead + start_time)
+      at time zone 'America/Montevideo' as s
+  ) start;
+$$;
