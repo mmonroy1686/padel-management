@@ -94,3 +94,18 @@ body {
     animation: none;
   }
 }
+
+/* A stamp just earned pops once; skipped when the viewer asks for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .stamp-pop {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: stamp-pop 450ms ease-out;
+  }
+}
+
+@keyframes stamp-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
