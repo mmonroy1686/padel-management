@@ -1,13 +1,17 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { getSiteUrl, safeNextPath } from '@/lib/auth/redirect'
+import { getSiteUrl, originFromHeaders, safeNextPath } from '@/lib/auth/redirect'
 import { createClient } from '@/lib/supabase/server'
 
 export type MagicLinkState = { status: 'idle' | 'sent' | 'error'; message?: string }
 
-function callbackUrl(next: string): string {
-  return `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(next)}`
+// Back to the host the visitor started on: the PKCE cookie that finishes the sign-in lives there.
+async function callbackUrl(next: string): Promise<string> {
+  const requestHeaders = await headers()
+  const origin = originFromHeaders((name) => requestHeaders.get(name), getSiteUrl())
+  return `${origin}/auth/callback?next=${encodeURIComponent(next)}`
 }
 
 export async function sendMagicLink(_previous: MagicLinkState, formData: FormData): Promise<MagicLinkState> {
@@ -17,7 +21,7 @@ export async function sendMagicLink(_previous: MagicLinkState, formData: FormDat
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: callbackUrl(safeNextPath(formData.get('next'))) },
+    options: { emailRedirectTo: await callbackUrl(safeNextPath(formData.get('next'))) },
   })
 
   if (error) {
@@ -43,7 +47,7 @@ export async function signInWithGoogle(formData: FormData): Promise<void> {
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: callbackUrl(safeNextPath(formData.get('next'))) },
+    options: { redirectTo: await callbackUrl(safeNextPath(formData.get('next'))) },
   })
 
   if (error || !data.url) redirect('/auth/ingreso?error=google')
