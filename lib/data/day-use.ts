@@ -115,11 +115,16 @@ export async function loadPassesOn(club: Club, date: LocalDate): Promise<DayUseP
 // A member's passes for the stamps (lib/domain/loyalty.ts). Players read their own; staff anyone's.
 export async function loadLoyaltyPasses(club: Club, playerId: string, since: LocalDate | null): Promise<LoyaltyPass[]> {
   const supabase = await createClient()
-  let query = supabase.from('day_use_passes').select('on_date, status, used_reward').eq('club_id', club.id).eq('player_id', playerId)
+  let query = supabase.from('day_use_passes').select('on_date, status, used_reward, created_at').eq('club_id', club.id).eq('player_id', playerId)
   if (since) query = query.gte('on_date', since)
   const { data, error } = await query
   if (error) throw error
-  return data.map((row) => ({ date: row.on_date, status: row.status, usedReward: row.used_reward }))
+  return data.map((row) => ({
+    date: row.on_date,
+    boughtOn: localDateOf(toDate(row.created_at), club.timezone),
+    status: row.status,
+    usedReward: row.used_reward,
+  }))
 }
 
 // Passes sold with a reward (not cancelled) since that date: reception's summary.

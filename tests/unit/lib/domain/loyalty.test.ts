@@ -14,7 +14,9 @@ import {
 
 const RULE: LoyaltyRule = { enabled: true, every: 5, discountPercent: 100, expiryMonths: 6 }
 const TODAY = '2026-10-01'
-const visit = (date: string): LoyaltyPass => ({ date, status: 'inside', usedReward: false })
+const visit = (date: string): LoyaltyPass => ({ date, boughtOn: date, status: 'inside', usedReward: false })
+const reward = (date: string, boughtOn = date): LoyaltyPass => ({ date, boughtOn, status: 'inside', usedReward: true })
+const days = (dates: string[]) => dates.map(visit)
 
 describe('monthsBefore', () => {
   it('goes back whole months like Postgres, keeping the day or the last one of the month', () => {
@@ -25,34 +27,55 @@ describe('monthsBefore', () => {
 })
 
 describe('loyaltyOf', () => {
-  const passes: LoyaltyPass[] = [
-    ...['2026-09-01', '2026-09-08', '2026-09-15', '2026-09-22', '2026-09-29', '2026-04-01'].map(visit),
-    visit('2026-03-31'),
-    { date: '2026-10-02', status: 'bought', usedReward: true },
-    { date: '2026-10-03', status: 'cancelled', usedReward: true },
-    { date: '2026-09-30', status: 'inside', usedReward: true },
+  it('counts the stamps inside the expiry, like private.loyalty_of', () => {
+    const passes = days(['2026-03-31', '2026-09-01', '2026-09-08', '2026-09-15', '2026-09-22', '2026-09-29'])
+    expect(loyaltyOf(passes, RULE, TODAY)).toEqual({ stamps: 5, earned: 1, used: 0, available: 1, progress: 0 })
+  })
+
+  // Same case as supabase/tests/database/day_use_review.test.sql.
+  const earnedUsedAndEarnedAgain = [
+    ...days(['2026-03-20', '2026-04-10', '2026-04-11', '2026-04-12', '2026-04-13']),
+    reward('2026-04-14'),
+    ...days(['2026-06-23', '2026-06-24', '2026-06-25', '2026-06-26', '2026-06-27']),
   ]
 
-  it('counts stamps inside the expiry, rewards earned, used and left, like private.loyalty_of', () => {
-    expect(loyaltyOf(passes, RULE, TODAY)).toEqual({ stamps: 6, earned: 1, used: 2, available: 0, progress: 1 })
-  })
-
-  it('counts every check-in when stamps never expire', () => {
-    expect(loyaltyOf(passes, { ...RULE, expiryMonths: null }, TODAY)).toMatchObject({ stamps: 7, earned: 1 })
-  })
-
-  it('has a reward once a group of stamps is complete and unused', () => {
-    expect(loyaltyOf(['2026-09-01', '2026-09-02', '2026-09-03'].map(visit), { ...RULE, every: 3 }, TODAY)).toEqual({
-      stamps: 3,
-      earned: 1,
-      used: 0,
+  it('lets a used reward take its own stamps, so an old one expiring does not take the next reward away', () => {
+    expect(loyaltyOf(earnedUsedAndEarnedAgain, RULE, TODAY)).toEqual({
+      stamps: 5,
+      earned: 2,
+      used: 1,
       available: 1,
       progress: 0,
     })
   })
 
+  it('counts every check-in when stamps never expire', () => {
+    expect(loyaltyOf(earnedUsedAndEarnedAgain, { ...RULE, expiryMonths: null }, TODAY)).toEqual({
+      stamps: 5,
+      earned: 2,
+      used: 1,
+      available: 1,
+      progress: 0,
+    })
+  })
+
+  it('uses a reward on the day it was bought, and not at all once cancelled', () => {
+    const rule = { ...RULE, every: 3 }
+    const three = days(['2026-09-01', '2026-09-02', '2026-09-03'])
+    expect(loyaltyOf([...three, { ...reward('2026-10-05', TODAY), status: 'bought' }], rule, TODAY)).toMatchObject({
+      stamps: 0,
+      available: 0,
+      used: 1,
+    })
+    expect(loyaltyOf([...three, { ...reward('2026-10-05', TODAY), status: 'cancelled' }], rule, TODAY)).toMatchObject({
+      stamps: 3,
+      available: 1,
+      used: 0,
+    })
+  })
+
   it('is empty while the club has stamps off', () => {
-    expect(loyaltyOf(passes, { ...RULE, enabled: false }, TODAY)).toEqual(NO_LOYALTY)
+    expect(loyaltyOf(earnedUsedAndEarnedAgain, { ...RULE, enabled: false }, TODAY)).toEqual(NO_LOYALTY)
   })
 })
 

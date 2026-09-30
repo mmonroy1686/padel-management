@@ -4,7 +4,8 @@ import type { ParseResult } from './settings'
 import { parseLocalDate, type LocalDate } from './time'
 
 export type LoyaltyRule = { enabled: boolean; every: number; discountPercent: number; expiryMonths: number | null }
-export type LoyaltyPass = { date: LocalDate; status: PassStatus; usedReward: boolean }
+// boughtOn: the club's date the pass was bought, which is when a reward is used.
+export type LoyaltyPass = { date: LocalDate; boughtOn: LocalDate; status: PassStatus; usedReward: boolean }
 export type Loyalty = { stamps: number; earned: number; used: number; available: number; progress: number }
 
 export const NO_LOYALTY: Loyalty = { stamps: 0, earned: 0, used: 0, available: 0, progress: 0 }
@@ -43,16 +44,36 @@ export function loyaltySince(rule: LoyaltyRule, today: LocalDate): LocalDate | n
   return rule.expiryMonths === null ? null : monthsBefore(today, rule.expiryMonths)
 }
 
-// Same as private.loyalty_of: a stamp is a check-in without a reward inside the expiry window;
-// every `every` stamps earn a reward; every pass bought with one (not cancelled) uses it.
+// Same as private.loyalty_of: check-ins without a reward are stamps; passes bought with a reward (not
+// cancelled) use one, on the day they were bought. Going through both in date order, a stamp drops
+// once it is older than the expiry on that day, and each use takes the `every` oldest stamps left.
+// What remains today makes the progress and the rewards available.
 export function loyaltyOf(passes: LoyaltyPass[], rule: LoyaltyRule, today: LocalDate): Loyalty {
   if (!rule.enabled) return NO_LOYALTY
-  const since = loyaltySince(rule, today)
-  const inWindow = passes.filter((pass) => since === null || pass.date >= since)
-  const stamps = inWindow.filter((pass) => pass.status === 'inside' && !pass.usedReward).length
-  const used = inWindow.filter((pass) => pass.status !== 'cancelled' && pass.usedReward).length
-  const earned = Math.floor(stamps / rule.every)
-  return { stamps, earned, used, available: Math.max(0, earned - used), progress: stamps % rule.every }
+  const events = [
+    ...passes.filter((pass) => pass.status === 'inside' && !pass.usedReward).map((pass) => ({ day: pass.date, use: false })),
+    ...passes.filter((pass) => pass.status !== 'cancelled' && pass.usedReward).map((pass) => ({ day: pass.boughtOn, use: true })),
+  ].sort((a, b) => (a.day === b.day ? Number(a.use) - Number(b.use) : a.day < b.day ? -1 : 1))
+
+  const unexpired = (stamps: LocalDate[], day: LocalDate) => {
+    const since = loyaltySince(rule, day)
+    return since === null ? stamps : stamps.filter((stamp) => stamp >= since)
+  }
+  const sinceToday = loyaltySince(rule, today)
+  let stamps: LocalDate[] = []
+  let used = 0
+  for (const event of events) {
+    stamps = unexpired(stamps, event.day)
+    if (!event.use) {
+      stamps.push(event.day)
+    } else {
+      stamps = stamps.slice(rule.every)
+      if (sinceToday === null || event.day >= sinceToday) used += 1
+    }
+  }
+  const left = unexpired(stamps, today).length
+  const available = Math.floor(left / rule.every)
+  return { stamps: left, earned: available + used, used, available, progress: left % rule.every }
 }
 
 export function rewardLabel(percent: number): string {
