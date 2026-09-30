@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/domain/format'
-import { KIND_LABELS, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
+import { continuesAbove, KIND_LABELS, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
 import { CELL_STYLES } from './cell-styles'
 import { PaymentBadge } from './payment-badge'
 
@@ -39,17 +39,17 @@ export function SlotGrid({ courts, rows, variant, onSelect }: SlotGridProps) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {rows.map((row, rowIndex) => (
             <tr key={row.slot.label}>
               <th scope="row" className={cn('pr-1 text-left font-display text-lg font-bold', row.past && 'opacity-50')}>
                 {row.slot.label}
               </th>
-              {row.cells.map((cell) => (
+              {row.cells.map((cell, courtIndex) => (
                 <td key={cell.court.id} className="min-w-28">
                   {variant === 'player' ? (
                     <PlayerCell cell={cell} onSelect={onSelect} />
                   ) : (
-                    <ClubCell cell={cell} onSelect={onSelect} />
+                    <ClubCell cell={cell} continues={continuesAbove(rows, rowIndex, courtIndex)} onSelect={onSelect} />
                   )}
                 </td>
               ))}
@@ -102,7 +102,15 @@ function PlayerCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridC
   return <div className={cn(CELL, CELL_STYLES.taken, cell.state === 'past' && 'opacity-50')}>{text}</div>
 }
 
-function ClubCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridCell) => void }) {
+function ClubCell({
+  cell,
+  continues,
+  onSelect,
+}: {
+  cell: GridCell
+  continues: boolean
+  onSelect: (cell: GridCell) => void
+}) {
   const { court, slot, occupancy, booking } = cell
   if (occupancy) {
     const kindLabel = KIND_LABELS[occupancy.kind]
@@ -115,6 +123,18 @@ function ClubCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridCel
           : occupancy.kind === 'booking' || occupancy.kind === 'match'
             ? CELL_STYLES.booking
             : CELL_STYLES.other
+    if (continues) {
+      return (
+        <button
+          type="button"
+          aria-label={`${court.name}, ${slot.label}: sigue ${title}`}
+          onClick={() => onSelect(cell)}
+          className={cn(CELL, style, FOCUS, 'opacity-70', cell.state === 'past' && 'opacity-40')}
+        >
+          <span className="line-clamp-1 text-xs">Sigue {title}</span>
+        </button>
+      )
+    }
     return (
       <button
         type="button"
