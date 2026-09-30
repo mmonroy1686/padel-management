@@ -73,6 +73,10 @@ export default async function SettingsPage() {
                 <input id="max_active_bookings" name="max_active_bookings" type="number" min={1} max={10}
                   defaultValue={club.max_active_bookings} className={inputClasses} />
               </Field>
+              <Field label="Horas antes para cerrar partidos incompletos" htmlFor="match_close_hours">
+                <input id="match_close_hours" name="match_close_hours" type="number" min={0} max={48}
+                  defaultValue={club.match_close_hours} className={inputClasses} />
+              </Field>
             </div>
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-1 text-sm font-semibold">Medios de pago</legend>
