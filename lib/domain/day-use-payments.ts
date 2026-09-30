@@ -1,7 +1,7 @@
 import { passTotal, type DayUsePass, type PassStatus } from './day-use'
 import { amountDue, paymentState } from './payments'
 import type { OverviewPayment, RefundItem } from './payments-overview'
-import { parseTime, zonedTime, type LocalDate } from './time'
+import { localDateOf, parseTime, zonedTime, type LocalDate } from './time'
 
 // What lib/data/payments.ts reads for Cobros.
 export type OverviewPass = {
@@ -25,11 +25,13 @@ export function passStartsAt(onDate: LocalDate, fromTime: string | null | undefi
 const holderOf = (pass: OverviewPass) => pass.guest_name ?? pass.player?.display_name ?? 'Jugador'
 const totalOf = (pass: OverviewPass) => pass.total ?? passTotal(pass.price, pass.discount_percent)
 
-// Passes of today or before (not cancelled) that still owe and have no transfer waiting for
+// Passes that already started (not cancelled) that still owe and have no transfer waiting for
 // review. A free pass (a 100 % reward) owes nothing and never shows.
-export function unpaidPasses(passes: OverviewPass[], today: LocalDate, timezone: string): UnpaidPassItem[] {
+export function unpaidPasses(passes: OverviewPass[], now: Date, timezone: string): UnpaidPassItem[] {
+  const today = localDateOf(now, timezone)
   return passes.flatMap((pass) => {
     if (pass.status === 'cancelled' || pass.on_date > today) return []
+    if (passStartsAt(pass.on_date, pass.product?.from_time, timezone) > now) return []
     const total = totalOf(pass)
     if (paymentState({ price: total, status: 'confirmed' }, pass.payments) !== 'pending') return []
     return [

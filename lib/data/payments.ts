@@ -42,7 +42,6 @@ const PASS_SELECT =
 export async function loadPaymentsOverview(club: Club, now = new Date()): Promise<PaymentsOverview> {
   const supabase = await createClient()
   const since = new Date(now.getTime() - 30 * 86_400_000)
-  const today = localDateOf(now, club.timezone)
 
   const [reported, played, cancelled, matchBookings, tournaments, passes] = await Promise.all([
     supabase
@@ -80,7 +79,8 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
       .from('day_use_passes')
       .select(PASS_SELECT)
       .eq('club_id', club.id)
-      .gte('on_date', localDateOf(since, club.timezone))
+      // Also passes cancelled lately whatever their date, so a refund of an old pass shows up.
+      .or(`on_date.gte.${localDateOf(since, club.timezone)},cancelled_at.gte.${since.toISOString()}`)
       .order('on_date', { ascending: false }),
   ])
   if (reported.error) throw reported.error
@@ -131,7 +131,7 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
     }),
     unpaid: unpaidBookings(played.data),
     unpaidEntries: unpaidEntries(tournaments.data, entries.data, now),
-    unpaidPasses: unpaidPasses(passes.data, today, club.timezone),
+    unpaidPasses: unpaidPasses(passes.data, now, club.timezone),
     refunds: [
       ...refundsDue(cancelled.data),
       ...leftPlayerRefunds(matchBookings.data),

@@ -24,6 +24,7 @@ const PASSES: OverviewPass[] = [
   pass({ id: 'p4', discount_percent: 100, total: 0 }),
   pass({ id: 'p5', on_date: '2026-09-28', status: 'cancelled', player: { display_name: 'Carla' }, payments: [{ id: 'pay5', status: 'confirmed', amount: 450 }] }),
   pass({ id: 'p6', player: { display_name: 'Dani' }, payments: [{ id: 'pay6', status: 'reported', amount: 450 }] }),
+  pass({ id: 'p7', player: { display_name: 'Eva' }, product: { name: 'Day use tarde', from_time: '18:00:00' } }),
 ]
 
 describe('day use in Cobros', () => {
@@ -31,8 +32,8 @@ describe('day use in Cobros', () => {
     expect(passStartsAt('2026-09-30', '08:00:00', TIMEZONE)).toEqual(at('08:00', '2026-09-30'))
   })
 
-  it('lists passes of today or before that still owe, without a transfer waiting', () => {
-    expect(unpaidPasses(PASSES, DATE, TIMEZONE)).toEqual([
+  it('lists passes that already started and still owe, without a transfer waiting', () => {
+    expect(unpaidPasses(PASSES, at('10:00', DATE), TIMEZONE)).toEqual([
       { passId: 'p1', holder: 'Ana', startsAt: at('08:00', '2026-09-30'), productName: 'Day use completo', due: 450 },
     ])
   })
