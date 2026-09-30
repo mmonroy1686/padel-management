@@ -3,16 +3,16 @@ import { clubTabs } from '@/lib/club/tabs'
 
 describe('clubTabs', () => {
   it('shows the day-to-day screens to reception', () => {
-    expect(clubTabs('reception').map((tab) => tab.label)).toEqual(['Grilla', 'Calendario', 'Cobros', 'Jugadores'])
+    expect(clubTabs('reception').map((tab) => tab.label)).toEqual(['Grilla', 'Calendario', 'Torneos', 'Cobros', 'Jugadores'])
   })
 
   it('adds the settings to admins', () => {
     expect(clubTabs('admin').map((tab) => tab.href)).toEqual([
-      '/club/grilla', '/club/calendario', '/club/cobros', '/club/jugadores', '/club/ajustes',
+      '/club/grilla', '/club/calendario', '/club/torneos', '/club/cobros', '/club/jugadores', '/club/ajustes',
     ])
   })
 
   it('gives every tab an icon', () => {
-    expect(clubTabs('admin').map((tab) => tab.icon)).toEqual(['grid', 'calendar', 'cash', 'users', 'sliders'])
+    expect(clubTabs('admin').map((tab) => tab.icon)).toEqual(['grid', 'calendar', 'trophy', 'cash', 'users', 'sliders'])
   })
 })
