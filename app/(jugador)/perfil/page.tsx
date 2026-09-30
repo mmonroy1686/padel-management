@@ -4,7 +4,8 @@ import { PlayerProfileForm } from '@/components/profile/player-profile-form'
 import { PreferredCourtsForm } from '@/components/profile/preferred-courts-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { Card } from '@/components/ui/card'
-import { saveAvailability, savePreferredCourts, saveProfile, signOut } from '@/lib/actions/profile'
+import { ActionForm } from '@/components/ui/action-form'
+import { saveAvailability, savePreferredCourts, saveProfile, setShowInClub, signOut } from '@/lib/actions/profile'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { availabilityKey } from '@/lib/domain/availability'
 import { categoryLabel } from '@/lib/domain/profile'
@@ -60,6 +61,18 @@ export default async function ProfilePage() {
           courts={courts.data}
           selected={preferred.data.map((row) => row.court_id)}
         />
+      </Card>
+      <Card className="flex flex-col gap-3">
+        <h2 className="font-display text-2xl font-bold uppercase">Ya están en el club</h2>
+        <ActionForm action={setShowInClub} submitLabel="Guardar" variant="secondary">
+          <label className="flex min-h-11 items-center gap-3">
+            <input type="checkbox" name="showInClub" defaultChecked={profile.show_in_club} className="size-5 accent-accent" />
+            Aparecer en «Ya están en el club»
+          </label>
+          <p className="text-sm text-fg-muted">
+            Cuando registrás tu ingreso de day use, los otros jugadores ven tu nombre en la lista del día.
+          </p>
+        </ActionForm>
       </Card>
       <form action={signOut}>
         <SubmitButton label="Cerrar sesión" pendingLabel="Saliendo…" variant="secondary" />
