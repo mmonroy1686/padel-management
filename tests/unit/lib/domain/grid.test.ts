@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { blockEndOptions, countFree, dayStats, holderName, visibleRows } from '@/lib/domain/grid'
+import { blockEndOptions, continuesAbove, countFree, dayStats, holderName, visibleRows } from '@/lib/domain/grid'
 import { at, booking, makeGrid, occupancy } from '../../fixtures/grid'
 import { makeMatch } from '../../fixtures/matches'
 
@@ -68,6 +68,23 @@ describe('countFree', () => {
   it('counts free cells', () => {
     expect(countFree(makeGrid().rows)).toBe(20)
     expect(countFree(makeGrid({ now: at('21:00') }).rows)).toBe(2)
+  })
+})
+
+describe('continuesAbove', () => {
+  it('marks the later rows of an occupancy that spans several slots, so it shows once', () => {
+    const grid = makeGrid({
+      occupancies: [occupancy('o1', 'court-1', '08:30', '10:00'), occupancy('o2', 'court-1', '11:00', '12:30')],
+    })
+    expect([0, 1, 2, 3].map((row) => continuesAbove(grid.rows, row, 0))).toEqual([false, true, false, false])
+    expect(continuesAbove(grid.rows, 1, 1)).toBe(false)
+  })
+
+  it('shows the card on the first visible row when earlier rows are hidden', () => {
+    const grid = makeGrid({ occupancies: [occupancy('o1', 'court-1', '08:30', '10:00')], now: at('09:00') })
+    const rows = visibleRows(grid.rows, { onlyFree: false, showPast: false })
+    expect(rows[0].cells[0].occupancy?.id).toBe('o1')
+    expect(continuesAbove(rows, 0, 0)).toBe(false)
   })
 })
 

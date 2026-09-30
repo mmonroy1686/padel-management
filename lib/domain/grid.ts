@@ -146,6 +146,13 @@ export function visibleRows(rows: GridRow[], options: { onlyFree: boolean; showP
   )
 }
 
+// An occupancy longer than a slot (a block, or a booking left off the grid after the club changed
+// its hours) fills several rows. Only the first shown row carries its card; the rest continue it.
+export function continuesAbove(rows: GridRow[], rowIndex: number, courtIndex: number): boolean {
+  const occupancy = rows[rowIndex]?.cells[courtIndex]?.occupancy
+  return !!occupancy && rows[rowIndex - 1]?.cells[courtIndex]?.occupancy?.id === occupancy.id
+}
+
 export function countFree(rows: GridRow[]): number {
   return rows.reduce((total, row) => total + row.cells.filter((cell) => cell.state === 'free').length, 0)
 }
