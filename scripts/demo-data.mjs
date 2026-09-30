@@ -1,0 +1,688 @@
+// Demo data to show the app to Rustic: players, bookings and payments, recurring slots, a block,
+// open matches, three americanos (open, in play, finished) and day use with stamps, all relative
+// to today. Every row hangs from accounts @demo.rustic.test, so each run first removes the previous
+// demo and `--clean` removes it for good. Real members and their data are never touched.
+//
+//   npm run demo:data                      local Supabase (supabase start)
+//   npm run demo:data -- --clean           remove the demo, local
+//   npm run demo:data -- --player=<email>  also give an existing account a demo history
+//   npm run demo:data -- --prod            production: needs SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+//                                          and SUPABASE_PUBLISHABLE_KEY in the environment
+import { randomBytes } from 'node:crypto'
+import { createClient } from '@supabase/supabase-js'
+import { localSupabase } from './local-supabase.mjs'
+
+const DEMO_DOMAIN = 'demo.rustic.test'
+const args = process.argv.slice(2)
+const PROD = args.includes('--prod')
+const CLEAN_ONLY = args.includes('--clean')
+const FEATURED_EMAIL = args.find((arg) => arg.startsWith('--player='))?.slice('--player='.length) ?? null
+
+const env = PROD
+  ? {
+      apiUrl: required('SUPABASE_URL'),
+      serviceRoleKey: required('SUPABASE_SERVICE_ROLE_KEY'),
+      publishableKey: required('SUPABASE_PUBLISHABLE_KEY'),
+    }
+  : localSupabase()
+const OPTIONS = { auth: { persistSession: false, autoRefreshToken: false } }
+const admin = createClient(env.apiUrl, env.serviceRoleKey, OPTIONS)
+// Only the script signs in as the demo accounts; their password is new on every run and never shown.
+const PASSWORD = randomBytes(18).toString('base64url')
+
+const STAFF = [
+  { key: 'admin', name: 'Sofía Méndez', role: 'admin', gender: 'female', side: 'both', hand: 'right', category: 4 },
+  { key: 'reception', name: 'Lucía Pereira', role: 'reception', gender: 'female', side: 'drive', hand: 'right', category: 6 },
+]
+// [key, name, gender, side, hand, category]
+const PLAYERS = [
+  ['martin', 'Martín Suárez', 'male', 'drive', 'right', 4],
+  ['nicolas', 'Nicolás Rodríguez', 'male', 'backhand', 'right', 4],
+  ['santiago', 'Santiago Fernández', 'male', 'both', 'left', 5],
+  ['diego', 'Diego Castro', 'male', 'drive', 'right', 5],
+  ['federico', 'Federico Silva', 'male', 'backhand', 'right', 5],
+  ['joaquin', 'Joaquín Pérez', 'male', 'both', 'right', 6],
+  ['gonzalo', 'Gonzalo Núñez', 'male', 'drive', 'right', 6],
+  ['matias', 'Matías Sosa', 'male', 'backhand', 'left', 6],
+  ['agustin', 'Agustín Correa', 'male', 'both', 'right', 7],
+  ['bruno', 'Bruno Olivera', 'male', 'drive', 'right', 3],
+  ['valentina', 'Valentina López', 'female', 'drive', 'right', 5],
+  ['camila', 'Camila Martínez', 'female', 'backhand', 'right', 5],
+  ['florencia', 'Florencia Díaz', 'female', 'both', 'right', 6],
+  ['carolina', 'Carolina Acosta', 'female', 'drive', 'left', 6],
+  ['mariana', 'Mariana Gómez', 'female', 'backhand', 'right', 4],
+  ['lucia', 'Lucía Benítez', 'female', 'both', 'right', 7],
+  ['paula', 'Paula Ramírez', 'female', 'drive', 'right', 5],
+  ['sofia', 'Sofía Cabrera', 'female', 'backhand', 'right', 6],
+  ['andrea', 'Andrea Morales', 'female', 'both', 'left', 4],
+  ['jimena', 'Jimena Torres', 'female', 'drive', 'right', 7],
+].map(([key, name, gender, side, hand, category]) => ({ key, name, gender, side, hand, category, role: 'player' }))
+
+// A tiny PNG, the receipt of every demo transfer.
+const RECEIPT = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+  'base64',
+)
+
+const { data: club, error: clubError } = await admin.from('clubs').select('*').eq('slug', 'rustic').single()
+if (clubError) fail('No está el club "rustic". Local: npm run db:reset.')
+console.log(`${PROD ? 'PRODUCCIÓN' : 'Local'}: ${env.apiUrl}, club ${club.name}`)
+
+const demoIds = await demoUserIds()
+if (demoIds.length > 0) {
+  await clean(demoIds)
+  console.log(`Quitamos la demo anterior (${demoIds.length} cuentas).`)
+}
+if (CLEAN_ONLY) process.exit(0)
+
+const { data: courts } = await admin
+  .from('courts')
+  .select('id, name')
+  .eq('club_id', club.id)
+  .eq('is_active', true)
+  .order('sort_order')
+if (!courts || courts.length < 2) fail('La demo necesita al menos 2 canchas activas.')
+const { count: priceCount } = await admin.from('pricing_rules').select('id', { count: 'exact', head: true }).eq('club_id', club.id)
+if (!priceCount) fail('La demo necesita precios cargados (Ajustes → Precios).')
+
+// ---------- people ----------
+const people = {}
+for (const person of [...STAFF, ...PLAYERS]) people[person.key] = await createMember(person)
+let featured = null
+if (FEATURED_EMAIL) {
+  featured = await existingMember(FEATURED_EMAIL)
+  if (featured) people.featured = featured
+}
+const reception = people.reception.client
+const clubAdmin = people.admin.client
+const staffId = people.reception.id
+console.log(`Cuentas: ${Object.keys(people).length} (${STAFF.length} del club, ${PLAYERS.length} jugadores).`)
+
+await check(
+  admin
+    .from('clubs')
+    .update({ loyalty_enabled: true, loyalty_every: 5, loyalty_discount_percent: 100, loyalty_expiry_months: 6 })
+    .eq('id', club.id),
+)
+
+// ---------- time ----------
+const TZ = club.timezone
+const today = localDate(new Date())
+const now = new Date()
+const SLOTS = slotTimes()
+const at = (days, time) => zoned(addDays(today, days), time)
+const futureSlot = (days, time) => at(days, time) > new Date(now.getTime() + 30 * 60_000)
+const court = (index) => courts[index % courts.length]
+
+// Things that take whole courts go first: day use, tournaments, recurring slots and the block.
+// ---------- day use ----------
+const products = {}
+for (const [key, product] of Object.entries({
+  full: {
+    p_name: 'Day use completo',
+    p_price: 450,
+    p_includes: ['Vestuarios y duchas', 'Pileta', 'Cancha libre'],
+    p_weekdays: [0, 6],
+    p_from_time: '08:00',
+    p_to_time: '12:30',
+    p_capacity: 30,
+    p_court_ids: [court(2).id],
+    p_sort_order: 1,
+  },
+  padel: {
+    p_name: 'Day use pádel',
+    p_price: 300,
+    p_includes: ['Vestuarios y duchas', 'Cancha libre en horario valle'],
+    p_weekdays: [1, 2, 3, 4, 5],
+    p_from_time: '14:00',
+    p_to_time: '17:00',
+    p_capacity: 20,
+    p_court_ids: [court(2).id],
+    p_sort_order: 2,
+  },
+})) {
+  const { data, error } = await clubAdmin.rpc('save_day_use_product', { p_club_id: club.id, ...product })
+  if (error) fail(`save_day_use_product: ${error.message}`)
+  products[key] = { id: data[0].saved_id, ...product }
+}
+
+// ---------- tournaments ----------
+const tournaments = []
+const openTournament = await tryRpc(reception, 'create_tournament', {
+  p_name: 'Americano de 5ta y 6ta',
+  p_starts_at: at(5, '18:30').toISOString(),
+  p_court_ids: [court(0).id, court(1).id],
+  p_max_players: 8,
+  p_points_per_game: 24,
+  p_round_minutes: 20,
+  p_rounds: 7,
+  p_category_min: 5,
+  p_category_max: 6,
+  p_type: 'mixed',
+  p_price: 400,
+})
+if (openTournament) {
+  tournaments.push('Americano de 5ta y 6ta (inscripción abierta)')
+  for (const key of ['santiago', 'diego', 'valentina', 'camila', 'florencia', 'joaquin']) {
+    await tryRpc(people[key].client, 'join_tournament', { p_tournament_id: openTournament.id })
+  }
+  if (featured) await tryRpc(featured.client, 'join_tournament', { p_tournament_id: openTournament.id })
+  await payEntries(openTournament.id, { cash: ['santiago', 'valentina'], transfer: ['camila'] })
+}
+
+// Today if it still fits before closing, otherwise tomorrow; started with some results.
+const playDay = futureSlot(0, '17:00') ? 0 : 1
+const liveTournament = await tryRpc(reception, 'create_tournament', {
+  p_name: 'Americano mixto de la casa',
+  p_starts_at: at(playDay, '17:00').toISOString(),
+  p_court_ids: [court(0).id, court(1).id],
+  p_max_players: 8,
+  p_points_per_game: 24,
+  p_round_minutes: 20,
+  p_rounds: 7,
+  p_category_min: 3,
+  p_category_max: 7,
+  p_type: 'mixed',
+  p_price: 400,
+})
+if (liveTournament) {
+  tournaments.push('Americano mixto de la casa (en juego)')
+  for (const key of ['martin', 'nicolas', 'mariana', 'andrea', 'paula', 'federico']) {
+    await tryRpc(people[key].client, 'join_tournament', { p_tournament_id: liveTournament.id })
+  }
+  await tryRpc(reception, 'add_tournament_guest', { p_tournament_id: liveTournament.id, p_name: 'Pablo (invitado)' })
+  await tryRpc(reception, 'add_tournament_guest', { p_tournament_id: liveTournament.id, p_name: 'Rocío (invitada)' })
+  await payEntries(liveTournament.id, { cash: ['martin', 'nicolas', 'mariana', 'andrea', 'paula'] })
+  await tryRpc(reception, 'close_tournament_registration', { p_tournament_id: liveTournament.id })
+  await tryRpc(reception, 'start_tournament', { p_tournament_id: liveTournament.id })
+  const { data: games } = await admin
+    .from('tournament_games')
+    .select('id, round')
+    .eq('tournament_id', liveTournament.id)
+    .lte('round', 3)
+  for (const [index, game] of (games ?? []).entries()) {
+    await tryRpc(reception, 'record_tournament_score', { p_game_id: game.id, p_score_a: [15, 9, 13, 11, 17, 7][index % 6] })
+  }
+}
+if (await finishedTournament()) tournaments.push('Relámpago de la semana pasada (finalizado)')
+
+// ---------- recurring slots and a block ----------
+let series = 0
+for (const [days, time, courtIndex, holder] of [
+  [1, '20:00', 0, { p_guest_name: 'Los del martes' }],
+  [2, '18:30', 1, { p_player_id: people.gonzalo.id }],
+  [3, '21:30', 0, { p_guest_name: 'Escuela de pádel' }],
+]) {
+  const date = addDays(today, days)
+  const created = await tryRpc(reception, 'create_series', {
+    p_court_id: court(courtIndex).id,
+    p_weekday: weekday(date),
+    p_start_time: time,
+    p_starts_on: date,
+    ...holder,
+  })
+  if (created) series++
+}
+await tryRpc(reception, 'block_court', {
+  p_court_id: court(courts.length - 1).id,
+  p_starts_at: at(1, '09:30').toISOString(),
+  p_ends_at: at(1, '12:30').toISOString(),
+  p_note: 'Clase de menores',
+})
+
+// ---------- open matches ----------
+let matches = 0
+for (const [days, time, courtIndex, creator, joiners] of [
+  [0, '21:30', 1, 'diego', ['camila', 'valentina']],
+  [1, '21:30', 0, 'bruno', ['gonzalo']],
+  [2, '20:00', 1, 'florencia', ['carolina', 'sofia']],
+  [3, '18:30', 0, 'santiago', []],
+  [4, '20:00', 1, 'agustin', ['lucia', 'jimena', 'joaquin']],
+]) {
+  // A match stops taking players match_close_hours before it starts.
+  if (at(days, time) <= new Date(now.getTime() + (club.match_close_hours * 60 + 30) * 60_000)) continue
+  const creatorPerson = people[creator]
+  const match = await tryRpc(creatorPerson.client, 'create_match', {
+    p_court_id: court(courtIndex).id,
+    p_starts_at: at(days, time).toISOString(),
+    p_allow_other_court: true,
+    p_category_min: Math.max(1, creatorPerson.category - 1),
+    p_category_max: Math.min(8, creatorPerson.category + 2),
+    p_match_type: 'mixed',
+    p_side: creatorPerson.side === 'both' ? 'drive' : creatorPerson.side,
+  })
+  if (!match) continue
+  matches++
+  for (const key of joiners) await joinAnywhere(people[key].client, match.id)
+  if (featured && days === 2) await joinAnywhere(featured.client, match.id)
+}
+
+// ---------- bookings ----------
+const bookingPlan = []
+const holders = ['nicolas', 'federico', 'gonzalo', 'matias', 'bruno', 'mariana', 'paula', 'sofia', 'andrea', 'carolina']
+let turn = 0
+for (let days = 0; days <= 6; days++) {
+  const evening = SLOTS.filter((time) => time >= '17:00')
+  const daytime = SLOTS.filter((time) => time < '17:00')
+  const times = [...evening, ...daytime.filter((_, index) => (index + days) % 3 === 0)]
+  for (const time of times) {
+    for (let index = 0; index < courts.length; index++) {
+      if ((days + index + time.length + turn) % 4 === 3) continue // leave some free
+      turn++
+      if (!futureSlot(days, time)) continue
+      const guest = turn % 5 === 0
+      bookingPlan.push({ days, time, courtId: courts[index].id, holder: guest ? null : holders[turn % holders.length], guest })
+    }
+  }
+}
+const GUESTS = ['Rodríguez', 'Familia García', 'Méndez y amigos', 'Barrios', 'Clínica Pádel Kids']
+let booked = 0
+let paidCash = 0
+let transfers = 0
+for (const [index, plan] of bookingPlan.entries()) {
+  const holderId = plan.holder ? people[plan.holder].id : null
+  const booking = await tryRpc(reception, 'staff_book', {
+    p_court_id: plan.courtId,
+    p_starts_at: at(plan.days, plan.time).toISOString(),
+    ...(holderId ? { p_player_id: holderId } : { p_guest_name: GUESTS[index % GUESTS.length] }),
+  }, { quiet: true })
+  if (!booking) continue
+  booked++
+  if (index % 3 === 0) {
+    if (await tryRpc(reception, 'record_cash', { p_booking_id: booking.id, p_amount: booking.price })) paidCash++
+  } else if (index % 3 === 1 && plan.holder) {
+    if (await reportTransfer(people[plan.holder], 'report_transfer', { p_booking_id: booking.id }, booking.id)) transfers++
+  }
+}
+if (featured) {
+  for (const [days, time, courtIndex] of [[1, '20:00', 2], [4, '18:30', 2]]) {
+    await tryRpc(reception, 'staff_book', {
+      p_court_id: court(courtIndex).id,
+      p_starts_at: at(days, time).toISOString(),
+      p_player_id: featured.id,
+    }, { quiet: true })
+  }
+}
+const pastUnpaid = await pastBookings()
+
+// ---------- day use passes and stamps ----------
+const passes = await dayUsePasses()
+
+console.log(`
+Listo. Demo cargada:
+  ${booked} reservas en los próximos 7 días (${paidCash} cobradas en efectivo, ${transfers} transferencias para confirmar)
+  ${pastUnpaid} turnos jugados sin pagar, ${series} turnos fijos, 1 bloqueo ("Clase de menores")
+  ${matches} partidos abiertos
+  ${tournaments.length} torneos: ${tournaments.join('; ')}
+  2 pases de day use, ${passes} pases vendidos y sellos de ejemplo (Valentina tiene una recompensa)
+${featured ? `  ${FEATURED_EMAIL} tiene reservas, un partido, una inscripción y 4 de 5 sellos.\n` : ''}
+Mostralo con tu cuenta de admin (Panel del club) o sumá tu cuenta de jugador con --player=<email>.
+Para sacarlo: npm run demo:data -- --clean${PROD ? ' --prod' : ''}`)
+
+// ======================================================================================
+
+function required(name) {
+  const value = process.env[name]
+  if (!value) fail(`Falta ${name} en el entorno.`)
+  return value
+}
+
+function fail(message) {
+  console.error(message)
+  process.exit(1)
+}
+
+async function check(query) {
+  const { error } = await query
+  if (error) fail(error.message)
+}
+
+async function tryRpc(client, name, params, { quiet = false } = {}) {
+  const { data, error } = await client.rpc(name, params)
+  if (error) {
+    if (!quiet) console.warn(`  (se saltea ${name}: ${error.message})`)
+    return null
+  }
+  return data
+}
+
+async function demoUserIds() {
+  const ids = []
+  for (let page = 1; ; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
+    if (error) fail(error.message)
+    ids.push(...data.users.filter((user) => user.email?.endsWith(`@${DEMO_DOMAIN}`)).map((user) => user.id))
+    if (data.users.length < 1000) break
+  }
+  return ids
+}
+
+async function signedIn(email) {
+  const client = createClient(env.apiUrl, env.publishableKey, OPTIONS)
+  const { error } = await client.auth.signInWithPassword({ email, password: PASSWORD })
+  if (error) fail(`No pudimos ingresar como ${email}: ${error.message}`)
+  return client
+}
+
+async function createMember(person) {
+  const email = `${person.key}@${DEMO_DOMAIN}`
+  const created = await admin.auth.admin.createUser({
+    email,
+    password: PASSWORD,
+    email_confirm: true,
+    user_metadata: { full_name: person.name },
+  })
+  if (created.error) fail(`${email}: ${created.error.message}`)
+  const id = created.data.user.id
+  await check(
+    admin
+      .from('profiles')
+      .update({ display_name: person.name, side: person.side, hand: person.hand, gender: person.gender, is_public: true })
+      .eq('id', id),
+  )
+  await check(
+    admin.from('club_members').upsert({
+      club_id: club.id,
+      user_id: id,
+      role: person.role,
+      category: person.category,
+      category_validated: true,
+    }),
+  )
+  return { ...person, id, email, client: await signedIn(email) }
+}
+
+// An account that already exists (e.g. Miguel's). The script only adds demo rows around it.
+async function existingMember(email) {
+  let user = null
+  for (let page = 1; !user; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
+    if (error) fail(error.message)
+    user = data.users.find((candidate) => candidate.email === email) ?? null
+    if (data.users.length < 1000) break
+  }
+  if (!user) {
+    console.warn(`  (no existe ${email}: la demo sigue sin su historia)`)
+    return null
+  }
+  const { data: member } = await admin
+    .from('club_members')
+    .select('category')
+    .eq('club_id', club.id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!member) {
+    console.warn(`  (${email} todavía no completó su perfil en el club: la demo sigue sin su historia)`)
+    return null
+  }
+  // A magic link for the script's own session: the password of a real account is never touched.
+  const link = await admin.auth.admin.generateLink({ type: 'magiclink', email })
+  if (link.error) fail(link.error.message)
+  const client = createClient(env.apiUrl, env.publishableKey, OPTIONS)
+  const verified = await client.auth.verifyOtp({ type: 'magiclink', token_hash: link.data.properties.hashed_token })
+  if (verified.error) fail(`No pudimos preparar ${email}: ${verified.error.message}`)
+  return { key: 'featured', id: user.id, email, category: member.category, client }
+}
+
+async function reportTransfer(person, rpc, params, name) {
+  const path = `${person.id}/${name}-${Date.now()}.png`
+  const upload = await person.client.storage.from('receipts').upload(path, RECEIPT, { contentType: 'image/png' })
+  if (upload.error) return null
+  return tryRpc(person.client, rpc, { ...params, p_receipt_path: path })
+}
+
+async function payEntries(tournamentId, { cash = [], transfer = [] }) {
+  const { data: entries } = await admin
+    .from('tournament_entries')
+    .select('id, player_id')
+    .eq('tournament_id', tournamentId)
+    .is('removed_at', null)
+  const entryOf = (key) => entries?.find((entry) => entry.player_id === people[key].id)
+  for (const key of cash) {
+    const entry = entryOf(key)
+    if (entry) await tryRpc(reception, 'record_tournament_cash', { p_entry_id: entry.id, p_amount: 400 })
+  }
+  for (const key of transfer) {
+    const entry = entryOf(key)
+    if (entry) await reportTransfer(people[key], 'report_tournament_transfer', { p_entry_id: entry.id }, entry.id)
+  }
+}
+
+// Played and still owed, yesterday and the day before: inserted directly, the booking functions
+// never take a slot in the past.
+async function pastBookings() {
+  let count = 0
+  for (const [days, time, courtIndex, key] of [
+    [-1, '20:00', 0, 'federico'],
+    [-1, '21:30', 1, 'matias'],
+    [-2, '18:30', 0, 'bruno'],
+  ]) {
+    const startsAt = at(days, time)
+    const period = `[${startsAt.toISOString()},${new Date(startsAt.getTime() + club.slot_minutes * 60_000).toISOString()})`
+    const occupancy = await admin
+      .from('court_occupancy')
+      .insert({ club_id: club.id, court_id: court(courtIndex).id, kind: 'booking', period, created_by: staffId })
+      .select('id')
+      .single()
+    if (occupancy.error) continue
+    const booking = await admin.from('bookings').insert({
+      club_id: club.id,
+      court_id: court(courtIndex).id,
+      period,
+      player_id: people[key].id,
+      source: 'reception',
+      price: 1600,
+      occupancy_id: occupancy.data.id,
+      created_by: staffId,
+    })
+    if (!booking.error) count++
+  }
+  return count
+}
+
+// Last week's americano, finished: inserted directly with its fixture and every result.
+async function finishedTournament() {
+  const startsAt = at(-6, '18:00')
+  const minutes = 7 * 20
+  const period = `[${startsAt.toISOString()},${new Date(startsAt.getTime() + minutes * 60_000).toISOString()})`
+  const tournament = await admin
+    .from('tournaments')
+    .insert({
+      club_id: club.id,
+      name: 'Relámpago de la semana pasada',
+      period,
+      court_ids: [court(0).id, court(1).id],
+      max_players: 8,
+      rounds: 7,
+      category_min: 4,
+      category_max: 7,
+      match_type: 'mixed',
+      price: 400,
+      status: 'finished',
+      created_by: staffId,
+    })
+    .select('id')
+    .single()
+  if (tournament.error) {
+    console.warn(`  (se saltea el torneo finalizado: ${tournament.error.message})`)
+    return false
+  }
+  const keys = ['martin', 'nicolas', 'santiago', 'diego', 'valentina', 'camila', 'mariana', 'andrea']
+  const entries = await admin
+    .from('tournament_entries')
+    .insert(keys.map((key) => ({ club_id: club.id, tournament_id: tournament.data.id, player_id: people[key].id, created_by: staffId })))
+    .select('id')
+  if (entries.error) return false
+  const ids = entries.data.map((entry) => entry.id)
+  const games = []
+  const n = ids.length
+  for (let round = 0; round < n - 1; round++) {
+    // Circle method, as in start_tournament.
+    const pairs = [ids[round], ids[n - 1]]
+    for (let k = 1; k < n / 2; k++) pairs.push(ids[(round + k) % (n - 1)], ids[(round - k + n - 1) % (n - 1)])
+    for (let game = 0; game < n / 4; game++) {
+      games.push({
+        club_id: club.id,
+        tournament_id: tournament.data.id,
+        round: round + 1,
+        wave: 1,
+        court_id: court(game).id,
+        starts_at: new Date(startsAt.getTime() + round * 20 * 60_000).toISOString(),
+        a1_entry_id: pairs[4 * game],
+        a2_entry_id: pairs[4 * game + 1],
+        b1_entry_id: pairs[4 * game + 2],
+        b2_entry_id: pairs[4 * game + 3],
+        score_a: [16, 10, 13, 8, 19, 12, 14][(round + game * 3) % 7],
+        recorded_by: staffId,
+        recorded_at: new Date(startsAt.getTime() + (round + 1) * 20 * 60_000).toISOString(),
+      })
+    }
+  }
+  const inserted = await admin.from('tournament_games').insert(games)
+  return !inserted.error
+}
+
+async function dayUsePasses() {
+  let count = 0
+  let stampCode = 0
+  // Stamps: past check-ins, inserted directly (check-in only works on the day of the pass).
+  const history = [
+    ['valentina', [3, 10, 17, 24, 31]],
+    ['camila', [7, 14]],
+    ['florencia', [5, 12, 19]],
+  ]
+  if (featured) history.push(['featured', [6, 13, 20, 27]])
+  for (const [key, daysAgo] of history) {
+    const rows = daysAgo.map((ago) => ({
+      club_id: club.id,
+      product_id: products.full.id,
+      on_date: addDays(today, -ago),
+      player_id: people[key].id,
+      price: 450,
+      code: `DU-9${String(stampCode++).padStart(5, '0')}`,
+      status: 'inside',
+      source: 'reception',
+      checked_in_at: at(-ago, '09:00').toISOString(),
+      checked_in_by: staffId,
+      created_by: staffId,
+    }))
+    const { error } = await admin.from('day_use_passes').insert(rows)
+    if (error) console.warn(`  (se saltean sellos de ${key}: ${error.message})`)
+  }
+
+  // The next day with day use from today: passes sold, some already inside.
+  for (let days = 0; days <= 6; days++) {
+    const date = addDays(today, days)
+    const product = [products.full, products.padel].find((candidate) => candidate.p_weekdays.includes(weekday(date)))
+    if (!product || !futureOrToday(days, product.p_to_time)) continue
+    const buyers = ['camila', 'florencia', 'diego', 'joaquin', 'carolina', 'agustin']
+    for (const [index, key] of buyers.entries()) {
+      const pass = await tryRpc(reception, 'sell_day_use', { p_product_id: product.id, p_date: date, p_player_id: people[key].id }, { quiet: true })
+      if (!pass) continue
+      count++
+      if (index % 2 === 0) await tryRpc(reception, 'record_day_use_cash', { p_pass_id: pass.id, p_amount: product.p_price })
+      if (days === 0 && index < 4) await tryRpc(reception, 'check_in_day_use', { p_pass_id: pass.id })
+    }
+    const guest = await tryRpc(reception, 'sell_day_use', { p_product_id: product.id, p_date: date, p_guest_name: 'Visitante de Punta' }, { quiet: true })
+    if (guest) count++
+    if (featured) {
+      const mine = await tryRpc(reception, 'sell_day_use', { p_product_id: product.id, p_date: date, p_player_id: featured.id }, { quiet: true })
+      if (mine) count++
+    }
+    break
+  }
+  return count
+}
+
+async function joinAnywhere(client, matchId) {
+  for (const position of [2, 3, 4]) {
+    const { error } = await client.rpc('join_match', { p_match_id: matchId, p_position: position })
+    if (!error) return true
+    if (!['spot_taken', 'side_mismatch'].includes(error.message)) return false
+  }
+  return false
+}
+
+async function clean(ids) {
+  const idList = `(${ids.join(',')})`
+  const series = await admin.from('recurring_series').select('id').in('created_by', ids)
+  const seriesIds = (series.data ?? []).map((row) => row.id)
+  const [spots, created] = await Promise.all([
+    admin.from('match_slots').select('match_id').in('player_id', ids),
+    admin.from('open_matches').select('id').in('created_by', ids),
+  ])
+  const matchIds = [...new Set([...(spots.data ?? []).map((row) => row.match_id), ...(created.data ?? []).map((row) => row.id)])]
+  const filters = [`player_id.in.${idList}`, `created_by.in.${idList}`]
+  if (seriesIds.length > 0) filters.push(`series_id.in.(${seriesIds.join(',')})`)
+  if (matchIds.length > 0) filters.push(`match_id.in.(${matchIds.join(',')})`)
+  const bookings = await admin.from('bookings').select('id, occupancy_id').or(filters.join(','))
+  if (bookings.error) fail(bookings.error.message)
+  const occupancyIds = bookings.data.flatMap((row) => (row.occupancy_id ? [row.occupancy_id] : []))
+  if (bookings.data.length > 0) await check(admin.from('bookings').delete().in('id', bookings.data.map((row) => row.id)))
+  if (seriesIds.length > 0) await check(admin.from('recurring_series').delete().in('id', seriesIds))
+  if (matchIds.length > 0) await check(admin.from('open_matches').delete().in('id', matchIds))
+  await check(admin.from('tournaments').delete().in('created_by', ids))
+  await check(admin.from('tournament_entries').delete().in('player_id', ids))
+  await check(admin.from('day_use_passes').delete().or(`player_id.in.${idList},created_by.in.${idList}`))
+  await check(admin.from('day_use_products').delete().in('created_by', ids))
+  const occupancyFilter = [`created_by.in.${idList}`]
+  if (occupancyIds.length > 0) occupancyFilter.push(`id.in.(${occupancyIds.join(',')})`)
+  await check(admin.from('court_occupancy').delete().or(occupancyFilter.join(',')))
+  for (const id of ids) {
+    const files = await admin.storage.from('receipts').list(id)
+    if (files.data && files.data.length > 0) {
+      await admin.storage.from('receipts').remove(files.data.map((file) => `${id}/${file.name}`))
+    }
+    const deleted = await admin.auth.admin.deleteUser(id)
+    if (deleted.error) fail(deleted.error.message)
+  }
+}
+
+// ---------- dates on the club's clock ----------
+
+function localDate(instant) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TZ ?? club.timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(instant)
+}
+
+function addDays(date, days) {
+  const [year, month, day] = date.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10)
+}
+
+function weekday(date) {
+  const [year, month, day] = date.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+}
+
+// The instant of a wall-clock time on the club's clock.
+function zoned(date, time) {
+  const guess = new Date(`${date}T${time}:00Z`)
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: club.timezone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+      .formatToParts(guess)
+      .map((part) => [part.type, part.value]),
+  )
+  const shown = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute)
+  return new Date(guess.getTime() - (shown - guess.getTime()))
+}
+
+function slotTimes() {
+  const toMinutes = (value) => Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5))
+  const times = []
+  for (let start = toMinutes(club.opens_at); start + club.slot_minutes <= toMinutes(club.closes_at); start += club.slot_minutes) {
+    times.push(`${String(Math.floor(start / 60)).padStart(2, '0')}:${String(start % 60).padStart(2, '0')}`)
+  }
+  return times
+}
+
+function futureOrToday(days, endTime) {
+  return days > 0 || at(0, endTime.slice(0, 5)) > now
+}

@@ -15,7 +15,8 @@
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local --schema public > lib/supabase/database.types.ts",
     "dev:local": "node scripts/dev-local.mjs",
-    "demo:users": "node scripts/demo-users.mjs"
+    "demo:users": "node scripts/demo-users.mjs",
+    "demo:data": "node scripts/demo-data.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
