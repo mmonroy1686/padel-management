@@ -660,6 +660,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"match_suggestions":
+{ Args: { "p_match_id": string }; Returns: {
+              "category": number,"display_name": string,"exact_side": boolean,"player_id": string,"prefers_court": boolean,"score": number,"side": Database["public"]['Enums']["player_side"],"spot": number,"times_played": number,"usually_free": boolean
+            }[]
+                           },
 "occupancy_notes":
 { Args: { "p_club_id": string,"p_from": string,"p_to": string }; Returns: {
               "id": string,"note": string
