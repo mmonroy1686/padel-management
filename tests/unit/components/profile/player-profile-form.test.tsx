@@ -4,14 +4,15 @@ import { describe, expect, it, vi } from 'vitest'
 import { PlayerProfileForm, type ProfileValues } from '@/components/profile/player-profile-form'
 import type { FormAction } from '@/components/ui/action-form'
 
-const NEW_PLAYER: ProfileValues = { displayName: 'Lucía', side: null, hand: null, category: null, isPublic: true }
+const NEW_PLAYER: ProfileValues = { displayName: 'Lucía', side: null, hand: null, gender: null, category: null, isPublic: true }
 
 describe('PlayerProfileForm', () => {
-  it('asks for name, side, hand and category when joining', () => {
+  it('asks for name, side, hand, gender and category when joining', () => {
     render(<PlayerProfileForm mode="onboarding" action={vi.fn<FormAction>()} initial={NEW_PLAYER} next="/reservar" />)
     expect(screen.getByLabelText('Nombre')).toHaveValue('Lucía')
     expect(screen.getByLabelText('Lado')).toBeRequired()
     expect(screen.getByLabelText('Mano')).toBeRequired()
+    expect(screen.getByLabelText('Género')).toBeRequired()
     expect(screen.getByLabelText('Categoría')).toBeRequired()
     expect(screen.getByText(/El club valida tu categoría/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Guardar y seguir' })).toBeInTheDocument()
@@ -23,12 +24,14 @@ describe('PlayerProfileForm', () => {
     await userEvent.selectOptions(screen.getByLabelText('Lado'), 'Revés')
     await userEvent.selectOptions(screen.getByLabelText('Mano'), 'Zurdo')
     await userEvent.selectOptions(screen.getByLabelText('Categoría'), '5ª')
+    await userEvent.selectOptions(screen.getByLabelText('Género'), 'Femenino')
     await userEvent.click(screen.getByRole('button', { name: 'Guardar y seguir' }))
     await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
     expect(Object.fromEntries(action.mock.calls[0][1].entries())).toMatchObject({
       displayName: 'Lucía',
       side: 'backhand',
       hand: 'left',
+      gender: 'female',
       category: '5',
       next: '/reservar',
       isPublic: 'on',
@@ -40,7 +43,7 @@ describe('PlayerProfileForm', () => {
       <PlayerProfileForm
         mode="profile"
         action={vi.fn<FormAction>()}
-        initial={{ displayName: 'Lucía', side: 'drive', hand: 'right', category: 5, isPublic: false }}
+        initial={{ displayName: 'Lucía', side: 'drive', hand: 'right', gender: 'female', category: 5, isPublic: false }}
       />,
     )
     expect(screen.getByLabelText('Otros jugadores pueden ver mi perfil')).not.toBeChecked()

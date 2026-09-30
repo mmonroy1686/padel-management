@@ -145,10 +145,11 @@ describe('loadSlot', () => {
 })
 
 describe('saveProfile', () => {
-  const valid = { displayName: ' Lucía ', side: 'backhand', hand: 'left', category: '5', isPublic: 'on' }
+  const valid = { displayName: ' Lucía ', side: 'backhand', hand: 'left', gender: 'female', category: '5', isPublic: 'on' }
 
-  it('rejects unknown sides and categories', async () => {
+  it('rejects unknown sides, genders and categories', async () => {
     expect(await saveProfile(IDLE, form({ ...valid, side: 'center' }))).toEqual(INVALID_INPUT)
+    expect(await saveProfile(IDLE, form({ ...valid, gender: 'x' }))).toEqual(INVALID_INPUT)
     expect(await saveProfile(IDLE, form({ ...valid, category: '9' }))).toEqual(INVALID_INPUT)
     expect(rpc).not.toHaveBeenCalled()
   })
@@ -160,6 +161,7 @@ describe('saveProfile', () => {
       p_display_name: 'Lucía',
       p_side: 'backhand',
       p_hand: 'left',
+      p_gender: 'female',
       p_is_public: true,
       p_category: 5,
     })

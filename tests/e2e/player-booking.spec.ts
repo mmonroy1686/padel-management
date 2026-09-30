@@ -16,6 +16,7 @@ test('a new player signs up, books a court, sees it and reports the transfer', a
   await page.getByLabel('Nombre').fill('Lucía E2E')
   await page.getByLabel('Lado').selectOption('Revés')
   await page.getByLabel('Mano').selectOption('Diestro')
+  await page.getByLabel('Género').selectOption('Femenino')
   await page.getByLabel('Categoría').selectOption('5ª')
   await page.getByRole('button', { name: 'Guardar y seguir' }).click()
   await expect(page).toHaveURL(/\/reservar/)

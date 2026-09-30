@@ -31,6 +31,9 @@ export async function createMember(options: {
   name: string
   prefix: string
   role?: 'player' | 'reception' | 'admin'
+  side?: 'drive' | 'backhand' | 'both'
+  gender?: 'male' | 'female'
+  category?: number
 }): Promise<TestUser> {
   const admin = adminClient()
   const club = await clubRow(admin)
@@ -45,13 +48,16 @@ export async function createMember(options: {
   if (error) throw error
   const id = data.user.id
 
-  const profile = await admin.from('profiles').update({ side: 'drive', hand: 'right' }).eq('id', id)
+  const profile = await admin
+    .from('profiles')
+    .update({ side: options.side ?? 'drive', hand: 'right', gender: options.gender ?? 'male' })
+    .eq('id', id)
   if (profile.error) throw profile.error
   const member = await admin.from('club_members').insert({
     club_id: club.id,
     user_id: id,
     role: options.role ?? 'player',
-    category: 5,
+    category: options.category ?? 5,
     category_validated: true,
   })
   if (member.error) throw member.error

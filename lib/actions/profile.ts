@@ -6,10 +6,10 @@ import { revalidateBookings } from '@/lib/actions/revalidate'
 import { safeNextPath } from '@/lib/auth/redirect'
 import { getViewer } from '@/lib/auth/viewer'
 import { readBoolean, readEnum, readInt, readText } from '@/lib/domain/input'
-import { HANDS, SIDES } from '@/lib/domain/profile'
+import { GENDERS, HANDS, SIDES } from '@/lib/domain/profile'
 import { createClient } from '@/lib/supabase/server'
 
-// Saves name, side, hand, visibility and category in one transaction (save_my_profile), which
+// Saves name, side, hand, gender, visibility and category in one transaction (save_my_profile), which
 // also joins the club the first time.
 export async function saveProfile(_previous: ActionState, form: FormData): Promise<ActionState> {
   const viewer = await getViewer()
@@ -18,8 +18,9 @@ export async function saveProfile(_previous: ActionState, form: FormData): Promi
   const displayName = readText(form, 'displayName', { maxLength: 60 })
   const side = readEnum(form, 'side', SIDES)
   const hand = readEnum(form, 'hand', HANDS)
+  const gender = readEnum(form, 'gender', GENDERS)
   const category = readInt(form, 'category', { min: 1, max: 8 })
-  if (!displayName || !side || !hand || category === null) return INVALID_INPUT
+  if (!displayName || !side || !hand || !gender || category === null) return INVALID_INPUT
 
   const supabase = await createClient()
   const { error } = await supabase.rpc('save_my_profile', {
@@ -27,6 +28,7 @@ export async function saveProfile(_previous: ActionState, form: FormData): Promi
     p_display_name: displayName,
     p_side: side,
     p_hand: hand,
+    p_gender: gender,
     p_is_public: readBoolean(form, 'isPublic'),
     p_category: category,
   })

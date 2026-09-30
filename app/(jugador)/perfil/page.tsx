@@ -26,6 +26,7 @@ export default async function ProfilePage() {
             displayName: profile.display_name,
             side: profile.side,
             hand: profile.hand,
+            gender: profile.gender,
             category: membership.category,
             isPublic: profile.is_public,
           }}
