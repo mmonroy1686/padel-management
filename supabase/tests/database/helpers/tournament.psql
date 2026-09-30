@@ -1,0 +1,53 @@
+-- Fase 3a fixture. Include it after slot.psql, club.psql and match.psql:
+--   \ir helpers/tournament.psql
+-- Tournaments and entries inserted as postgres (skips the RPC rules on purpose). Unless told
+-- otherwise a tournament is mixed, 1ª a 8ª, for 8 players, 7 rounds, $400, on Cancha 1 and 2.
+create procedure test_helpers.make_tournament(
+  p_id uuid,
+  p_period tstzrange,
+  p_max integer default 8,
+  p_status public.tournament_status default 'registration',
+  p_type public.match_type default 'mixed',
+  p_category_min integer default 1,
+  p_category_max integer default 8,
+  p_price integer default 400,
+  p_courts uuid[] default array['c0000000-0000-0000-0000-000000000001',
+                                'c0000000-0000-0000-0000-000000000002']::uuid[]
+)
+language plpgsql
+as $$
+begin
+  insert into public.tournaments (id, club_id, name, period, court_ids, max_players, rounds, category_min,
+                                  category_max, match_type, price, status, cancelled_at)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', 'Americano T', p_period, p_courts, p_max, 7,
+          p_category_min, p_category_max, p_type, p_price, p_status,
+          case when p_status = 'cancelled' then now() end);
+end;
+$$;
+
+-- Signs a member up.
+create procedure test_helpers.add_entry(p_tournament_id uuid, p_player_id uuid)
+language sql
+as $$
+  insert into public.tournament_entries (club_id, tournament_id, player_id)
+  values ('a0000000-0000-0000-0000-000000000001', p_tournament_id, p_player_id);
+$$;
+
+-- Adds p_count guests: 'Invitado 1', 'Invitado 2', ...
+create procedure test_helpers.add_guests(p_tournament_id uuid, p_count integer)
+language sql
+as $$
+  insert into public.tournament_entries (club_id, tournament_id, guest_name)
+  select 'a0000000-0000-0000-0000-000000000001', p_tournament_id, 'Invitado ' || n
+  from generate_series(1, p_count) as n;
+$$;
+
+-- The active entry of a member in a tournament (null once she left).
+create function test_helpers.entry_of(p_tournament_id uuid, p_player_id uuid)
+returns uuid
+language sql
+stable
+as $$
+  select id from public.tournament_entries
+  where tournament_id = p_tournament_id and player_id = p_player_id and removed_at is null;
+$$;
