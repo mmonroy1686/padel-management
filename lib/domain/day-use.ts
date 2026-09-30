@@ -1,4 +1,5 @@
 import { dayLabel, formatPrice } from './format'
+import type { Loyalty, LoyaltyRule } from './loyalty'
 import type { Period } from './matches'
 import { normalizeText } from './members'
 import { courtsText, type EntryPayment } from './tournaments'
@@ -302,4 +303,12 @@ export function unblockedCourts(
       )
       .map((courtId) => ({ productId: product.id, date, courtId }))
   })
+}
+
+// The day use card in Inicio (lib/data/day-use.ts loadDayUseHome).
+export type DayUseHome = {
+  rule: LoyaltyRule
+  loyalty: Loyalty
+  todayPass: { id: string; text: string } | null
+  todayText: string | null
 }
