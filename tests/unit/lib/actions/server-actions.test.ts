@@ -30,7 +30,7 @@ vi.mock('@/lib/auth/viewer', () => ({
 
 const { bookSlot } = await import('@/app/(jugador)/reservar/actions')
 const { cancelMyBooking, reportTransfer } = await import('@/app/(jugador)/reservas/actions')
-const { endSeries, loadSlot } = await import('@/app/(club)/club/grilla/actions')
+const { cancelMatch, endSeries, loadSlot, recordCash, removeFromMatch } = await import('@/app/(club)/club/grilla/actions')
 const { addPricingRule, updateClubSettings } = await import('@/app/(club)/club/ajustes/actions')
 const { saveAvailability, savePreferredCourts, saveProfile } = await import('@/lib/actions/profile')
 const { createMatch, joinMatch, leaveMatch } = await import('@/app/(jugador)/partidos/actions')
@@ -237,5 +237,24 @@ describe('match actions', () => {
     expect(rpc).toHaveBeenCalledWith('join_match', { p_match_id: MATCH, p_position: 2 })
     rpc.mockResolvedValueOnce({ data: null, error: { message: 'side_mismatch' } })
     expect(await joinMatch(IDLE, form({ matchId: MATCH, position: '3' }))).toMatchObject({ status: 'error' })
+  })
+})
+
+describe('club match actions', () => {
+  const MATCH = '55555555-5555-5555-5555-555555555555'
+  const PLAYER = '66666666-6666-6666-6666-666666666666'
+
+  it('rejects bad ids and a payer that is not a uuid', async () => {
+    expect(await cancelMatch(IDLE, form({ matchId: 'm1' }))).toEqual(INVALID_INPUT)
+    expect(await removeFromMatch(IDLE, form({ matchId: MATCH, playerId: 'ana' }))).toEqual(INVALID_INPUT)
+    expect(await recordCash(IDLE, form({ bookingId: BOOKING, amount: '400', payerId: 'ana' }))).toEqual(INVALID_INPUT)
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('records cash for one player of a match', async () => {
+    await recordCash(IDLE, form({ bookingId: BOOKING, amount: '400', payerId: PLAYER }))
+    expect(rpc).toHaveBeenCalledWith('record_cash', { p_booking_id: BOOKING, p_amount: 400, p_payer_id: PLAYER })
+    await cancelMatch(IDLE, form({ matchId: MATCH, note: ' Lluvia ' }))
+    expect(rpc).toHaveBeenCalledWith('cancel_match', { p_match_id: MATCH, p_note: 'Lluvia' })
   })
 })

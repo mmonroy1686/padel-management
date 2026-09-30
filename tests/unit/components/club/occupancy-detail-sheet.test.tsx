@@ -13,6 +13,22 @@ const booked = makeGrid({
 const blocked = makeGrid({
   occupancies: [occupancy('blk', 'court-2', '08:00', '11:00', 'block', 'Clase de Pablo')],
 }).rows[0].cells[1]
+const matchCell = makeGrid({
+  occupancies: [occupancy('om', 'court-1', '20:00', '21:30', 'match')],
+  bookings: [
+    booking('om', {
+      holderName: 'Partido abierto',
+      source: 'online',
+      price: 1600,
+      amountDue: 1200,
+      matchId: 'm1',
+      matchPlayers: [
+        { playerId: 'a', name: 'Ana', position: 1, share: 400, due: 0, state: 'paid' },
+        { playerId: 'b', name: 'Bruno', position: 2, share: 400, due: 400, state: 'pending' },
+      ],
+    }),
+  ],
+}).rows.find((row) => row.slot.label === '20:00')!.cells[0]
 
 function renderDetail(cell: GridCell, acceptsCash = true) {
   const done = async () => ({ status: 'ok' as const, message: 'Listo.' })
@@ -21,6 +37,8 @@ function renderDetail(cell: GridCell, acceptsCash = true) {
     unblock: vi.fn<FormAction>(done),
     cash: vi.fn<FormAction>(done),
     endSeries: vi.fn<FormAction>(done),
+    cancelMatch: vi.fn<FormAction>(done),
+    removeFromMatch: vi.fn<FormAction>(done),
   }
   const onDone = vi.fn()
   render(
@@ -87,5 +105,15 @@ describe('OccupancyDetailSheet', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Liberar cancha' }))
     await waitFor(() => expect(actions.unblock).toHaveBeenCalledTimes(1))
     expect(sent(actions.unblock)).toEqual({ occupancyId: 'blk' })
+  })
+
+  it('shows a match booking by player, with cash per player and the match actions', async () => {
+    const { actions, sent } = renderDetail(matchCell)
+    expect(screen.getByText('Ana')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Cobrar $400' }))
+    await waitFor(() => expect(actions.cash).toHaveBeenCalledTimes(1))
+    expect(sent(actions.cash)).toEqual({ bookingId: 'b-om', payerId: 'b', amount: '400' })
+    expect(screen.getByRole('button', { name: 'Cancelar partido' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cancelar reserva' })).not.toBeInTheDocument()
   })
 })

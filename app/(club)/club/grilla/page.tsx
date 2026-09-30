@@ -1,15 +1,18 @@
 import type { Metadata } from 'next'
 import { DayStrip } from '@/components/booking/day-strip'
+import { FormingMatchesPanel } from '@/components/club/forming-matches-panel'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { Card } from '@/components/ui/card'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadDayGrid } from '@/lib/data/day'
+import { loadFreeCourts } from '@/lib/data/matches'
 import { loadMemberOptions } from '@/lib/data/members'
-import { dayLabel, dayLongLabel, formatPrice } from '@/lib/domain/format'
+import { dayLabel, dayLongLabel, formatPrice, timeIn } from '@/lib/domain/format'
 import { dayStats } from '@/lib/domain/grid'
+import { riskOf } from '@/lib/domain/match-risk'
 import { isLocalDate } from '@/lib/domain/input'
 import { addDays, localDateOf } from '@/lib/domain/time'
-import { cancelBooking, endSeries, loadSlot, recordCash, unblockCourt } from './actions'
+import { cancelBooking, cancelMatch, endSeries, loadSlot, recordCash, removeFromMatch, unblockCourt } from './actions'
 import { ClubBoard } from './club-board'
 
 export const metadata: Metadata = { title: 'Grilla' }
@@ -29,6 +32,13 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
 
   const [grid, members] = await Promise.all([loadDayGrid(club, date, { userId: viewer.userId, audience: 'staff' }, now), loadMemberOptions(club.id)])
   const stats = dayStats(grid)
+  const forming = grid.matches.filter((match) => match.status === 'forming')
+  const freeCourts = await loadFreeCourts(club, forming)
+  const panelItems = forming.map((match) => ({
+    match,
+    timeText: timeIn(match.startsAt, club.timezone),
+    risk: riskOf(match, freeCourts.get(match.id) ?? []),
+  }))
 
   return (
     <>
@@ -44,17 +54,27 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
           <p className="text-sm text-fg-muted">Ingresos por canchas</p>
         </Card>
       </div>
-      <ClubBoard
-        key={date}
-        date={date}
-        dayText={dayLongLabel(date)}
-        timezone={club.timezone}
-        grid={grid}
-        members={members}
-        acceptsCash={club.accepts_cash}
-        loadAction={loadSlot}
-        detailActions={{ cancel: cancelBooking, unblock: unblockCourt, cash: recordCash, endSeries }}
-      />
+      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+        <ClubBoard
+          key={date}
+          date={date}
+          dayText={dayLongLabel(date)}
+          timezone={club.timezone}
+          grid={grid}
+          members={members}
+          acceptsCash={club.accepts_cash}
+          loadAction={loadSlot}
+          detailActions={{
+            cancel: cancelBooking,
+            unblock: unblockCourt,
+            cash: recordCash,
+            endSeries,
+            cancelMatch,
+            removeFromMatch,
+          }}
+        />
+        <FormingMatchesPanel items={panelItems} actions={{ cancelMatch, removeFromMatch }} />
+      </div>
     </>
   )
 }
