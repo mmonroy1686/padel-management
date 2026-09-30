@@ -62,4 +62,21 @@ describe('BookingSheet', () => {
     renderSheet(vi.fn<FormAction>(), null)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
+  it('offers an open match at a quarter of the price', async () => {
+    const onCreateMatch = vi.fn()
+    render(
+      <BookingSheet
+        choice={CHOICE}
+        dayText="jueves 1 de octubre"
+        paymentNote="Se paga en el club."
+        cancellationRule="Podés cancelar."
+        action={vi.fn<FormAction>()}
+        onClose={vi.fn()}
+        onBooked={vi.fn()}
+        onCreateMatch={onCreateMatch}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Armar partido abierto, $400 c/u' }))
+    expect(onCreateMatch).toHaveBeenCalledWith(CHOICE)
+  })
 })

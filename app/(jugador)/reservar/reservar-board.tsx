@@ -4,9 +4,12 @@ import { useCallback, useState } from 'react'
 import { BookingSheet, type BookingChoice } from '@/components/booking/booking-sheet'
 import { Legend } from '@/components/booking/legend'
 import { SlotGrid } from '@/components/booking/slot-grid'
+import { CreateMatchSheet, type MatchFormInitial } from '@/components/matches/create-match-sheet'
 import type { FormAction } from '@/components/ui/action-form'
 import { cn } from '@/lib/cn'
 import { visibleRows, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
+import type { MatchFormOptions } from '@/lib/domain/matches'
+import type { LocalDate } from '@/lib/domain/time'
 
 export function ReservarBoard({
   courts,
@@ -15,6 +18,9 @@ export function ReservarBoard({
   paymentNote,
   cancellationRule,
   bookAction,
+  date,
+  matchOptions,
+  createMatchAction,
 }: {
   courts: Court[]
   rows: GridRow[]
@@ -22,11 +28,15 @@ export function ReservarBoard({
   paymentNote: string
   cancellationRule: string
   bookAction: FormAction
+  date: LocalDate
+  matchOptions: MatchFormOptions
+  createMatchAction: FormAction
 }) {
   const [choice, setChoice] = useState<BookingChoice | null>(null)
   const [onlyFree, setOnlyFree] = useState(false)
   const [showPast, setShowPast] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [matchInitial, setMatchInitial] = useState<MatchFormInitial | null>(null)
   const close = useCallback(() => setChoice(null), [])
   const booked = useCallback((message: string) => {
     setChoice(null)
@@ -90,6 +100,17 @@ export function ReservarBoard({
         action={bookAction}
         onClose={close}
         onBooked={booked}
+        onCreateMatch={(picked) => {
+          setChoice(null)
+          setMatchInitial({ date, time: picked.timeLabel, courtId: picked.courtId })
+        }}
+      />
+      <CreateMatchSheet
+        open={matchInitial !== null}
+        onClose={() => setMatchInitial(null)}
+        action={createMatchAction}
+        options={matchOptions}
+        initial={matchInitial ?? undefined}
       />
     </div>
   )
