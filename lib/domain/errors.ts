@@ -7,13 +7,20 @@ const MESSAGES = {
   notice_period: 'Ya no se puede cancelar: el plazo de aviso terminó. Avisá al club.',
   no_price: 'Ese turno no tiene precio cargado. Consultá en el club.',
   too_many_bookings: 'Llegaste al máximo de reservas activas. Cancelá una o esperá a jugarla.',
-  busy_at_that_time: 'Ya tenés una reserva a esa hora.',
+  busy_at_that_time: 'Ya tenés una reserva o un partido a esa hora.',
   receipt_required: 'Subí el comprobante de la transferencia.',
   forbidden: 'No tenés permiso para hacer eso.',
   not_found: 'No encontramos lo que buscabas. Puede que ya no exista.',
   invalid_state: 'Eso ya no se puede hacer: cambió mientras tanto. Recargá la página.',
   invalid_input: 'Revisá los datos ingresados.',
   method_disabled: 'El club no acepta ese medio de pago.',
+  category_mismatch: 'Tu categoría no entra en la de este partido.',
+  type_mismatch: 'Este partido es para otro género. A los mixtos se suma cualquiera.',
+  side_mismatch: 'Ese lugar es para el otro lado de la cancha.',
+  match_closed: 'El partido ya no está abierto: se completó, se canceló o llegó la hora de cierre.',
+  already_in_match: 'Ya estás en este partido.',
+  spot_taken: 'Ese lugar se acaba de ocupar. Elegí otro.',
+  already_paid: 'Ya pagaste tu parte: pedile al club que te saque del partido y te devuelva el pago.',
 } as const
 
 export type ErrorCode = keyof typeof MESSAGES

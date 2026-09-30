@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { blockEndOptions, countFree, dayStats, holderName, visibleRows } from '@/lib/domain/grid'
 import { at, booking, makeGrid, occupancy } from '../../fixtures/grid'
+import { makeMatch } from '../../fixtures/matches'
 
 describe('buildDayGrid', () => {
   it('offers every future slot on every court, with its price', () => {
@@ -94,5 +95,26 @@ describe('holderName', () => {
     expect(holderName('Rodríguez', 'Ana')).toBe('Rodríguez')
     expect(holderName(null, 'Ana')).toBe('Ana')
     expect(holderName(null, null)).toBeNull()
+  })
+})
+
+describe('forming matches on the grid', () => {
+  const at20 = (grid: ReturnType<typeof makeGrid>) => grid.rows.find((row) => row.slot.label === '20:00')
+
+  it('marks the free cell of the preferred court and slot, which stays free', () => {
+    const row = at20(makeGrid({ matches: [makeMatch()] }))
+    expect(row?.cells.map((cell) => cell.formingMatch ?? null)).toEqual([{ id: 'm1', filled: 1 }, null])
+    expect(row?.cells[0].state).toBe('free')
+  })
+
+  it('leaves out taken cells and matches that already hold a court', () => {
+    const taken = makeGrid({ matches: [makeMatch()], occupancies: [occupancy('o1', 'court-1', '20:00', '21:30')] })
+    expect(at20(taken)?.cells[0].formingMatch ?? null).toBeNull()
+    const held = makeGrid({ matches: [makeMatch({ bookingId: 'b1' })] })
+    expect(at20(held)?.cells[0].formingMatch ?? null).toBeNull()
+  })
+
+  it('keeps the matches of the day for the club panel', () => {
+    expect(makeGrid({ matches: [makeMatch()] }).matches.map((match) => match.id)).toEqual(['m1'])
   })
 })

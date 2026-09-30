@@ -1,3 +1,5 @@
+import type { MatchPlayerPayment } from './match-payments'
+import { filledCount, type Match } from './matches'
 import type { PaymentState } from './payments'
 import { priceFor, type PricingRule, type Slot } from './slots'
 import { formatMinutes, toDate, type LocalDate } from './time'
@@ -24,7 +26,11 @@ export type GridBooking = {
   seriesId: string | null
   paymentState: PaymentState
   amountDue: number
+  matchId?: string | null
+  matchPlayers?: MatchPlayerPayment[]
 }
+// A forming match that wants this court at this time. It does not block it.
+export type FormingMatchRef = { id: string; filled: number }
 export type CellState = 'free' | 'mine' | 'taken' | 'past' | 'no_price'
 export type GridCell = {
   court: Court
@@ -34,9 +40,10 @@ export type GridCell = {
   occupancy: Occupancy | null
   booking: GridBooking | null
   offGrid: boolean
+  formingMatch?: FormingMatchRef | null
 }
 export type GridRow = { slot: Slot; past: boolean; cells: GridCell[] }
-export type DayGrid = { date: LocalDate; courts: Court[]; rows: GridRow[]; outside: Occupancy[] }
+export type DayGrid = { date: LocalDate; courts: Court[]; rows: GridRow[]; outside: Occupancy[]; matches: Match[] }
 
 export const KIND_LABELS: Record<OccupancyKind, string> = {
   booking: 'Reserva',
@@ -59,6 +66,17 @@ function isOffGrid(occupancy: Occupancy | null, slot: Slot): boolean {
   )
 }
 
+function formingAt(matches: Match[], courtId: string, slot: Slot): FormingMatchRef | null {
+  const match = matches.find(
+    (candidate) =>
+      candidate.status === 'forming' &&
+      candidate.bookingId === null &&
+      candidate.preferredCourtId === courtId &&
+      candidate.startsAt.getTime() === slot.startsAt.getTime(),
+  )
+  return match ? { id: match.id, filled: filledCount(match) } : null
+}
+
 function cellState(occupancy: Occupancy | null, booking: GridBooking | null, past: boolean, price: number | null): CellState {
   if (occupancy) return booking?.isMine ? 'mine' : 'taken'
   if (past) return 'past'
@@ -73,8 +91,10 @@ export function buildDayGrid(input: {
   rules: PricingRule[]
   occupancies: Occupancy[]
   bookings: GridBooking[]
+  matches?: Match[]
   now: Date
 }): DayGrid {
+  const matches = input.matches ?? []
   const bookingByOccupancy = new Map(input.bookings.map((booking) => [booking.occupancyId, booking]))
   const rows = input.slots.map((slot) => {
     const past = slot.startsAt.getTime() <= input.now.getTime()
@@ -90,12 +110,13 @@ export function buildDayGrid(input: {
         booking,
         state: cellState(occupancy, booking, past, price),
         offGrid: isOffGrid(occupancy, slot),
+        formingMatch: occupancy ? null : formingAt(matches, court.id, slot),
       }
     })
     return { slot, past, cells }
   })
   const outside = input.occupancies.filter((o) => !input.slots.some((slot) => overlaps(o, slot)))
-  return { date: input.date, courts: input.courts, rows, outside }
+  return { date: input.date, courts: input.courts, rows, outside, matches }
 }
 
 export type OccupancyRow = {

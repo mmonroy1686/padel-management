@@ -5,10 +5,18 @@ import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Field, inputClasses } from '@/components/ui/field'
 import { formatPrice, timeIn } from '@/lib/domain/format'
-import { KIND_LABELS, type GridCell, type Occupancy } from '@/lib/domain/grid'
+import { KIND_LABELS, type GridBooking, type GridCell, type Occupancy } from '@/lib/domain/grid'
 import type { LocalDate } from '@/lib/domain/time'
+import { CancelMatchForm, RemovePlayerForm } from './match-staff-actions'
 
-export type DetailActions = { cancel: FormAction; unblock: FormAction; cash: FormAction; endSeries: FormAction }
+export type DetailActions = {
+  cancel: FormAction
+  unblock: FormAction
+  cash: FormAction
+  endSeries: FormAction
+  cancelMatch: FormAction
+  removeFromMatch: FormAction
+}
 
 export function OccupancyDetailSheet({
   cell,
@@ -45,7 +53,9 @@ export function OccupancyDetailSheet({
           {source}.
         </p>
         {cell.offGrid ? <p className="text-sm">No coincide con la grilla actual del club.</p> : null}
-        {booking ? (
+        {booking?.matchId ? (
+          <MatchBookingDetail booking={booking} acceptsCash={acceptsCash} actions={actions} onDone={onDone} />
+        ) : booking ? (
           <>
             <div className="flex items-center gap-3">
               <PaymentBadge state={booking.paymentState} />
@@ -106,5 +116,56 @@ export function OccupancyDetailSheet({
         ) : null}
       </div>
     </BottomSheet>
+  )
+}
+
+function MatchBookingDetail({
+  booking,
+  acceptsCash,
+  actions,
+  onDone,
+}: {
+  booking: GridBooking
+  acceptsCash: boolean
+  actions: DetailActions
+  onDone: (message: string) => void
+}) {
+  const matchId = booking.matchId ?? ''
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <PaymentBadge state={booking.paymentState} />
+        <span>{formatPrice(booking.price)}, cada jugador paga su parte</span>
+      </div>
+      <ul className="flex flex-col gap-2">
+        {(booking.matchPlayers ?? []).map((player) => (
+          <li key={player.playerId} className="flex flex-col gap-2 rounded-xl border border-border p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold">{player.name}</span>
+              <PaymentBadge state={player.state} />
+            </div>
+            <p className="text-sm text-fg-muted">
+              Parte {formatPrice(player.share)}
+              {player.due > 0 ? `, debe ${formatPrice(player.due)}` : ''}
+            </p>
+            {acceptsCash && player.due > 0 ? (
+              <ActionForm
+                action={actions.cash}
+                submitLabel={`Cobrar ${formatPrice(player.due)}`}
+                pendingLabel="Registrando…"
+                variant="secondary"
+                onDone={onDone}
+              >
+                <input type="hidden" name="bookingId" value={booking.id} />
+                <input type="hidden" name="payerId" value={player.playerId} />
+                <input type="hidden" name="amount" value={player.due} />
+              </ActionForm>
+            ) : null}
+            <RemovePlayerForm matchId={matchId} playerId={player.playerId} action={actions.removeFromMatch} onDone={onDone} />
+          </li>
+        ))}
+      </ul>
+      <CancelMatchForm matchId={matchId} action={actions.cancelMatch} onDone={onDone} />
+    </div>
   )
 }

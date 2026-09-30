@@ -5,9 +5,9 @@ import { createClient } from '@supabase/supabase-js'
 import { localSupabase } from './local-supabase.mjs'
 
 const DEMO = [
-  { email: 'admin@rustic.test', name: 'Admin Demo', role: 'admin', side: 'both', hand: 'right', category: 4 },
-  { email: 'recepcion@rustic.test', name: 'Recepción Demo', role: 'reception', side: 'drive', hand: 'right', category: 6 },
-  { email: 'jugador@rustic.test', name: 'Jugador Demo', role: 'player', side: 'backhand', hand: 'left', category: 5 },
+  { email: 'admin@rustic.test', name: 'Admin Demo', role: 'admin', side: 'both', hand: 'right', gender: 'female', category: 4 },
+  { email: 'recepcion@rustic.test', name: 'Recepción Demo', role: 'reception', side: 'drive', hand: 'right', gender: 'male', category: 6 },
+  { email: 'jugador@rustic.test', name: 'Jugador Demo', role: 'player', side: 'backhand', hand: 'left', gender: 'female', category: 5 },
 ]
 
 const { apiUrl, serviceRoleKey, mailpitUrl } = localSupabase()
@@ -33,7 +33,7 @@ for (const demo of DEMO) {
 
   const profile = await admin
     .from('profiles')
-    .update({ display_name: demo.name, side: demo.side, hand: demo.hand })
+    .update({ display_name: demo.name, side: demo.side, hand: demo.hand, gender: demo.gender })
     .eq('id', user.id)
   if (profile.error) throw profile.error
 

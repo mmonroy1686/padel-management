@@ -2,7 +2,9 @@
 
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
+import { Button } from '@/components/ui/button'
 import { formatPrice } from '@/lib/domain/format'
+import { perPlayerPrice } from '@/lib/domain/matches'
 
 export type BookingChoice = { courtId: string; courtName: string; startsAt: string; timeLabel: string; price: number }
 
@@ -14,10 +16,11 @@ export type BookingSheetProps = {
   action: FormAction
   onClose: () => void
   onBooked: (message: string) => void
+  onCreateMatch?: (choice: BookingChoice) => void
 }
 
 // Every rule that affects the player is explained before she books: price, how to pay, cancelling.
-export function BookingSheet({ choice, dayText, paymentNote, cancellationRule, action, onClose, onBooked }: BookingSheetProps) {
+export function BookingSheet({ choice, dayText, paymentNote, cancellationRule, action, onClose, onBooked, onCreateMatch }: BookingSheetProps) {
   return (
     <BottomSheet open={choice !== null} onClose={onClose} title="Reservar cancha">
       {choice ? (
@@ -44,6 +47,16 @@ export function BookingSheet({ choice, dayText, paymentNote, cancellationRule, a
             <input type="hidden" name="courtId" value={choice.courtId} />
             <input type="hidden" name="startsAt" value={choice.startsAt} />
           </ActionForm>
+          {onCreateMatch ? (
+            <>
+              <Button variant="secondary" fullWidth onClick={() => onCreateMatch(choice)}>
+                Armar partido abierto, {formatPrice(perPlayerPrice(choice.price))} c/u
+              </Button>
+              <p className="text-sm text-fg-muted">
+                Con el partido abierto la cancha no se bloquea hasta que estén los 4. Cada uno paga su parte.
+              </p>
+            </>
+          ) : null}
         </div>
       ) : null}
     </BottomSheet>

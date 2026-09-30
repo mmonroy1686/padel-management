@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { holderLabel, refundsDue, unpaidBookings, type OverviewBooking } from '@/lib/domain/payments-overview'
+import { holderLabel, leftPlayerRefunds, refundsDue, unpaidBookings, type OverviewBooking } from '@/lib/domain/payments-overview'
 
 function booking(overrides: Partial<OverviewBooking> = {}): OverviewBooking {
   return {
@@ -57,5 +57,45 @@ describe('refundsDue', () => {
     expect(items).toEqual([
       { paymentId: 'p1', holder: 'Rodríguez', startsAt: new Date('2026-10-01T23:00:00Z'), courtName: 'Cancha 2', amount: 1600 },
     ])
+  })
+})
+
+describe('open matches in Cobros', () => {
+  const slots = [
+    { position: 1, player_id: 'a', player: { display_name: 'Ana' } },
+    { position: 2, player_id: 'b', player: { display_name: 'Bruno' } },
+  ]
+  const matchBooking = (overrides: Partial<OverviewBooking> = {}): OverviewBooking => ({
+    id: 'mb',
+    starts_at: '2026-09-28T23:00:00Z',
+    price: 1600,
+    status: 'confirmed',
+    guest_name: null,
+    player: null,
+    court: { name: 'Cancha 2' },
+    match_id: 'm1',
+    match: { slots },
+    payments: [{ id: 'p1', status: 'confirmed', amount: 400, payer_id: 'a', payer: { display_name: 'Ana' } }],
+    ...overrides,
+  })
+
+  it('lists each player who still owes his share', () => {
+    expect(unpaidBookings([matchBooking()])).toEqual([
+      { bookingId: 'mb', holder: 'Bruno', startsAt: new Date('2026-09-28T23:00:00Z'), courtName: 'Cancha 2', due: 400, payerId: 'b' },
+    ])
+  })
+
+  it('names who paid what the club has to give back', () => {
+    expect(refundsDue([matchBooking({ status: 'cancelled' })])).toEqual([
+      { paymentId: 'p1', holder: 'Ana', startsAt: new Date('2026-09-28T23:00:00Z'), courtName: 'Cancha 2', amount: 400 },
+    ])
+  })
+
+  it('gives back what a player paid before the club took him out', () => {
+    const left = matchBooking({ match: { slots: [{ position: 2, player_id: 'b', player: { display_name: 'Bruno' } }] } })
+    expect(leftPlayerRefunds([left])).toEqual([
+      { paymentId: 'p1', holder: 'Ana', startsAt: new Date('2026-09-28T23:00:00Z'), courtName: 'Cancha 2', amount: 400 },
+    ])
+    expect(leftPlayerRefunds([matchBooking()])).toEqual([])
   })
 })

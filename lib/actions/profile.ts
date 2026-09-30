@@ -5,11 +5,12 @@ import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/acti
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { safeNextPath } from '@/lib/auth/redirect'
 import { getViewer } from '@/lib/auth/viewer'
-import { readBoolean, readEnum, readInt, readText } from '@/lib/domain/input'
-import { HANDS, SIDES } from '@/lib/domain/profile'
+import { parseAvailability } from '@/lib/domain/availability'
+import { isUuid, readBoolean, readEnum, readInt, readText } from '@/lib/domain/input'
+import { GENDERS, HANDS, SIDES } from '@/lib/domain/profile'
 import { createClient } from '@/lib/supabase/server'
 
-// Saves name, side, hand, visibility and category in one transaction (save_my_profile), which
+// Saves name, side, hand, gender, visibility and category in one transaction (save_my_profile), which
 // also joins the club the first time.
 export async function saveProfile(_previous: ActionState, form: FormData): Promise<ActionState> {
   const viewer = await getViewer()
@@ -18,8 +19,9 @@ export async function saveProfile(_previous: ActionState, form: FormData): Promi
   const displayName = readText(form, 'displayName', { maxLength: 60 })
   const side = readEnum(form, 'side', SIDES)
   const hand = readEnum(form, 'hand', HANDS)
+  const gender = readEnum(form, 'gender', GENDERS)
   const category = readInt(form, 'category', { min: 1, max: 8 })
-  if (!displayName || !side || !hand || category === null) return INVALID_INPUT
+  if (!displayName || !side || !hand || !gender || category === null) return INVALID_INPUT
 
   const supabase = await createClient()
   const { error } = await supabase.rpc('save_my_profile', {
@@ -27,6 +29,7 @@ export async function saveProfile(_previous: ActionState, form: FormData): Promi
     p_display_name: displayName,
     p_side: side,
     p_hand: hand,
+    p_gender: gender,
     p_is_public: readBoolean(form, 'isPublic'),
     p_category: category,
   })
@@ -36,6 +39,33 @@ export async function saveProfile(_previous: ActionState, form: FormData): Promi
   const next = form.get('next')
   if (typeof next === 'string' && next) redirect(safeNextPath(next))
   return ok('Guardamos tus cambios.')
+}
+
+export async function saveAvailability(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const viewer = await getViewer()
+  if (!viewer) return failed('Tu sesión venció. Volvé a ingresar.')
+  const slots = parseAvailability(form.getAll('availability'))
+  if (!slots) return INVALID_INPUT
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('save_my_availability', { p_slots: slots })
+  revalidateBookings()
+  return fromRpc(error, 'Guardamos tus horarios.')
+}
+
+export async function savePreferredCourts(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const viewer = await getViewer()
+  if (!viewer) return failed('Tu sesión venció. Volvé a ingresar.')
+  const courtIds = form.getAll('courtIds')
+  if (!courtIds.every(isUuid)) return INVALID_INPUT
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('save_my_preferred_courts', {
+    p_club_id: viewer.club.id,
+    p_court_ids: courtIds.map((id) => id.toLowerCase()),
+  })
+  revalidateBookings()
+  return fromRpc(error, 'Guardamos tus canchas preferidas.')
 }
 
 export async function signOut(): Promise<void> {

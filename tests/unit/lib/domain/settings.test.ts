@@ -14,6 +14,7 @@ const PROTOTYPE: [string, string][] = [
   ['booking_window_days', '14'],
   ['cancellation_notice_hours', '24'],
   ['max_active_bookings', '2'],
+  ['match_close_hours', '3'],
   ['accepts_cash', 'on'],
   ['accepts_transfer', 'on'],
   ['transfer_receipt_required', 'on'],
@@ -33,6 +34,7 @@ describe('parseClubSettings', () => {
         booking_window_days: 14,
         cancellation_notice_hours: 24,
         max_active_bookings: 2,
+        match_close_hours: 3,
         accepts_cash: true,
         accepts_transfer: true,
         transfer_receipt_required: true,
@@ -51,6 +53,13 @@ describe('parseClubSettings', () => {
   it('rejects hours where not even one slot fits', () => {
     const settings = [...replacing('opens_at', '22:00')]
     expect(parseClubSettings(form(settings))).toEqual({ ok: false, message: 'En ese horario no entra ni un turno.' })
+  })
+
+  it('keeps the closing time of incomplete matches between 0 and 48 hours', () => {
+    expect(parseClubSettings(form(replacing('match_close_hours', '49')))).toEqual({
+      ok: false,
+      message: 'Las horas para cerrar partidos van de 0 a 48.',
+    })
   })
 
   it('needs at least one payment method', () => {

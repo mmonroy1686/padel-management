@@ -2,12 +2,24 @@
 
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { Field, inputClasses } from '@/components/ui/field'
-import { CATEGORIES, HAND_LABELS, HANDS, SIDE_LABELS, SIDES, type Hand, type Side } from '@/lib/domain/profile'
+import {
+  CATEGORIES,
+  GENDER_LABELS,
+  GENDERS,
+  HAND_LABELS,
+  HANDS,
+  SIDE_LABELS,
+  SIDES,
+  type Gender,
+  type Hand,
+  type Side,
+} from '@/lib/domain/profile'
 
 export type ProfileValues = {
   displayName: string
   side: Side | null
   hand: Hand | null
+  gender: Gender | null
   category: number | null
   isPublic: boolean
 }
@@ -64,6 +76,18 @@ export function PlayerProfileForm({
           ))}
         </select>
       </Field>
+      <Field label="Género" htmlFor="gender">
+        <select id="gender" name="gender" required defaultValue={initial.gender ?? ''} className={inputClasses}>
+          <option value="" disabled>
+            Elegí tu género
+          </option>
+          {GENDERS.map((gender) => (
+            <option key={gender} value={gender}>
+              {GENDER_LABELS[gender]}
+            </option>
+          ))}
+        </select>
+      </Field>
       <Field label="Categoría" htmlFor="category">
         <select id="category" name="category" required defaultValue={initial.category ?? ''} className={inputClasses}>
           <option value="" disabled>
@@ -81,6 +105,11 @@ export function PlayerProfileForm({
           ? 'El club valida tu categoría. Hasta entonces figura como pendiente.'
           : 'Si cambiás la categoría, el club la vuelve a validar.'}
       </p>
+      {onboarding ? (
+        <p className="text-sm text-fg-muted">
+          El género define a qué partidos masculinos o femeninos te podés sumar. A los mixtos se suma cualquiera.
+        </p>
+      ) : null}
       {onboarding ? (
         <input type="hidden" name="isPublic" value="on" />
       ) : (

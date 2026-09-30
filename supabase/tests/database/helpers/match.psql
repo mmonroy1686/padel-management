@@ -1,0 +1,93 @@
+-- Fase 2 fixture. Include it after slot.psql and club.psql:
+--   \ir helpers/match.psql
+-- Genders and sides for the club T players, four more players, and helpers to build matches.
+-- Ana (a1): female, drive, 5. Bruno (b1): male, backhand, 6.
+-- Gabi (a2): female, both, 5. Hugo (a3): male, drive, 4. Iván (a4): male, backhand, 5.
+-- Juli (a5): female, backhand, 6.
+-- Spots: 1 = team A drive, 2 = team A backhand, 3 = team B drive, 4 = team B backhand.
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000000a2', 'gabi@test.local'),
+  ('00000000-0000-0000-0000-0000000000a3', 'hugo@test.local'),
+  ('00000000-0000-0000-0000-0000000000a4', 'ivan@test.local'),
+  ('00000000-0000-0000-0000-0000000000a5', 'juli@test.local');
+
+update public.profiles p
+   set display_name = v.name, gender = v.gender::public.gender, side = v.side::public.player_side, hand = 'right'
+  from (values
+    ('00000000-0000-0000-0000-0000000000a1', 'Ana', 'female', 'drive'),
+    ('00000000-0000-0000-0000-0000000000b1', 'Bruno', 'male', 'backhand'),
+    ('00000000-0000-0000-0000-0000000000a2', 'Gabi', 'female', 'both'),
+    ('00000000-0000-0000-0000-0000000000a3', 'Hugo', 'male', 'drive'),
+    ('00000000-0000-0000-0000-0000000000a4', 'Iván', 'male', 'backhand'),
+    ('00000000-0000-0000-0000-0000000000a5', 'Juli', 'female', 'backhand')
+  ) as v (id, name, gender, side)
+ where p.id = v.id::uuid;
+
+insert into public.club_members (club_id, user_id, role, category, category_validated) values
+  ('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a2', 'player', 5, true),
+  ('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a3', 'player', 4, true),
+  ('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a4', 'player', 5, true),
+  ('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a5', 'player', 6, true);
+
+-- A forming match with its four spots, inserted as postgres (skips the RPC rules on purpose).
+-- p_players has four elements (null = free spot); the first one is recorded as the creator.
+create procedure test_helpers.make_match(
+  p_id uuid,
+  p_court_id uuid,
+  p_period tstzrange,
+  p_players uuid[],
+  p_type public.match_type default 'mixed',
+  p_min integer default 1,
+  p_max integer default 8,
+  p_allow_other_court boolean default true
+)
+language plpgsql
+as $$
+begin
+  insert into public.open_matches (id, club_id, period, preferred_court_id, allow_other_court, category_min,
+                                   category_max, match_type, created_by)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', p_period, p_court_id, p_allow_other_court, p_min, p_max,
+          p_type, p_players[1]);
+
+  insert into public.match_slots (match_id, club_id, position, team, side, player_id, joined_at)
+  select p_id, 'a0000000-0000-0000-0000-000000000001', pos, case when pos <= 2 then 'A' else 'B' end,
+         (case when pos % 2 = 1 then 'drive' else 'backhand' end)::public.player_side,
+         p_players[pos], case when p_players[pos] is not null then now() end
+  from generate_series(1, 4) as pos;
+end;
+$$;
+
+-- Gives a match a court: an occupancy of kind 'match' and its booking. Confirms it unless told not
+-- to (a match that lost a player keeps its court while it looks for another one).
+create procedure test_helpers.hold_court(
+  p_match_id uuid, p_court_id uuid, p_price integer default 1600, p_confirm boolean default true
+)
+language plpgsql
+as $$
+declare
+  v_period tstzrange;
+  v_occupancy_id uuid;
+  v_booking_id uuid;
+begin
+  select period into v_period from public.open_matches where id = p_match_id;
+  insert into public.court_occupancy (club_id, court_id, kind, period)
+  values ('a0000000-0000-0000-0000-000000000001', p_court_id, 'match', v_period)
+  returning id into v_occupancy_id;
+  insert into public.bookings (club_id, court_id, period, match_id, source, price, occupancy_id)
+  values ('a0000000-0000-0000-0000-000000000001', p_court_id, v_period, p_match_id, 'online', p_price, v_occupancy_id)
+  returning id into v_booking_id;
+  update public.open_matches
+     set booking_id = v_booking_id, court_id = p_court_id,
+         status = case when p_confirm then 'confirmed'::public.match_status else status end
+   where id = p_match_id;
+end;
+$$;
+
+-- The match that starts at that time (tests keep one per time).
+create function test_helpers.match_at(days_ahead int, start_time time)
+returns uuid
+language sql
+stable
+as $$
+  select id from public.open_matches where starts_at = test_helpers.at(days_ahead, start_time) limit 1;
+$$;

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/domain/format'
 import { KIND_LABELS, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
@@ -61,6 +62,20 @@ export function SlotGrid({ courts, rows, variant, onSelect }: SlotGridProps) {
 }
 
 function PlayerCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridCell) => void }) {
+  if (cell.state === 'free' && cell.formingMatch) {
+    const missing = 4 - cell.formingMatch.filled
+    const text = missing === 1 ? 'Falta 1' : `Faltan ${missing}`
+    return (
+      <Link
+        href={`/partidos/${cell.formingMatch.id}`}
+        aria-label={`Partido armándose en ${cell.court.name} a las ${cell.slot.label}: ${text.toLowerCase()}`}
+        className={cn(CELL, 'border-2 border-dashed border-accent bg-bg text-fg', FOCUS)}
+      >
+        <b>{text}</b>
+        <span>Partido abierto</span>
+      </Link>
+    )
+  }
   if (cell.state === 'free' && cell.price !== null) {
     const price = formatPrice(cell.price)
     return (
@@ -79,7 +94,7 @@ function PlayerCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridC
     return (
       <div className={cn(CELL, CELL_STYLES.mine)}>
         <b>Tuya</b>
-        <span>Reserva</span>
+        <span>{cell.booking?.matchId ? 'Partido' : 'Reserva'}</span>
       </div>
     )
   }
@@ -97,7 +112,7 @@ function ClubCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridCel
         ? CELL_STYLES.block
         : occupancy.kind === 'recurring'
           ? CELL_STYLES.recurring
-          : occupancy.kind === 'booking'
+          : occupancy.kind === 'booking' || occupancy.kind === 'match'
             ? CELL_STYLES.booking
             : CELL_STYLES.other
     return (
@@ -127,6 +142,7 @@ function ClubCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridCel
     >
       <span>+ Cargar</span>
       {cell.price === null ? <span className="text-xs">Sin precio</span> : null}
+      {cell.formingMatch ? <span className="text-xs">Armándose {cell.formingMatch.filled}/4 · no bloquea</span> : null}
     </button>
   )
 }

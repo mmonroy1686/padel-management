@@ -86,11 +86,39 @@ export async function unblockCourt(_previous: ActionState, form: FormData): Prom
 export async function recordCash(_previous: ActionState, form: FormData): Promise<ActionState> {
   const bookingId = readUuid(form, 'bookingId')
   const amount = readInt(form, 'amount', { min: 1, max: 10_000_000 })
-  if (!bookingId || amount === null) return INVALID_INPUT
+  const hasPayer = form.get('payerId') !== null
+  const payerId = hasPayer ? readUuid(form, 'payerId') : null
+  if (!bookingId || amount === null || (hasPayer && !payerId)) return INVALID_INPUT
   const supabase = await createClient()
-  const { error } = await supabase.rpc('record_cash', { p_booking_id: bookingId, p_amount: amount })
+  const { error } = await supabase.rpc('record_cash', {
+    p_booking_id: bookingId,
+    p_amount: amount,
+    ...(payerId ? { p_payer_id: payerId } : {}),
+  })
   revalidateBookings()
   return fromRpc(error, 'Pago en efectivo registrado.')
+}
+
+export async function cancelMatch(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const matchId = readUuid(form, 'matchId')
+  if (!matchId) return INVALID_INPUT
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('cancel_match', {
+    p_match_id: matchId,
+    p_note: readText(form, 'note', { maxLength: 120 }) ?? undefined,
+  })
+  revalidateBookings()
+  return fromRpc(error, 'Partido cancelado. Si tenía cancha, quedó libre.')
+}
+
+export async function removeFromMatch(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const matchId = readUuid(form, 'matchId')
+  const playerId = readUuid(form, 'playerId')
+  if (!matchId || !playerId) return INVALID_INPUT
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('remove_from_match', { p_match_id: matchId, p_player_id: playerId })
+  revalidateBookings()
+  return fromRpc(error, 'Sacamos al jugador. El partido vuelve a buscar gente.')
 }
 
 export async function endSeries(_previous: ActionState, form: FormData): Promise<ActionState> {

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { SlotGrid } from '@/components/booking/slot-grid'
 import { at, booking, COURTS, makeGrid, occupancy } from '../../fixtures/grid'
+import { makeMatch } from '../../fixtures/matches'
 
 describe('SlotGrid for players', () => {
   it('offers free slots with court, time and price', async () => {
@@ -57,5 +58,21 @@ describe('SlotGrid for the club', () => {
   it('lets reception load a free slot, and warns when it has no price', () => {
     render(<SlotGrid courts={COURTS} rows={makeGrid({ rules: [] }).rows} variant="club" onSelect={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Cargar Cancha 1, 08:00' })).toHaveTextContent('Sin precio')
+  })
+})
+
+describe('open matches on the grid', () => {
+  it('shows a forming match on the player grid and opens it', () => {
+    const grid = makeGrid({ matches: [makeMatch()] })
+    render(<SlotGrid courts={grid.courts} rows={grid.rows} variant="player" onSelect={vi.fn()} />)
+    const link = screen.getByRole('link', { name: 'Partido armándose en Cancha 1 a las 20:00: faltan 3' })
+    expect(link).toHaveAttribute('href', '/partidos/m1')
+    expect(link).toHaveTextContent('Faltan 3')
+  })
+
+  it('tells reception the match does not block the court', () => {
+    const grid = makeGrid({ matches: [makeMatch()] })
+    render(<SlotGrid courts={grid.courts} rows={grid.rows} variant="club" onSelect={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'Cargar Cancha 1, 20:00' })).toHaveTextContent('Armándose 1/4 · no bloquea')
   })
 })

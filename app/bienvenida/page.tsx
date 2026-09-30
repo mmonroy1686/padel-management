@@ -34,6 +34,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Sear
             displayName: viewer.profile.display_name,
             side: viewer.profile.side,
             hand: viewer.profile.hand,
+            gender: viewer.profile.gender,
             category: viewer.membership?.category ?? null,
             isPublic: viewer.profile.is_public,
           }}
