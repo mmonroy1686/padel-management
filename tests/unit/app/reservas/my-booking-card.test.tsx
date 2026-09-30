@@ -59,4 +59,11 @@ describe('MyBookingCard', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Ya transferí' }))
     expect(screen.getByRole('dialog', { name: 'Ya transferí' })).toHaveTextContent('Banco Ejemplo')
   })
+
+  it('links a match share to its match instead of cancelling', () => {
+    renderCard({ ...BOOKING, matchId: 'm1', cancel: { allowed: false, reason: 'Para bajarte, entrá al partido.' } })
+    expect(screen.getByText('Partido abierto, tu parte')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver partido' })).toHaveAttribute('href', '/partidos/m1')
+    expect(screen.queryByRole('button', { name: 'Cancelar reserva' })).not.toBeInTheDocument()
+  })
 })

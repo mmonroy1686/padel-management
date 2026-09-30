@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { splitMyBookings, toMyBookingView, type MyBookingRow } from '@/lib/domain/my-bookings'
+import { splitMyBookings, toMyBookingView, toMyMatchBookingView, type MyBookingRow } from '@/lib/domain/my-bookings'
 
 const CLUB = { timezone: 'America/Montevideo', cancellation_notice_hours: 24, accepts_transfer: true }
 const NOW = new Date('2026-10-01T12:00:00Z')
@@ -74,5 +74,26 @@ describe('splitMyBookings', () => {
     const { upcoming, past } = splitMyBookings([view('a', false), view('b', false), view('c', true), view('d', true)])
     expect(upcoming.map((v) => v.id)).toEqual(['c', 'd'])
     expect(past.map((v) => v.id)).toEqual(['b', 'a'])
+  })
+})
+
+describe('toMyMatchBookingView', () => {
+  it('shows the player his share and his own payments only', () => {
+    const view = toMyMatchBookingView(
+      {
+        ...row({ price: 1602 }),
+        match_id: 'm1',
+        payments: [
+          { status: 'confirmed', amount: 402, rejection_reason: null, created_at: '2026-09-29T10:00:00Z', payer_id: 'me' },
+          { status: 'reported', amount: 400, rejection_reason: null, created_at: '2026-09-29T10:00:00Z', payer_id: 'other' },
+        ],
+      },
+      1,
+      'me',
+      CLUB,
+      NOW,
+    )
+    expect(view).toMatchObject({ price: 402, amountDue: 0, paymentState: 'paid', matchId: 'm1' })
+    expect(view.cancel).toEqual({ allowed: false, reason: 'Para bajarte, entrá al partido.' })
   })
 })

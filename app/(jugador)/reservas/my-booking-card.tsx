@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useState } from 'react'
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import { TransferSheet, type ReportTransfer } from '@/components/booking/transfer-sheet'
@@ -39,6 +40,7 @@ export function MyBookingCard({
           <p>
             {booking.timeText}, {booking.courtName}
           </p>
+          {booking.matchId ? <p className="text-sm font-semibold">Partido abierto, tu parte</p> : null}
           <p className="text-fg-muted">{formatPrice(booking.price)}</p>
         </div>
         <PaymentBadge state={booking.paymentState} />
@@ -59,7 +61,11 @@ export function MyBookingCard({
               Ya transferí
             </Button>
           ) : null}
-          {booking.cancel.allowed ? (
+          {booking.matchId ? (
+            <Link href={`/partidos/${booking.matchId}`} className="font-semibold text-accent-ink underline">
+              Ver partido
+            </Link>
+          ) : booking.cancel.allowed ? (
             <Button variant="ghost" onClick={() => setSheet('cancel')}>
               Cancelar reserva
             </Button>
