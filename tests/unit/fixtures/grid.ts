@@ -1,4 +1,5 @@
 import { buildDayGrid, type Court, type DayGrid, type GridBooking, type Occupancy, type OccupancyKind } from '@/lib/domain/grid'
+import type { Match } from '@/lib/domain/matches'
 import { daySlots, type ClubSchedule, type PricingRule } from '@/lib/domain/slots'
 import { zonedTime } from '@/lib/domain/time'
 
@@ -50,8 +51,9 @@ export function booking(occupancyId: string, overrides: Partial<GridBooking> = {
 export function makeGrid({
   occupancies = [],
   bookings = [],
+  matches = [],
   now = at('07:00'),
   rules = RULES,
-}: { occupancies?: Occupancy[]; bookings?: GridBooking[]; now?: Date; rules?: PricingRule[] } = {}): DayGrid {
-  return buildDayGrid({ date: DATE, slots: daySlots(SCHEDULE, DATE), courts: COURTS, rules, occupancies, bookings, now })
+}: { occupancies?: Occupancy[]; bookings?: GridBooking[]; matches?: Match[]; now?: Date; rules?: PricingRule[] } = {}): DayGrid {
+  return buildDayGrid({ date: DATE, slots: daySlots(SCHEDULE, DATE), courts: COURTS, rules, occupancies, bookings, matches, now })
 }
