@@ -6608,4 +6608,4 @@ Expected: `quality` y `db-and-e2e` en verde.
 
 - **v1 (2026-09-30)**: scaffold.
 - **v2 (2026-09-30)**: plan completo en 7 cortes (Tasks 1–34) sobre el diseño aprobado. Decisiones propias en "Decisiones que este plan toma".
-
+- **v3 (2026-09-30)**: ejecutado. Desvíos en `notes.md`; arreglos de la revisión en la migración `20261001000260`.
