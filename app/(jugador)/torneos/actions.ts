@@ -20,7 +20,7 @@ export async function leaveTournament(_previous: ActionState, form: FormData): P
   const supabase = await createClient()
   const { error } = await supabase.rpc('leave_tournament', { p_tournament_id: tournamentId })
   revalidateBookings()
-  return fromRpc(error, 'Te diste de baja. Tu lugar quedó libre.')
+  return fromRpc(error, 'Te diste de baja. Tu lugar quedó libre. Si ya habías pagado, el club te lo devuelve.')
 }
 
 // Called after the browser uploaded the receipt; report_tournament_transfer checks the path is hers.
