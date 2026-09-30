@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { holderLabel, leftPlayerRefunds, refundsDue, unpaidBookings, type OverviewBooking } from '@/lib/domain/payments-overview'
+import { holderLabel, leftPlayerRefunds, refundsDue, totalsOf, unpaidBookings, type OverviewBooking } from '@/lib/domain/payments-overview'
 
 function booking(overrides: Partial<OverviewBooking> = {}): OverviewBooking {
   return {
@@ -97,5 +97,15 @@ describe('open matches in Cobros', () => {
       { paymentId: 'p1', holder: 'Ana', startsAt: new Date('2026-09-28T23:00:00Z'), courtName: 'Cancha 2', amount: 400 },
     ])
     expect(leftPlayerRefunds([matchBooking()])).toEqual([])
+  })
+})
+
+describe('totalsOf', () => {
+  it('counts the items and adds up their amounts', () => {
+    expect(totalsOf([{ due: 1200 }, { due: 300 }], (item) => item.due)).toEqual({ count: 2, total: 1500 })
+  })
+
+  it('is zero for an empty list', () => {
+    expect(totalsOf([], () => 1)).toEqual({ count: 0, total: 0 })
   })
 })

@@ -24,7 +24,8 @@ describe('TransferReviewCard', () => {
   it('shows who, when, how much and the receipt', () => {
     renderCard()
     expect(screen.getByText('Martina')).toBeInTheDocument()
-    expect(screen.getByText('sábado 3 de octubre, 20:00, Cancha 2')).toBeInTheDocument()
+    expect(screen.getByText('sábado 3 de octubre, 20:00')).toBeInTheDocument()
+    expect(screen.getByText('Cancha 2')).toBeInTheDocument()
     expect(screen.getByText('$1.600')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ver comprobante' })).toHaveAttribute('href', 'https://example.test/signed')
   })

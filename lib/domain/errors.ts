@@ -20,6 +20,7 @@ const MESSAGES = {
   match_closed: 'El partido ya no está abierto: se completó, se canceló o llegó la hora de cierre.',
   already_in_match: 'Ya estás en este partido.',
   spot_taken: 'Ese lugar se acaba de ocupar. Elegí otro.',
+  court_has_history: 'Esa cancha ya tiene reservas o partidos. Desactivala en lugar de borrarla.',
   already_paid: 'Ya pagaste tu parte: pedile al club que te saque del partido y te devuelva el pago.',
 } as const
 

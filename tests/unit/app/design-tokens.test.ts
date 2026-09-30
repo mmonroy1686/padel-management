@@ -16,7 +16,7 @@ function readThemes(): { dark: Theme; light: Theme } {
   return { dark: parse(blocks[0]), light: parse(blocks[1]) }
 }
 
-const TOKENS = ['bg', 'surface', 'border', 'fg', 'fg-muted', 'accent', 'on-accent', 'accent-ink', 'court', 'on-court', 'court-ink']
+const TOKENS = ['bg', 'surface', 'border', 'fg', 'fg-muted', 'accent', 'on-accent', 'accent-ink', 'court', 'on-court', 'court-ink', 'danger']
 
 const READABLE_PAIRS: Array<[string, string]> = [
   ['fg', 'bg'],
@@ -27,6 +27,8 @@ const READABLE_PAIRS: Array<[string, string]> = [
   ['accent-ink', 'surface'],
   ['court-ink', 'bg'],
   ['court-ink', 'surface'],
+  ['danger', 'bg'],
+  ['danger', 'surface'],
   ['on-accent', 'accent'],
   ['on-court', 'court'],
 ]

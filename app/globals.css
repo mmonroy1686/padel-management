@@ -14,6 +14,7 @@
   --court: #025995;
   --on-court: #FFFFFF;
   --court-ink: #4DA3DB;
+  --danger: #FF8A7A;
 }
 
 /* Amber never works as text on a light background (1.85:1), so light mode uses amber-ink. */
@@ -31,6 +32,7 @@
     --court: #025995;
     --on-court: #FFFFFF;
     --court-ink: #025995;
+    --danger: #B42318;
   }
 }
 
@@ -56,6 +58,7 @@
   --color-court: var(--court);
   --color-on-court: var(--on-court);
   --color-court-ink: var(--court-ink);
+  --color-danger: var(--danger);
   --font-sans: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-barlow-condensed), var(--font-barlow), ui-sans-serif, sans-serif;
 }

@@ -31,7 +31,7 @@ vi.mock('@/lib/auth/viewer', () => ({
 const { bookSlot } = await import('@/app/(jugador)/reservar/actions')
 const { cancelMyBooking, reportTransfer } = await import('@/app/(jugador)/reservas/actions')
 const { cancelMatch, endSeries, loadSlot, recordCash, removeFromMatch } = await import('@/app/(club)/club/grilla/actions')
-const { addPricingRule, updateClubSettings } = await import('@/app/(club)/club/ajustes/actions')
+const { addPricingRule, deleteCourt, updateClubSettings } = await import('@/app/(club)/club/ajustes/actions')
 const { saveAvailability, savePreferredCourts, saveProfile } = await import('@/lib/actions/profile')
 const { createMatch, joinMatch, leaveMatch } = await import('@/app/(jugador)/partidos/actions')
 const { errorMessage } = await import('@/lib/domain/errors')
@@ -87,6 +87,13 @@ describe('settings actions', () => {
       message: errorMessage('forbidden'),
     })
     expect(await addPricingRule(IDLE, bandForm())).toMatchObject({ status: 'error' })
+    expect(await deleteCourt(IDLE, form({ courtId: COURT }))).toEqual({ status: 'error', message: errorMessage('forbidden') })
+    expect(from).not.toHaveBeenCalled()
+  })
+
+  it('rejects a court to delete that is not a uuid', async () => {
+    state.role = 'admin'
+    expect(await deleteCourt(IDLE, form({ courtId: 'cancha-3' }))).toEqual(INVALID_INPUT)
     expect(from).not.toHaveBeenCalled()
   })
 

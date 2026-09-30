@@ -7,7 +7,7 @@ const DATABASE_CODES = [
   'too_many_bookings', 'busy_at_that_time', 'receipt_required', 'forbidden', 'not_found',
   'invalid_state', 'invalid_input', 'method_disabled',
   'category_mismatch', 'type_mismatch', 'side_mismatch', 'match_closed', 'already_in_match', 'spot_taken',
-  'already_paid',
+  'already_paid', 'court_has_history',
 ]
 
 describe('errorMessage', () => {

@@ -5,7 +5,8 @@ import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Field, inputClasses } from '@/components/ui/field'
-import { formatPrice } from '@/lib/domain/format'
+import { Icon } from '@/components/ui/icon'
+import { PaymentItemHead } from './payments-section'
 
 export type TransferView = {
   id: string
@@ -30,27 +31,32 @@ export function TransferReviewCard({
 
   if (done) {
     return (
-      <Card>
+      <Card className="flex items-center gap-3">
+        <Icon name="check-circle" className="text-court-ink" />
         <p role="status">{done}</p>
       </Card>
     )
   }
 
   return (
-    <Card className="flex flex-col gap-3">
-      <div>
-        <p className="font-semibold">{transfer.holder}</p>
-        <p className="text-fg-muted">
-          {transfer.when}, {transfer.courtName}
-        </p>
-        <p className="font-display text-2xl font-bold">{formatPrice(transfer.amount)}</p>
-      </div>
+    <Card className="flex h-full flex-col gap-3">
+      <PaymentItemHead holder={transfer.holder} when={transfer.when} courtName={transfer.courtName}
+        amount={transfer.amount} amountLabel="Transfirió" />
       {transfer.receiptUrl ? (
-        <a href={transfer.receiptUrl} target="_blank" rel="noreferrer" className="font-semibold text-accent-ink underline">
+        <a
+          href={transfer.receiptUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex min-h-11 items-center gap-2 self-start font-semibold text-accent-ink underline"
+        >
+          <Icon name="receipt" className="size-4" />
           Ver comprobante
         </a>
       ) : (
-        <p className="text-sm text-fg-muted">Sin comprobante</p>
+        <p className="flex min-h-11 items-center gap-2 text-sm text-fg-muted">
+          <Icon name="receipt" className="size-4" />
+          Sin comprobante
+        </p>
       )}
       <ActionForm action={confirmAction} submitLabel="Confirmar" pendingLabel="Confirmando…" onDone={setDone}>
         <input type="hidden" name="paymentId" value={transfer.id} />
