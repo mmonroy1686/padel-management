@@ -8,5 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/unit/setup.ts'],
     include: ['tests/unit/**/*.test.{ts,tsx}'],
+    // jsdom role queries get slow when every file runs in parallel; 5 s (the default) flaked.
+    testTimeout: 15_000,
   },
 })
