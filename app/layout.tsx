@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Barlow, Barlow_Condensed } from 'next/font/google'
+import { ActivityProvider } from '@/components/ui/activity'
 import './globals.css'
 
 const barlow = Barlow({
@@ -33,7 +34,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es" className={`${barlow.variable} ${barlowCondensed.variable}`}>
-      <body className="min-h-dvh bg-bg font-sans text-fg antialiased">{children}</body>
+      <body className="min-h-dvh bg-bg font-sans text-fg antialiased">
+        <ActivityProvider>{children}</ActivityProvider>
+      </body>
     </html>
   )
 }

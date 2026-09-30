@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useRef } from 'react'
-import { Button } from '@/components/ui/button'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { failed, IDLE, type ActionState } from '@/lib/actions/result'
 import { errorMessage } from '@/lib/domain/errors'
@@ -82,9 +82,7 @@ export function TransferSheet({
               {state.message}
             </p>
           ) : null}
-          <Button type="submit" fullWidth disabled={pending}>
-            {pending ? 'Enviando…' : 'Informar transferencia'}
-          </Button>
+          <SubmitButton label="Informar transferencia" pendingLabel="Enviando…" pending={pending} />
         </form>
       </div>
     </BottomSheet>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { Button } from '@/components/ui/button'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { sendMagicLink, type MagicLinkState } from './actions'
 
 const initialState: MagicLinkState = { status: 'idle' }
@@ -38,9 +38,7 @@ export function MagicLinkForm({ next }: { next: string }) {
           {state.message}
         </p>
       ) : null}
-      <Button type="submit" fullWidth disabled={pending}>
-        {pending ? 'Enviando…' : 'Enviarme el enlace'}
-      </Button>
+      <SubmitButton label="Enviarme el enlace" pendingLabel="Enviando…" pending={pending} />
     </form>
   )
 }
