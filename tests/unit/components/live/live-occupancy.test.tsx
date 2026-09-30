@@ -68,7 +68,7 @@ describe('LiveOccupancy', () => {
     expect(mocks.calls).toEqual(['setAuth user-token', 'subscribe'])
   })
 
-  it('listens to new occupancies of its club and to any removal', async () => {
+  it('listens to occupancies, matches and spots of its club', async () => {
     render(<LiveOccupancy clubId="club-1" />)
     await settle()
     expect(mocks.channel.on).toHaveBeenCalledWith(
@@ -79,6 +79,16 @@ describe('LiveOccupancy', () => {
     expect(mocks.channel.on).toHaveBeenCalledWith(
       'postgres_changes',
       { event: 'DELETE', schema: 'public', table: 'court_occupancy' },
+      expect.any(Function),
+    )
+    expect(mocks.channel.on).toHaveBeenCalledWith(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'open_matches', filter: 'club_id=eq.club-1' },
+      expect.any(Function),
+    )
+    expect(mocks.channel.on).toHaveBeenCalledWith(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'match_slots', filter: 'club_id=eq.club-1' },
       expect.any(Function),
     )
   })

@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-// Reloads the current screen when a court is taken or freed anywhere in the club. It does not
-// patch state by hand: the server renders the day again. Realtime cannot filter deletes, so those
-// come unfiltered (with only the id) and trigger a reload too.
+// Reloads the current screen when a court is taken or freed anywhere in the club, or a match or
+// one of its spots changes. It does not patch state by hand: the server renders the day again.
+// Realtime cannot filter deletes, so those come unfiltered (with only the id) and trigger a reload too.
 export function LiveOccupancy({ clubId, debounceMs = 300 }: { clubId: string; debounceMs?: number }) {
   const router = useRouter()
 
@@ -35,6 +35,16 @@ export function LiveOccupancy({ clubId, debounceMs = 300 }: { clubId: string; de
           reload,
         )
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'court_occupancy' }, reload)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'open_matches', filter: `club_id=eq.${clubId}` },
+          reload,
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'match_slots', filter: `club_id=eq.${clubId}` },
+          reload,
+        )
         .subscribe()
     }
     void start()
