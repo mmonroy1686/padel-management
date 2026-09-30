@@ -101,11 +101,11 @@ export async function loadFreeCourts(club: Club, matches: Match[]): Promise<Map<
 }
 
 // What the join rules, the cards and "Partidos para vos" need to know about the viewer: what he
-// has booked or joined (busy), where and when he usually plays (habits, last 120 days).
+// has booked, joined or signed up for (busy), where and when he usually plays (habits, last 120 days).
 export async function loadPlayerContext(viewer: MemberViewer, now = new Date()): Promise<PlayerContext> {
   const supabase = await createClient()
   const since = new Date(now.getTime() - 120 * 86_400_000).toISOString()
-  const [bookings, spots, availability, preferred] = await Promise.all([
+  const [bookings, spots, availability, preferred, entries] = await Promise.all([
     supabase
       .from('bookings')
       .select('starts_at, ends_at')
@@ -115,17 +115,29 @@ export async function loadPlayerContext(viewer: MemberViewer, now = new Date()):
     supabase.from('match_slots').select('match:open_matches(starts_at, ends_at, status)').eq('player_id', viewer.userId),
     supabase.from('player_availability').select('weekday, band').eq('user_id', viewer.userId),
     supabase.from('player_preferred_courts').select('court_id').eq('user_id', viewer.userId),
+    supabase
+      .from('tournament_entries')
+      .select('tournament:tournaments!tournament_entries_tournament_in_club(starts_at, ends_at, status)')
+      .eq('player_id', viewer.userId)
+      .is('removed_at', null),
   ])
   if (bookings.error) throw bookings.error
   if (spots.error) throw spots.error
   if (availability.error) throw availability.error
   if (preferred.error) throw preferred.error
+  if (entries.error) throw entries.error
 
   const timezone = viewer.club.timezone
   const booked: Period[] = bookings.data.map((row) => ({ startsAt: toDate(row.starts_at), endsAt: toDate(row.ends_at) }))
   const inMatches = spots.data.flatMap((row) =>
     row.match && row.match.status !== 'cancelled'
       ? [{ startsAt: toDate(row.match.starts_at), endsAt: toDate(row.match.ends_at), confirmed: row.match.status === 'confirmed' }]
+      : [],
+  )
+  // Same as private.is_busy: an active entry in a tournament that was not cancelled.
+  const inTournaments: Period[] = entries.data.flatMap((row) =>
+    row.tournament && row.tournament.status !== 'cancelled'
+      ? [{ startsAt: toDate(row.tournament.starts_at), endsAt: toDate(row.tournament.ends_at) }]
       : [],
   )
   const playedAt = new Map<string, number>()
@@ -142,7 +154,7 @@ export async function loadPlayerContext(viewer: MemberViewer, now = new Date()):
       gender: viewer.profile.gender,
       side: viewer.profile.side,
     },
-    busy: [...booked, ...inMatches]
+    busy: [...booked, ...inMatches, ...inTournaments]
       .filter((period) => period.endsAt > now)
       .map(({ startsAt, endsAt }) => ({ startsAt, endsAt })),
     habits: {
