@@ -81,3 +81,10 @@ export function leftPlayerRefunds(matchBookings: OverviewBooking[]): RefundItem[
       }))
   })
 }
+
+export type PaymentsTotals = { count: number; total: number }
+
+// Count and money of one Cobros list, for the summary at the top of the screen.
+export function totalsOf<T>(items: T[], amount: (item: T) => number): PaymentsTotals {
+  return { count: items.length, total: items.reduce((sum, item) => sum + amount(item), 0) }
+}

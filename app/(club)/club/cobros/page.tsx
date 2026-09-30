@@ -3,10 +3,12 @@ import { ActionForm } from '@/components/ui/action-form'
 import { Card } from '@/components/ui/card'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadPaymentsOverview } from '@/lib/data/payments'
-import { dayLongLabel, formatPrice, timeIn } from '@/lib/domain/format'
+import { dayLongLabel, timeIn } from '@/lib/domain/format'
+import { totalsOf } from '@/lib/domain/payments-overview'
 import { localDateOf } from '@/lib/domain/time'
 import { recordCash } from '../grilla/actions'
 import { confirmPayment, refundPayment, rejectPayment } from './actions'
+import { PaymentItemHead, PaymentsSection, SummaryTile } from './payments-section'
 import { TransferReviewCard } from './transfer-review-card'
 
 export const metadata: Metadata = { title: 'Cobros' }
@@ -17,89 +19,96 @@ export default async function PaymentsPage() {
   const { transfers, unpaid, refunds } = await loadPaymentsOverview(club)
   const when = (start: Date) => `${dayLongLabel(localDateOf(start, club.timezone))}, ${timeIn(start, club.timezone)}`
 
+  const totals = {
+    transfers: totalsOf(transfers, (transfer) => transfer.amount),
+    unpaid: totalsOf(unpaid, (item) => item.due),
+    refunds: totalsOf(refunds, (item) => item.amount),
+  }
+
   return (
     <>
-      <section aria-labelledby="transferencias" className="flex flex-col gap-3">
-        <h2 id="transferencias" className="font-display text-2xl font-bold uppercase">
-          Transferencias para confirmar
-        </h2>
-        {transfers.length > 0 ? (
-          <ul className="grid gap-3 md:grid-cols-2">
-            {transfers.map((transfer) => (
-              <li key={transfer.id}>
-                <TransferReviewCard
-                  transfer={{
-                    id: transfer.id,
-                    amount: transfer.amount,
-                    holder: transfer.holder,
-                    when: transfer.startsAt ? when(transfer.startsAt) : '',
-                    courtName: transfer.courtName,
-                    receiptUrl: transfer.receiptUrl,
-                  }}
-                  confirmAction={confirmPayment}
-                  rejectAction={rejectPayment}
-                />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-fg-muted">No hay transferencias para confirmar.</p>
-        )}
-      </section>
+      <nav aria-label="Resumen de cobros" className="grid grid-cols-3 gap-2 sm:gap-3">
+        <SummaryTile href="#transferencias" label="Por confirmar" totals={totals.transfers} tone="accent" />
+        <SummaryTile href="#sin-pagar" label="Sin cobrar" totals={totals.unpaid} tone="accent" />
+        <SummaryTile href="#devolver" label="A devolver" totals={totals.refunds} tone="danger" />
+      </nav>
 
-      <section aria-labelledby="sin-pagar" className="flex flex-col gap-3">
-        <h2 id="sin-pagar" className="font-display text-2xl font-bold uppercase">
-          Reservas jugadas sin pagar
-        </h2>
-        {unpaid.length > 0 ? (
-          <ul className="grid gap-3 md:grid-cols-2">
-            {unpaid.map((item) => (
-              <li key={`${item.bookingId}-${item.payerId ?? ''}`}>
-                <Card className="flex flex-col gap-2">
-                  <p className="font-semibold">{item.holder}</p>
-                  <p className="text-fg-muted">
-                    {when(item.startsAt)}, {item.courtName}. Debe {formatPrice(item.due)}.
-                  </p>
-                  {club.accepts_cash ? (
-                    <ActionForm action={recordCash} submitLabel="Cobrar en efectivo" variant="secondary">
-                      <input type="hidden" name="bookingId" value={item.bookingId} />
-                      <input type="hidden" name="amount" value={item.due} />
-                      {item.payerId ? <input type="hidden" name="payerId" value={item.payerId} /> : null}
-                    </ActionForm>
-                  ) : null}
-                </Card>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-fg-muted">Nada pendiente en los últimos 30 días.</p>
-        )}
-      </section>
+      <PaymentsSection
+        id="transferencias"
+        icon="receipt"
+        tone="accent"
+        title="Transferencias para confirmar"
+        hint="Revisá el comprobante y confirmá cuando la plata esté en la cuenta."
+        totals={totals.transfers}
+        emptyText="No hay transferencias para confirmar."
+      >
+        {transfers.map((transfer) => (
+          <li key={transfer.id}>
+            <TransferReviewCard
+              transfer={{
+                id: transfer.id,
+                amount: transfer.amount,
+                holder: transfer.holder,
+                when: transfer.startsAt ? when(transfer.startsAt) : '',
+                courtName: transfer.courtName,
+                receiptUrl: transfer.receiptUrl,
+              }}
+              confirmAction={confirmPayment}
+              rejectAction={rejectPayment}
+            />
+          </li>
+        ))}
+      </PaymentsSection>
 
-      <section aria-labelledby="devolver" className="flex flex-col gap-3">
-        <h2 id="devolver" className="font-display text-2xl font-bold uppercase">
-          Pagos a devolver
-        </h2>
-        {refunds.length > 0 ? (
-          <ul className="grid gap-3 md:grid-cols-2">
-            {refunds.map((item) => (
-              <li key={item.paymentId}>
-                <Card className="flex flex-col gap-2">
-                  <p className="font-semibold">{item.holder}</p>
-                  <p className="text-fg-muted">
-                    Canceló {when(item.startsAt)}, {item.courtName}. Pagó {formatPrice(item.amount)}.
-                  </p>
-                  <ActionForm action={refundPayment} submitLabel="Marcar devuelto" variant="secondary">
-                    <input type="hidden" name="paymentId" value={item.paymentId} />
-                  </ActionForm>
-                </Card>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-fg-muted">No hay devoluciones pendientes.</p>
-        )}
-      </section>
+      <PaymentsSection
+        id="sin-pagar"
+        icon="clock"
+        tone="accent"
+        title="Reservas jugadas sin pagar"
+        hint="Turnos de los últimos 30 días que todavía deben plata."
+        totals={totals.unpaid}
+        emptyText="Nada pendiente en los últimos 30 días."
+      >
+        {unpaid.map((item) => (
+          <li key={`${item.bookingId}-${item.payerId ?? ''}`}>
+            <Card className="flex h-full flex-col gap-3">
+              <PaymentItemHead holder={item.holder} when={when(item.startsAt)} courtName={item.courtName}
+                amount={item.due} amountLabel="Debe" />
+              {club.accepts_cash ? (
+                <ActionForm action={recordCash} submitLabel="Cobrar en efectivo" pendingLabel="Registrando…" variant="secondary"
+                  className="mt-auto">
+                  <input type="hidden" name="bookingId" value={item.bookingId} />
+                  <input type="hidden" name="amount" value={item.due} />
+                  {item.payerId ? <input type="hidden" name="payerId" value={item.payerId} /> : null}
+                </ActionForm>
+              ) : null}
+            </Card>
+          </li>
+        ))}
+      </PaymentsSection>
+
+      <PaymentsSection
+        id="devolver"
+        icon="undo"
+        tone="danger"
+        title="Pagos a devolver"
+        hint="Reservas canceladas o jugadores que salieron de un partido después de pagar."
+        totals={totals.refunds}
+        emptyText="No hay devoluciones pendientes."
+      >
+        {refunds.map((item) => (
+          <li key={item.paymentId}>
+            <Card className="flex h-full flex-col gap-3">
+              <PaymentItemHead holder={item.holder} when={when(item.startsAt)} courtName={item.courtName}
+                amount={item.amount} amountLabel="Devolver" />
+              <ActionForm action={refundPayment} submitLabel="Marcar devuelto" pendingLabel="Guardando…" variant="secondary"
+                className="mt-auto">
+                <input type="hidden" name="paymentId" value={item.paymentId} />
+              </ActionForm>
+            </Card>
+          </li>
+        ))}
+      </PaymentsSection>
     </>
   )
 }
