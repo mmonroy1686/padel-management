@@ -482,6 +482,33 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"cancel_match":
+{ Args: { "p_match_id": string,"p_note"?: string }; Returns: {
+              "allow_other_court": boolean,
+"booking_id": string | null,
+"cancel_note": string | null,
+"cancel_reason": string | null,
+"cancelled_at": string | null,
+"category_max": number,
+"category_min": number,
+"club_id": string,
+"court_id": string | null,
+"created_at": string,
+"created_by": string | null,
+"ends_at": string | null,
+"id": string,
+"match_type": Database["public"]['Enums']["match_type"],
+"period": unknown,
+"preferred_court_id": string,
+"starts_at": string | null,
+"status": Database["public"]['Enums']["match_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "open_matches"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "cancel_my_booking":
 { Args: { "p_booking_id": string }; Returns: {
               "cancelled_at": string | null,
@@ -509,6 +536,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"close_matches":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "confirm_payment":
 { Args: { "p_payment_id": string }; Returns: {
               "amount": number,
@@ -531,6 +561,33 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_match":
+{ Args: { "p_allow_other_court": boolean,"p_category_max": number,"p_category_min": number,"p_court_id": string,"p_match_type": Database["public"]['Enums']["match_type"],"p_side": Database["public"]['Enums']["player_side"],"p_starts_at": string }; Returns: {
+              "allow_other_court": boolean,
+"booking_id": string | null,
+"cancel_note": string | null,
+"cancel_reason": string | null,
+"cancelled_at": string | null,
+"category_max": number,
+"category_min": number,
+"club_id": string,
+"court_id": string | null,
+"created_at": string,
+"created_by": string | null,
+"ends_at": string | null,
+"id": string,
+"match_type": Database["public"]['Enums']["match_type"],
+"period": unknown,
+"preferred_court_id": string,
+"starts_at": string | null,
+"status": Database["public"]['Enums']["match_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "open_matches"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_series":
 { Args: { "p_court_id": string,"p_ends_on"?: string,"p_guest_name"?: string,"p_player_id"?: string,"p_start_time": string,"p_starts_on": string,"p_weekday": number }; Returns: {
               "club_id": string,
@@ -549,6 +606,60 @@ isOneToOne: false
 "end_series":
 { Args: { "p_from_date": string,"p_series_id": string }; Returns: number
                            },
+"join_match":
+{ Args: { "p_match_id": string,"p_position": number }; Returns: {
+              "allow_other_court": boolean,
+"booking_id": string | null,
+"cancel_note": string | null,
+"cancel_reason": string | null,
+"cancelled_at": string | null,
+"category_max": number,
+"category_min": number,
+"club_id": string,
+"court_id": string | null,
+"created_at": string,
+"created_by": string | null,
+"ends_at": string | null,
+"id": string,
+"match_type": Database["public"]['Enums']["match_type"],
+"period": unknown,
+"preferred_court_id": string,
+"starts_at": string | null,
+"status": Database["public"]['Enums']["match_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "open_matches"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"leave_match":
+{ Args: { "p_match_id": string }; Returns: {
+              "allow_other_court": boolean,
+"booking_id": string | null,
+"cancel_note": string | null,
+"cancel_reason": string | null,
+"cancelled_at": string | null,
+"category_max": number,
+"category_min": number,
+"club_id": string,
+"court_id": string | null,
+"created_at": string,
+"created_by": string | null,
+"ends_at": string | null,
+"id": string,
+"match_type": Database["public"]['Enums']["match_type"],
+"period": unknown,
+"preferred_court_id": string,
+"starts_at": string | null,
+"status": Database["public"]['Enums']["match_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "open_matches"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "occupancy_notes":
 { Args: { "p_club_id": string,"p_from": string,"p_to": string }; Returns: {
               "id": string,"note": string
@@ -617,6 +728,33 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"remove_from_match":
+{ Args: { "p_match_id": string,"p_player_id": string }; Returns: {
+              "allow_other_court": boolean,
+"booking_id": string | null,
+"cancel_note": string | null,
+"cancel_reason": string | null,
+"cancelled_at": string | null,
+"category_max": number,
+"category_min": number,
+"club_id": string,
+"court_id": string | null,
+"created_at": string,
+"created_by": string | null,
+"ends_at": string | null,
+"id": string,
+"match_type": Database["public"]['Enums']["match_type"],
+"period": unknown,
+"preferred_court_id": string,
+"starts_at": string | null,
+"status": Database["public"]['Enums']["match_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "open_matches"
         isOneToOne: true
         isSetofReturn: false
       } },
