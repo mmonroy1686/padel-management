@@ -70,6 +70,22 @@ export async function updateCourt(_previous: ActionState, form: FormData): Promi
   return ok('Cancha guardada.')
 }
 
+// The database refuses a court with bookings, recurring slots or matches (court_has_history).
+export async function deleteCourt(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  const courtId = readUuid(form, 'courtId')
+  if (!courtId) return INVALID_INPUT
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('courts').delete().eq('id', courtId).eq('club_id', clubId).select('id')
+  if (error?.message === 'court_has_history') return failed(errorMessage('court_has_history'))
+  if (error) return failed('No pudimos borrar la cancha.')
+  if (data.length === 0) return FORBIDDEN
+  revalidateBookings()
+  return ok('Cancha borrada.')
+}
+
 export async function addPricingRule(_previous: ActionState, form: FormData): Promise<ActionState> {
   const clubId = await adminClubId()
   if (!clubId) return FORBIDDEN

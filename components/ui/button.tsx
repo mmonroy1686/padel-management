@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from 'react'
 import { cn } from '@/lib/cn'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost'
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 type ButtonStyle = { variant?: ButtonVariant; fullWidth?: boolean; className?: string }
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & ButtonStyle
 
@@ -12,6 +12,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-accent text-on-accent hover:brightness-95',
   secondary: 'border border-border bg-surface text-fg hover:border-accent',
   ghost: 'text-accent-ink hover:bg-surface',
+  danger: 'border border-danger text-danger hover:bg-surface',
 }
 
 // Also used by links that look like buttons (<Link className={buttonClasses()}>).

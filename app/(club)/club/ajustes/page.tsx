@@ -7,7 +7,8 @@ import { WEEKDAYS_SHORT } from '@/lib/domain/format'
 import { describeRule, SLOT_LENGTHS, TIME_OPTIONS } from '@/lib/domain/settings'
 import { formatMinutes, parseTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
-import { addCourt, addPricingRule, deletePricingRule, updateClubSettings, updateCourt } from './actions'
+import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubSettings, updateCourt } from './actions'
+import { DeleteCourtButton } from './delete-court-button'
 
 export const metadata: Metadata = { title: 'Ajustes' }
 
@@ -126,6 +127,9 @@ export default async function SettingsPage() {
                     Activa (se ofrece para reservar)
                   </label>
                 </ActionForm>
+                <div className="mt-3 border-t border-border pt-3">
+                  <DeleteCourtButton courtId={court.id} courtName={court.name} action={deleteCourt} />
+                </div>
               </Card>
             </li>
           ))}
