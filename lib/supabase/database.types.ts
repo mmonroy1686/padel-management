@@ -666,7 +666,7 @@ isOneToOne: false
             }[]
                            },
 "record_cash":
-{ Args: { "p_amount": number,"p_booking_id": string }; Returns: {
+{ Args: { "p_amount": number,"p_booking_id": string,"p_payer_id"?: string }; Returns: {
               "amount": number,
 "booking_id": string,
 "club_id": string,
