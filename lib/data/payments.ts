@@ -9,6 +9,7 @@ import {
   type UnpaidItem,
 } from '@/lib/domain/payments-overview'
 import { toDate } from '@/lib/domain/time'
+import { entryRefunds, unpaidEntries, type UnpaidEntryItem } from '@/lib/domain/tournament-payments'
 import { createClient } from '@/lib/supabase/server'
 
 export type ReportedTransfer = {
@@ -20,7 +21,12 @@ export type ReportedTransfer = {
   receiptUrl: string | null
 }
 
-export type PaymentsOverview = { transfers: ReportedTransfer[]; unpaid: UnpaidItem[]; refunds: RefundItem[] }
+export type PaymentsOverview = {
+  transfers: ReportedTransfer[]
+  unpaid: UnpaidItem[]
+  unpaidEntries: UnpaidEntryItem[]
+  refunds: RefundItem[]
+}
 
 const RECEIPT_URL_SECONDS = 300
 
@@ -32,11 +38,11 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
   const supabase = await createClient()
   const since = new Date(now.getTime() - 30 * 86_400_000).toISOString()
 
-  const [reported, played, cancelled, matchBookings] = await Promise.all([
+  const [reported, played, cancelled, matchBookings, tournaments] = await Promise.all([
     supabase
       .from('payments')
       .select(
-        'id, amount, receipt_path, payer:profiles!payments_payer_id_fkey(display_name), booking:bookings(starts_at, guest_name, court:courts(name), player:profiles!bookings_player_id_fkey(display_name))',
+        'id, amount, receipt_path, payer:profiles!payments_payer_id_fkey(display_name), booking:bookings(starts_at, guest_name, court:courts(name), player:profiles!bookings_player_id_fkey(display_name)), entry:tournament_entries!payments_entry_in_club(tournament:tournaments!tournament_entries_tournament_in_club(name, starts_at))',
       )
       .eq('club_id', club.id)
       .eq('status', 'reported')
@@ -63,11 +69,24 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
       .eq('status', 'confirmed')
       .not('match_id', 'is', null)
       .gt('starts_at', since),
+    supabase.from('tournaments').select('id, name, starts_at, price, status').eq('club_id', club.id).gt('starts_at', since),
   ])
   if (reported.error) throw reported.error
   if (played.error) throw played.error
   if (cancelled.error) throw cancelled.error
   if (matchBookings.error) throw matchBookings.error
+  if (tournaments.error) throw tournaments.error
+
+  const entries =
+    tournaments.data.length > 0
+      ? await supabase
+          .from('tournament_entries')
+          .select(
+            'id, tournament_id, guest_name, removed_at, player:profiles!tournament_entries_player_id_fkey(display_name), payments!payments_entry_in_club(id, status, amount)',
+          )
+          .in('tournament_id', tournaments.data.map((tournament) => tournament.id))
+      : { data: [], error: null }
+  if (entries.error) throw entries.error
 
   // Receipts are private: short-lived signed URLs, made with the staff session.
   const signedUrls = new Map<string, string>()
@@ -79,15 +98,23 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
   }
 
   return {
-    transfers: reported.data.map((payment) => ({
-      id: payment.id,
-      amount: payment.amount,
-      holder: payment.payer?.display_name ?? (payment.booking ? holderLabel(payment.booking) : 'Sin nombre'),
-      startsAt: payment.booking ? toDate(payment.booking.starts_at) : null,
-      courtName: payment.booking?.court?.name ?? '',
-      receiptUrl: payment.receipt_path ? (signedUrls.get(payment.receipt_path) ?? null) : null,
-    })),
+    transfers: reported.data.map((payment) => {
+      const tournament = payment.entry?.tournament ?? null
+      return {
+        id: payment.id,
+        amount: payment.amount,
+        holder: payment.payer?.display_name ?? (payment.booking ? holderLabel(payment.booking) : 'Sin nombre'),
+        startsAt: payment.booking ? toDate(payment.booking.starts_at) : tournament ? toDate(tournament.starts_at) : null,
+        courtName: payment.booking?.court?.name ?? (tournament ? `Torneo ${tournament.name}` : ''),
+        receiptUrl: payment.receipt_path ? (signedUrls.get(payment.receipt_path) ?? null) : null,
+      }
+    }),
     unpaid: unpaidBookings(played.data),
-    refunds: [...refundsDue(cancelled.data), ...leftPlayerRefunds(matchBookings.data)],
+    unpaidEntries: unpaidEntries(tournaments.data, entries.data, now),
+    refunds: [
+      ...refundsDue(cancelled.data),
+      ...leftPlayerRefunds(matchBookings.data),
+      ...entryRefunds(tournaments.data, entries.data),
+    ],
   }
 }

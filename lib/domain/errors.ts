@@ -7,7 +7,7 @@ const MESSAGES = {
   notice_period: 'Ya no se puede cancelar: el plazo de aviso terminó. Avisá al club.',
   no_price: 'Ese turno no tiene precio cargado. Consultá en el club.',
   too_many_bookings: 'Llegaste al máximo de reservas activas. Cancelá una o esperá a jugarla.',
-  busy_at_that_time: 'Ya tenés una reserva o un partido a esa hora.',
+  busy_at_that_time: 'Ya tenés una reserva, un partido o un torneo a esa hora.',
   receipt_required: 'Subí el comprobante de la transferencia.',
   forbidden: 'No tenés permiso para hacer eso.',
   not_found: 'No encontramos lo que buscabas. Puede que ya no exista.',
@@ -22,6 +22,14 @@ const MESSAGES = {
   spot_taken: 'Ese lugar se acaba de ocupar. Elegí otro.',
   court_has_history: 'Esa cancha ya tiene reservas o partidos. Desactivala en lugar de borrarla.',
   already_paid: 'Ya pagaste tu parte: pedile al club que te saque del partido y te devuelva el pago.',
+  tournament_closed: 'La inscripción de este torneo está cerrada.',
+  tournament_full: 'El torneo ya no tiene lugares.',
+  already_in_tournament: 'Ya estás anotado en este torneo.',
+  not_enough_players: 'Para armar el fixture tiene que haber 8, 12 o 16 anotados.',
+  scores_missing: 'Faltan cargar resultados. Completalos antes de finalizar.',
+  invalid_score: 'Ese resultado no puede ser: va de 0 a los puntos del partido.',
+  courts_busy: 'Alguna de esas canchas ya está ocupada en ese horario. Elegí otras u otro horario.',
+  outside_hours: 'El torneo tiene que empezar y terminar dentro del horario del club.',
 } as const
 
 export type ErrorCode = keyof typeof MESSAGES

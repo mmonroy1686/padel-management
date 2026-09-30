@@ -11,6 +11,13 @@ const ROW = {
 }
 
 describe('toOccupancy', () => {
+  it('keeps the tournament an occupancy belongs to', () => {
+    expect(toOccupancy({ ...ROW, kind: 'tournament', tournament_id: 't1' }, 'player')).toMatchObject({
+      kind: 'tournament',
+      tournamentId: 't1',
+    })
+  })
+
   it('keeps the block reason for staff', () => {
     expect(toOccupancy(ROW, 'staff')).toEqual({
       id: 'blk',

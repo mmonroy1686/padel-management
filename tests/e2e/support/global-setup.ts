@@ -2,7 +2,7 @@ import { adminClient, E2E_DOMAIN } from './admin'
 
 // Removes what earlier e2e runs left in the local database: users @e2e.test and everything they
 // booked, loaded or uploaded (including series bookings the daily job created with no author), and
-// the matches they created or joined.
+// the matches they created or joined, and the tournaments they created or signed up for.
 // adminClient only ever points at the local stack.
 export default async function globalSetup(): Promise<void> {
   const admin = adminClient()
@@ -39,6 +39,10 @@ export default async function globalSetup(): Promise<void> {
   if (seriesIds.length > 0) await check(admin.from('recurring_series').delete().in('id', seriesIds))
   // Bookings went first (that clears open_matches.booking_id); the spots go with their matches.
   if (matchIds.length > 0) await check(admin.from('open_matches').delete().in('id', matchIds))
+  // Tournaments take their entries, games, payments and occupancies with them (on delete cascade).
+  // Entries of e2e players in other tournaments go too, so the users can be deleted.
+  await check(admin.from('tournaments').delete().in('created_by', ids))
+  await check(admin.from('tournament_entries').delete().in('player_id', ids))
   const occupancyFilter = [`created_by.in.${idList}`]
   if (occupancyIds.length > 0) occupancyFilter.push(`id.in.(${occupancyIds.join(',')})`)
   await check(admin.from('court_occupancy').delete().or(occupancyFilter.join(',')))

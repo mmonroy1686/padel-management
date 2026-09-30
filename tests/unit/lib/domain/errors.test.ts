@@ -8,6 +8,8 @@ const DATABASE_CODES = [
   'invalid_state', 'invalid_input', 'method_disabled',
   'category_mismatch', 'type_mismatch', 'side_mismatch', 'match_closed', 'already_in_match', 'spot_taken',
   'already_paid', 'court_has_history',
+  'tournament_closed', 'tournament_full', 'already_in_tournament', 'not_enough_players', 'scores_missing',
+  'invalid_score', 'courts_busy', 'outside_hours',
 ]
 
 describe('errorMessage', () => {
@@ -22,7 +24,12 @@ describe('errorMessage', () => {
 
   it('explains the match rules in words', () => {
     expect(errorMessage('side_mismatch')).toBe('Ese lugar es para el otro lado de la cancha.')
-    expect(errorMessage('busy_at_that_time')).toBe('Ya tenés una reserva o un partido a esa hora.')
+    expect(errorMessage('busy_at_that_time')).toBe('Ya tenés una reserva, un partido o un torneo a esa hora.')
+  })
+
+  it('explains the tournament rules in words', () => {
+    expect(errorMessage('not_enough_players')).toBe('Para armar el fixture tiene que haber 8, 12 o 16 anotados.')
+    expect(errorMessage('courts_busy')).toBe('Alguna de esas canchas ya está ocupada en ese horario. Elegí otras u otro horario.')
   })
 
   it('falls back for unknown codes and inherited object keys', () => {

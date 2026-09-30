@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { MyBookingCard } from '@/app/(jugador)/reservas/my-booking-card'
+import { MyBookingCard } from '@/components/booking/my-booking-card'
 import type { ReportTransfer } from '@/components/booking/transfer-sheet'
 import type { FormAction } from '@/components/ui/action-form'
 import type { MyBookingView } from '@/lib/domain/my-bookings'
