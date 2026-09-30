@@ -54,7 +54,7 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
           <p className="text-sm text-fg-muted">Ingresos por canchas</p>
         </Card>
       </div>
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <ClubBoard
           key={date}
           date={date}
