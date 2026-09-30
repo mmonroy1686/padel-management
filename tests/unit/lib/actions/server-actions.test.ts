@@ -32,7 +32,7 @@ const { bookSlot } = await import('@/app/(jugador)/reservar/actions')
 const { cancelMyBooking, reportTransfer } = await import('@/app/(jugador)/reservas/actions')
 const { endSeries, loadSlot } = await import('@/app/(club)/club/grilla/actions')
 const { addPricingRule, updateClubSettings } = await import('@/app/(club)/club/ajustes/actions')
-const { saveProfile } = await import('@/lib/actions/profile')
+const { saveAvailability, savePreferredCourts, saveProfile } = await import('@/lib/actions/profile')
 const { errorMessage } = await import('@/lib/domain/errors')
 
 const COURT = '22222222-2222-2222-2222-222222222201'
@@ -166,5 +166,26 @@ describe('saveProfile', () => {
       p_category: 5,
     })
     expect(redirect).toHaveBeenCalledWith('/')
+  })
+})
+
+describe('availability and preferred courts', () => {
+  it('rejects keys and courts with the wrong shape before any RPC', async () => {
+    const bad = new FormData()
+    bad.append('availability', '9-night')
+    expect(await saveAvailability(IDLE, bad)).toEqual(INVALID_INPUT)
+    const courts = new FormData()
+    courts.append('courtIds', 'cancha-1')
+    expect(await savePreferredCourts(IDLE, courts)).toEqual(INVALID_INPUT)
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('saves the checked keys and courts, or none', async () => {
+    const data = new FormData()
+    data.append('availability', '4-night')
+    await saveAvailability(IDLE, data)
+    expect(rpc).toHaveBeenCalledWith('save_my_availability', { p_slots: ['4-night'] })
+    await savePreferredCourts(IDLE, new FormData())
+    expect(rpc).toHaveBeenCalledWith('save_my_preferred_courts', { p_club_id: 'club-1', p_court_ids: [] })
   })
 })

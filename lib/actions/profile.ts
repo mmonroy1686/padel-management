@@ -5,7 +5,8 @@ import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/acti
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { safeNextPath } from '@/lib/auth/redirect'
 import { getViewer } from '@/lib/auth/viewer'
-import { readBoolean, readEnum, readInt, readText } from '@/lib/domain/input'
+import { parseAvailability } from '@/lib/domain/availability'
+import { isUuid, readBoolean, readEnum, readInt, readText } from '@/lib/domain/input'
 import { GENDERS, HANDS, SIDES } from '@/lib/domain/profile'
 import { createClient } from '@/lib/supabase/server'
 
@@ -38,6 +39,33 @@ export async function saveProfile(_previous: ActionState, form: FormData): Promi
   const next = form.get('next')
   if (typeof next === 'string' && next) redirect(safeNextPath(next))
   return ok('Guardamos tus cambios.')
+}
+
+export async function saveAvailability(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const viewer = await getViewer()
+  if (!viewer) return failed('Tu sesión venció. Volvé a ingresar.')
+  const slots = parseAvailability(form.getAll('availability'))
+  if (!slots) return INVALID_INPUT
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('save_my_availability', { p_slots: slots })
+  revalidateBookings()
+  return fromRpc(error, 'Guardamos tus horarios.')
+}
+
+export async function savePreferredCourts(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const viewer = await getViewer()
+  if (!viewer) return failed('Tu sesión venció. Volvé a ingresar.')
+  const courtIds = form.getAll('courtIds')
+  if (!courtIds.every(isUuid)) return INVALID_INPUT
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('save_my_preferred_courts', {
+    p_club_id: viewer.club.id,
+    p_court_ids: courtIds.map((id) => id.toLowerCase()),
+  })
+  revalidateBookings()
+  return fromRpc(error, 'Guardamos tus canchas preferidas.')
 }
 
 export async function signOut(): Promise<void> {
