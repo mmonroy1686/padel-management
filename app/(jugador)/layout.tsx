@@ -4,6 +4,7 @@ import { getViewer } from '@/lib/auth/viewer'
 const PLAYER_TABS = [
   { href: '/', label: 'Inicio' },
   { href: '/reservar', label: 'Reservar' },
+  { href: '/partidos', label: 'Partidos' },
   { href: '/reservas', label: 'Mis reservas' },
   { href: '/perfil', label: 'Perfil' },
 ]
