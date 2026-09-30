@@ -11,4 +11,8 @@ describe('clubTabs', () => {
       '/club/grilla', '/club/calendario', '/club/cobros', '/club/jugadores', '/club/ajustes',
     ])
   })
+
+  it('gives every tab an icon', () => {
+    expect(clubTabs('admin').map((tab) => tab.icon)).toEqual(['grid', 'calendar', 'cash', 'users', 'sliders'])
+  })
 })

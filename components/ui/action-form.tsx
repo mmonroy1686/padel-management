@@ -1,7 +1,8 @@
 'use client'
 
 import { useActionState, type ReactNode } from 'react'
-import { Button, type ButtonVariant } from '@/components/ui/button'
+import type { ButtonVariant } from '@/components/ui/button'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { IDLE, type ActionState } from '@/lib/actions/result'
 import { cn } from '@/lib/cn'
 
@@ -48,9 +49,7 @@ export function ActionForm({
           {state.message}
         </p>
       ) : null}
-      <Button type="submit" variant={variant} fullWidth disabled={pending}>
-        {pending ? pendingLabel : submitLabel}
-      </Button>
+      <SubmitButton label={submitLabel} pendingLabel={pendingLabel} variant={variant} pending={pending} />
     </form>
   )
 }

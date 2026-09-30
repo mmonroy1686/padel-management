@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Logo } from '@/components/brand/logo'
-import { Button } from '@/components/ui/button'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { Card } from '@/components/ui/card'
 import { safeNextPath } from '@/lib/auth/redirect'
 import { signInWithGoogle } from './actions'
@@ -39,9 +39,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
         </div>
         <form action={signInWithGoogle}>
           <input type="hidden" name="next" value={nextPath} />
-          <Button type="submit" variant="secondary" fullWidth>
-            Seguir con Google
-          </Button>
+          <SubmitButton label="Seguir con Google" pendingLabel="Abriendo Google…" variant="secondary" />
         </form>
       </Card>
     </main>

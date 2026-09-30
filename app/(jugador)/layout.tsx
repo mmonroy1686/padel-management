@@ -1,12 +1,12 @@
-import { TabNav } from '@/components/nav/tab-nav'
+import { TabNav, type TabItem } from '@/components/nav/tab-nav'
 import { getViewer } from '@/lib/auth/viewer'
 
-const PLAYER_TABS = [
-  { href: '/', label: 'Inicio' },
-  { href: '/reservar', label: 'Reservar' },
-  { href: '/partidos', label: 'Partidos' },
-  { href: '/reservas', label: 'Mis reservas' },
-  { href: '/perfil', label: 'Perfil' },
+const PLAYER_TABS: TabItem[] = [
+  { href: '/', label: 'Inicio', icon: 'home' },
+  { href: '/reservar', label: 'Reservar', icon: 'calendar-plus' },
+  { href: '/partidos', label: 'Partidos', icon: 'racket' },
+  { href: '/reservas', label: 'Mis reservas', icon: 'ticket' },
+  { href: '/perfil', label: 'Perfil', icon: 'user' },
 ]
 
 export default async function PlayerLayout({ children }: { children: React.ReactNode }) {

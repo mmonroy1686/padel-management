@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { AvailabilityForm } from '@/components/profile/availability-form'
 import { PlayerProfileForm } from '@/components/profile/player-profile-form'
 import { PreferredCourtsForm } from '@/components/profile/preferred-courts-form'
-import { Button } from '@/components/ui/button'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { Card } from '@/components/ui/card'
 import { saveAvailability, savePreferredCourts, saveProfile, signOut } from '@/lib/actions/profile'
 import { requirePlayer } from '@/lib/auth/viewer'
@@ -62,9 +62,7 @@ export default async function ProfilePage() {
         />
       </Card>
       <form action={signOut}>
-        <Button type="submit" variant="secondary" fullWidth>
-          Cerrar sesión
-        </Button>
+        <SubmitButton label="Cerrar sesión" pendingLabel="Saliendo…" variant="secondary" />
       </form>
     </>
   )

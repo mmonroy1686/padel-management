@@ -3,10 +3,10 @@ import type { Role } from '@/lib/domain/profile'
 
 export function clubTabs(role: Role): TabItem[] {
   const tabs: TabItem[] = [
-    { href: '/club/grilla', label: 'Grilla' },
-    { href: '/club/calendario', label: 'Calendario' },
-    { href: '/club/cobros', label: 'Cobros' },
-    { href: '/club/jugadores', label: 'Jugadores' },
+    { href: '/club/grilla', label: 'Grilla', icon: 'grid' },
+    { href: '/club/calendario', label: 'Calendario', icon: 'calendar' },
+    { href: '/club/cobros', label: 'Cobros', icon: 'cash' },
+    { href: '/club/jugadores', label: 'Jugadores', icon: 'users' },
   ]
-  return role === 'admin' ? [...tabs, { href: '/club/ajustes', label: 'Ajustes' }] : tabs
+  return role === 'admin' ? [...tabs, { href: '/club/ajustes', label: 'Ajustes', icon: 'sliders' }] : tabs
 }

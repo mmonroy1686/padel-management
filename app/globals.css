@@ -64,3 +64,30 @@ body {
   background: var(--bg);
   color: var(--fg);
 }
+
+/* Top loading bar: waits a moment so fast actions do not flash it, then slides across. */
+.loading-bar {
+  opacity: 0;
+  animation: loading-bar-show 1ms 150ms forwards;
+}
+
+.loading-bar-fill {
+  width: 40%;
+  animation: loading-bar-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes loading-bar-show {
+  to { opacity: 1; }
+}
+
+@keyframes loading-bar-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar-fill {
+    width: 100%;
+    animation: none;
+  }
+}
