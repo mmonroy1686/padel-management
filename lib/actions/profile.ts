@@ -68,6 +68,16 @@ export async function savePreferredCourts(_previous: ActionState, form: FormData
   return fromRpc(error, 'Guardamos tus canchas preferidas.')
 }
 
+// Whether other players see her name in "Ya están en el club" when she checks in.
+export async function setShowInClub(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const viewer = await getViewer()
+  if (!viewer) return failed('Tu sesión venció. Volvé a ingresar.')
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('set_show_in_club', { p_show: readBoolean(form, 'showInClub') })
+  revalidateBookings()
+  return fromRpc(error, 'Guardamos tu preferencia.')
+}
+
 export async function signOut(): Promise<void> {
   const supabase = await createClient()
   await supabase.auth.signOut()

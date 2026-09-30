@@ -5,6 +5,7 @@ import { revalidateBookings } from '@/lib/actions/revalidate'
 import { getViewer } from '@/lib/auth/viewer'
 import { errorMessage } from '@/lib/domain/errors'
 import { readBoolean, readInt, readText, readUuid } from '@/lib/domain/input'
+import { parseLoyaltyForm } from '@/lib/domain/loyalty'
 import { parseClubSettings, parsePricingRule } from '@/lib/domain/settings'
 import { createClient } from '@/lib/supabase/server'
 
@@ -28,6 +29,21 @@ export async function updateClubSettings(_previous: ActionState, form: FormData)
   if (data.length === 0) return FORBIDDEN
   revalidateBookings()
   return ok('Ajustes guardados. Las reservas ya hechas no cambian.')
+}
+
+// Stamps rule (Ajustes → Sellos). The clubs check constraints have the last word.
+export async function updateLoyalty(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  const parsed = parseLoyaltyForm(form)
+  if (!parsed.ok) return failed(parsed.message)
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('clubs').update(parsed.value).eq('id', clubId).select('id')
+  if (error) return failed('No pudimos guardar los sellos. Revisá los datos.')
+  if (data.length === 0) return FORBIDDEN
+  revalidateBookings()
+  return ok('Sellos guardados.')
 }
 
 export async function addCourt(_previous: ActionState, form: FormData): Promise<ActionState> {
