@@ -9,6 +9,18 @@ const DAYS = [
 ]
 
 describe('DayStrip', () => {
+  it('crosses out the days without day use', () => {
+    render(
+      <DayStrip
+        days={[...DAYS.slice(0, 2), { date: '2026-10-01', label: 'jue 1', closed: true }]}
+        selected="2026-09-30"
+        basePath="/day-use"
+      />,
+    )
+    expect(screen.getByRole('link', { name: 'jue 1, sin day use' })).toHaveClass('line-through')
+    expect(screen.getByRole('link', { name: 'Hoy' })).not.toHaveClass('line-through')
+  })
+
   it('links every day to the same screen', () => {
     render(<DayStrip days={DAYS} selected="2026-09-30" basePath="/reservar" />)
     expect(screen.getByRole('navigation', { name: 'Día' })).toBeInTheDocument()

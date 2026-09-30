@@ -12,6 +12,7 @@ const ITEMS: Record<'player' | 'club', [CellStyle, string][]> = {
     ['recurring', 'Turno fijo'],
     ['block', 'Bloqueo'],
     ['tournament', 'Torneo'],
+    ['day_use', 'Day use'],
   ],
 }
 

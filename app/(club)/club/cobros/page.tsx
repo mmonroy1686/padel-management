@@ -7,6 +7,7 @@ import { dayLongLabel, timeIn } from '@/lib/domain/format'
 import { totalsOf } from '@/lib/domain/payments-overview'
 import { localDateOf } from '@/lib/domain/time'
 import { recordCash } from '../grilla/actions'
+import { recordPassCash } from '../day-use/actions'
 import { recordTournamentCash } from '../torneos/actions'
 import { confirmPayment, refundPayment, rejectPayment } from './actions'
 import { PaymentItemHead, PaymentsSection, SummaryTile } from './payments-section'
@@ -17,12 +18,12 @@ export const metadata: Metadata = { title: 'Cobros' }
 export default async function PaymentsPage() {
   const viewer = await requireStaff('/club/cobros')
   const { club } = viewer
-  const { transfers, unpaid, unpaidEntries, refunds } = await loadPaymentsOverview(club)
+  const { transfers, unpaid, unpaidEntries, unpaidPasses, refunds } = await loadPaymentsOverview(club)
   const when = (start: Date) => `${dayLongLabel(localDateOf(start, club.timezone))}, ${timeIn(start, club.timezone)}`
 
   const totals = {
     transfers: totalsOf(transfers, (transfer) => transfer.amount),
-    unpaid: totalsOf([...unpaid, ...unpaidEntries], (item) => item.due),
+    unpaid: totalsOf([...unpaid, ...unpaidEntries, ...unpaidPasses], (item) => item.due),
     refunds: totalsOf(refunds, (item) => item.amount),
   }
 
@@ -66,7 +67,7 @@ export default async function PaymentsPage() {
         icon="clock"
         tone="accent"
         title="Jugado sin pagar"
-        hint="Turnos y torneos de los últimos 30 días que todavía deben plata."
+        hint="Turnos, torneos y day use de los últimos 30 días que todavía deben plata."
         totals={totals.unpaid}
         emptyText="Nada pendiente en los últimos 30 días."
       >
@@ -101,6 +102,21 @@ export default async function PaymentsPage() {
             </Card>
           </li>
         ))}
+        {unpaidPasses.map((item) => (
+          <li key={item.passId}>
+            <Card className="flex h-full flex-col gap-3">
+              <PaymentItemHead holder={item.holder} when={when(item.startsAt)} courtName={item.productName}
+                amount={item.due} amountLabel="Debe" />
+              {club.accepts_cash ? (
+                <ActionForm action={recordPassCash} submitLabel="Cobrar en efectivo" pendingLabel="Registrando…" variant="secondary"
+                  className="mt-auto">
+                  <input type="hidden" name="passId" value={item.passId} />
+                  <input type="hidden" name="amount" value={item.due} />
+                </ActionForm>
+              ) : null}
+            </Card>
+          </li>
+        ))}
       </PaymentsSection>
 
       <PaymentsSection
@@ -108,7 +124,7 @@ export default async function PaymentsPage() {
         icon="undo"
         tone="danger"
         title="Pagos a devolver"
-        hint="Reservas o torneos cancelados, o jugadores que se bajaron después de pagar."
+        hint="Reservas, torneos o pases de day use cancelados, o jugadores que se bajaron después de pagar."
         totals={totals.refunds}
         emptyText="No hay devoluciones pendientes."
       >

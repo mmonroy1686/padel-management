@@ -1,0 +1,74 @@
+-- Fase 3b fixture. Include it after slot.psql, club.psql and match.psql:
+--   \ir helpers/day_use.psql
+-- Club B with its admin Eva (e1) and Cancha B: the "staff of another club" of every day use test.
+-- Products and passes inserted as postgres (skips the RPC rules on purpose). Unless told otherwise a
+-- product runs every day from 08:00 to 12:30 for 30 people at $450 and blocks no court.
+insert into public.clubs (id, slug, name) values ('a0000000-0000-0000-0000-000000000002', 'test-club-b', 'Club B');
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000e1', 'eva@test.local');
+insert into public.club_members (club_id, user_id, role) values
+  ('a0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-0000000000e1', 'admin');
+insert into public.courts (id, club_id, name, sort_order) values
+  ('cb000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002', 'Cancha B', 1);
+
+-- Pass codes for the fixture: DU-100000, DU-100001, ...
+create sequence test_helpers.pass_code start 100000;
+
+create procedure test_helpers.make_product(
+  p_id uuid,
+  p_name text default 'Day use T',
+  p_weekdays smallint[] default array[0, 1, 2, 3, 4, 5, 6]::smallint[],
+  p_from time default '08:00',
+  p_to time default '12:30',
+  p_capacity integer default 30,
+  p_price integer default 450,
+  p_courts uuid[] default array[]::uuid[],
+  p_active boolean default true
+)
+language sql
+as $$
+  insert into public.day_use_products (id, club_id, name, price, weekdays, from_time, to_time, capacity, court_ids,
+                                       is_active)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', p_name, p_price, p_weekdays, p_from, p_to, p_capacity,
+          p_courts, p_active);
+$$;
+
+-- A member's pass on today + p_days, bought online. A reward pass takes 100 % off.
+create procedure test_helpers.make_pass(
+  p_id uuid,
+  p_product_id uuid,
+  p_days integer,
+  p_player_id uuid,
+  p_status public.day_use_pass_status default 'bought',
+  p_used_reward boolean default false
+)
+language sql
+as $$
+  insert into public.day_use_passes (id, club_id, product_id, on_date, player_id, price, discount_percent, used_reward,
+                                     code, status, source, checked_in_at, cancelled_at)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', p_product_id, test_helpers.today() + p_days, p_player_id, 450,
+          case when p_used_reward then 100 else 0 end, p_used_reward,
+          'DU-' || nextval('test_helpers.pass_code'), p_status, 'online',
+          case when p_status = 'inside' then now() end, case when p_status = 'cancelled' then now() end);
+$$;
+
+-- p_count past check-ins of a member, one per day, the newest p_days_ago days back.
+create procedure test_helpers.add_visits(p_product_id uuid, p_player_id uuid, p_count integer, p_days_ago integer default 1)
+language sql
+as $$
+  insert into public.day_use_passes (club_id, product_id, on_date, player_id, price, code, status, source, checked_in_at)
+  select 'a0000000-0000-0000-0000-000000000001', p_product_id, test_helpers.today() - p_days_ago - n, p_player_id, 450,
+         'DU-' || nextval('test_helpers.pass_code'), 'inside', 'online', now()
+  from generate_series(0, p_count - 1) as n;
+$$;
+
+-- The pass of a member on today + p_days that was not cancelled. Runs as the caller: under RLS a
+-- player finds only her own passes and staff every pass of their club.
+create function test_helpers.pass_of(p_player_id uuid, p_days integer)
+returns uuid
+language sql
+stable
+as $$
+  select id from public.day_use_passes
+  where player_id = p_player_id and on_date = test_helpers.today() + p_days and status <> 'cancelled'
+  limit 1;
+$$;

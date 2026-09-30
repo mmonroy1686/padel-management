@@ -120,11 +120,13 @@ function ClubCell({
         ? CELL_STYLES.block
         : occupancy.kind === 'tournament'
           ? CELL_STYLES.tournament
-          : occupancy.kind === 'recurring'
-            ? CELL_STYLES.recurring
-            : occupancy.kind === 'booking' || occupancy.kind === 'match'
-              ? CELL_STYLES.booking
-              : CELL_STYLES.other
+          : occupancy.kind === 'day_use'
+            ? CELL_STYLES.day_use
+            : occupancy.kind === 'recurring'
+              ? CELL_STYLES.recurring
+              : occupancy.kind === 'booking' || occupancy.kind === 'match'
+                ? CELL_STYLES.booking
+                : CELL_STYLES.other
     if (continues) {
       return (
         <button

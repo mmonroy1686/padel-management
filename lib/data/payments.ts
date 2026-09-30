@@ -1,5 +1,6 @@
 import 'server-only'
 import type { Club } from '@/lib/auth/viewer'
+import { passRefunds, passStartsAt, unpaidPasses, type UnpaidPassItem } from '@/lib/domain/day-use-payments'
 import {
   holderLabel,
   leftPlayerRefunds,
@@ -8,7 +9,7 @@ import {
   type RefundItem,
   type UnpaidItem,
 } from '@/lib/domain/payments-overview'
-import { toDate } from '@/lib/domain/time'
+import { localDateOf, toDate } from '@/lib/domain/time'
 import { entryRefunds, unpaidEntries, type UnpaidEntryItem } from '@/lib/domain/tournament-payments'
 import { createClient } from '@/lib/supabase/server'
 
@@ -25,6 +26,7 @@ export type PaymentsOverview = {
   transfers: ReportedTransfer[]
   unpaid: UnpaidItem[]
   unpaidEntries: UnpaidEntryItem[]
+  unpaidPasses: UnpaidPassItem[]
   refunds: RefundItem[]
 }
 
@@ -33,16 +35,19 @@ const RECEIPT_URL_SECONDS = 300
 const BOOKING_SELECT =
   'id, starts_at, price, status, guest_name, match_id, court:courts(name), player:profiles!bookings_player_id_fkey(display_name), match:open_matches!bookings_match_id_fkey(slots:match_slots(position, player_id, player:profiles(display_name))), payments(id, status, amount, payer_id, payer:profiles!payments_payer_id_fkey(display_name))'
 
+const PASS_SELECT =
+  'id, on_date, price, discount_percent, total, status, guest_name, player:profiles!day_use_passes_player_id_fkey(display_name), product:day_use_products!day_use_passes_product_in_club(name, from_time), payments!payments_pass_in_club(id, status, amount)'
+
 // Everything the Cobros screen needs, read with the staff session.
 export async function loadPaymentsOverview(club: Club, now = new Date()): Promise<PaymentsOverview> {
   const supabase = await createClient()
-  const since = new Date(now.getTime() - 30 * 86_400_000).toISOString()
+  const since = new Date(now.getTime() - 30 * 86_400_000)
 
-  const [reported, played, cancelled, matchBookings, tournaments] = await Promise.all([
+  const [reported, played, cancelled, matchBookings, tournaments, passes] = await Promise.all([
     supabase
       .from('payments')
       .select(
-        'id, amount, receipt_path, payer:profiles!payments_payer_id_fkey(display_name), booking:bookings(starts_at, guest_name, court:courts(name), player:profiles!bookings_player_id_fkey(display_name)), entry:tournament_entries!payments_entry_in_club(tournament:tournaments!tournament_entries_tournament_in_club(name, starts_at))',
+        'id, amount, receipt_path, payer:profiles!payments_payer_id_fkey(display_name), booking:bookings(starts_at, guest_name, court:courts(name), player:profiles!bookings_player_id_fkey(display_name)), entry:tournament_entries!payments_entry_in_club(tournament:tournaments!tournament_entries_tournament_in_club(name, starts_at)), pass:day_use_passes!payments_pass_in_club(on_date, product:day_use_products!day_use_passes_product_in_club(name, from_time))',
       )
       .eq('club_id', club.id)
       .eq('status', 'reported')
@@ -53,14 +58,14 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
       .eq('club_id', club.id)
       .eq('status', 'confirmed')
       .lt('ends_at', now.toISOString())
-      .gt('ends_at', since)
+      .gt('ends_at', since.toISOString())
       .order('starts_at', { ascending: false }),
     supabase
       .from('bookings')
       .select(BOOKING_SELECT)
       .eq('club_id', club.id)
       .eq('status', 'cancelled')
-      .gt('starts_at', since)
+      .gt('starts_at', since.toISOString())
       .order('starts_at', { ascending: false }),
     supabase
       .from('bookings')
@@ -68,14 +73,22 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
       .eq('club_id', club.id)
       .eq('status', 'confirmed')
       .not('match_id', 'is', null)
-      .gt('starts_at', since),
-    supabase.from('tournaments').select('id, name, starts_at, price, status').eq('club_id', club.id).gt('starts_at', since),
+      .gt('starts_at', since.toISOString()),
+    supabase.from('tournaments').select('id, name, starts_at, price, status').eq('club_id', club.id).gt('starts_at', since.toISOString()),
+    supabase
+      .from('day_use_passes')
+      .select(PASS_SELECT)
+      .eq('club_id', club.id)
+      // Also passes cancelled lately whatever their date, so a refund of an old pass shows up.
+      .or(`on_date.gte.${localDateOf(since, club.timezone)},cancelled_at.gte.${since.toISOString()}`)
+      .order('on_date', { ascending: false }),
   ])
   if (reported.error) throw reported.error
   if (played.error) throw played.error
   if (cancelled.error) throw cancelled.error
   if (matchBookings.error) throw matchBookings.error
   if (tournaments.error) throw tournaments.error
+  if (passes.error) throw passes.error
 
   const entries =
     tournaments.data.length > 0
@@ -100,21 +113,30 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
   return {
     transfers: reported.data.map((payment) => {
       const tournament = payment.entry?.tournament ?? null
+      const pass = payment.pass ?? null
       return {
         id: payment.id,
         amount: payment.amount,
         holder: payment.payer?.display_name ?? (payment.booking ? holderLabel(payment.booking) : 'Sin nombre'),
-        startsAt: payment.booking ? toDate(payment.booking.starts_at) : tournament ? toDate(tournament.starts_at) : null,
-        courtName: payment.booking?.court?.name ?? (tournament ? `Torneo ${tournament.name}` : ''),
+        startsAt: payment.booking
+          ? toDate(payment.booking.starts_at)
+          : tournament
+            ? toDate(tournament.starts_at)
+            : pass
+              ? passStartsAt(pass.on_date, pass.product?.from_time, club.timezone)
+              : null,
+        courtName: payment.booking?.court?.name ?? (tournament ? `Torneo ${tournament.name}` : (pass?.product?.name ?? '')),
         receiptUrl: payment.receipt_path ? (signedUrls.get(payment.receipt_path) ?? null) : null,
       }
     }),
     unpaid: unpaidBookings(played.data),
     unpaidEntries: unpaidEntries(tournaments.data, entries.data, now),
+    unpaidPasses: unpaidPasses(passes.data, now, club.timezone),
     refunds: [
       ...refundsDue(cancelled.data),
       ...leftPlayerRefunds(matchBookings.data),
       ...entryRefunds(tournaments.data, entries.data),
+      ...passRefunds(passes.data, club.timezone),
     ],
   }
 }

@@ -10,6 +10,7 @@ const DATABASE_CODES = [
   'already_paid', 'court_has_history',
   'tournament_closed', 'tournament_full', 'already_in_tournament', 'not_enough_players', 'scores_missing',
   'invalid_score', 'courts_busy', 'outside_hours',
+  'day_use_closed', 'day_use_full', 'already_has_pass', 'no_reward', 'already_checked_in', 'not_today',
 ]
 
 describe('errorMessage', () => {
@@ -30,6 +31,11 @@ describe('errorMessage', () => {
   it('explains the tournament rules in words', () => {
     expect(errorMessage('not_enough_players')).toBe('Para armar el fixture tiene que haber 8, 12 o 16 anotados.')
     expect(errorMessage('courts_busy')).toBe('Alguna de esas canchas ya está ocupada en ese horario. Elegí otras u otro horario.')
+  })
+
+  it('explains the day use rules in words', () => {
+    expect(errorMessage('no_reward')).toBe('Todavía no tenés una recompensa para usar.')
+    expect(errorMessage('not_today')).toBe('El ingreso se registra el día del pase.')
   })
 
   it('falls back for unknown codes and inherited object keys', () => {

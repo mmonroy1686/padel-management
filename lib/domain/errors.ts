@@ -30,6 +30,12 @@ const MESSAGES = {
   invalid_score: 'Ese resultado no puede ser: va de 0 a los puntos del partido.',
   courts_busy: 'Alguna de esas canchas ya está ocupada en ese horario. Elegí otras u otro horario.',
   outside_hours: 'El torneo tiene que empezar y terminar dentro del horario del club.',
+  day_use_closed: 'Ese día no hay day use.',
+  day_use_full: 'Ya no quedan lugares para ese day use.',
+  already_has_pass: 'Ya tenés ese pase para ese día.',
+  no_reward: 'Todavía no tenés una recompensa para usar.',
+  already_checked_in: 'Ese pase ya registró el ingreso.',
+  not_today: 'El ingreso se registra el día del pase.',
 } as const
 
 export type ErrorCode = keyof typeof MESSAGES
