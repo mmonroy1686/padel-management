@@ -8,6 +8,7 @@ export const CELL_STYLES = {
   recurring: 'bg-accent text-on-accent',
   block: 'border-2 border-dashed border-fg-muted bg-surface text-fg',
   tournament: 'border-2 border-accent bg-surface text-fg',
+  day_use: 'border-2 border-dotted border-court-ink bg-surface text-fg',
   other: 'bg-surface text-fg',
 } as const
 
