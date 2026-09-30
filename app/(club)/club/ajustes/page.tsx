@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { LogoForm } from '@/components/club/logo-form'
 import { ActionForm } from '@/components/ui/action-form'
 import { Card } from '@/components/ui/card'
 import { Field, inputClasses } from '@/components/ui/field'
@@ -8,7 +9,7 @@ import { LOYALTY_EXPIRY_OPTIONS, loyaltyRuleOf, loyaltyRuleText } from '@/lib/do
 import { describeRule, SLOT_LENGTHS, TIME_OPTIONS } from '@/lib/domain/settings'
 import { formatMinutes, parseTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
-import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubSettings, updateCourt, updateLoyalty } from './actions'
+import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, saveClubLogo } from './actions'
 import { DeleteCourtButton } from './delete-court-button'
 
 export const metadata: Metadata = { title: 'Ajustes' }
@@ -41,6 +42,15 @@ export default async function SettingsPage() {
 
   return (
     <>
+      <section aria-labelledby="logo" className="flex flex-col gap-3">
+        <h2 id="logo" className="font-display text-2xl font-bold uppercase">
+          Logo
+        </h2>
+        <Card>
+          <LogoForm club={club} saveAction={saveClubLogo} removeAction={removeClubLogo} />
+        </Card>
+      </section>
+
       <section aria-labelledby="club" className="flex flex-col gap-3">
         <h2 id="club" className="font-display text-2xl font-bold uppercase">
           Horario y reglas

@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Logo } from '@/components/brand/logo'
 import { MyBookingCard } from '@/components/booking/my-booking-card'
 import { MatchCard } from '@/components/matches/match-card'
 import { buttonClasses } from '@/components/ui/button'
@@ -159,7 +158,6 @@ export default async function HomePage() {
 function Landing() {
   return (
     <>
-      <Logo className="size-16" />
       <h1 className="font-display text-4xl font-bold uppercase">Rustic Pádel</h1>
       <Card>
         <p className="mb-4 text-fg-muted">Reservá cancha, armá partido y anotate en los torneos desde el celular.</p>
