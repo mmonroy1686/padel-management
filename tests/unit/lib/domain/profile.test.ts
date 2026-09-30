@@ -1,17 +1,24 @@
 import { describe, expect, it } from 'vitest'
-import { categoryLabel, firstName, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
+import { categoryLabel, firstName, GENDER_LABELS, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
 
 describe('isProfileComplete', () => {
-  const profile = { side: 'drive', hand: 'right' }
+  const profile = { side: 'drive', hand: 'right', gender: 'female' }
 
-  it('needs side, hand and a category in the club', () => {
+  it('needs side, hand, gender and a category in the club', () => {
     expect(isProfileComplete(profile, { category: 5 })).toBe(true)
   })
 
-  it('sends people without them to the welcome form', () => {
-    expect(isProfileComplete({ side: null, hand: 'right' }, { category: 5 })).toBe(false)
+  it('sends people without them to the welcome form, also those who joined before gender existed', () => {
+    expect(isProfileComplete({ ...profile, side: null }, { category: 5 })).toBe(false)
+    expect(isProfileComplete({ ...profile, gender: null }, { category: 5 })).toBe(false)
     expect(isProfileComplete(profile, { category: null })).toBe(false)
     expect(isProfileComplete(profile, null)).toBe(false)
+  })
+})
+
+describe('GENDER_LABELS', () => {
+  it('names genders in Spanish', () => {
+    expect(GENDER_LABELS).toEqual({ male: 'Masculino', female: 'Femenino' })
   })
 })
 
