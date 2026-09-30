@@ -3,6 +3,7 @@ import type { Club, MemberViewer } from '@/lib/auth/viewer'
 import { availabilityKey } from '@/lib/domain/availability'
 import { dayLabel } from '@/lib/domain/format'
 import { freeCourtIds } from '@/lib/domain/match-risk'
+import { toSuggestion, type SuggestionView } from '@/lib/domain/match-suggestions'
 import {
   matchFormDefaults,
   toMatch,
@@ -71,6 +72,13 @@ export async function loadMatch(club: Club, id: string): Promise<Match | null> {
 }
 
 // Where each match could still get a court: active courts with nothing overlapping its slot.
+export async function loadSuggestions(club: Club, match: Match): Promise<SuggestionView[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('match_suggestions', { p_match_id: match.id })
+  if (error) throw error
+  return data.map((row) => toSuggestion(row, { match, timezone: club.timezone }))
+}
+
 export async function loadFreeCourts(club: Club, matches: Match[]): Promise<Map<string, string[]>> {
   if (matches.length === 0) return new Map()
   const from = new Date(Math.min(...matches.map((match) => match.startsAt.getTime()))).toISOString()

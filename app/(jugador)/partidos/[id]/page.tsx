@@ -1,16 +1,18 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
+import { SuggestionsList } from '@/components/matches/suggestions-list'
 import { getSiteUrl } from '@/lib/auth/redirect'
 import { requirePlayer } from '@/lib/auth/viewer'
-import { loadFreeCourts, loadMatch, loadPlayerContext } from '@/lib/data/matches'
+import { loadFreeCourts, loadMatch, loadPlayerContext, loadSuggestions } from '@/lib/data/matches'
 import { dayLongLabel, timeIn } from '@/lib/domain/format'
 import { isUuid } from '@/lib/domain/input'
 import { canJoin, joinStatus } from '@/lib/domain/match-join'
 import { riskOf } from '@/lib/domain/match-risk'
 import { shareText } from '@/lib/domain/match-share'
-import { howItWorks, leaveStatus, openSlots } from '@/lib/domain/matches'
+import { howItWorks, isInMatch, leaveStatus, openSlots } from '@/lib/domain/matches'
 import { paymentMethodsNote } from '@/lib/domain/payments'
+import { isStaffRole } from '@/lib/domain/profile'
 import { localDateOf } from '@/lib/domain/time'
 import { joinMatch, leaveMatch } from '../actions'
 import { MatchBoard } from './match-board'
@@ -39,6 +41,11 @@ export default async function MatchPage({ params, searchParams }: { params: Para
   const requested = Number(sumarme)
   const dayText = dayLongLabel(localDateOf(match.startsAt, club.timezone))
   const time = timeIn(match.startsAt, club.timezone)
+  const share = shareText({ match, clubName: club.name, dayText, time, url: `${getSiteUrl()}/partidos/${match.id}` })
+  const suggestions =
+    match.status === 'forming' && (isInMatch(match, viewer.userId) || isStaffRole(viewer.membership.role))
+      ? await loadSuggestions(club, match)
+      : null
 
   return (
     <>
@@ -55,10 +62,12 @@ export default async function MatchPage({ params, searchParams }: { params: Para
         paymentNote={paymentMethodsNote(club)}
         closeHours={club.match_close_hours}
         leave={leaveStatus(match, viewer.userId, club.cancellation_notice_hours, now)}
-        shareText={shareText({ match, clubName: club.name, dayText, time, url: `${getSiteUrl()}/partidos/${match.id}` })}
+        shareText={share}
         joinAction={joinMatch}
         leaveAction={leaveMatch}
-      />
+      >
+        {suggestions ? <SuggestionsList suggestions={suggestions} shareText={share} /> : null}
+      </MatchBoard>
     </>
   )
 }
