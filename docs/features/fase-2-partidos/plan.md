@@ -1,7 +1,7 @@
 ---
 feature: fase-2-partidos
 type: plan
-status: in-progress
+status: done
 date: 2026-09-29
 branch: feat/fase-2-partidos
 references: ./design.md, ../fase-1-reservas/plan.md, ../fase-1-reservas/notes.md, ../../prototipo.html
@@ -7434,3 +7434,4 @@ Expected: `quality` y `db-and-e2e` en verde.
 
 - **v1 (2026-09-29)**: scaffold.
 - **v2 (2026-09-29)**: plan completo en 8 cortes (Tasks 1–42) sobre el diseño aprobado. Decisiones propias en "Decisiones que este plan toma".
+- **v3 (2026-09-30)**: ejecutado completo (Tasks 1–42). Cambios durante la ejecución: `testTimeout` de Vitest (Task 7), un caso de `create_match.test.sql` movido a una hora de la grilla (Task 8), columnas `minmax(0,1fr)` en la grilla del club (Task 34) y la migración `20260930000700_match_suggestions_fixes.sql` de la revisión (Task 42). Detalle en notes.md.

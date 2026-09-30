@@ -1,7 +1,7 @@
 ---
 feature: fase-2-partidos
 type: design
-status: design
+status: approved
 date: 2026-09-29
 branch: feat/fase-2-partidos
 references: ../../plan-general.md, ../../prototipo.html, ../fase-1-reservas/design.md
