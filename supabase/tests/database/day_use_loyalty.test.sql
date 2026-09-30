@@ -46,8 +46,8 @@ select results_eq(
 reset role;
 select results_eq(
   $$ select * from private.loyalty_of('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a1') $$,
-  $$ values (3, 1, 1, 0, 0) $$,
-  'and the reward is used');
+  $$ values (0, 1, 1, 0, 0) $$,
+  'and the reward is used: it takes the three stamps');
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1", "role": "authenticated"}';
@@ -69,7 +69,7 @@ call test_helpers.make_pass('dd000000-0000-0000-0000-000000000010', 'd0000000-00
   '00000000-0000-0000-0000-0000000000a1', 'inside', true);
 select results_eq(
   $$ select * from private.loyalty_of('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a1') $$,
-  $$ values (3, 1, 1, 0, 0) $$,
+  $$ values (0, 1, 1, 0, 0) $$,
   'a day use with a reward does not add a stamp');
 
 -- Three check-ins about 200 days ago, older than 6 months.
@@ -77,13 +77,13 @@ call test_helpers.add_visits('d0000000-0000-0000-0000-000000000001', '00000000-0
 select is(
   (select stamps from private.loyalty_of('a0000000-0000-0000-0000-000000000001',
                                          '00000000-0000-0000-0000-0000000000a1')),
-  3, 'check-ins older than the expiry do not count');
+  0, 'check-ins older than the expiry do not count: the reward took the three recent ones');
 
 update public.clubs set loyalty_expiry_months = null where id = 'a0000000-0000-0000-0000-000000000001';
 select results_eq(
   $$ select * from private.loyalty_of('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a1') $$,
-  $$ values (6, 2, 1, 1, 0) $$,
-  'without expiry every check-in counts');
+  $$ values (3, 2, 1, 1, 0) $$,
+  'without expiry every check-in counts: the reward took the three oldest');
 
 update public.clubs set loyalty_enabled = false where id = 'a0000000-0000-0000-0000-000000000001';
 select results_eq(
