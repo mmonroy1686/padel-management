@@ -1,14 +1,20 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Logo } from '@/components/brand/logo'
+import { MatchCard } from '@/components/matches/match-card'
 import { buttonClasses } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { getViewer } from '@/lib/auth/viewer'
 import { loadDayGrid } from '@/lib/data/day'
-import { dayLongLabel, timeIn } from '@/lib/domain/format'
+import { loadFreeCourts, loadMatches, loadPlayerContext } from '@/lib/data/matches'
+import { dayLabel, dayLongLabel, timeIn } from '@/lib/domain/format'
 import { countFree } from '@/lib/domain/grid'
+import { joinStatus } from '@/lib/domain/match-join'
+import { riskOf } from '@/lib/domain/match-risk'
+import { isInMatch, statusLabel } from '@/lib/domain/matches'
+import { matchesForMe } from '@/lib/domain/matches-for-me'
 import { categoryLabel, firstName, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
-import { localDateOf, toDate } from '@/lib/domain/time'
+import { addDays, localDateOf, toDate, zonedTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function HomePage() {
@@ -19,7 +25,9 @@ export default async function HomePage() {
 
   const now = new Date()
   const supabase = await createClient()
-  const [grid, next] = await Promise.all([
+  const member = { ...viewer, membership }
+  const windowEnd = zonedTime(addDays(localDateOf(now, club.timezone), club.booking_window_days + 1), 0, club.timezone)
+  const [grid, next, matches, context] = await Promise.all([
     loadDayGrid(club, localDateOf(now, club.timezone), { userId: viewer.userId, audience: 'player' }, now),
     supabase
       .from('bookings')
@@ -30,9 +38,20 @@ export default async function HomePage() {
       .order('starts_at')
       .limit(1)
       .maybeSingle(),
+    loadMatches(club, { from: now, to: windowEnd }),
+    loadPlayerContext(member, now),
   ])
   if (next.error) throw next.error
   const freeToday = countFree(grid.rows)
+  const forMe = matchesForMe(
+    matches.filter((match) => match.status === 'forming'),
+    context.player,
+    { now, closeHours: club.match_close_hours, busy: context.busy, timezone: club.timezone, habits: context.habits },
+  )
+  const myMatches = matches.filter((match) => isInMatch(match, viewer.userId)).slice(0, 3)
+  const freeCourts = await loadFreeCourts(club, forMe.map((item) => item.match))
+  const today = localDateOf(now, club.timezone)
+  const whenText = (start: Date) => `${dayLabel(localDateOf(start, club.timezone), today)} ${timeIn(start, club.timezone)}`
 
   return (
     <>
@@ -60,6 +79,52 @@ export default async function HomePage() {
           <p className="text-fg-muted">No tenés reservas.</p>
         )}
       </Card>
+      <Card className="flex flex-col gap-2">
+        <h2 className="font-display text-2xl font-bold uppercase">Tu próximo partido</h2>
+        {myMatches.length > 0 ? (
+          <ul className="flex flex-col gap-2">
+            {myMatches.map((match) => (
+              <li key={match.id}>
+                <Link href={`/partidos/${match.id}`} className="font-semibold text-accent-ink underline">
+                  {whenText(match.startsAt)}
+                </Link>{' '}
+                <span className="text-fg-muted">{statusLabel(match)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-fg-muted">No estás anotado en ningún partido.</p>
+        )}
+      </Card>
+      <section aria-labelledby="para-vos" className="flex flex-col gap-3">
+        <h2 id="para-vos" className="font-display text-2xl font-bold uppercase">
+          Partidos para vos
+        </h2>
+        {forMe.length > 0 ? (
+          <ul className="flex flex-col gap-3">
+            {forMe.map(({ match, reasons }) => (
+              <li key={match.id}>
+                <MatchCard
+                  match={match}
+                  viewerId={viewer.userId}
+                  whenText={whenText(match.startsAt)}
+                  status={joinStatus(match, context.player, { now, closeHours: club.match_close_hours, busy: context.busy })}
+                  risk={riskOf(match, freeCourts.get(match.id) ?? [])}
+                  reasons={reasons}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-fg-muted">
+            Ahora no hay partidos armándose para tu categoría y lado.{' '}
+            <Link href="/partidos" className="font-semibold text-accent-ink underline">
+              Armá uno
+            </Link>
+            .
+          </p>
+        )}
+      </section>
       <Link href="/reservar" className={buttonClasses({ fullWidth: true })}>
         {freeToday === 1 ? '1 turno libre hoy' : `${freeToday} turnos libres hoy`}
       </Link>
