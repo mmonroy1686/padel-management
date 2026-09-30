@@ -709,6 +709,34 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"buy_day_use":
+{ Args: { "p_date": string,"p_product_id": string,"p_use_reward"?: boolean }; Returns: {
+              "cancelled_at": string | null,
+"cancelled_by": string | null,
+"checked_in_at": string | null,
+"checked_in_by": string | null,
+"club_id": string,
+"code": string,
+"created_at": string,
+"created_by": string | null,
+"discount_percent": number,
+"guest_name": string | null,
+"id": string,
+"on_date": string,
+"player_id": string | null,
+"price": number,
+"product_id": string,
+"source": Database["public"]['Enums']["booking_source"],
+"status": Database["public"]['Enums']["day_use_pass_status"],
+"total": number | null,
+"used_reward": boolean
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "day_use_passes"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "cancel_booking":
 { Args: { "p_booking_id": string }; Returns: {
               "cancelled_at": string | null,
@@ -733,6 +761,34 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "bookings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"cancel_day_use":
+{ Args: { "p_pass_id": string }; Returns: {
+              "cancelled_at": string | null,
+"cancelled_by": string | null,
+"checked_in_at": string | null,
+"checked_in_by": string | null,
+"club_id": string,
+"code": string,
+"created_at": string,
+"created_by": string | null,
+"discount_percent": number,
+"guest_name": string | null,
+"id": string,
+"on_date": string,
+"player_id": string | null,
+"price": number,
+"product_id": string,
+"source": Database["public"]['Enums']["booking_source"],
+"status": Database["public"]['Enums']["day_use_pass_status"],
+"total": number | null,
+"used_reward": boolean
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "day_use_passes"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -815,6 +871,34 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "tournaments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"check_in_day_use":
+{ Args: { "p_pass_id": string }; Returns: {
+              "cancelled_at": string | null,
+"cancelled_by": string | null,
+"checked_in_at": string | null,
+"checked_in_by": string | null,
+"club_id": string,
+"code": string,
+"created_at": string,
+"created_by": string | null,
+"discount_percent": number,
+"guest_name": string | null,
+"id": string,
+"on_date": string,
+"player_id": string | null,
+"price": number,
+"product_id": string,
+"source": Database["public"]['Enums']["booking_source"],
+"status": Database["public"]['Enums']["day_use_pass_status"],
+"total": number | null,
+"used_reward": boolean
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "day_use_passes"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -943,6 +1027,16 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"day_use_inside":
+{ Args: { "p_club_id": string,"p_date": string }; Returns: {
+              "checked_in_at": string,"name": string,"product_name": string
+            }[]
+                           },
+"day_use_sold":
+{ Args: { "p_club_id": string,"p_from": string,"p_to": string }; Returns: {
+              "inside": number,"on_date": string,"product_id": string,"sold": number
+            }[]
+                           },
 "end_series":
 { Args: { "p_from_date": string,"p_series_id": string }; Returns: number
                            },
@@ -1076,6 +1170,30 @@ isOneToOne: false
                            },
 "record_cash":
 { Args: { "p_amount": number,"p_booking_id": string,"p_payer_id"?: string }; Returns: {
+              "amount": number,
+"booking_id": string | null,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"day_use_pass_id": string | null,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"payer_id": string | null,
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"],
+"tournament_entry_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"record_day_use_cash":
+{ Args: { "p_amount": number,"p_pass_id": string }; Returns: {
               "amount": number,
 "booking_id": string | null,
 "club_id": string,
@@ -1266,6 +1384,30 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"report_day_use_transfer":
+{ Args: { "p_pass_id": string,"p_receipt_path"?: string }; Returns: {
+              "amount": number,
+"booking_id": string | null,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"day_use_pass_id": string | null,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"payer_id": string | null,
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"],
+"tournament_entry_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "report_tournament_transfer":
 { Args: { "p_entry_id": string,"p_receipt_path"?: string }; Returns: {
               "amount": number,
@@ -1314,6 +1456,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"save_day_use_product":
+{ Args: { "p_capacity": number,"p_club_id": string,"p_court_ids": (string)[],"p_from_time": string,"p_includes": (string)[],"p_name": string,"p_price": number,"p_product_id"?: string,"p_sort_order"?: number,"p_to_time": string,"p_weekdays": (number)[] }; Returns: {
+              "saved_id": string,"skipped_count": number
+            }[]
+                           },
 "save_my_availability":
 { Args: { "p_slots": (string)[] }; Returns: {
               "band": Database["public"]['Enums']["day_band"],
@@ -1352,6 +1499,40 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"sell_day_use":
+{ Args: { "p_date": string,"p_guest_name"?: string,"p_player_id"?: string,"p_product_id": string,"p_use_reward"?: boolean }; Returns: {
+              "cancelled_at": string | null,
+"cancelled_by": string | null,
+"checked_in_at": string | null,
+"checked_in_by": string | null,
+"club_id": string,
+"code": string,
+"created_at": string,
+"created_by": string | null,
+"discount_percent": number,
+"guest_name": string | null,
+"id": string,
+"on_date": string,
+"player_id": string | null,
+"price": number,
+"product_id": string,
+"source": Database["public"]['Enums']["booking_source"],
+"status": Database["public"]['Enums']["day_use_pass_status"],
+"total": number | null,
+"used_reward": boolean
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "day_use_passes"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"set_day_use_override":
+{ Args: { "p_date": string,"p_enabled": boolean,"p_product_id": string }; Returns: number
+                           },
+"set_day_use_product_active":
+{ Args: { "p_active": boolean,"p_product_id": string }; Returns: number
+                           },
 "set_member_role":
 { Args: { "p_club_id": string,"p_role": Database["public"]['Enums']["club_role"],"p_user_id": string }; Returns: {
               "category": number | null,
@@ -1382,6 +1563,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_show_in_club":
+{ Args: { "p_show": boolean }; Returns: undefined
+                           },
 "staff_book":
 { Args: { "p_court_id": string,"p_guest_name"?: string,"p_player_id"?: string,"p_starts_at": string }; Returns: {
               "cancelled_at": string | null,
