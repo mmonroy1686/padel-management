@@ -20,6 +20,8 @@ import { matchesForMe } from '@/lib/domain/matches-for-me'
 import { categoryLabel, firstName, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
 import { addDays, localDateOf, zonedTime } from '@/lib/domain/time'
 import { openTournamentsText } from '@/lib/domain/tournaments'
+import { DayUseHomeCard } from '@/components/day-use/day-use-home-card'
+import { loadDayUseHome } from '@/lib/data/day-use'
 import { cancelMyBooking, reportTransfer } from './reservas/actions'
 
 export default async function HomePage() {
@@ -31,12 +33,13 @@ export default async function HomePage() {
   const now = new Date()
   const member = { ...viewer, membership }
   const windowEnd = zonedTime(addDays(localDateOf(now, club.timezone), club.booking_window_days + 1), 0, club.timezone)
-  const [grid, bookings, matches, context, tournaments] = await Promise.all([
+  const [grid, bookings, matches, context, tournaments, dayUse] = await Promise.all([
     loadDayGrid(club, localDateOf(now, club.timezone), { userId: viewer.userId, audience: 'player' }, now),
     loadMyBookings(viewer, now),
     loadMatches(club, { from: now, to: windowEnd }),
     loadPlayerContext(member, now),
     loadTournaments(club, { endsAfter: now }),
+    loadDayUseHome(viewer, now),
   ])
   const freeToday = countFree(grid.rows)
   const forMe = matchesForMe(
@@ -105,6 +108,7 @@ export default async function HomePage() {
         <Icon name="trophy" className="text-accent-ink" />
         {openTournamentsText(openTournaments)}
       </Link>
+      {dayUse ? <DayUseHomeCard home={dayUse} /> : null}
       <section aria-labelledby="para-vos" className="flex flex-col gap-3">
         <h2 id="para-vos" className="font-display text-2xl font-bold uppercase">
           Partidos para vos
