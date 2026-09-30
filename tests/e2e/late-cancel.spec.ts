@@ -6,8 +6,8 @@ test('a player cannot cancel inside the notice period and sees why', async ({ pa
   const player = await createMember({ name: 'Tomás E2E', prefix: 'flujo3' })
   const { courtName } = await insertBookingSoon(player)
 
-  await signInWithMagicLink(page, player.email, '/reservas')
-  await expect(page).toHaveURL(/\/reservas/)
+  await signInWithMagicLink(page, player.email, '/')
+  await expect(page.getByRole('heading', { name: 'Tus reservas' })).toBeVisible()
 
   const card = page.getByRole('listitem').filter({ hasText: courtName }).filter({ hasText: 'Pendiente de pago' })
   await expect(card).toContainText('Ya no se puede cancelar: faltan menos de 24 h')

@@ -34,8 +34,10 @@ test('a new player signs up, books a court, sees it and reports the transfer', a
   await sheet.getByRole('button', { name: 'Reservar', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('Listo, reservaste la cancha')
 
-  // The booking shows up in Mis reservas, pending payment.
-  await page.getByRole('link', { name: 'Mis reservas' }).click()
+  // The booking shows up in Inicio, pending payment.
+  // Straight to /: in dev, the Next indicator covers the Inicio tab on a phone.
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Tus reservas' })).toBeVisible()
   const card = page.getByRole('listitem').filter({ hasText: `${time} a` }).filter({ hasText: court })
   await expect(card).toContainText('Pendiente de pago')
 

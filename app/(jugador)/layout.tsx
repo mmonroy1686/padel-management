@@ -5,7 +5,7 @@ const PLAYER_TABS: TabItem[] = [
   { href: '/', label: 'Inicio', icon: 'home' },
   { href: '/reservar', label: 'Reservar', icon: 'calendar-plus' },
   { href: '/partidos', label: 'Partidos', icon: 'racket' },
-  { href: '/reservas', label: 'Mis reservas', icon: 'ticket' },
+  { href: '/torneos', label: 'Torneos', icon: 'trophy' },
   { href: '/perfil', label: 'Perfil', icon: 'user' },
 ]
 
