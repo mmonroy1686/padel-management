@@ -54,7 +54,7 @@ export default async function PaymentsPage() {
         {unpaid.length > 0 ? (
           <ul className="grid gap-3 md:grid-cols-2">
             {unpaid.map((item) => (
-              <li key={item.bookingId}>
+              <li key={`${item.bookingId}-${item.payerId ?? ''}`}>
                 <Card className="flex flex-col gap-2">
                   <p className="font-semibold">{item.holder}</p>
                   <p className="text-fg-muted">
@@ -64,6 +64,7 @@ export default async function PaymentsPage() {
                     <ActionForm action={recordCash} submitLabel="Cobrar en efectivo" variant="secondary">
                       <input type="hidden" name="bookingId" value={item.bookingId} />
                       <input type="hidden" name="amount" value={item.due} />
+                      {item.payerId ? <input type="hidden" name="payerId" value={item.payerId} /> : null}
                     </ActionForm>
                   ) : null}
                 </Card>
