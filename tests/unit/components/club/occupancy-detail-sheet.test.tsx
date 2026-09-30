@@ -59,6 +59,16 @@ function renderDetail(cell: GridCell, acceptsCash = true) {
 }
 
 describe('OccupancyDetailSheet', () => {
+  it('links a tournament block to its page', () => {
+    const tournamentCell = makeGrid({
+      occupancies: [{ ...occupancy('tt', 'court-1', '18:00', '20:20', 'tournament', 'Americano de octubre'), tournamentId: 't1' }],
+    }).rows.find((row) => row.slot.label === '18:30')!.cells[0]
+    renderDetail(tournamentCell)
+    expect(screen.getByRole('dialog', { name: 'Americano de octubre' })).toHaveTextContent('Torneo, Cancha 1')
+    expect(screen.getByRole('link', { name: 'Gestionar torneo' })).toHaveAttribute('href', '/club/torneos/t1')
+    expect(screen.queryByRole('button', { name: 'Liberar cancha' })).not.toBeInTheDocument()
+  })
+
   it('shows holder, time, source and payment', () => {
     renderDetail(booked)
     const dialog = screen.getByRole('dialog', { name: 'Rodríguez' })

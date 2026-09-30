@@ -13,6 +13,8 @@ export type Occupancy = {
   startsAt: Date
   endsAt: Date
   note: string | null
+  // The tournament that blocks the court (kind 'tournament'); members may read it.
+  tournamentId?: string | null
 }
 // What the viewer may know about the booking behind an occupancy. Players only get their own.
 export type GridBooking = {
@@ -126,6 +128,7 @@ export type OccupancyRow = {
   starts_at: string | null
   ends_at: string | null
   note: string | null
+  tournament_id?: string | null
 }
 
 // Block reasons are for staff only: a player's grid never carries them to the browser.
@@ -137,6 +140,7 @@ export function toOccupancy(row: OccupancyRow, audience: 'player' | 'staff'): Oc
     note: audience === 'staff' ? row.note : null,
     startsAt: toDate(row.starts_at),
     endsAt: toDate(row.ends_at),
+    ...(row.tournament_id ? { tournamentId: row.tournament_id } : {}),
   }
 }
 

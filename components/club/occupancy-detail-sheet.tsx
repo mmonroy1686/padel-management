@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
@@ -53,6 +54,11 @@ export function OccupancyDetailSheet({
           {source}.
         </p>
         {cell.offGrid ? <p className="text-sm">No coincide con la grilla actual del club.</p> : null}
+        {occupancy.tournamentId ? (
+          <Link href={`/club/torneos/${occupancy.tournamentId}`} className="font-semibold text-accent-ink underline">
+            Gestionar torneo
+          </Link>
+        ) : null}
         {booking?.matchId ? (
           <MatchBookingDetail booking={booking} acceptsCash={acceptsCash} actions={actions} onDone={onDone} />
         ) : booking ? (

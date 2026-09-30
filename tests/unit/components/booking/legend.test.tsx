@@ -11,6 +11,6 @@ describe('Legend', () => {
 
   it('explains the club grid', () => {
     render(<Legend variant="club" />)
-    expect(screen.getByRole('list', { name: 'Referencias' })).toHaveTextContent('ReservaTurno fijoBloqueo')
+    expect(screen.getByRole('list', { name: 'Referencias' })).toHaveTextContent('ReservaTurno fijoBloqueoTorneo')
   })
 })

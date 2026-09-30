@@ -71,7 +71,7 @@ export async function loadDayGrid(
     supabase.from('pricing_rules').select('weekdays, from_time, to_time, price').eq('club_id', club.id),
     supabase
       .from('court_occupancy')
-      .select('id, court_id, kind, starts_at, ends_at')
+      .select('id, court_id, kind, starts_at, ends_at, tournament_id')
       .eq('club_id', club.id)
       .lt('starts_at', dayEnd)
       .gt('ends_at', dayStart),
