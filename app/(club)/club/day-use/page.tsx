@@ -55,10 +55,7 @@ export default async function ClubDayUsePage({ searchParams }: { searchParams: S
     <>
       <LiveOccupancy clubId={club.id} />
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-display text-2xl font-bold uppercase">Day use</h2>
-          <p className="text-fg-muted">{dayLongLabel(date)}</p>
-        </div>
+        <p className="text-lg font-semibold">{dayLongLabel(date)}</p>
         {membership.role === 'admin' ? (
           <Link href="/club/day-use/configuracion" className={buttonClasses({ variant: 'secondary' })}>
             Configurar pases

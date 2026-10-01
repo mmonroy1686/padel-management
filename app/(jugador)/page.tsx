@@ -146,7 +146,7 @@ export default async function HomePage() {
         )}
       </section>
       <Link href="/reservar" className={buttonClasses({ fullWidth: true })}>
-        {freeToday === 1 ? '1 turno libre hoy' : `${freeToday} turnos libres hoy`}
+        {freeToday === 0 ? 'Reservar para otro día' : freeToday === 1 ? '1 turno libre hoy' : `${freeToday} turnos libres hoy`}
       </Link>
       {bookings.past.length > 0 ? (
         <details className="flex flex-col gap-3">
