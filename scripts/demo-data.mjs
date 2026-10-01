@@ -111,7 +111,12 @@ const TZ = club.timezone
 const today = localDate(new Date())
 const now = new Date()
 const SLOTS = slotTimes()
-const at = (days, time) => zoned(addDays(today, days), time)
+// Times in this script are examples ('18:30'); each club has its own grid, so they snap to its nearest slot.
+const near = (time) => {
+  const minutes = (value) => Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5))
+  return SLOTS.reduce((best, slot) => (Math.abs(minutes(slot) - minutes(time)) < Math.abs(minutes(best) - minutes(time)) ? slot : best))
+}
+const at = (days, time) => zoned(addDays(today, days), near(time))
 const futureSlot = (days, time) => at(days, time) > new Date(now.getTime() + 30 * 60_000)
 const court = (index) => courts[index % courts.length]
 
@@ -223,7 +228,7 @@ for (const [days, time, courtIndex, holder] of [
   const created = await tryRpc(reception, 'create_series', {
     p_court_id: court(courtIndex).id,
     p_weekday: weekday(date),
-    p_start_time: time,
+    p_start_time: near(time),
     p_starts_on: date,
     ...holder,
   })
@@ -713,5 +718,5 @@ function slotTimes() {
 }
 
 function futureOrToday(days, endTime) {
-  return days > 0 || at(0, endTime.slice(0, 5)) > now
+  return days > 0 || zoned(today, endTime.slice(0, 5)) > now
 }
