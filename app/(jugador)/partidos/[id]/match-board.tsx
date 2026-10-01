@@ -64,7 +64,7 @@ export function MatchBoard(props: MatchBoardProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <h1 className="font-display text-3xl font-bold uppercase">{props.whenText}</h1>
-        <span className="rounded-full border border-border px-2 py-0.5 text-xs font-semibold">{statusLabel(match)}</span>
+        <span className="shrink-0 whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-xs font-semibold">{statusLabel(match)}</span>
       </div>
       {notice ? (
         <p role="status" className="rounded-xl border border-accent bg-surface p-3">

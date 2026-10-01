@@ -32,11 +32,11 @@ export function MatchCourt({ match, viewerId, joinable = [], onJoin, compact = f
         {spot(2)}
       </div>
       <div aria-hidden="true" className="border-t-2 border-on-court" />
+      {compact ? null : <p className="text-xs font-semibold uppercase">Pareja 2</p>}
       <div className="grid grid-cols-2 gap-1">
         {spot(3)}
         {spot(4)}
       </div>
-      {compact ? null : <p className="text-xs font-semibold uppercase">Pareja 2</p>}
     </div>
   )
 }
