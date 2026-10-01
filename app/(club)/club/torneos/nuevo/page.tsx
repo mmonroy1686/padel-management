@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { NewTournamentForm } from '@/components/tournaments/new-tournament-form'
+import { BackLink } from '@/components/ui/back-link'
 import { Card } from '@/components/ui/card'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadActiveCourts, loadTakenPeriods } from '@/lib/data/tournaments'
@@ -21,9 +21,7 @@ export default async function NewTournamentPage() {
 
   return (
     <>
-      <Link href="/club/torneos" className="text-sm font-semibold text-accent-ink underline">
-        Volver a torneos
-      </Link>
+      <BackLink href="/club/torneos">Volver a torneos</BackLink>
       <h2 className="font-display text-2xl font-bold uppercase">Nuevo americano</h2>
       <Card>
         <NewTournamentForm

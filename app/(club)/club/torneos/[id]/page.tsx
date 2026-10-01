@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { EntriesManager } from '@/components/tournaments/entries-manager'
@@ -7,6 +6,7 @@ import { FixtureList } from '@/components/tournaments/fixture-list'
 import { RankingTable } from '@/components/tournaments/ranking-table'
 import { ScoreBoard } from '@/components/tournaments/score-board'
 import { TournamentControls } from '@/components/tournaments/tournament-controls'
+import { BackLink } from '@/components/ui/back-link'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadTournament } from '@/lib/data/tournaments'
 import { dayLongLabel, formatPrice, timeIn } from '@/lib/domain/format'
@@ -45,14 +45,15 @@ export default async function ManageTournamentPage({ params }: { params: Params 
   return (
     <>
       <LiveOccupancy clubId={club.id} />
-      <Link href="/club/torneos" className="text-sm font-semibold text-accent-ink underline">
-        Volver a torneos
-      </Link>
+      <BackLink href="/club/torneos">Volver a torneos</BackLink>
       <header className="flex flex-col gap-1">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h2 className="font-display text-3xl font-bold uppercase">{tournament.name}</h2>
-          <span className="rounded-full border border-border px-2 py-0.5 text-xs font-semibold">
-            {TOURNAMENT_STATUS_LABELS[tournament.status]} · {spotsLabel(tournament)}
+          <span className="shrink-0 whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-xs font-semibold">
+            {/* While signing up, how full it is; after that spotsLabel is the status itself. */}
+            {spotsLabel(tournament) === TOURNAMENT_STATUS_LABELS[tournament.status]
+              ? TOURNAMENT_STATUS_LABELS[tournament.status]
+              : `${TOURNAMENT_STATUS_LABELS[tournament.status]} · ${spotsLabel(tournament)}`}
           </span>
         </div>
         <p className="text-fg-muted">

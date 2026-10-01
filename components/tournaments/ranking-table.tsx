@@ -1,7 +1,7 @@
 import { cn } from '@/lib/cn'
 import type { RankingRow } from '@/lib/domain/tournament-ranking'
 
-const CELL = 'py-2 pr-3 text-right tabular-nums'
+const CELL = 'py-3 pr-3 text-right tabular-nums'
 
 // Points, then games won, then difference (tournament-ranking.ts). The viewer's row stands out.
 export function RankingTable({ rows, highlightEntryId = null }: { rows: RankingRow[]; highlightEntryId?: string | null }) {
@@ -23,9 +23,10 @@ export function RankingTable({ rows, highlightEntryId = null }: { rows: RankingR
             const mine = row.entryId === highlightEntryId
             return (
               <tr key={row.entryId} aria-current={mine ? 'true' : undefined} className={cn('border-t border-border', mine && 'font-semibold text-accent-ink')}>
-                <td className="py-2 pr-3 tabular-nums">{row.position}</td>
-                <th scope="row" className={cn('py-2 pr-3 text-left', mine ? 'font-semibold' : 'font-normal')}>
+                <td className="py-3 pr-3 tabular-nums">{row.position}</td>
+                <th scope="row" className={cn('py-3 pr-3 text-left', mine ? 'font-semibold' : 'font-normal')}>
                   {row.name}
+                  {mine ? ' (vos)' : ''}
                 </th>
                 <td className={CELL}>{row.points}</td>
                 <td className={CELL}>{row.played}</td>

@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Logo } from '@/components/brand/logo'
 import { MyBookingCard } from '@/components/booking/my-booking-card'
 import { MatchCard } from '@/components/matches/match-card'
 import { buttonClasses } from '@/components/ui/button'
@@ -90,10 +89,18 @@ export default async function HomePage() {
           <ul className="flex flex-col gap-2">
             {myMatches.map((match) => (
               <li key={match.id}>
-                <Link href={`/partidos/${match.id}`} className="font-semibold text-accent-ink underline">
-                  {whenText(match.startsAt)}
-                </Link>{' '}
-                <span className="text-fg-muted">{statusLabel(match)}</span>
+                <Link
+                  href={`/partidos/${match.id}`}
+                  className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-border bg-bg px-3 hover:border-accent focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  <span>
+                    <span className="block font-semibold">{whenText(match.startsAt)}</span>
+                    <span className="block text-sm text-fg-muted">{statusLabel(match)}</span>
+                  </span>
+                  <span aria-hidden="true" className="text-xl text-accent-ink">
+                    ›
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -139,7 +146,7 @@ export default async function HomePage() {
         )}
       </section>
       <Link href="/reservar" className={buttonClasses({ fullWidth: true })}>
-        {freeToday === 1 ? '1 turno libre hoy' : `${freeToday} turnos libres hoy`}
+        {freeToday === 0 ? 'Reservar para otro día' : freeToday === 1 ? '1 turno libre hoy' : `${freeToday} turnos libres hoy`}
       </Link>
       {bookings.past.length > 0 ? (
         <details className="flex flex-col gap-3">
@@ -159,7 +166,6 @@ export default async function HomePage() {
 function Landing() {
   return (
     <>
-      <Logo className="size-16" />
       <h1 className="font-display text-4xl font-bold uppercase">Rustic Pádel</h1>
       <Card>
         <p className="mb-4 text-fg-muted">Reservá cancha, armá partido y anotate en los torneos desde el celular.</p>

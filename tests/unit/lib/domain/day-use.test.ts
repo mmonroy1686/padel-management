@@ -3,6 +3,7 @@ import {
   buyStatus,
   canCancelPass,
   dayUseDays,
+  firstOpenDay,
   includesText,
   isOpenOn,
   isPassCode,
@@ -157,11 +158,11 @@ describe('toPass', () => {
 })
 
 describe('passes', () => {
-  it('lets the player cancel a pass bought for today or later', () => {
-    expect(canCancelPass(makePass(), DATE)).toBe(true)
-    expect(canCancelPass(makePass(), '2026-10-02')).toBe(false)
-    expect(canCancelPass(makePass({ status: 'inside' }), DATE)).toBe(false)
-    expect(canCancelPass(makePass({ status: 'cancelled' }), DATE)).toBe(false)
+  it('lets the player cancel a pass until its day use ends, like cancel_day_use', () => {
+    expect(canCancelPass(makePass(), at('12:00'))).toBe(true)
+    expect(canCancelPass(makePass(), at('12:30'))).toBe(false)
+    expect(canCancelPass(makePass({ status: 'inside' }), at('09:00'))).toBe(false)
+    expect(canCancelPass(makePass({ status: 'cancelled' }), at('09:00'))).toBe(false)
   })
 
   it('finds passes by name, without accents, or by code', () => {
@@ -198,5 +199,24 @@ describe('unblockedCourts', () => {
   it('leaves out what already started and the days it does not run', () => {
     expect(unblockedCourts(product, [DATE, '2026-10-02'], [], occupancies, at('09:00'), TIMEZONE)).toEqual([])
     expect(unblockedCourts(product, ['2026-10-03'], [{ productId: 'p1', date: '2026-10-03', enabled: false }], [], at('07:00'), TIMEZONE)).toEqual([])
+  })
+})
+
+describe('firstOpenDay', () => {
+  // DATE is a Thursday; the pass runs 08:00 to 12:30 on Thursdays and Saturdays.
+  const products = [makeProduct({ weekdays: [4, 6] })]
+
+  it("is today while today's day use has not ended", () => {
+    expect(firstOpenDay(DATE, products, [], at('12:00'), TIMEZONE)).toBe(DATE)
+  })
+
+  it("is the next day with day use once today's ended, counting the exceptions", () => {
+    expect(firstOpenDay(DATE, products, [], at('13:00'), TIMEZONE)).toBe('2026-10-03')
+    const friday = [{ productId: 'p1', date: '2026-10-02', enabled: true }]
+    expect(firstOpenDay(DATE, products, friday, at('13:00'), TIMEZONE)).toBe('2026-10-02')
+  })
+
+  it('stays on today when no day of the week has day use', () => {
+    expect(firstOpenDay(DATE, [], [], at('13:00'), TIMEZONE)).toBe(DATE)
   })
 })

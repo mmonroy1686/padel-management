@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PassStaffCard } from '@/components/day-use/pass-staff-card'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
+import { BackLink } from '@/components/ui/back-link'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadPassByCode } from '@/lib/data/day-use'
 import { isPassCode } from '@/lib/domain/day-use'
@@ -28,9 +28,7 @@ export default async function PassByCodePage({ params }: { params: Params }) {
   return (
     <>
       <LiveOccupancy clubId={club.id} />
-      <Link href="/club/day-use" className="text-sm font-semibold text-accent-ink underline">
-        Volver a day use
-      </Link>
+      <BackLink href="/club/day-use">Volver a day use</BackLink>
       <div>
         <h2 className="font-display text-2xl font-bold uppercase">Pase {pass.code}</h2>
         <p className="text-fg-muted">

@@ -2,6 +2,7 @@
 
 import Link, { useLinkStatus } from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useReportActivity } from '@/components/ui/activity'
 import { Icon, type IconName } from '@/components/ui/icon'
 import { cn } from '@/lib/cn'
@@ -17,13 +18,33 @@ export function isCurrent(pathname: string, href: string): boolean {
 export function TabNav({ label, items, variant }: { label: string; items: TabItem[]; variant: 'bottom' | 'top' }) {
   const pathname = usePathname()
   const bottom = variant === 'bottom'
+  const nav = useRef<HTMLElement>(null)
+  const [more, setMore] = useState({ left: false, right: false })
+  // The club's tabs scroll sideways on a phone: fade the edge that has more, and keep the current one in view.
+  const measure = useCallback(() => {
+    const el = nav.current
+    if (!el || bottom) return
+    setMore({ left: el.scrollLeft > 1, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 1 })
+  }, [bottom])
+  useEffect(() => {
+    if (bottom) return
+    nav.current?.querySelector('[aria-current="page"]')?.scrollIntoView?.({ block: 'nearest', inline: 'center' })
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [bottom, pathname, measure])
+
   return (
     <nav
+      ref={nav}
       aria-label={label}
+      onScroll={bottom ? undefined : measure}
+      data-more-left={bottom ? undefined : String(more.left)}
+      data-more-right={bottom ? undefined : String(more.right)}
       className={cn(
         bottom
           ? 'fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg pb-[env(safe-area-inset-bottom)]'
-          : 'overflow-x-auto border-b border-border',
+          : 'tab-scroll overflow-x-auto border-b border-border',
       )}
     >
       <ul className={cn('mx-auto flex', bottom ? 'max-w-lg justify-around' : 'max-w-5xl gap-1 px-4')}>

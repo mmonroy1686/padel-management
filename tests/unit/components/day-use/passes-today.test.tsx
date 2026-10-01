@@ -99,3 +99,21 @@ describe('PassesToday', () => {
     expect(screen.getByText('Todavía no hay pases para hoy.')).toBeInTheDocument()
   })
 })
+
+describe('PassesToday on another day', () => {
+  it('names the day it lists', () => {
+    render(
+      <PassesToday
+        passes={[]}
+        today={DATE}
+        forDay="del viernes 2"
+        timezone={TIMEZONE}
+        acceptsCash
+        actions={{ checkIn: vi.fn(), cash: vi.fn(), cancel: vi.fn() }}
+        sell={{ offers: [], members: [], rewardPercent: null, action: vi.fn() }}
+      />,
+    )
+    expect(screen.getByRole('heading', { name: 'Pases del viernes 2 (0)' })).toBeInTheDocument()
+    expect(screen.getByText('Todavía no hay pases del viernes 2.')).toBeInTheDocument()
+  })
+})

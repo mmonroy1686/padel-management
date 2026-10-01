@@ -39,7 +39,7 @@ test('reception runs an americano: players and guests fill it, fixture, results 
   // Close registration and build the fixture.
   await page.getByRole('button', { name: 'Cerrar inscripción' }).click()
   await page.getByRole('button', { name: 'Armar fixture' }).click()
-  await expect(page.getByRole('heading', { name: 'Ronda 1' })).toBeVisible()
+  await expect(page.getByText('Ronda 1 · en curso')).toBeVisible()
 
   // The first result from the screen (team B fills itself), the rest through the API.
   const firstGame = page.locator('form').filter({ has: page.getByLabel(/^Puntos de /) }).first()

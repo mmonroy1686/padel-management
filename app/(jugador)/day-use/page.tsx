@@ -8,7 +8,7 @@ import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { Card } from '@/components/ui/card'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { loadInside, loadLoyaltyPasses, loadMyPasses, loadOverrides, loadProducts, loadSold } from '@/lib/data/day-use'
-import { buyStatus, dayUseDays, openProducts, PASS_STATUS_LABELS, soldOf, WEEK_DAYS } from '@/lib/domain/day-use'
+import { buyStatus, dayUseDays, firstOpenDay, openProducts, PASS_STATUS_LABELS, soldOf, WEEK_DAYS } from '@/lib/domain/day-use'
 import { dayLabel, dayLongLabel } from '@/lib/domain/format'
 import { isLocalDate } from '@/lib/domain/input'
 import { loyaltyOf, loyaltyRuleOf, loyaltyRuleText, loyaltySince } from '@/lib/domain/loyalty'
@@ -27,7 +27,6 @@ export default async function DayUsePage({ searchParams }: { searchParams: Searc
   const today = localDateOf(now, club.timezone)
   const last = addDays(today, WEEK_DAYS - 1)
   const { dia } = await searchParams
-  const selected = isLocalDate(dia) && dia >= today && dia <= last ? dia : today
   const rule = loyaltyRuleOf(club)
 
   const [products, overrides, sold, mine, visits, inside] = await Promise.all([
@@ -38,6 +37,9 @@ export default async function DayUsePage({ searchParams }: { searchParams: Searc
     loadLoyaltyPasses(club, viewer.userId, loyaltySince(rule, today)),
     loadInside(club, today),
   ])
+  // Without a day in the link, open on the first one that still has day use (not today's, once over).
+  const selected =
+    isLocalDate(dia) && dia >= today && dia <= last ? dia : firstOpenDay(today, products, overrides, now, club.timezone)
   const loyalty = loyaltyOf(visits, rule, today)
   const reward = rule.enabled && loyalty.available > 0 ? { percent: rule.discountPercent } : null
   const offers = openProducts(products, selected, overrides)

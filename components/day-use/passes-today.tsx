@@ -10,10 +10,12 @@ import type { LocalDate } from '@/lib/domain/time'
 import { PassStaffCard, type PassActions } from './pass-staff-card'
 import { SellSheet, type SellOffer } from './sell-sheet'
 
-// Design: "Hoy". Today's passes with a search by name or code, and the sale at the desk.
+// Design: "Hoy". The passes of a day (today unless reception picks another) with a search by name
+// or code, and the sale at the desk.
 export function PassesToday({
   passes,
   today,
+  forDay = 'de hoy',
   timezone,
   acceptsCash,
   actions,
@@ -21,6 +23,8 @@ export function PassesToday({
 }: {
   passes: DayUsePass[]
   today: LocalDate
+  // "de hoy", "del viernes 2": what the title and the empty list say.
+  forDay?: string
   timezone: string
   acceptsCash: boolean
   actions: PassActions
@@ -39,7 +43,7 @@ export function PassesToday({
     <section aria-labelledby="pases-hoy" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="pases-hoy" className="font-display text-2xl font-bold uppercase">
-          Pases de hoy ({passes.length})
+          Pases {forDay} ({passes.length})
         </h2>
         <Button onClick={() => setSelling(true)}>Vender pase</Button>
       </div>
@@ -68,7 +72,7 @@ export function PassesToday({
         </ul>
       ) : (
         <p className="rounded-2xl border border-dashed border-border p-4 text-fg-muted">
-          {passes.length > 0 ? 'Nadie coincide con esa búsqueda.' : 'Todavía no hay pases para hoy.'}
+          {passes.length > 0 ? 'Nadie coincide con esa búsqueda.' : `Todavía no hay pases ${forDay === 'de hoy' ? 'para hoy' : forDay}.`}
         </p>
       )}
       {selling ? (

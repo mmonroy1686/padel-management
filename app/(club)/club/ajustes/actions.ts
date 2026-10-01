@@ -3,6 +3,7 @@
 import { failed, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { getViewer } from '@/lib/auth/viewer'
+import { isClubLogoPath } from '@/lib/domain/club-logo'
 import { errorMessage } from '@/lib/domain/errors'
 import { readBoolean, readInt, readText, readUuid } from '@/lib/domain/input'
 import { parseLoyaltyForm } from '@/lib/domain/loyalty'
@@ -130,4 +131,27 @@ export async function deletePricingRule(_previous: ActionState, form: FormData):
   if (data.length === 0) return FORBIDDEN
   revalidateBookings()
   return ok('Precio borrado. Los turnos sin precio dejan de ofrecerse.')
+}
+
+// Ajustes → Logo. The browser already uploaded the file (only admins can); this points the club at it.
+export async function saveClubLogo(path: string): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  if (typeof path !== 'string' || !isClubLogoPath(clubId, path)) return INVALID_INPUT
+  return setClubLogo(clubId, path, 'Logo guardado. Ya se ve en toda la app.')
+}
+
+export async function removeClubLogo(): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  return setClubLogo(clubId, null, 'Logo quitado.')
+}
+
+async function setClubLogo(clubId: string, path: string | null, message: string): Promise<ActionState> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('clubs').update({ logo_path: path }).eq('id', clubId).select('id')
+  if (error) return failed('No pudimos guardar el logo.')
+  if (data.length === 0) return FORBIDDEN
+  revalidateBookings()
+  return ok(message)
 }

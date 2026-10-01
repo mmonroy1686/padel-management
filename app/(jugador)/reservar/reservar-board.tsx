@@ -82,7 +82,11 @@ export function ReservarBoard({
       {pastCount > 0 && !showPast ? (
         <p className="text-sm text-fg-muted">
           Ocultamos {pastCount} {pastCount === 1 ? 'horario que ya pasó' : 'horarios que ya pasaron'}.{' '}
-          <button type="button" className="font-semibold text-accent-ink underline" onClick={() => setShowPast(true)}>
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center px-1 align-middle font-semibold text-accent-ink underline"
+            onClick={() => setShowPast(true)}
+          >
             Mostrar
           </button>
         </p>

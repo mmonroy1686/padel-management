@@ -16,13 +16,30 @@ describe('FixtureList', () => {
         makeGame('g3', ['e1', 'e3'], ['e5', 'e7'], null, { round: 2, startsAt: at('18:20') }),
       ],
     })
-    render(<FixtureList tournament={tournament} timezone={TIMEZONE} />)
-    const first = screen.getByRole('region', { name: 'Ronda 1' })
+    render(<FixtureList tournament={tournament} timezone={TIMEZONE} myEntryId="e5" />)
+    const [first, second] = screen.getAllByRole('group')
     expect(within(first).getAllByRole('listitem')).toHaveLength(2)
     expect(first).toHaveTextContent('18:00, Cancha 1')
     expect(first).toHaveTextContent('Jugador 1 y Jugador 2 14 a 10 Jugador 3 y Jugador 4')
     expect(first).toHaveTextContent('Jugador 5 y Jugador 6 vs Jugador 7 y Jugador 8')
-    expect(screen.getByRole('region', { name: 'Ronda 2' })).toHaveTextContent('18:20, Cancha 1')
+    expect(second).toHaveTextContent('18:20, Cancha 1')
+  })
+
+  it('opens the round being played, folds the rest and marks the games of the viewer', () => {
+    const tournament = makeTournament({
+      status: 'in_progress',
+      entries: makeEntries(8),
+      games: [
+        makeGame('g1', ['e1', 'e2'], ['e3', 'e4'], 14),
+        makeGame('g2', ['e5', 'e6'], ['e7', 'e8'], 12),
+        makeGame('g3', ['e1', 'e3'], ['e5', 'e7'], null, { round: 2 }),
+        makeGame('g4', ['e2', 'e4'], ['e6', 'e8'], null, { round: 3 }),
+      ],
+    })
+    render(<FixtureList tournament={tournament} timezone={TIMEZONE} myEntryId="e5" />)
+    expect(screen.getAllByRole('group').map((round) => round.hasAttribute('open'))).toEqual([false, true, false])
+    const mine = screen.getAllByRole('listitem').filter((item) => item.textContent?.includes('Tu partido'))
+    expect(mine).toHaveLength(2)
   })
 })
 
@@ -42,6 +59,7 @@ describe('RankingTable', () => {
     expect(rows).toHaveLength(4)
     expect(rows[1]).toHaveTextContent('1Bruno3832+4')
     expect(rows[2]).toHaveAttribute('aria-current', 'true')
+    expect(rows[2]).toHaveTextContent('Ana (vos)')
     expect(rows[3]).toHaveTextContent('3Carla3430-4')
   })
 })

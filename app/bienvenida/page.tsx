@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { Logo } from '@/components/brand/logo'
+import { ClubLogo } from '@/components/brand/club-logo'
 import { PlayerProfileForm } from '@/components/profile/player-profile-form'
 import { Card } from '@/components/ui/card'
 import { saveProfile } from '@/lib/actions/profile'
@@ -20,7 +20,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Sear
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col gap-6 px-4 py-10">
-      <Logo className="size-14" />
+      <ClubLogo club={viewer.club} className="size-16" />
       <div>
         <h1 className="font-display text-4xl font-bold uppercase">Bienvenida</h1>
         <p className="text-fg-muted">Contanos cómo jugás. Lo usamos para armar partidos parejos.</p>

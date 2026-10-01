@@ -33,7 +33,7 @@ export function MatchCard({ match, viewerId, whenText, status, risk, reasons = [
     <Card className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <p className="font-display text-xl font-bold uppercase">{whenText}</p>
-        <span className="rounded-full border border-border px-2 py-0.5 text-xs font-semibold">{statusLabel(match)}</span>
+        <span className="shrink-0 whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-xs font-semibold">{statusLabel(match)}</span>
       </div>
       <div className="flex gap-3">
         <MatchCourt match={match} viewerId={viewerId} compact />

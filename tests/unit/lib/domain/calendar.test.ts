@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addMonths, isMonth, monthGrid, monthOf, summarizeDays, weekOf } from '@/lib/domain/calendar'
+import { addMonths, isMonth, monthGrid, monthOf, recurringText, summarizeDays, weekOf } from '@/lib/domain/calendar'
 
 describe('monthGrid', () => {
   it('covers the month in weeks that start on Monday', () => {
@@ -48,5 +48,14 @@ describe('summarizeDays', () => {
     )
     expect(summary.get('2026-10-01')).toEqual({ occupied: 3, recurring: 1, percent: 10 })
     expect(summary.get('2026-10-02')).toBeUndefined()
+  })
+})
+
+describe('recurringText', () => {
+  it('counts recurring slots in singular and plural', () => {
+    expect(recurringText(1)).toBe('1 fijo')
+    expect(recurringText(3)).toBe('3 fijos')
+    expect(recurringText(1, { long: true })).toBe('1 turno fijo')
+    expect(recurringText(2, { long: true })).toBe('2 turnos fijos')
   })
 })

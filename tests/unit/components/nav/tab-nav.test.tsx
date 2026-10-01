@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { isCurrent, TabNav, type TabItem } from '@/components/nav/tab-nav'
 
@@ -32,5 +32,21 @@ describe('TabNav', () => {
     expect(isCurrent('/reservas/algo', '/reservas')).toBe(true)
     expect(isCurrent('/reservar', '/')).toBe(false)
     expect(isCurrent('/reservar', '/reservas')).toBe(false)
+  })
+
+  it('shows that the club tabs go on when they do not fit, and brings the current one into view', () => {
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+    render(<TabNav label="Panel" items={ITEMS} variant="top" />)
+    const nav = screen.getByRole('navigation', { name: 'Panel' })
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', inline: 'center' })
+    Object.defineProperties(nav, { scrollWidth: { value: 600 }, clientWidth: { value: 300 }, scrollLeft: { value: 0, writable: true } })
+    fireEvent.scroll(nav)
+    expect(nav).toHaveAttribute('data-more-right', 'true')
+    expect(nav).toHaveAttribute('data-more-left', 'false')
+    nav.scrollLeft = 300
+    fireEvent.scroll(nav)
+    expect(nav).toHaveAttribute('data-more-right', 'false')
+    expect(nav).toHaveAttribute('data-more-left', 'true')
   })
 })

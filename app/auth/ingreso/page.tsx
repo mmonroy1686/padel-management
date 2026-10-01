@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
-import { Logo } from '@/components/brand/logo'
+import { ClubLogo } from '@/components/brand/club-logo'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { Card } from '@/components/ui/card'
 import { safeNextPath } from '@/lib/auth/redirect'
+import { getClub } from '@/lib/auth/viewer'
 import { signInWithGoogle } from './actions'
 import { MagicLinkForm } from './magic-link-form'
 
@@ -23,7 +24,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center gap-6 px-4 py-10">
-      <Logo className="size-14" />
+      <ClubLogo club={await getClub()} className="size-16" />
       <h1 className="font-display text-4xl font-bold uppercase">Ingresar</h1>
 
       {errorMessage ? (

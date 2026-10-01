@@ -1,5 +1,6 @@
+import { ClubHeader } from '@/components/brand/club-header'
 import { TabNav, type TabItem } from '@/components/nav/tab-nav'
-import { getViewer } from '@/lib/auth/viewer'
+import { getClub, getViewer } from '@/lib/auth/viewer'
 
 const PLAYER_TABS: TabItem[] = [
   { href: '/', label: 'Inicio', icon: 'home' },
@@ -10,11 +11,12 @@ const PLAYER_TABS: TabItem[] = [
 ]
 
 export default async function PlayerLayout({ children }: { children: React.ReactNode }) {
-  const viewer = await getViewer()
+  const [viewer, club] = await Promise.all([getViewer(), getClub()])
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col">
-      <main className="flex flex-1 flex-col gap-6 px-4 pb-28 pt-6">{children}</main>
+      <ClubHeader club={club} />
+      <main className="flex flex-1 flex-col gap-6 px-4 pb-28 pt-5">{children}</main>
       {viewer ? <TabNav label="Secciones" items={PLAYER_TABS} variant="bottom" /> : null}
     </div>
   )

@@ -161,7 +161,7 @@ export function TournamentBoard(props: TournamentBoardProps) {
             <h2 id="fixture" className="font-display text-2xl font-bold uppercase">
               Fixture
             </h2>
-            <FixtureList tournament={tournament} timezone={props.timezone} />
+            <FixtureList tournament={tournament} timezone={props.timezone} myEntryId={props.myEntryId} />
           </section>
         </>
       ) : null}

@@ -14,7 +14,7 @@ export type SlotGridProps = {
   onSelect: (cell: GridCell) => void
 }
 
-const CELL = 'flex min-h-14 w-full flex-col items-start justify-center rounded-xl px-3 py-2 text-left text-sm'
+const CELL = 'flex min-h-14 w-full flex-col items-start justify-center rounded-xl px-2.5 py-2 text-left text-sm'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 // One grid for both sides: players see free, taken and their own; the club sees who and how paid.
@@ -25,7 +25,7 @@ export function SlotGrid({ courts, rows, variant, onSelect }: SlotGridProps) {
         <caption className="sr-only">Turnos por cancha</caption>
         <thead>
           <tr>
-            <th scope="col" className="w-16">
+            <th scope="col" className={variant === 'player' ? 'w-12' : 'w-16'}>
               <span className="sr-only">Hora</span>
             </th>
             {courts.map((court) => (
@@ -41,11 +41,16 @@ export function SlotGrid({ courts, rows, variant, onSelect }: SlotGridProps) {
         <tbody>
           {rows.map((row, rowIndex) => (
             <tr key={row.slot.label}>
-              <th scope="row" className={cn('pr-1 text-left font-display text-lg font-bold', row.past && 'opacity-50')}>
+              <th
+                scope="row"
+                className={cn('pr-1 text-left font-display font-bold', variant === 'player' ? 'text-base' : 'text-lg', row.past && 'opacity-50')}
+              >
                 {row.slot.label}
               </th>
               {row.cells.map((cell, courtIndex) => (
-                <td key={cell.court.id} className="min-w-28">
+                // Players: the columns share the width so three courts fit on a phone; the club's longer
+                // cells keep their width and scroll.
+                <td key={cell.court.id} className={variant === 'player' ? 'min-w-0' : 'min-w-28'}>
                   {variant === 'player' ? (
                     <PlayerCell cell={cell} onSelect={onSelect} />
                   ) : (

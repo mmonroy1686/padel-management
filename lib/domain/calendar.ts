@@ -55,3 +55,9 @@ export function summarizeDays(
   }
   return summary
 }
+
+// "1 fijo", "3 fijos"; long: "1 turno fijo", for the day's spoken label.
+export function recurringText(count: number, { long = false }: { long?: boolean } = {}): string {
+  if (long) return `${count} ${count === 1 ? 'turno fijo' : 'turnos fijos'}`
+  return `${count} ${count === 1 ? 'fijo' : 'fijos'}`
+}

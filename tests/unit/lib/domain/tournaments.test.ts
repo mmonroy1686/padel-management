@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  currentRound,
   courtsText,
   entryNames,
   entryStatus,
@@ -155,5 +156,18 @@ describe('entries and games', () => {
       [2, ['g3']],
     ])
     expect(missingScores(games)).toBe(2)
+  })
+})
+
+describe('currentRound', () => {
+  it('is the first round with a result missing, or the last one when all are in', () => {
+    const games = [
+      makeGame('g1', ['e1', 'e2'], ['e3', 'e4'], 14),
+      makeGame('g2', ['e1', 'e3'], ['e2', 'e4'], null, { round: 2 }),
+      makeGame('g3', ['e1', 'e4'], ['e2', 'e3'], null, { round: 3 }),
+    ]
+    expect(currentRound(games)).toBe(2)
+    expect(currentRound(games.map((game) => ({ ...game, scoreA: 12 })))).toBe(3)
+    expect(currentRound([])).toBeNull()
   })
 })
