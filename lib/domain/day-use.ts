@@ -111,6 +111,23 @@ export function dayUseDays(today: LocalDate, products: DayUseProduct[], override
   })
 }
 
+// The day the day use screen opens on: the first day of the week with a pass whose hours have not
+// ended yet; today when the week has none.
+export function firstOpenDay(
+  today: LocalDate,
+  products: DayUseProduct[],
+  overrides: DayUseOverride[],
+  now: Date,
+  timezone: string,
+  count = WEEK_DAYS,
+): LocalDate {
+  for (let index = 0; index < count; index++) {
+    const date = addDays(today, index)
+    if (openProducts(products, date, overrides).some((product) => productPeriod(product, date, timezone).endsAt > now)) return date
+  }
+  return today
+}
+
 export function scheduleText(product: Pick<DayUseProduct, 'fromTime' | 'toTime'>): string {
   return `${product.fromTime} a ${product.toTime}`
 }
@@ -248,9 +265,9 @@ export function toPass(row: PassRow, timezone: string): DayUsePass {
   }
 }
 
-// Same rule as cancel_day_use for a player: before check-in, and not for a day that passed.
-export function canCancelPass(pass: Pick<DayUsePass, 'status' | 'date'>, today: LocalDate): boolean {
-  return pass.status === 'bought' && pass.date >= today
+// Same rule as cancel_day_use for a player: before check-in, and until the pass hours end.
+export function canCancelPass(pass: Pick<DayUsePass, 'status' | 'endsAt'>, now: Date): boolean {
+  return pass.status === 'bought' && pass.endsAt > now
 }
 
 // Reception's search: by name (without accents) or by code.

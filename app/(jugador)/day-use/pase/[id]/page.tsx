@@ -9,7 +9,6 @@ import { canCancelPass, passCheckInPath } from '@/lib/domain/day-use'
 import { dayLongLabel, timeIn } from '@/lib/domain/format'
 import { isUuid } from '@/lib/domain/input'
 import { paymentMethodsNote } from '@/lib/domain/payments'
-import { localDateOf } from '@/lib/domain/time'
 import { entryPaymentView } from '@/lib/domain/tournament-payments'
 import { passQrSvg } from '@/lib/qr/pass-qr'
 import { cancelMyPass, reportPassTransfer } from '../../actions'
@@ -28,7 +27,6 @@ export default async function MyPassPage({ params }: { params: Params }) {
   // Staff can read any pass of the club: this screen is only for its owner.
   if (!pass || pass.playerId !== viewer.userId) notFound()
 
-  const today = localDateOf(new Date(), club.timezone)
   const qrSvg = await passQrSvg(`${getSiteUrl()}${passCheckInPath(pass.code)}`)
 
   return (
@@ -46,7 +44,7 @@ export default async function MyPassPage({ params }: { params: Params }) {
         payment={entryPaymentView(pass.total, pass.payments, club.accepts_transfer)}
         paymentNote={paymentMethodsNote(club)}
         transfer={{ details: club.transfer_details, receiptRequired: club.transfer_receipt_required }}
-        canCancel={canCancelPass(pass, today)}
+        canCancel={canCancelPass(pass, new Date())}
         cancelAction={cancelMyPass}
         reportAction={reportPassTransfer}
       />
