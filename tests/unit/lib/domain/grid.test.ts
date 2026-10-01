@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { blockEndOptions, continuesAbove, countFree, dayStats, holderName, visibleRows } from '@/lib/domain/grid'
+import { blockEnd, blockEndOptions, continuesAbove, countFree, dayStats, holderName, rowsCovered, visibleRows } from '@/lib/domain/grid'
 import { at, booking, makeGrid, occupancy } from '../../fixtures/grid'
 import { makeMatch } from '../../fixtures/matches'
 
@@ -68,6 +68,22 @@ describe('countFree', () => {
   it('counts free cells', () => {
     expect(countFree(makeGrid().rows)).toBe(20)
     expect(countFree(makeGrid({ now: at('21:00') }).rows)).toBe(2)
+  })
+})
+
+describe('rowsCovered', () => {
+  it('counts the rows an occupancy fills from its first one down, so it shows as one block', () => {
+    const grid = makeGrid({
+      occupancies: [occupancy('o1', 'court-1', '08:30', '10:00'), occupancy('o2', 'court-1', '11:00', '12:30')],
+    })
+    expect([0, 2, 3].map((row) => rowsCovered(grid.rows, row, 0))).toEqual([2, 1, 1])
+    expect(rowsCovered(grid.rows, 0, 1)).toBe(1)
+  })
+
+  it('tells when a block over several slots ends', () => {
+    const grid = makeGrid({ occupancies: [occupancy('o1', 'court-1', '08:30', '10:00')] })
+    expect(blockEnd(grid.rows, 0, 0)).toBe('11:00')
+    expect(blockEnd(grid.rows, 2, 0)).toBeNull()
   })
 })
 

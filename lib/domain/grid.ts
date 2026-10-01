@@ -157,6 +157,24 @@ export function continuesAbove(rows: GridRow[], rowIndex: number, courtIndex: nu
   return !!occupancy && rows[rowIndex - 1]?.cells[courtIndex]?.occupancy?.id === occupancy.id
 }
 
+// How many rows, from this one down, the same occupancy fills in this court: the grid draws it as one
+// block over all of them.
+export function rowsCovered(rows: GridRow[], rowIndex: number, courtIndex: number): number {
+  const id = rows[rowIndex]?.cells[courtIndex]?.occupancy?.id
+  if (!id) return 1
+  let count = 1
+  while (rows[rowIndex + count]?.cells[courtIndex]?.occupancy?.id === id) count++
+  return count
+}
+
+// When a block over several slots ends (e.g. "13:00"); null for a single slot.
+export function blockEnd(rows: GridRow[], rowIndex: number, courtIndex: number): string | null {
+  const span = rowsCovered(rows, rowIndex, courtIndex)
+  if (span < 2) return null
+  const last = rows[rowIndex + span - 1].slot
+  return formatMinutes(last.startMinutes + (last.endsAt.getTime() - last.startsAt.getTime()) / 60_000)
+}
+
 export function countFree(rows: GridRow[]): number {
   return rows.reduce((total, row) => total + row.cells.filter((cell) => cell.state === 'free').length, 0)
 }

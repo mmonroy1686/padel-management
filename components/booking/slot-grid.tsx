@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/domain/format'
-import { continuesAbove, KIND_LABELS, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
+import { blockEnd, continuesAbove, KIND_LABELS, rowsCovered, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
 import { CELL_STYLES } from './cell-styles'
 import { PaymentBadge } from './payment-badge'
 
@@ -14,7 +14,7 @@ export type SlotGridProps = {
   onSelect: (cell: GridCell) => void
 }
 
-const CELL = 'flex min-h-14 w-full flex-col items-start justify-center rounded-xl px-2.5 py-2 text-left text-sm md:min-h-16 md:px-3'
+const CELL = 'flex h-full min-h-14 w-full flex-col items-start justify-center rounded-xl px-2.5 py-2 text-left text-sm md:min-h-16 md:px-3'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 // One grid for both sides: players see free, taken and their own; the club sees who and how paid.
@@ -47,17 +47,24 @@ export function SlotGrid({ courts, rows, variant, onSelect }: SlotGridProps) {
               >
                 {row.slot.label}
               </th>
-              {row.cells.map((cell, courtIndex) => (
-                // Players: the columns share the width so three courts fit on a phone; the club's longer
-                // cells keep their width and scroll.
-                <td key={cell.court.id} className={variant === 'player' ? 'min-w-0' : 'min-w-28'}>
-                  {variant === 'player' ? (
-                    <PlayerCell cell={cell} onSelect={onSelect} />
-                  ) : (
-                    <ClubCell cell={cell} continues={continuesAbove(rows, rowIndex, courtIndex)} onSelect={onSelect} />
-                  )}
-                </td>
-              ))}
+              {row.cells.map((cell, courtIndex) =>
+                // An occupancy over several slots is one block: its first row spans the rest.
+                continuesAbove(rows, rowIndex, courtIndex) ? null : (
+                  // Players: the columns share the width so three courts fit on a phone; the club's longer
+                  // cells keep their width and scroll. h-px lets the cell's block fill a spanned height.
+                  <td
+                    key={cell.court.id}
+                    rowSpan={rowsCovered(rows, rowIndex, courtIndex)}
+                    className={cn('h-px', variant === 'player' ? 'min-w-0' : 'min-w-28')}
+                  >
+                    {variant === 'player' ? (
+                      <PlayerCell cell={cell} onSelect={onSelect} />
+                    ) : (
+                      <ClubCell cell={cell} until={blockEnd(rows, rowIndex, courtIndex)} onSelect={onSelect} />
+                    )}
+                  </td>
+                ),
+              )}
             </tr>
           ))}
         </tbody>
@@ -109,11 +116,11 @@ function PlayerCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridC
 
 function ClubCell({
   cell,
-  continues,
+  until,
   onSelect,
 }: {
   cell: GridCell
-  continues: boolean
+  until: string | null
   onSelect: (cell: GridCell) => void
 }) {
   const { court, slot, occupancy, booking } = cell
@@ -132,22 +139,10 @@ function ClubCell({
               : occupancy.kind === 'booking' || occupancy.kind === 'match'
                 ? CELL_STYLES.booking
                 : CELL_STYLES.other
-    if (continues) {
-      return (
-        <button
-          type="button"
-          aria-label={`${court.name}, ${slot.label}: sigue ${title}`}
-          onClick={() => onSelect(cell)}
-          className={cn(CELL, style, FOCUS, 'opacity-70', cell.state === 'past' && 'opacity-40')}
-        >
-          <span className="line-clamp-1 text-xs">Sigue {title}</span>
-        </button>
-      )
-    }
     return (
       <button
         type="button"
-        aria-label={`${court.name}, ${slot.label}: ${title}`}
+        aria-label={`${court.name}, ${slot.label}${until ? ` a ${until}` : ''}: ${title}`}
         onClick={() => onSelect(cell)}
         className={cn(CELL, style, FOCUS, cell.state === 'past' && 'opacity-60')}
       >
@@ -156,6 +151,7 @@ function ClubCell({
           {kindLabel}
           {booking ? `, ${booking.source === 'online' ? 'online' : 'en recepción'}` : ''}
         </span>
+        {until ? <span className="text-xs tabular-nums">Hasta las {until}</span> : null}
         {booking ? <PaymentBadge state={booking.paymentState} className="mt-1" /> : null}
         {cell.offGrid ? <span className="text-xs">Fuera de la grilla</span> : null}
       </button>

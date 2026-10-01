@@ -60,7 +60,7 @@ export function TournamentControls({ tournament, actions }: { tournament: Tourna
         </>
       ) : null}
       {status !== 'finished' && status !== 'cancelled' ? (
-        <Button variant="danger" onClick={() => setConfirmCancel(true)}>
+        <Button variant="danger" fullWidth onClick={() => setConfirmCancel(true)}>
           Cancelar torneo
         </Button>
       ) : null}

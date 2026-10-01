@@ -67,7 +67,8 @@ export default async function HomePage() {
           {profile.side ? ` ${SIDE_LABELS[profile.side]}.` : ''}
         </p>
       </div>
-      {/* Two columns on wide screens: what you have booked on the left, what to do next on the right. */}
+      {/* Two columns on wide screens: what you have booked on the left, what to do next on the right; then
+          the open matches across the page, two per row. */}
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-6">
           <section aria-labelledby="tus-reservas" className="flex flex-col gap-3">
@@ -121,50 +122,50 @@ export default async function HomePage() {
         </div>
         <div className="flex flex-col gap-6">
           {dayUse ? <DayUseHomeCard home={dayUse} /> : null}
-          <section aria-labelledby="para-vos" className="flex flex-col gap-3">
-            <h2 id="para-vos" className="font-display text-2xl font-bold uppercase">
-              Partidos para vos
-            </h2>
-            {forMe.length > 0 ? (
-              <ul className="flex flex-col gap-3">
-                {forMe.map(({ match, reasons }) => (
-                  <li key={match.id}>
-                    <MatchCard
-                      match={match}
-                      viewerId={viewer.userId}
-                      whenText={whenText(match.startsAt)}
-                      status={joinStatus(match, context.player, { now, closeHours: club.match_close_hours, busy: context.busy })}
-                      risk={riskOf(match, freeCourts.get(match.id) ?? [])}
-                      reasons={reasons}
-                    />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-fg-muted">
-                Ahora no hay partidos armándose para tu categoría y lado.{' '}
-                <Link href="/partidos" className="font-semibold text-accent-ink underline">
-                  Armá uno
-                </Link>
-                .
-              </p>
-            )}
-          </section>
           <Link href="/reservar" className={buttonClasses({ fullWidth: true })}>
             {freeToday === 0 ? 'Reservar para otro día' : freeToday === 1 ? '1 turno libre hoy' : `${freeToday} turnos libres hoy`}
           </Link>
-          {bookings.past.length > 0 ? (
-            <details className="flex flex-col gap-3">
-              <summary className="cursor-pointer font-display text-xl font-bold uppercase">Pasadas y canceladas</summary>
-              <ul className="mt-3 flex flex-col gap-3">{bookings.past.map(bookingCard)}</ul>
-            </details>
-          ) : null}
-          {isStaffRole(membership.role) ? (
-            <Link href="/club/grilla" className={buttonClasses({ variant: 'secondary', fullWidth: true })}>
-              Panel del club
-            </Link>
-          ) : null}
         </div>
+        <section aria-labelledby="para-vos" className="flex flex-col gap-3 lg:col-span-2">
+          <h2 id="para-vos" className="font-display text-2xl font-bold uppercase">
+            Partidos para vos
+          </h2>
+          {forMe.length > 0 ? (
+            <ul className="grid gap-3 md:grid-cols-2">
+              {forMe.map(({ match, reasons }) => (
+                <li key={match.id}>
+                  <MatchCard
+                    match={match}
+                    viewerId={viewer.userId}
+                    whenText={whenText(match.startsAt)}
+                    status={joinStatus(match, context.player, { now, closeHours: club.match_close_hours, busy: context.busy })}
+                    risk={riskOf(match, freeCourts.get(match.id) ?? [])}
+                    reasons={reasons}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-fg-muted">
+              Ahora no hay partidos armándose para tu categoría y lado.{' '}
+              <Link href="/partidos" className="font-semibold text-accent-ink underline">
+                Armá uno
+              </Link>
+              .
+            </p>
+          )}
+        </section>
+        {bookings.past.length > 0 ? (
+          <details className="flex flex-col gap-3 lg:col-span-2">
+            <summary className="cursor-pointer font-display text-xl font-bold uppercase">Pasadas y canceladas</summary>
+            <ul className="mt-3 grid gap-3 md:grid-cols-2">{bookings.past.map(bookingCard)}</ul>
+          </details>
+        ) : null}
+        {isStaffRole(membership.role) ? (
+          <Link href="/club/grilla" className={buttonClasses({ variant: 'secondary', fullWidth: true, className: 'lg:col-span-2' })}>
+            Panel del club
+          </Link>
+        ) : null}
       </div>
     </>
   )

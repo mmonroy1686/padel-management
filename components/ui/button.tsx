@@ -15,9 +15,10 @@ const VARIANTS: Record<ButtonVariant, string> = {
   danger: 'border border-danger text-danger hover:bg-surface',
 }
 
-// Also used by links that look like buttons (<Link className={buttonClasses()}>).
+// Also used by links that look like buttons (<Link className={buttonClasses()}>). fullWidth fills a
+// phone's width; on wider screens it stops at a comfortable size (.button-block in globals.css).
 export function buttonClasses({ variant = 'primary', fullWidth = false, className }: ButtonStyle = {}): string {
-  return cn(BASE, VARIANTS[variant], fullWidth && 'w-full', className)
+  return cn(BASE, VARIANTS[variant], fullWidth && 'button-block w-full', className)
 }
 
 export function Button({ variant, fullWidth, className, type = 'button', ...props }: ButtonProps) {

@@ -127,6 +127,17 @@ body {
   --fade-right: 2.5rem;
 }
 
+/* Wide screens: a full-width button stops at a comfortable size instead of crossing the page, except
+   inside a sheet, where it still fills the dialog. */
+@media (min-width: 48rem) {
+  .button-block:not([role='dialog'] *) {
+    width: auto;
+    min-width: 16rem;
+    align-self: flex-start;
+    justify-self: start;
+  }
+}
+
 /* Tablets (wide touch screens, e.g. reception's at the desk): everything a bit bigger, so text reads
    at arm's length and every button is easy to hit. Computers with a mouse keep the usual size.
    Breakpoints stay in px of the screen: media queries do not follow the root font size. */
