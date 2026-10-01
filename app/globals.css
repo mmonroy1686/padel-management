@@ -109,3 +109,20 @@ body {
   70% { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); }
 }
+
+/* The club's tabs scroll sideways on a phone: the edge with more tabs fades out. */
+.tab-scroll {
+  scrollbar-width: none;
+  --fade-left: 0px;
+  --fade-right: 0px;
+  mask-image: linear-gradient(to right, transparent 0, black var(--fade-left), black calc(100% - var(--fade-right)), transparent 100%);
+}
+.tab-scroll::-webkit-scrollbar {
+  display: none;
+}
+.tab-scroll[data-more-left='true'] {
+  --fade-left: 2.5rem;
+}
+.tab-scroll[data-more-right='true'] {
+  --fade-right: 2.5rem;
+}
