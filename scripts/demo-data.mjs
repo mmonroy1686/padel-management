@@ -191,8 +191,8 @@ if (liveTournament) {
   for (const key of ['martin', 'nicolas', 'mariana', 'andrea', 'paula', 'federico']) {
     await tryRpc(people[key].client, 'join_tournament', { p_tournament_id: liveTournament.id })
   }
-  await tryRpc(reception, 'add_tournament_guest', { p_tournament_id: liveTournament.id, p_name: 'Pablo (invitado)' })
-  await tryRpc(reception, 'add_tournament_guest', { p_tournament_id: liveTournament.id, p_name: 'Rocío (invitada)' })
+  await tryRpc(reception, 'add_tournament_guest', { p_tournament_id: liveTournament.id, p_name: 'Pablo' })
+  await tryRpc(reception, 'add_tournament_guest', { p_tournament_id: liveTournament.id, p_name: 'Rocío' })
   await payEntries(liveTournament.id, { cash: ['martin', 'nicolas', 'mariana', 'andrea', 'paula'] })
   await tryRpc(reception, 'close_tournament_registration', { p_tournament_id: liveTournament.id })
   await tryRpc(reception, 'start_tournament', { p_tournament_id: liveTournament.id })
