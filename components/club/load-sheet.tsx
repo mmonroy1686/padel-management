@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Field, inputClasses } from '@/components/ui/field'
+import { MemberPicker } from '@/components/ui/member-picker'
 import { formatPrice } from '@/lib/domain/format'
 import { blockEndOptions, type GridCell, type GridRow } from '@/lib/domain/grid'
 import type { MemberOption } from '@/lib/domain/members'
@@ -122,13 +123,7 @@ export function HolderFields({
         </Field>
       ) : (
         <Field label="Jugador" htmlFor="playerId">
-          <select id="playerId" name="playerId" required className={inputClasses}>
-            {members.map((member) => (
-              <option key={member.userId} value={member.userId}>
-                {member.name}
-              </option>
-            ))}
-          </select>
+          <MemberPicker id="playerId" name="playerId" members={members} />
         </Field>
       )}
     </>

@@ -55,7 +55,7 @@ describe('SellSheet', () => {
   it('offers the member\'s reward when selling to a member', async () => {
     renderSheet()
     await userEvent.click(screen.getByLabelText('Jugador del club'))
-    expect(screen.getByLabelText('Jugador')).toHaveValue('ana')
+    expect(screen.getByRole('combobox', { name: 'Jugador' })).toHaveValue('')
     expect(screen.getByLabelText('Usar su recompensa (-100%)')).not.toBeChecked()
   })
 
