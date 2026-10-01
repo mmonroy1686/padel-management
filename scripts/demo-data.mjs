@@ -149,19 +149,24 @@ for (const [key, product] of Object.entries({
 
 // ---------- tournaments ----------
 const tournaments = []
-const openTournament = await tryRpc(reception, 'create_tournament', {
-  p_name: 'Americano de 5ta y 6ta',
-  p_starts_at: at(5, '18:30').toISOString(),
-  p_court_ids: [court(0).id, court(1).id],
-  p_max_players: 8,
-  p_points_per_game: 24,
-  p_round_minutes: 20,
-  p_rounds: 7,
-  p_category_min: 5,
-  p_category_max: 6,
-  p_type: 'mixed',
-  p_price: 400,
-})
+// The first of a few evenings where both courts are free (real bookings may already be there).
+let openTournament = null
+for (const [days, time] of [[5, '18:30'], [6, '18:30'], [4, '18:30'], [5, '14:00'], [6, '14:00']]) {
+  openTournament = await tryRpc(reception, 'create_tournament', {
+    p_name: 'Americano de 5ta y 6ta',
+    p_starts_at: at(days, time).toISOString(),
+    p_court_ids: [court(0).id, court(1).id],
+    p_max_players: 8,
+    p_points_per_game: 24,
+    p_round_minutes: 20,
+    p_rounds: 7,
+    p_category_min: 5,
+    p_category_max: 6,
+    p_type: 'mixed',
+    p_price: 400,
+  }, { quiet: true })
+  if (openTournament) break
+}
 if (openTournament) {
   tournaments.push('Americano de 5ta y 6ta (inscripción abierta)')
   for (const key of ['santiago', 'diego', 'valentina', 'camila', 'florencia', 'joaquin']) {
