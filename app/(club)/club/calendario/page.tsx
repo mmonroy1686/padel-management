@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { requireStaff } from '@/lib/auth/viewer'
 import { cn } from '@/lib/cn'
 import { scheduleOf } from '@/lib/data/day'
-import { addMonths, isMonth, monthGrid, monthOf, summarizeDays, weekOf } from '@/lib/domain/calendar'
+import { addMonths, isMonth, monthGrid, monthOf, recurringText, summarizeDays, weekOf } from '@/lib/domain/calendar'
 import { dayLongLabel, monthLabel, WEEKDAYS_LONG } from '@/lib/domain/format'
 import { holderLabel } from '@/lib/domain/payments-overview'
 import { isLocalDate } from '@/lib/domain/input'
@@ -120,16 +120,16 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                   <td key={day}>
                     <Link
                       href={`/club/grilla?dia=${day}`}
-                      aria-label={`${dayLongLabel(day)}: ${percent}% ocupado${recurring ? `, ${recurring} turnos fijos` : ''}`}
+                      aria-label={`${dayLongLabel(day)}: ${percent}% ocupado${recurring ? `, ${recurringText(recurring, { long: true })}` : ''}`}
                       className={cn(
                         'flex min-h-16 flex-col rounded-xl border p-2 text-sm hover:border-accent',
-                        day === today ? 'border-accent' : 'border-border',
-                        !inMonth && 'opacity-40',
+                        day === today ? 'border-accent' : inMonth ? 'border-border' : 'border-dashed border-border',
                       )}
                     >
-                      <span className="font-display text-lg font-bold">{parseLocalDate(day).day}</span>
+                      {/* Days of the next or previous month: the number is muted, the data reads as usual. */}
+                      <span className={cn('font-display text-lg font-bold', !inMonth && 'text-fg-muted')}>{parseLocalDate(day).day}</span>
                       <span>{percent}%</span>
-                      {recurring > 0 ? <span className="text-xs text-fg-muted">{recurring} fijos</span> : null}
+                      {recurring > 0 ? <span className="text-xs text-fg-muted">{recurringText(recurring)}</span> : null}
                     </Link>
                   </td>
                 )
