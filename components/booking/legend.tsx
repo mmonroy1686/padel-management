@@ -21,7 +21,8 @@ export function Legend({ variant }: { variant: 'player' | 'club' }) {
     <ul aria-label="Referencias" className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg-muted">
       {ITEMS[variant].map(([style, label]) => (
         <li key={style} className="flex items-center gap-2">
-          <span aria-hidden="true" className={cn('size-3 rounded-sm', CELL_STYLES[style])} />
+          {/* The taken swatch is surface on the page background: a border keeps it visible. */}
+          <span aria-hidden="true" className={cn('size-3 rounded-sm', CELL_STYLES[style], style === 'taken' && 'border border-fg-muted')} />
           {label}
         </li>
       ))}
