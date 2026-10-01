@@ -90,11 +90,11 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
         </nav>
       </div>
       <div className="flex justify-between">
-        <Link href={`/club/calendario?${previous}`} className="font-semibold text-accent-ink">
-          Anterior
+        <Link href={`/club/calendario?${previous}`} className="inline-flex min-h-11 items-center px-1 font-semibold text-accent-ink">
+          ‹ Anterior
         </Link>
-        <Link href={`/club/calendario?${next}`} className="font-semibold text-accent-ink">
-          Siguiente
+        <Link href={`/club/calendario?${next}`} className="inline-flex min-h-11 items-center px-1 font-semibold text-accent-ink">
+          Siguiente ›
         </Link>
       </div>
       <table className="w-full table-fixed border-separate border-spacing-1">

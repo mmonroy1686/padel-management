@@ -89,10 +89,18 @@ export default async function HomePage() {
           <ul className="flex flex-col gap-2">
             {myMatches.map((match) => (
               <li key={match.id}>
-                <Link href={`/partidos/${match.id}`} className="font-semibold text-accent-ink underline">
-                  {whenText(match.startsAt)}
-                </Link>{' '}
-                <span className="text-fg-muted">{statusLabel(match)}</span>
+                <Link
+                  href={`/partidos/${match.id}`}
+                  className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-border bg-bg px-3 hover:border-accent focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  <span>
+                    <span className="block font-semibold">{whenText(match.startsAt)}</span>
+                    <span className="block text-sm text-fg-muted">{statusLabel(match)}</span>
+                  </span>
+                  <span aria-hidden="true" className="text-xl text-accent-ink">
+                    ›
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>

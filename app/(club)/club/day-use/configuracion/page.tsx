@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { OverrideCalendar } from '@/components/day-use/override-calendar'
 import { ProductForm } from '@/components/day-use/product-form'
 import { ActionForm } from '@/components/ui/action-form'
+import { BackLink } from '@/components/ui/back-link'
 import { Card } from '@/components/ui/card'
 import { requireAdmin } from '@/lib/auth/viewer'
 import { loadDayUseOccupancies, loadOverrides, loadProducts } from '@/lib/data/day-use'
@@ -37,9 +37,7 @@ export default async function DayUseSettingsPage() {
 
   return (
     <>
-      <Link href="/club/day-use" className="text-sm font-semibold text-accent-ink underline">
-        Volver a day use
-      </Link>
+      <BackLink href="/club/day-use">Volver a day use</BackLink>
       <h2 className="font-display text-2xl font-bold uppercase">Configurar day use</h2>
 
       {warnings.length > 0 ? (

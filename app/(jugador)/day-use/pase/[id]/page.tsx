@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
+import { BackLink } from '@/components/ui/back-link'
 import { getSiteUrl } from '@/lib/auth/redirect'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { loadPass } from '@/lib/data/day-use'
@@ -32,9 +32,7 @@ export default async function MyPassPage({ params }: { params: Params }) {
   return (
     <>
       <LiveOccupancy clubId={club.id} />
-      <Link href="/day-use" className="text-sm font-semibold text-accent-ink underline">
-        Volver a day use
-      </Link>
+      <BackLink href="/day-use">Volver a day use</BackLink>
       <PassBoard
         pass={pass}
         viewerId={viewer.userId}

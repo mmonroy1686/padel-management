@@ -6,7 +6,7 @@ import { PaymentBadge } from '@/components/booking/payment-badge'
 import { TransferSheet, type ReportTransfer } from '@/components/booking/transfer-sheet'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
-import { Button } from '@/components/ui/button'
+import { Button, buttonClasses } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { formatPrice } from '@/lib/domain/format'
 import type { MyBookingView } from '@/lib/domain/my-bookings'
@@ -62,7 +62,7 @@ export function MyBookingCard({
             </Button>
           ) : null}
           {booking.matchId ? (
-            <Link href={`/partidos/${booking.matchId}`} className="font-semibold text-accent-ink underline">
+            <Link href={`/partidos/${booking.matchId}`} className={buttonClasses({ variant: 'ghost' })}>
               Ver partido
             </Link>
           ) : booking.cancel.allowed ? (
