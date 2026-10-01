@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { TournamentCard } from '@/components/tournaments/tournament-card'
 import { Icon } from '@/components/ui/icon'
-import { makeTournament } from '../../fixtures/tournaments'
+import { makeEntries, makeGame, makeTournament } from '../../fixtures/tournaments'
 
 describe('TournamentCard', () => {
   it('shows when, what, for whom, where, the format, the price and how full it is', () => {
@@ -34,6 +34,33 @@ describe('TournamentCard', () => {
     expect(screen.getByText('En juego')).toBeInTheDocument()
     expect(screen.queryByText('La inscripción está cerrada.')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ver torneo' })).toBeInTheDocument()
+  })
+})
+
+describe('TournamentCard results', () => {
+  const games = [makeGame('g1', ['e1', 'e2'], ['e3', 'e4'], 16), makeGame('g2', ['e1', 'e3'], ['e2', 'e4'], 14)]
+
+  it('names the champion of a finished tournament', () => {
+    render(
+      <TournamentCard
+        tournament={makeTournament({ status: 'finished', entries: makeEntries(4), games })}
+        whenText="jue 1"
+        status={{ ok: false, text: '' }}
+      />,
+    )
+    expect(screen.getByText('Campeón: Jugador 1, 30 pts')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver resultados' })).toBeInTheDocument()
+  })
+
+  it('says who leads one being played', () => {
+    render(
+      <TournamentCard
+        tournament={makeTournament({ status: 'in_progress', entries: makeEntries(4), games })}
+        whenText="jue 1"
+        status={{ ok: false, text: '' }}
+      />,
+    )
+    expect(screen.getByText('Va ganando: Jugador 1, 30 pts')).toBeInTheDocument()
   })
 })
 

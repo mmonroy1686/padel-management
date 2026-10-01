@@ -5,6 +5,7 @@ import { PaymentBadge } from '@/components/booking/payment-badge'
 import { TransferSheet, type ReportTransfer } from '@/components/booking/transfer-sheet'
 import { ShareSheet } from '@/components/matches/share-sheet'
 import { FixtureList } from '@/components/tournaments/fixture-list'
+import { Podium } from '@/components/tournaments/podium'
 import { RankingTable } from '@/components/tournaments/ranking-table'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
@@ -155,6 +156,7 @@ export function TournamentBoard(props: TournamentBoardProps) {
             <h2 id="ranking" className="font-display text-2xl font-bold uppercase">
               {tournament.status === 'finished' ? 'Ranking final' : 'Ranking en vivo'}
             </h2>
+            <Podium rows={props.ranking} finished={tournament.status === 'finished'} highlightEntryId={props.myEntryId} />
             <RankingTable rows={props.ranking} highlightEntryId={props.myEntryId} />
           </section>
           <section aria-labelledby="fixture" className="flex flex-col gap-2">
