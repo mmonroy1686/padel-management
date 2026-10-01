@@ -8,6 +8,7 @@
 //   npm run demo:data -- --player=<email>  also give an existing account a demo history
 //   npm run demo:data -- --prod            production: needs SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 //                                          and SUPABASE_PUBLISHABLE_KEY in the environment
+// Locally the demo fills the courts the e2e flows book: run --clean before npm run test:e2e.
 import { randomBytes } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { localSupabase } from './local-supabase.mjs'
