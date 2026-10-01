@@ -43,3 +43,24 @@ Fuera de la app: el círculo "N" abajo a la izquierda es el indicador de desarro
 1. Antes de la demo con Rustic: 2 (pestañas), 3 (grilla), 4 (day use abre en un día disponible), 6 (objetivos táctiles) y 9 (textos del calendario). Son cambios chicos y se notan apenas abren la app.
 2. Antes del piloto: 1 (carga de resultados por ronda) y 5 (day use de otros días en recepción).
 3. Después: 7, 8, 10 a 14.
+
+## Estado (2026-10-02)
+
+Los 14 puntos quedaron resueltos en `feat/demo-logo-ux`:
+
+- **1** Resultados por ronda: solo la ronda en curso abierta, las demás plegadas con "N de M cargados"; campo con − y +.
+- **2** Pestañas del panel: la activa se desplaza a la vista y el borde con más pestañas se desvanece.
+- **3** Reservar: las columnas comparten el ancho y las 3 canchas entran en 390 px.
+- **4** Day use del jugador: sin día en el link abre en el primero con un pase que no terminó (`firstOpenDay`); "Cancelar pase" solo antes del fin del horario, igual que la base.
+- **5** Day use en recepción: selector de los próximos 7 días.
+- **6** 44 px de alto: `BackLink` para los "Volver a…", flechas del calendario, "Mostrar" y "Ver partido".
+- **7** Inicio: los próximos partidos son filas que se tocan; sin "0 turnos libres hoy".
+- **8** Torneo del jugador: rondas plegadas salvo la en juego, "Tu partido" marcado.
+- **9** Calendario: "1 fijo"; los días del mes de al lado se leen normales (borde punteado).
+- **10** Leyenda: el cuadrito de "Ocupada" tiene borde.
+- **11** `FileField`: elegir archivo en español (logo y comprobantes).
+- **12** Detalle de partido: "Pareja 2" sobre su fila; las píldoras de estado no se cortan.
+- **13** Panel del club: el h1 es la sección; "Panel del club · Rustic" arriba, chico.
+- **14** Ranking: más aire y "(vos)".
+
+Además (pedido aparte): la barra de carga se enciende con cualquier link interno, no solo con las pestañas, y se apaga al entrar a la pantalla nueva.
