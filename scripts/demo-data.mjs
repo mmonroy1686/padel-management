@@ -209,7 +209,7 @@ if (await finishedTournament()) tournaments.push('Relámpago de la semana pasada
 // ---------- recurring slots and a block ----------
 let series = 0
 for (const [days, time, courtIndex, holder] of [
-  [1, '20:00', 0, { p_guest_name: 'Los del martes' }],
+  [1, '20:00', 0, { p_guest_name: 'Los de siempre' }],
   [2, '18:30', 1, { p_player_id: people.gonzalo.id }],
   [3, '21:30', 0, { p_guest_name: 'Escuela de pádel' }],
 ]) {
@@ -311,7 +311,7 @@ const passes = await dayUsePasses()
 console.log(`
 Listo. Demo cargada:
   ${booked} reservas en los próximos 7 días (${paidCash} cobradas en efectivo, ${transfers} transferencias para confirmar)
-  ${pastUnpaid} turnos jugados sin pagar, ${series} turnos fijos, 1 bloqueo ("Clase de menores")
+  ${pastUnpaid} turnos ya jugados sin pagar, ${series} turnos fijos, 1 bloqueo ("Clase de menores")
   ${matches} partidos abiertos
   ${tournaments.length} torneos: ${tournaments.join('; ')}
   2 pases de day use, ${passes} pases vendidos y sellos de ejemplo (Valentina tiene una recompensa)
@@ -448,11 +448,16 @@ async function payEntries(tournamentId, { cash = [], transfer = [] }) {
   }
 }
 
-// Played and still owed, yesterday and the day before: inserted directly, the booking functions
+// Slots already played: today's earlier ones (so the grid of the day looks like a normal day,
+// mostly paid) and a few of the last two days still owed. Inserted directly: the booking functions
 // never take a slot in the past.
 async function pastBookings() {
   let count = 0
+  const todayPlayed = SLOTS.filter((time) => !futureSlot(0, time) && at(0, time) < now)
+    .flatMap((time, row) => courts.map((_, courtIndex) => [0, time, courtIndex, holders[(row + courtIndex) % holders.length]]))
+    .filter((_, index) => index % 4 !== 3)
   for (const [days, time, courtIndex, key] of [
+    ...todayPlayed,
     [-1, '20:00', 0, 'federico'],
     [-1, '21:30', 1, 'matias'],
     [-2, '18:30', 0, 'bruno'],
@@ -465,17 +470,35 @@ async function pastBookings() {
       .select('id')
       .single()
     if (occupancy.error) continue
-    const booking = await admin.from('bookings').insert({
-      club_id: club.id,
-      court_id: court(courtIndex).id,
-      period,
-      player_id: people[key].id,
-      source: 'reception',
-      price: 1600,
-      occupancy_id: occupancy.data.id,
-      created_by: staffId,
-    })
-    if (!booking.error) count++
+    const price = time >= '18:30' ? 1600 : 1200
+    const booking = await admin
+      .from('bookings')
+      .insert({
+        club_id: club.id,
+        court_id: court(courtIndex).id,
+        period,
+        player_id: people[key].id,
+        source: 'reception',
+        price,
+        occupancy_id: occupancy.data.id,
+        created_by: staffId,
+      })
+      .select('id')
+      .single()
+    if (booking.error) continue
+    // Today's played slots were mostly paid at the desk; the older ones stay owed for Cobros.
+    if (days === 0 && (courtIndex + Number(time.slice(0, 2))) % 4 !== 0) {
+      await admin.from('payments').insert({
+        club_id: club.id,
+        booking_id: booking.data.id,
+        method: 'cash',
+        amount: price,
+        status: 'confirmed',
+        reported_by: staffId,
+        confirmed_by: staffId,
+        confirmed_at: at(0, time).toISOString(),
+      })
+    } else count++
   }
   return count
 }
