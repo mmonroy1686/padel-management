@@ -126,3 +126,12 @@ body {
 .tab-scroll[data-more-right='true'] {
   --fade-right: 2.5rem;
 }
+
+/* Tablets (wide touch screens, e.g. reception's at the desk): everything a bit bigger, so text reads
+   at arm's length and every button is easy to hit. Computers with a mouse keep the usual size.
+   Breakpoints stay in px of the screen: media queries do not follow the root font size. */
+@media (min-width: 48rem) and (pointer: coarse) {
+  html {
+    font-size: 112.5%;
+  }
+}

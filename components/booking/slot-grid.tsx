@@ -14,7 +14,7 @@ export type SlotGridProps = {
   onSelect: (cell: GridCell) => void
 }
 
-const CELL = 'flex min-h-14 w-full flex-col items-start justify-center rounded-xl px-2.5 py-2 text-left text-sm'
+const CELL = 'flex min-h-14 w-full flex-col items-start justify-center rounded-xl px-2.5 py-2 text-left text-sm md:min-h-16 md:px-3'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 // One grid for both sides: players see free, taken and their own; the club sees who and how paid.
