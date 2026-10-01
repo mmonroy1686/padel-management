@@ -188,6 +188,13 @@ export function missingScores(games: TournamentGame[]): number {
   return games.filter((game) => game.scoreA === null).length
 }
 
+// The round reception is on: the first one with a result missing, or the last one once all are in.
+export function currentRound(games: TournamentGame[]): number | null {
+  if (games.length === 0) return null
+  const missing = games.filter((game) => game.scoreA === null).map((game) => game.round)
+  return missing.length > 0 ? Math.min(...missing) : Math.max(...games.map((game) => game.round))
+}
+
 export type EntryContext = { now: Date; busy: Period[] }
 export type EntryStatus = { ok: true; text: string } | { ok: false; text: string }
 
