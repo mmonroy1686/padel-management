@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useRef } from 'react'
+import { FileField } from '@/components/ui/file-field'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { failed, IDLE, type ActionState } from '@/lib/actions/result'
@@ -64,18 +65,15 @@ export function TransferSheet({
           {details ?? 'El club todavía no cargó sus datos de transferencia. Consultá en recepción.'}
         </p>
         <form action={formAction} className="flex flex-col gap-3">
-          <label htmlFor="receipt" className="text-sm font-semibold">
-            {receiptRequired ? 'Comprobante' : 'Comprobante (opcional)'}
-          </label>
           {/* aria-required, not required: the action above already asks for the receipt with a clear
               message, and native validation of file inputs varies between browsers. */}
-          <input
-            ref={receiptInput}
+          <FileField
             id="receipt"
             name="receipt"
-            type="file"
+            label={receiptRequired ? 'Comprobante' : 'Comprobante (opcional)'}
             accept="image/*,application/pdf"
-            aria-required={receiptRequired}
+            inputRef={receiptInput}
+            ariaRequired={receiptRequired}
           />
           {state.status === 'error' ? (
             <p role="alert" className="rounded-xl border border-accent bg-bg p-3 text-sm">

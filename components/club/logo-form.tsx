@@ -3,6 +3,7 @@
 import { useActionState, useRef } from 'react'
 import { ClubLogo } from '@/components/brand/club-logo'
 import { Button } from '@/components/ui/button'
+import { FileField } from '@/components/ui/file-field'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { failed, IDLE, type ActionState } from '@/lib/actions/result'
 import { LOGO_TYPES } from '@/lib/domain/club-logo'
@@ -40,10 +41,7 @@ export function LogoForm({ club, saveAction, removeAction, upload = uploadClubLo
         </p>
       </div>
       <form action={formAction} className="flex flex-col gap-3">
-        <label htmlFor="club-logo" className="text-sm font-semibold">
-          Archivo del logo
-        </label>
-        <input ref={fileInput} id="club-logo" name="logo" type="file" accept={LOGO_TYPES.join(',')} />
+        <FileField id="club-logo" name="logo" label="Archivo del logo" accept={LOGO_TYPES.join(',')} inputRef={fileInput} />
         <SubmitButton label="Guardar logo" pendingLabel="Subiendo…" pending={pending} />
       </form>
       {club.logo_path ? (
