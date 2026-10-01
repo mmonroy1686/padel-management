@@ -12,7 +12,7 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="min-h-dvh">
-      <header className="mx-auto flex max-w-6xl items-end justify-between gap-4 px-4 pt-6">
+      <header className="mx-auto flex max-w-6xl 2xl:max-w-7xl items-end justify-between gap-4 px-4 pt-6">
         <div className="flex items-center gap-3">
           <ClubLogo club={viewer.club} className="size-12" />
           <div>
@@ -25,7 +25,7 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
         </Link>
       </header>
       <TabNav label="Panel" items={tabs} variant="top" />
-      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6">{children}</main>
+      <main className="mx-auto flex max-w-6xl 2xl:max-w-7xl flex-col gap-6 px-4 py-6">{children}</main>
     </div>
   )
 }

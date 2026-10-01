@@ -47,7 +47,7 @@ export function TabNav({ label, items, variant }: { label: string; items: TabIte
           : 'tab-scroll overflow-x-auto border-b border-border',
       )}
     >
-      <ul className={cn('mx-auto flex', bottom ? 'max-w-lg justify-around md:max-w-3xl lg:max-w-5xl' : 'max-w-6xl gap-1 px-4')}>
+      <ul className={cn('mx-auto flex', bottom ? 'max-w-lg justify-around md:max-w-3xl lg:max-w-5xl' : 'max-w-6xl gap-1 px-4 2xl:max-w-7xl')}>
         {items.map((item) => {
           const current = isCurrent(pathname, item.href)
           return (

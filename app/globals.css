@@ -135,3 +135,15 @@ body {
     font-size: 112.5%;
   }
 }
+
+/* Computers: on big screens the text grows a little too, so the panel reads well from a desk chair. */
+@media (min-width: 80rem) and (pointer: fine) {
+  html {
+    font-size: 106.25%;
+  }
+}
+@media (min-width: 96rem) and (pointer: fine) {
+  html {
+    font-size: 112.5%;
+  }
+}
