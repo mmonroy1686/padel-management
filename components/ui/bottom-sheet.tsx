@@ -25,8 +25,9 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
 
   if (!open) return null
 
+  // A sheet from the bottom on a phone; a centered dialog on a tablet, easier to reach.
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6">
       <div
         aria-hidden="true"
         data-testid="sheet-backdrop"
@@ -37,7 +38,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl border-t border-border bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+        className="relative max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl border-t border-border bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:max-w-xl md:rounded-3xl md:border md:pb-5"
       >
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2 id={titleId} className="font-display text-2xl font-bold uppercase">

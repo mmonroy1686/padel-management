@@ -39,7 +39,7 @@ export default async function TournamentsPage() {
         <p className="text-fg-muted">Americanos del club: te anotás solo y en cada ronda cambiás de pareja.</p>
       </div>
       {upcoming.length > 0 ? (
-        <ul className="flex flex-col gap-3">{upcoming.map(card)}</ul>
+        <ul className="grid gap-3 md:grid-cols-2">{upcoming.map(card)}</ul>
       ) : (
         <p className="rounded-xl border border-border p-4 text-fg-muted">
           Ahora no hay torneos. Cuando el club arme uno, aparece acá.
@@ -50,7 +50,7 @@ export default async function TournamentsPage() {
           <h2 id="finalizados" className="font-display text-2xl font-bold uppercase">
             Finalizados
           </h2>
-          <ul className="flex flex-col gap-3">{finished.map(card)}</ul>
+          <ul className="grid gap-3 md:grid-cols-2">{finished.map(card)}</ul>
         </section>
       ) : null}
     </>

@@ -82,7 +82,7 @@ export default async function DayUsePage({ searchParams }: { searchParams: Searc
       ) : null}
       <DayStrip days={dayUseDays(today, products, overrides)} selected={selected} basePath="/day-use" />
       {offers.length > 0 ? (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid gap-3 md:grid-cols-2">
           {offers.map((product) => {
             const count = soldOf(sold, product.id, selected)
             return (

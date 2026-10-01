@@ -72,7 +72,7 @@ export default async function HomePage() {
           Tus reservas
         </h2>
         {bookings.upcoming.length > 0 ? (
-          <ul className="flex flex-col gap-3">{bookings.upcoming.map(bookingCard)}</ul>
+          <ul className="grid gap-3 md:grid-cols-2">{bookings.upcoming.map(bookingCard)}</ul>
         ) : (
           <p className="text-fg-muted">
             No tenés reservas.{' '}

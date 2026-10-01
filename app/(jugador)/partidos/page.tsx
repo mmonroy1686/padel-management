@@ -65,7 +65,7 @@ export default async function MatchesPage({ searchParams }: { searchParams: Sear
         </Link>
       </nav>
       {shown.length > 0 ? (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid gap-3 md:grid-cols-2">
           {shown.map(({ match, status }) => (
             <li key={match.id}>
               <MatchCard
