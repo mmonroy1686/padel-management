@@ -76,7 +76,7 @@ describe('TournamentBoard', () => {
     })
     expect(screen.getByRole('heading', { name: 'Ranking en vivo' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Ranking' })).toHaveTextContent('Jugador 1')
-    expect(screen.getByRole('heading', { name: 'Ronda 1' })).toBeInTheDocument()
+    expect(screen.getAllByRole('group')[0]).toHaveTextContent('Ronda 1')
     expect(screen.queryByRole('heading', { name: /Anotados/ })).not.toBeInTheDocument()
   })
 
