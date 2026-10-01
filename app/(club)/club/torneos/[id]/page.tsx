@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { EntriesManager } from '@/components/tournaments/entries-manager'
 import { FixtureList } from '@/components/tournaments/fixture-list'
+import { Podium } from '@/components/tournaments/podium'
 import { RankingTable } from '@/components/tournaments/ranking-table'
 import { ScoreBoard } from '@/components/tournaments/score-board'
 import { TournamentControls } from '@/components/tournaments/tournament-controls'
@@ -42,6 +43,7 @@ export default async function ManageTournamentPage({ params }: { params: Params 
   const when = `${dayLongLabel(localDateOf(tournament.startsAt, club.timezone))}, ${timeIn(tournament.startsAt, club.timezone)} a ${timeIn(tournament.endsAt, club.timezone)}`
   const played = tournament.status === 'in_progress' || tournament.status === 'finished'
 
+  const rows = ranking(tournament.entries, tournament.games, tournament.pointsPerGame)
   return (
     <>
       <LiveOccupancy clubId={club.id} />
@@ -74,7 +76,8 @@ export default async function ManageTournamentPage({ params }: { params: Params 
           <h2 id="ranking" className="font-display text-2xl font-bold uppercase">
             {tournament.status === 'finished' ? 'Ranking final' : 'Ranking'}
           </h2>
-          <RankingTable rows={ranking(tournament.entries, tournament.games, tournament.pointsPerGame)} />
+          <Podium rows={rows} finished={tournament.status === 'finished'} />
+          <RankingTable rows={rows} />
         </section>
       ) : null}
       {tournament.status === 'finished' ? <FixtureList tournament={tournament} timezone={club.timezone} /> : null}

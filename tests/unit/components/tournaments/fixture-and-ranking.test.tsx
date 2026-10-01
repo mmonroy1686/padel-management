@@ -17,11 +17,14 @@ describe('FixtureList', () => {
       ],
     })
     render(<FixtureList tournament={tournament} timezone={TIMEZONE} myEntryId="e5" />)
-    const [first, second] = screen.getAllByRole('group')
+    const [first, second] = [...document.querySelectorAll('details')]
     expect(within(first).getAllByRole('listitem')).toHaveLength(2)
     expect(first).toHaveTextContent('18:00, Cancha 1')
-    expect(first).toHaveTextContent('Jugador 1 y Jugador 2 14 a 10 Jugador 3 y Jugador 4')
-    expect(first).toHaveTextContent('Jugador 5 y Jugador 6 vs Jugador 7 y Jugador 8')
+    const played = within(first).getAllByRole('listitem')[0]
+    expect(within(played).getByRole('group', { name: 'Jugador 1 y Jugador 2 14, Jugador 3 y Jugador 4 10' })).toBeInTheDocument()
+    expect(within(played).getByText('Jugador 1 y Jugador 2').closest('[data-winner]')).toHaveAttribute('data-winner', 'true')
+    const pending = within(first).getAllByRole('listitem')[1]
+    expect(pending).toHaveTextContent('Por jugar')
     expect(second).toHaveTextContent('18:20, Cancha 1')
   })
 
@@ -36,8 +39,8 @@ describe('FixtureList', () => {
         makeGame('g4', ['e2', 'e4'], ['e6', 'e8'], null, { round: 3 }),
       ],
     })
-    render(<FixtureList tournament={tournament} timezone={TIMEZONE} myEntryId="e5" />)
-    expect(screen.getAllByRole('group').map((round) => round.hasAttribute('open'))).toEqual([false, true, false])
+    const { container } = render(<FixtureList tournament={tournament} timezone={TIMEZONE} myEntryId="e5" />)
+    expect([...container.querySelectorAll('details')].map((round) => round.open)).toEqual([false, true, false])
     const mine = screen.getAllByRole('listitem').filter((item) => item.textContent?.includes('Tu partido'))
     expect(mine).toHaveLength(2)
   })
