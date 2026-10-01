@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { RecurringOverview } from '@/components/club/recurring-overview'
 import { requireStaff } from '@/lib/auth/viewer'
 import { cn } from '@/lib/cn'
 import { scheduleOf } from '@/lib/data/day'
 import { addMonths, isMonth, monthGrid, monthOf, recurringText, summarizeDays, weekOf } from '@/lib/domain/calendar'
-import { dayLongLabel, monthLabel, WEEKDAYS_LONG } from '@/lib/domain/format'
+import { dayLongLabel, monthLabel } from '@/lib/domain/format'
 import { holderLabel } from '@/lib/domain/payments-overview'
 import { isLocalDate } from '@/lib/domain/input'
-import { shortDate, SKIP_REASON_LABELS, type SkipReason } from '@/lib/domain/series'
+import { SKIP_REASON_LABELS, type SkipReason } from '@/lib/domain/series'
 import { daySlots } from '@/lib/domain/slots'
 import { addDays, formatMinutes, localDateOf, parseLocalDate, parseTime, toDate, zonedTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
@@ -139,44 +140,26 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
         </tbody>
       </table>
 
-      <section aria-labelledby="fijos" className="flex flex-col gap-2">
-        <h2 id="fijos" className="font-display text-2xl font-bold uppercase">
-          Turnos fijos
-        </h2>
-        {series.data.length > 0 ? (
-          <ul className="flex flex-col gap-1">
-            {series.data.map((item) => (
-              <li key={item.id}>
-                {WEEKDAYS_LONG[item.weekday]} {time(item.start_time)}, {item.court?.name}:{' '}
-                {holderLabel(item)}
-                {item.ends_on ? `, hasta el ${shortDate(item.ends_on)}` : ''}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-fg-muted">No hay turnos fijos. Se cargan desde la grilla.</p>
-        )}
-      </section>
-
-      <section aria-labelledby="salteadas" className="flex flex-col gap-2">
-        <h2 id="salteadas" className="font-display text-2xl font-bold uppercase">
-          Fechas salteadas
-        </h2>
-        {skips.data.length > 0 ? (
-          <ul className="flex flex-col gap-1">
-            {skips.data.map((skip) => (
-              <li key={skip.id}>
-                {shortDate(skip.on_date)}
-                {skip.series ? ` ${time(skip.series.start_time)}, ${skip.series.court?.name}, ` : ' '}
-                {skip.series ? holderLabel(skip.series) : ''}:{' '}
-                {SKIP_REASON_LABELS[skip.reason as SkipReason] ?? skip.reason}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-fg-muted">Ningún turno fijo quedó sin reservar.</p>
-        )}
-      </section>
+      <RecurringOverview
+        series={series.data.map((item) => ({
+          id: item.id,
+          weekday: item.weekday,
+          startTime: time(item.start_time),
+          courtName: item.court?.name ?? 'Cancha',
+          holder: holderLabel(item),
+          endsOn: item.ends_on,
+        }))}
+        skips={skips.data.map((skip) => ({
+          id: skip.id,
+          date: skip.on_date,
+          startTime: skip.series ? time(skip.series.start_time) : '',
+          courtName: skip.series?.court?.name ?? 'Cancha',
+          holder: skip.series ? holderLabel(skip.series) : 'Turno fijo',
+          reason: SKIP_REASON_LABELS[skip.reason as SkipReason] ?? skip.reason,
+        }))}
+        today={today}
+        slotMinutes={club.slot_minutes}
+      />
     </>
   )
 }
