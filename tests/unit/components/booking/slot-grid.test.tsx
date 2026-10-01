@@ -49,6 +49,15 @@ describe('SlotGrid for the club', () => {
     expect(onSelect).toHaveBeenCalledWith(grid.rows[0].cells[0])
   })
 
+  it('draws a booking over several slots as one block, with its end', () => {
+    const grid = makeGrid({ occupancies: [occupancy('o1', 'court-1', '08:00', '11:00')], bookings: [booking('o1')] })
+    render(<SlotGrid courts={COURTS} rows={grid.rows} variant="club" onSelect={vi.fn()} />)
+    const block = screen.getByRole('button', { name: /^Cancha 1, 08:00 a 11:00:/ })
+    expect(block).toHaveTextContent('Hasta las 11:00')
+    expect(block.closest('td')).toHaveAttribute('rowspan', '2')
+    expect(screen.queryByRole('button', { name: /Cancha 1, 09:30/ })).not.toBeInTheDocument()
+  })
+
   it('labels blocks with their reason', () => {
     const grid = makeGrid({ occupancies: [occupancy('blk', 'court-2', '08:00', '09:30', 'block', 'Clase de Pablo')] })
     render(<SlotGrid courts={COURTS} rows={grid.rows} variant="club" onSelect={vi.fn()} />)

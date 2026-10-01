@@ -30,22 +30,24 @@ export function MatchCard({ match, viewerId, whenText, status, risk, reasons = [
   const href = `/partidos/${match.id}`
   const joinSide = status.ok ? match.slots.find((slot) => slot.position === status.position)?.side : undefined
   return (
-    <Card className="flex flex-col gap-3">
+    <Card className="flex h-full flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <p className="font-display text-xl font-bold uppercase">{whenText}</p>
         <span className="shrink-0 whitespace-nowrap rounded-full border border-border px-2 py-0.5 text-xs font-semibold">{statusLabel(match)}</span>
       </div>
       <div className="flex gap-3">
         <MatchCourt match={match} viewerId={viewerId} compact />
-        <p className="text-sm">
-          {match.courtName ?? match.preferredCourtName}
-          <br />
-          {categoryRangeLabel(match.categoryMin, match.categoryMax)}, {MATCH_TYPE_LABELS[match.type].toLowerCase()}
-          <br />
-          {match.price !== null ? `${formatPrice(perPlayerPrice(match.price))} por persona` : 'Precio a confirmar'}
-        </p>
+        <div className="flex flex-col gap-1">
+          {match.status === 'forming' ? <p className="font-semibold">{missingText(match)}</p> : null}
+          <p className="text-sm">
+            {match.courtName ?? match.preferredCourtName}
+            <br />
+            {categoryRangeLabel(match.categoryMin, match.categoryMax)}, {MATCH_TYPE_LABELS[match.type].toLowerCase()}
+            <br />
+            {match.price !== null ? `${formatPrice(perPlayerPrice(match.price))} por persona` : 'Precio a confirmar'}
+          </p>
+        </div>
       </div>
-      {match.status === 'forming' ? <p className="font-semibold">{missingText(match)}</p> : null}
       {reasons.length > 0 ? (
         <ul aria-label="Por qué te lo mostramos" className="flex flex-wrap gap-2">
           {reasons.map((reason) => (
@@ -62,7 +64,7 @@ export function MatchCard({ match, viewerId, whenText, status, risk, reasons = [
           {risk.text}
         </p>
       ) : null}
-      <div className="flex gap-2">
+      <div className="mt-auto flex gap-2">
         {status.ok && joinSide ? (
           <Link href={`${href}?sumarme=${status.position}`} className={buttonClasses({ className: 'flex-1' })}>
             Sumarme de {SLOT_SIDE_WORDS[joinSide]}
