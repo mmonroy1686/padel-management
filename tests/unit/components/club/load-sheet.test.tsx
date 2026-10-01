@@ -52,7 +52,8 @@ describe('LoadSheet', () => {
   it('loads a booking for a club member', async () => {
     const { action, sent } = renderSheet()
     await userEvent.click(screen.getByRole('radio', { name: 'Jugador del club' }))
-    await userEvent.selectOptions(screen.getByLabelText('Jugador', { exact: true }), 'Ana')
+    await userEvent.type(screen.getByRole('combobox', { name: 'Jugador' }), 'an')
+    await userEvent.click(screen.getByRole('option', { name: 'Ana' }))
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
     await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
     expect(sent()).toMatchObject({ kind: 'booking', holder: 'player', playerId: 'u-ana' })
