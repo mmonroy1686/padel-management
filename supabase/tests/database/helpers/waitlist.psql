@@ -1,0 +1,64 @@
+-- Lista de espera fixture. Include it after slot.psql, club.psql, match.psql and day_use.psql:
+--   \ir helpers/waitlist.psql
+-- Waits and holds are inserted as postgres (skips the RPC rules on purpose). Unless told otherwise a
+-- wait is for tomorrow from 18:30 to 23:00 on any court of club T. Pass p_created_at to set the order
+-- of the line (now() is the same for the whole test).
+create procedure test_helpers.make_wait(
+  p_id uuid,
+  p_player_id uuid,
+  p_days integer default 1,
+  p_from time default '18:30',
+  p_to time default '23:00',
+  p_courts uuid[] default array[]::uuid[],
+  p_created_at timestamptz default now()
+)
+language sql
+as $$
+  insert into public.slot_waits (id, club_id, player_id, on_date, from_time, to_time, court_ids, created_at)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', p_player_id, test_helpers.today() + p_days, p_from, p_to,
+          p_courts, p_created_at);
+$$;
+
+-- A hold for the wait's player, as private.offer_freed leaves it: the occupancy (with the player's
+-- name as its note) and the hold row.
+create procedure test_helpers.make_hold(
+  p_id uuid,
+  p_wait_id uuid,
+  p_court_id uuid,
+  p_period tstzrange,
+  p_expires_at timestamptz default now() + interval '15 minutes'
+)
+language plpgsql
+as $$
+declare
+  v_player_id uuid;
+  v_occupancy_id uuid;
+begin
+  select player_id into v_player_id from public.slot_waits where id = p_wait_id;
+  insert into public.court_occupancy (club_id, court_id, kind, period, expires_at, note)
+  values ('a0000000-0000-0000-0000-000000000001', p_court_id, 'hold', p_period, p_expires_at,
+          (select display_name from public.profiles where id = v_player_id))
+  returning id into v_occupancy_id;
+  insert into public.slot_holds (id, club_id, wait_id, player_id, occupancy_id, court_id, period, expires_at)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', p_wait_id, v_player_id, v_occupancy_id, p_court_id,
+          p_period, p_expires_at);
+end;
+$$;
+
+-- The active hold of a player (null when she has none). Call it as postgres: RLS applies otherwise.
+create function test_helpers.active_hold(p_player_id uuid)
+returns uuid
+language sql
+stable
+as $$
+  select id from public.slot_holds where player_id = p_player_id and status = 'active';
+$$;
+
+-- The occupancy that holds the court for a hold.
+create function test_helpers.hold_occupancy(p_hold_id uuid)
+returns uuid
+language sql
+stable
+as $$
+  select occupancy_id from public.slot_holds where id = p_hold_id;
+$$;
