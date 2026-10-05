@@ -710,7 +710,7 @@ select is(private.hold_minutes(now() + interval '45 minutes', now()), null::inte
   'at 45 minutes or less nobody gets it held');
 
 -- The line for tomorrow evening, oldest first: Gabi (Cancha 2 only), Hugo (mornings), Iván (already
--- holding another court), Ana, Juli and Bruno (who has Cancha 1 booked at 19:00).
+-- holding another court), Ana, Juli and Bruno (who has Cancha 1 booked at 18:30).
 call test_helpers.make_wait('e0000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-0000000000a2',
   p_courts => array['c0000000-0000-0000-0000-000000000002']::uuid[], p_created_at => now() - interval '3 hours');
 call test_helpers.make_wait('e0000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-0000000000a3',
@@ -728,7 +728,7 @@ call test_helpers.make_wait('e0000000-0000-0000-0000-000000000017', '00000000-00
 call test_helpers.make_hold('e1000000-0000-0000-0000-000000000017', 'e0000000-0000-0000-0000-000000000017',
   'c0000000-0000-0000-0000-000000000002', test_helpers.slot(2, '08:00', 90), now() + interval '1 hour');
 call test_helpers.make_booking('b0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
-  test_helpers.slot(1, '19:00', 90), '00000000-0000-0000-0000-0000000000b1', 1600);
+  test_helpers.slot(1, '18:30', 90), '00000000-0000-0000-0000-0000000000b1', 1600);
 
 -- A court freed and taken again in the same transaction (claiming, regenerating a day use) is not offered.
 insert into public.court_occupancy (id, club_id, court_id, kind, period, note) values
@@ -755,7 +755,7 @@ reset role;
 select results_eq(
   $$ select court_id, period from public.slot_holds
      where id = test_helpers.active_hold('00000000-0000-0000-0000-0000000000a1') $$,
-  $$ values ('c0000000-0000-0000-0000-000000000001'::uuid, test_helpers.slot(1, '19:00', 90)) $$,
+  $$ values ('c0000000-0000-0000-0000-000000000001'::uuid, test_helpers.slot(1, '18:30', 90)) $$,
   'the freed slot is held for the first in line that takes that court and time: Ana');
 select is(
   (select expires_at from public.court_occupancy
@@ -773,11 +773,11 @@ select results_eq(
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000b1", "role": "authenticated"}';
 select throws_ok(
-  $$ select public.book_slot('c0000000-0000-0000-0000-000000000001', test_helpers.at(1, '19:00')) $$,
+  $$ select public.book_slot('c0000000-0000-0000-0000-000000000001', test_helpers.at(1, '18:30')) $$,
   'P0001', 'slot_taken', 'nobody books a held slot online');
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000c1", "role": "authenticated"}';
 select throws_ok(
-  $$ select public.staff_book('c0000000-0000-0000-0000-000000000001', test_helpers.at(1, '19:00'),
+  $$ select public.staff_book('c0000000-0000-0000-0000-000000000001', test_helpers.at(1, '18:30'),
        p_guest_name => 'Pérez') $$,
   'P0001', 'slot_taken', 'nor reception');
 reset role;
@@ -793,7 +793,7 @@ set constraints all deferred;
 select results_eq(
   $$ select court_id, period from public.slot_holds
      where id = test_helpers.active_hold('00000000-0000-0000-0000-0000000000a5') $$,
-  $$ values ('c0000000-0000-0000-0000-000000000001'::uuid, test_helpers.slot(1, '19:00', 90)) $$,
+  $$ values ('c0000000-0000-0000-0000-000000000001'::uuid, test_helpers.slot(1, '18:30', 90)) $$,
   'after a pass the slot goes to the next in line: Juli');
 select is((select status::text from public.slot_waits where id = 'e0000000-0000-0000-0000-000000000014'), 'waiting',
   'Ana keeps waiting for the other slots of her range');
@@ -810,7 +810,7 @@ set constraints all deferred;
 select results_eq(
   $$ select court_id, period from public.slot_holds
      where id = test_helpers.active_hold('00000000-0000-0000-0000-0000000000b1') $$,
-  $$ values ('c0000000-0000-0000-0000-000000000001'::uuid, test_helpers.slot(1, '19:00', 90)) $$,
+  $$ values ('c0000000-0000-0000-0000-000000000001'::uuid, test_helpers.slot(1, '18:30', 90)) $$,
   'an expired hold goes to the next in line: Bruno, free again at that time');
 
 -- Close to the start: 5 minutes, or nobody gets it held.
@@ -840,7 +840,7 @@ select is(
   0, 'nobody hears about the same slot twice');
 select is(
   private.offer_freed('a0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
-    test_helpers.slot(-1, '19:00', 90)),
+    test_helpers.slot(-1, '18:30', 90)),
   0, 'a slot that already started is not offered');
 
 -- Tomorrow at 12:30 Iván's and Bruno's holds have run out (Gabi's lasts until 18:35), and so has

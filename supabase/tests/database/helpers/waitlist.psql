@@ -45,11 +45,13 @@ begin
 end;
 $$;
 
--- The active hold of a player (null when she has none). Call it as postgres: RLS applies otherwise.
+-- The active hold of a player (null when she has none). security definer: it reads past RLS, so a
+-- test can pass another player's hold to an RPC while acting as someone else.
 create function test_helpers.active_hold(p_player_id uuid)
 returns uuid
 language sql
 stable
+security definer
 as $$
   select id from public.slot_holds where player_id = p_player_id and status = 'active';
 $$;
@@ -59,6 +61,17 @@ create function test_helpers.hold_occupancy(p_hold_id uuid)
 returns uuid
 language sql
 stable
+security definer
 as $$
   select occupancy_id from public.slot_holds where id = p_hold_id;
+$$;
+
+-- The hold a wait got for one slot (whatever its status now).
+create function test_helpers.hold_of(p_wait_id uuid, p_period tstzrange)
+returns uuid
+language sql
+stable
+security definer
+as $$
+  select id from public.slot_holds where wait_id = p_wait_id and period = p_period;
 $$;
