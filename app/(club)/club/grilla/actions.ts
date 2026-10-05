@@ -131,3 +131,13 @@ export async function endSeries(_previous: ActionState, form: FormData): Promise
   if (error) return fromRpc(error, '')
   return ok(data === 1 ? 'Turno fijo terminado. Cancelamos 1 reserva.' : `Turno fijo terminado. Cancelamos ${data} reservas.`)
 }
+
+// "Pasar al siguiente" on a held court.
+export async function releaseSlotHold(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const occupancyId = readUuid(form, 'occupancyId')
+  if (!occupancyId) return INVALID_INPUT
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('release_slot_hold', { p_occupancy_id: occupancyId })
+  revalidateBookings()
+  return fromRpc(error, 'Listo, el turno pasó al siguiente de la lista.')
+}
