@@ -12,6 +12,9 @@ import { addDays, localDateOf } from '@/lib/domain/time'
 import { createMatch } from '../partidos/actions'
 import { bookSlot } from './actions'
 import { ReservarBoard } from './reservar-board'
+import { cancelSlotWait, createSlotWait } from '@/lib/actions/waitlist'
+import { loadMyWaitlist } from '@/lib/data/waitlist'
+import { waitItems, waitRangeOptions } from '@/lib/domain/waitlist'
 
 export const metadata: Metadata = { title: 'Reservar' }
 
@@ -28,6 +31,7 @@ export default async function ReservarPage({ searchParams }: { searchParams: Sea
   const grid = await loadDayGrid(club, date, { userId: viewer.userId, audience: 'player' }, now)
   const context = await loadPlayerContext(viewer, now)
   const matchOptions = await loadMatchFormOptions(viewer, context, today)
+  const waitlist = await loadMyWaitlist(viewer, now)
 
   return (
     <>
@@ -50,6 +54,10 @@ export default async function ReservarPage({ searchParams }: { searchParams: Sea
         date={date}
         matchOptions={matchOptions}
         createMatchAction={createMatch}
+        waitOptions={waitRangeOptions(grid.rows.map((row) => row.slot), now)}
+        activeWaits={waitItems(waitlist.waits, waitlist.courts, today)}
+        waitAction={createSlotWait}
+        cancelWaitAction={cancelSlotWait}
       />
     </>
   )

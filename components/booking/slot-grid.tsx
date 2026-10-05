@@ -12,13 +12,15 @@ export type SlotGridProps = {
   rows: GridRow[]
   variant: 'player' | 'club'
   onSelect: (cell: GridCell) => void
+  // Players: a taken slot still ahead offers "Avisame si se libera".
+  onWait?: (cell: GridCell) => void
 }
 
 const CELL = 'flex h-full min-h-14 w-full flex-col items-start justify-center rounded-xl px-2.5 py-2 text-left text-sm md:min-h-16 md:px-3'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 // One grid for both sides: players see free, taken and their own; the club sees who and how paid.
-export function SlotGrid({ courts, rows, variant, onSelect }: SlotGridProps) {
+export function SlotGrid({ courts, rows, variant, onSelect, onWait }: SlotGridProps) {
   return (
     <div className="-mx-4 overflow-x-auto px-4">
       <table className="w-full min-w-[18rem] border-separate border-spacing-1">
@@ -58,7 +60,7 @@ export function SlotGrid({ courts, rows, variant, onSelect }: SlotGridProps) {
                     className={cn('h-px', variant === 'player' ? 'min-w-0' : 'min-w-28')}
                   >
                     {variant === 'player' ? (
-                      <PlayerCell cell={cell} onSelect={onSelect} />
+                      <PlayerCell cell={cell} past={row.past} onSelect={onSelect} onWait={onWait} />
                     ) : (
                       <ClubCell cell={cell} until={blockEnd(rows, rowIndex, courtIndex)} onSelect={onSelect} />
                     )}
@@ -73,7 +75,17 @@ export function SlotGrid({ courts, rows, variant, onSelect }: SlotGridProps) {
   )
 }
 
-function PlayerCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridCell) => void }) {
+function PlayerCell({
+  cell,
+  past,
+  onSelect,
+  onWait,
+}: {
+  cell: GridCell
+  past: boolean
+  onSelect: (cell: GridCell) => void
+  onWait?: (cell: GridCell) => void
+}) {
   if (cell.state === 'free' && cell.formingMatch) {
     const missing = 4 - cell.formingMatch.filled
     const text = missing === 1 ? 'Falta 1' : `Faltan ${missing}`
@@ -108,6 +120,19 @@ function PlayerCell({ cell, onSelect }: { cell: GridCell; onSelect: (cell: GridC
         <b>Tuya</b>
         <span>{cell.booking?.matchId ? 'Partido' : 'Reserva'}</span>
       </div>
+    )
+  }
+  if (cell.state === 'taken' && !past && onWait) {
+    return (
+      <button
+        type="button"
+        aria-label={`Avisame si se libera ${cell.court.name} a las ${cell.slot.label}`}
+        onClick={() => onWait(cell)}
+        className={cn(CELL, CELL_STYLES.taken, FOCUS, 'hover:text-fg')}
+      >
+        <span>Ocupada</span>
+        <span className="text-xs font-semibold text-accent-ink">Avisame</span>
+      </button>
     )
   }
   const text = cell.state === 'taken' ? 'Ocupada' : cell.state === 'past' ? 'Ya pasó' : 'No disponible'
