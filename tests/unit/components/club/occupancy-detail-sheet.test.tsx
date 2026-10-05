@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { OccupancyDetailSheet, type DetailActions } from '@/components/club/occupancy-detail-sheet'
 import type { FormAction } from '@/components/ui/action-form'
 import type { GridCell } from '@/lib/domain/grid'
-import { booking, makeGrid, occupancy, TIMEZONE } from '../../fixtures/grid'
+import { at, booking, makeGrid, occupancy, TIMEZONE } from '../../fixtures/grid'
 
 const booked = makeGrid({
   occupancies: [occupancy('o1', 'court-1', '08:00', '09:30')],
@@ -30,6 +30,10 @@ const matchCell = makeGrid({
   ],
 }).rows.find((row) => row.slot.label === '20:00')!.cells[0]
 
+const held = makeGrid({
+  occupancies: [{ ...occupancy('h1', 'court-1', '20:00', '21:30', 'hold', 'Ana'), expiresAt: at('17:42') }],
+}).rows.find((row) => row.slot.label === '20:00')!.cells[0]
+
 function renderDetail(cell: GridCell, acceptsCash = true) {
   const done = async () => ({ status: 'ok' as const, message: 'Listo.' })
   const actions: DetailActions = {
@@ -39,6 +43,7 @@ function renderDetail(cell: GridCell, acceptsCash = true) {
     endSeries: vi.fn<FormAction>(done),
     cancelMatch: vi.fn<FormAction>(done),
     removeFromMatch: vi.fn<FormAction>(done),
+    release: vi.fn<FormAction>(done),
   }
   const onDone = vi.fn()
   render(
@@ -125,5 +130,14 @@ describe('OccupancyDetailSheet', () => {
     expect(sent(actions.cash)).toEqual({ bookingId: 'b-om', payerId: 'b', amount: '400' })
     expect(screen.getByRole('button', { name: 'Cancelar partido' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Cancelar reserva' })).not.toBeInTheDocument()
+  })
+
+  it('says for whom a court is held and passes it to the next in line', async () => {
+    const { actions, onDone, sent } = renderDetail(held)
+    expect(screen.getByRole('dialog', { name: 'Ana' })).toHaveTextContent('Retenido para Ana hasta las 17:42.')
+    await userEvent.click(screen.getByRole('button', { name: 'Pasar al siguiente' }))
+    await waitFor(() => expect(actions.release).toHaveBeenCalledTimes(1))
+    expect(sent(actions.release)).toEqual({ occupancyId: 'h1' })
+    expect(onDone).toHaveBeenCalledWith('Listo.')
   })
 })

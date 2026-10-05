@@ -12,7 +12,7 @@ import { dayStats } from '@/lib/domain/grid'
 import { riskOf } from '@/lib/domain/match-risk'
 import { isLocalDate } from '@/lib/domain/input'
 import { addDays, localDateOf } from '@/lib/domain/time'
-import { cancelBooking, cancelMatch, endSeries, loadSlot, recordCash, removeFromMatch, unblockCourt } from './actions'
+import { cancelBooking, cancelMatch, endSeries, loadSlot, recordCash, releaseSlotHold, removeFromMatch, unblockCourt } from './actions'
 import { ClubBoard } from './club-board'
 
 export const metadata: Metadata = { title: 'Grilla' }
@@ -71,6 +71,7 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
             endSeries,
             cancelMatch,
             removeFromMatch,
+            release: releaseSlotHold,
           }}
         />
         <FormingMatchesPanel items={panelItems} actions={{ cancelMatch, removeFromMatch }} />
