@@ -18,7 +18,6 @@ export type MyWaitlist = { waits: Wait[]; hold: Hold | null; courts: CourtName[]
 
 // The player's waiting waits, her active hold (with the slot's price, the same rule as
 // private.slot_price) and the club's active courts to name them. RLS returns only hers.
-// If supabase-js infers a slightly different shape for the court embed, adjust the code; never cast.
 export async function loadMyWaitlist(viewer: { userId: string; club: Club }, now = new Date()): Promise<MyWaitlist> {
   const { club } = viewer
   const supabase = await createClient()

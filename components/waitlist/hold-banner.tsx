@@ -25,7 +25,7 @@ export function HoldBanner({ holdId, text, expiresAt, price, paymentNote, claimA
   // The clock starts once mounted: the server's second and the browser's never match.
   const [now, setNow] = useState<Date | null>(null)
   const [confirming, setConfirming] = useState(false)
-  // Stable, so the sheet does not grab the focus again on every tick.
+  // Stable across ticks of the countdown.
   const closeSheet = useCallback(() => setConfirming(false), [])
 
   useEffect(() => {

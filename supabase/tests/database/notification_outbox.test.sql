@@ -3,11 +3,19 @@ create extension if not exists pgtap with schema extensions;
 \ir helpers/slot.psql
 \ir helpers/club.psql
 \ir helpers/match.psql
+\ir helpers/day_use.psql
+\ir helpers/waitlist.psql
 select plan(14);
+
+-- Ana's aviso is about a hold still active (the outbox skips the mail of one that is not).
+call test_helpers.make_wait('e0000000-0000-0000-0000-000000000041', '00000000-0000-0000-0000-0000000000a1');
+call test_helpers.make_hold('e1000000-0000-0000-0000-000000000041', 'e0000000-0000-0000-0000-000000000041',
+  'c0000000-0000-0000-0000-000000000001', test_helpers.slot(1, '18:30', 90));
 
 insert into public.notifications (id, club_id, user_id, kind, data, link, created_at) values
   ('e2000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001',
-   '00000000-0000-0000-0000-0000000000a1', 'slot_held', '{"court_name": "Cancha 1"}', '/', now() - interval '2 minutes'),
+   '00000000-0000-0000-0000-0000000000a1', 'slot_held',
+   '{"court_name": "Cancha 1", "hold_id": "e1000000-0000-0000-0000-000000000041"}', '/', now() - interval '2 minutes'),
   ('e2000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001',
    '00000000-0000-0000-0000-0000000000b1', 'slot_free_now', '{"court_name": "Cancha 2"}', '/reservar',
    now() - interval '1 minute');
