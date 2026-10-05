@@ -3,7 +3,8 @@ import { adminClient, E2E_DOMAIN } from './admin'
 // Removes what earlier e2e runs left in the local database: users @e2e.test and everything they
 // booked, loaded or uploaded (including series bookings the daily job created with no author), and
 // the matches they created or joined, the tournaments they created or signed up for, and the day use
-// passes they created, bought or sold.
+// passes they created, bought or sold, and the courts held for them on the waitlist (their waits, holds
+// and avisos go with the users, on delete cascade).
 // adminClient only ever points at the local stack.
 export default async function globalSetup(): Promise<void> {
   const admin = adminClient()
@@ -34,6 +35,10 @@ export default async function globalSetup(): Promise<void> {
   const bookings = await admin.from('bookings').select('id, occupancy_id').or(filters.join(','))
   if (bookings.error) throw bookings.error
   const occupancyIds = bookings.data.flatMap((row) => (row.occupancy_id ? [row.occupancy_id] : []))
+  // Waitlist: courts held for e2e players go free too.
+  const holds = await admin.from('slot_holds').select('occupancy_id').in('player_id', ids).eq('status', 'active')
+  if (holds.error) throw holds.error
+  occupancyIds.push(...holds.data.flatMap((row) => (row.occupancy_id ? [row.occupancy_id] : [])))
 
   // Payments go with their bookings (on delete cascade).
   if (bookings.data.length > 0) await check(admin.from('bookings').delete().in('id', bookings.data.map((row) => row.id)))
