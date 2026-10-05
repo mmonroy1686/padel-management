@@ -56,6 +56,7 @@ export function ClubBoard({
         courts={grid.courts}
         rows={grid.rows}
         variant="club"
+        timezone={timezone}
         onSelect={(cell) => {
           setNotice(null)
           setSelected(cell)

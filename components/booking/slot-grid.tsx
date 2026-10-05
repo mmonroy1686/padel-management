@@ -2,9 +2,18 @@
 
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
-import { formatPrice } from '@/lib/domain/format'
-import { blockEnd, continuesAbove, KIND_LABELS, rowsCovered, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
-import { CELL_STYLES } from './cell-styles'
+import { formatPrice, timeIn } from '@/lib/domain/format'
+import {
+  blockEnd,
+  continuesAbove,
+  KIND_LABELS,
+  rowsCovered,
+  type Court,
+  type GridCell,
+  type GridRow,
+  type OccupancyKind,
+} from '@/lib/domain/grid'
+import { CELL_STYLES, type CellStyle } from './cell-styles'
 import { PaymentBadge } from './payment-badge'
 
 export type SlotGridProps = {
@@ -14,13 +23,15 @@ export type SlotGridProps = {
   onSelect: (cell: GridCell) => void
   // Players: a taken slot still ahead offers "Avisame si se libera".
   onWait?: (cell: GridCell) => void
+  // Club: the club's clock, to show until when a court is held.
+  timezone?: string
 }
 
 const CELL = 'flex h-full min-h-14 w-full flex-col items-start justify-center rounded-xl px-2.5 py-2 text-left text-sm md:min-h-16 md:px-3'
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 // One grid for both sides: players see free, taken and their own; the club sees who and how paid.
-export function SlotGrid({ courts, rows, variant, onSelect, onWait }: SlotGridProps) {
+export function SlotGrid({ courts, rows, variant, onSelect, onWait, timezone }: SlotGridProps) {
   return (
     <div className="-mx-4 overflow-x-auto px-4">
       <table className="w-full min-w-[18rem] border-separate border-spacing-1">
@@ -62,7 +73,7 @@ export function SlotGrid({ courts, rows, variant, onSelect, onWait }: SlotGridPr
                     {variant === 'player' ? (
                       <PlayerCell cell={cell} past={row.past} onSelect={onSelect} onWait={onWait} />
                     ) : (
-                      <ClubCell cell={cell} until={blockEnd(rows, rowIndex, courtIndex)} onSelect={onSelect} />
+                      <ClubCell cell={cell} until={blockEnd(rows, rowIndex, courtIndex)} timezone={timezone} onSelect={onSelect} />
                     )}
                   </td>
                 ),
@@ -139,44 +150,48 @@ function PlayerCell({
   return <div className={cn(CELL, CELL_STYLES.taken, cell.state === 'past' && 'opacity-50')}>{text}</div>
 }
 
+// The look each kind of occupancy takes on the club's grid.
+const CLUB_STYLES: Record<OccupancyKind, CellStyle> = {
+  booking: 'booking',
+  match: 'booking',
+  recurring: 'recurring',
+  block: 'block',
+  tournament: 'tournament',
+  day_use: 'day_use',
+  hold: 'hold',
+}
+
 function ClubCell({
   cell,
   until,
+  timezone,
   onSelect,
 }: {
   cell: GridCell
   until: string | null
+  timezone?: string
   onSelect: (cell: GridCell) => void
 }) {
   const { court, slot, occupancy, booking } = cell
   if (occupancy) {
     const kindLabel = KIND_LABELS[occupancy.kind]
     const title = booking?.holderName ?? occupancy.note ?? kindLabel
-    const style =
-      occupancy.kind === 'block'
-        ? CELL_STYLES.block
-        : occupancy.kind === 'tournament'
-          ? CELL_STYLES.tournament
-          : occupancy.kind === 'day_use'
-            ? CELL_STYLES.day_use
-            : occupancy.kind === 'recurring'
-              ? CELL_STYLES.recurring
-              : occupancy.kind === 'booking' || occupancy.kind === 'match'
-                ? CELL_STYLES.booking
-                : CELL_STYLES.other
+    const heldUntil =
+      occupancy.kind === 'hold' && occupancy.expiresAt && timezone ? timeIn(occupancy.expiresAt, timezone) : null
+    const ends = heldUntil ?? until
     return (
       <button
         type="button"
         aria-label={`${court.name}, ${slot.label}${until ? ` a ${until}` : ''}: ${title}`}
         onClick={() => onSelect(cell)}
-        className={cn(CELL, style, FOCUS, cell.state === 'past' && 'opacity-60')}
+        className={cn(CELL, CELL_STYLES[CLUB_STYLES[occupancy.kind]], FOCUS, cell.state === 'past' && 'opacity-60')}
       >
         <b className="line-clamp-1">{title}</b>
         <span className="text-xs">
-          {kindLabel}
+          {occupancy.kind === 'hold' ? `${kindLabel}, lista de espera` : kindLabel}
           {booking ? `, ${booking.source === 'online' ? 'online' : 'en recepción'}` : ''}
         </span>
-        {until ? <span className="text-xs tabular-nums">Hasta las {until}</span> : null}
+        {ends ? <span className="text-xs tabular-nums">Hasta las {ends}</span> : null}
         {booking ? <PaymentBadge state={booking.paymentState} className="mt-1" /> : null}
         {cell.offGrid ? <span className="text-xs">Fuera de la grilla</span> : null}
       </button>
