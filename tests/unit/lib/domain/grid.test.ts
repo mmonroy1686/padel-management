@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { blockEnd, blockEndOptions, continuesAbove, countFree, dayStats, holderName, rowsCovered, visibleRows } from '@/lib/domain/grid'
+import { blockEnd, blockEndOptions, continuesAbove, countFree, dayStats, holderName, KIND_LABELS, rowsCovered, toOccupancy, visibleRows } from '@/lib/domain/grid'
 import { at, booking, makeGrid, occupancy } from '../../fixtures/grid'
 import { makeMatch } from '../../fixtures/matches'
 
@@ -149,5 +149,25 @@ describe('forming matches on the grid', () => {
 
   it('keeps the matches of the day for the club panel', () => {
     expect(makeGrid({ matches: [makeMatch()] }).matches.map((match) => match.id)).toEqual(['m1'])
+  })
+})
+
+describe('holds', () => {
+  it('names a held court', () => {
+    expect(KIND_LABELS.hold).toBe('Retenido')
+  })
+
+  it('reads until when a court is held; only staff learn for whom', () => {
+    const row = {
+      id: 'h1',
+      court_id: 'court-1',
+      kind: 'hold' as const,
+      starts_at: '2026-10-01T22:00:00Z',
+      ends_at: '2026-10-01T23:30:00Z',
+      note: 'Ana',
+      expires_at: '2026-10-01T20:42:00Z',
+    }
+    expect(toOccupancy(row, 'player')).toMatchObject({ kind: 'hold', note: null, expiresAt: new Date('2026-10-01T20:42:00Z') })
+    expect(toOccupancy(row, 'staff').note).toBe('Ana')
   })
 })

@@ -17,6 +17,7 @@ export type DetailActions = {
   endSeries: FormAction
   cancelMatch: FormAction
   removeFromMatch: FormAction
+  release: FormAction
 }
 
 export function OccupancyDetailSheet({
@@ -107,6 +108,24 @@ export function OccupancyDetailSheet({
                 <p className="text-sm text-fg-muted">Cancela esta fecha y las siguientes de este turno fijo.</p>
               </ActionForm>
             ) : null}
+          </>
+        ) : null}
+        {occupancy.kind === 'hold' ? (
+          <>
+            <p>
+              Retenido para {occupancy.note ?? 'el primero de la lista de espera'}
+              {occupancy.expiresAt ? ` hasta las ${timeIn(occupancy.expiresAt, timezone)}` : ''}. Si no lo reserva a tiempo,
+              pasa al siguiente.
+            </p>
+            <ActionForm
+              action={actions.release}
+              submitLabel="Pasar al siguiente"
+              pendingLabel="Pasando…"
+              variant="secondary"
+              onDone={onDone}
+            >
+              <input type="hidden" name="occupancyId" value={occupancy.id} />
+            </ActionForm>
           </>
         ) : null}
         {occupancy.kind === 'block' ? (

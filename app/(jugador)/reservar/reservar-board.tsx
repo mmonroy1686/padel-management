@@ -6,10 +6,13 @@ import { Legend } from '@/components/booking/legend'
 import { SlotGrid } from '@/components/booking/slot-grid'
 import { CreateMatchSheet, type MatchFormInitial } from '@/components/matches/create-match-sheet'
 import type { FormAction } from '@/components/ui/action-form'
+import { Button } from '@/components/ui/button'
+import { WaitSheet, type WaitInitial } from '@/components/waitlist/wait-sheet'
 import { cn } from '@/lib/cn'
 import { visibleRows, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
 import type { MatchFormOptions } from '@/lib/domain/matches'
 import type { LocalDate } from '@/lib/domain/time'
+import { slotEndLabel, type TimeOption, type WaitItem } from '@/lib/domain/waitlist'
 
 export function ReservarBoard({
   courts,
@@ -21,6 +24,10 @@ export function ReservarBoard({
   date,
   matchOptions,
   createMatchAction,
+  waitOptions,
+  activeWaits,
+  waitAction,
+  cancelWaitAction,
 }: {
   courts: Court[]
   rows: GridRow[]
@@ -31,15 +38,26 @@ export function ReservarBoard({
   date: LocalDate
   matchOptions: MatchFormOptions
   createMatchAction: FormAction
+  waitOptions: { from: TimeOption[]; to: TimeOption[] }
+  activeWaits: WaitItem[]
+  waitAction: FormAction
+  cancelWaitAction: FormAction
 }) {
   const [choice, setChoice] = useState<BookingChoice | null>(null)
   const [onlyFree, setOnlyFree] = useState(false)
   const [showPast, setShowPast] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [matchInitial, setMatchInitial] = useState<MatchFormInitial | null>(null)
+  const [waitOpen, setWaitOpen] = useState(false)
+  const [waitInitial, setWaitInitial] = useState<WaitInitial | null>(null)
   const close = useCallback(() => setChoice(null), [])
   const booked = useCallback((message: string) => {
     setChoice(null)
+    setNotice(message)
+  }, [])
+  const closeWait = useCallback(() => setWaitOpen(false), [])
+  const waited = useCallback((message: string) => {
+    setWaitOpen(false)
     setNotice(message)
   }, [])
 
@@ -56,6 +74,12 @@ export function ReservarBoard({
       timeLabel: cell.slot.label,
       price: cell.price,
     })
+  }
+
+  function openWait(initial: WaitInitial | null) {
+    setNotice(null)
+    setWaitInitial(initial)
+    setWaitOpen(true)
   }
 
   return (
@@ -92,10 +116,24 @@ export function ReservarBoard({
         </p>
       ) : null}
       {shown.length > 0 ? (
-        <SlotGrid courts={courts} rows={shown} variant="player" onSelect={select} />
+        <SlotGrid
+          courts={courts}
+          rows={shown}
+          variant="player"
+          onSelect={select}
+          onWait={(cell) => openWait({ fromTime: cell.slot.label, toTime: slotEndLabel(cell.slot), courtIds: [cell.court.id] })}
+        />
       ) : (
         <p className="rounded-xl border border-border p-4 text-fg-muted">No quedan horarios libres este día. Probá con otro día.</p>
       )}
+      <div className="flex flex-col gap-2">
+        <Button variant="secondary" fullWidth onClick={() => openWait(null)}>
+          Avisame si se libera
+        </Button>
+        <p className="text-sm text-fg-muted">
+          ¿No encontrás lugar? Anotate y, si se libera un turno, te lo guardamos unos minutos. También podés tocar una cancha ocupada.
+        </p>
+      </div>
       <BookingSheet
         choice={choice}
         dayText={dayText}
@@ -115,6 +153,19 @@ export function ReservarBoard({
         action={createMatchAction}
         options={matchOptions}
         initial={matchInitial ?? undefined}
+      />
+      <WaitSheet
+        open={waitOpen}
+        onClose={closeWait}
+        date={date}
+        dayText={dayText}
+        courts={courts}
+        options={waitOptions}
+        initial={waitInitial}
+        activeWaits={activeWaits}
+        createAction={waitAction}
+        cancelAction={cancelWaitAction}
+        onDone={waited}
       />
     </div>
   )

@@ -4,7 +4,7 @@ import type { PaymentState } from './payments'
 import { priceFor, type PricingRule, type Slot } from './slots'
 import { formatMinutes, toDate, type LocalDate } from './time'
 
-export type OccupancyKind = 'booking' | 'recurring' | 'tournament' | 'block' | 'match' | 'day_use'
+export type OccupancyKind = 'booking' | 'recurring' | 'tournament' | 'block' | 'match' | 'day_use' | 'hold'
 export type Court = { id: string; name: string; isCovered: boolean }
 export type Occupancy = {
   id: string
@@ -15,6 +15,8 @@ export type Occupancy = {
   note: string | null
   // The tournament that blocks the court (kind 'tournament'); members may read it.
   tournamentId?: string | null
+  // Until when a court is held for the waitlist (kind 'hold').
+  expiresAt?: Date | null
 }
 // What the viewer may know about the booking behind an occupancy. Players only get their own.
 export type GridBooking = {
@@ -54,6 +56,7 @@ export const KIND_LABELS: Record<OccupancyKind, string> = {
   block: 'Bloqueo',
   match: 'Partido',
   day_use: 'Day use',
+  hold: 'Retenido',
 }
 
 function overlaps(occupancy: Occupancy, slot: Slot): boolean {
@@ -129,9 +132,10 @@ export type OccupancyRow = {
   ends_at: string | null
   note: string | null
   tournament_id?: string | null
+  expires_at?: string | null
 }
 
-// Block reasons are for staff only: a player's grid never carries them to the browser.
+// Block reasons and who holds a court are for staff only: a player's grid never carries them.
 export function toOccupancy(row: OccupancyRow, audience: 'player' | 'staff'): Occupancy {
   return {
     id: row.id,
@@ -141,6 +145,7 @@ export function toOccupancy(row: OccupancyRow, audience: 'player' | 'staff'): Oc
     startsAt: toDate(row.starts_at),
     endsAt: toDate(row.ends_at),
     ...(row.tournament_id ? { tournamentId: row.tournament_id } : {}),
+    ...(row.expires_at ? { expiresAt: new Date(row.expires_at) } : {}),
   }
 }
 

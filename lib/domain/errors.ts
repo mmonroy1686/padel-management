@@ -36,6 +36,9 @@ const MESSAGES = {
   no_reward: 'Todavía no tenés una recompensa para usar.',
   already_checked_in: 'Ese pase ya registró el ingreso.',
   not_today: 'El ingreso se registra el día del pase.',
+  slot_available: 'Hay un turno libre en ese horario: reservalo desde la grilla.',
+  too_many_waits: 'Ya estás esperando 3 turnos. Cancelá una espera para anotarte en otra.',
+  hold_expired: 'Se terminó el tiempo para reservarlo y el turno pasó al siguiente de la lista.',
 } as const
 
 export type ErrorCode = keyof typeof MESSAGES

@@ -11,9 +11,16 @@ const DATABASE_CODES = [
   'tournament_closed', 'tournament_full', 'already_in_tournament', 'not_enough_players', 'scores_missing',
   'invalid_score', 'courts_busy', 'outside_hours',
   'day_use_closed', 'day_use_full', 'already_has_pass', 'no_reward', 'already_checked_in', 'not_today',
+  'slot_available', 'too_many_waits', 'hold_expired',
 ]
 
 describe('errorMessage', () => {
+  it('explains the waitlist rules in words', () => {
+    expect(errorMessage('slot_available')).toBe('Hay un turno libre en ese horario: reservalo desde la grilla.')
+    expect(errorMessage('too_many_waits')).toBe('Ya estás esperando 3 turnos. Cancelá una espera para anotarte en otra.')
+    expect(errorMessage('hold_expired')).toBe('Se terminó el tiempo para reservarlo y el turno pasó al siguiente de la lista.')
+  })
+
   it.each(DATABASE_CODES)('translates %s', (code) => {
     expect(isErrorCode(code)).toBe(true)
     expect(errorMessage(code)).not.toBe(FALLBACK_MESSAGE)

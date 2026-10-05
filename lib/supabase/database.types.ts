@@ -106,13 +106,13 @@ isOneToOne: false
                   ]
                 },"court_occupancy": {
                   Row: {
-                    "club_id": string,"court_id": string,"created_at": string,"created_by": string | null,"day_use_product_id": string | null,"ends_at": string | null,"id": string,"kind": Database["public"]['Enums']["occupancy_kind"],"note": string | null,"period": unknown,"starts_at": string | null,"tournament_id": string | null
+                    "club_id": string,"court_id": string,"created_at": string,"created_by": string | null,"day_use_product_id": string | null,"ends_at": string | null,"expires_at": string | null,"id": string,"kind": Database["public"]['Enums']["occupancy_kind"],"note": string | null,"period": unknown,"starts_at": string | null,"tournament_id": string | null
                   }
                   Insert: {
-                    "club_id": string,"court_id": string,"created_at"?: string,"created_by"?: string | null,"day_use_product_id"?: string | null,"ends_at"?: never,"id"?: string,"kind": Database["public"]['Enums']["occupancy_kind"],"note"?: string | null,"period": unknown,"starts_at"?: never,"tournament_id"?: string | null
+                    "club_id": string,"court_id": string,"created_at"?: string,"created_by"?: string | null,"day_use_product_id"?: string | null,"ends_at"?: never,"expires_at"?: string | null,"id"?: string,"kind": Database["public"]['Enums']["occupancy_kind"],"note"?: string | null,"period": unknown,"starts_at"?: never,"tournament_id"?: string | null
                   }
                   Update: {
-                    "club_id"?: string,"court_id"?: string,"created_at"?: string,"created_by"?: string | null,"day_use_product_id"?: string | null,"ends_at"?: never,"id"?: string,"kind"?: Database["public"]['Enums']["occupancy_kind"],"note"?: string | null,"period"?: unknown,"starts_at"?: never,"tournament_id"?: string | null
+                    "club_id"?: string,"court_id"?: string,"created_at"?: string,"created_by"?: string | null,"day_use_product_id"?: string | null,"ends_at"?: never,"expires_at"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["occupancy_kind"],"note"?: string | null,"period"?: unknown,"starts_at"?: never,"tournament_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -279,6 +279,31 @@ isOneToOne: false
     },{
       foreignKeyName: "match_slots_player_id_fkey"
       columns: ["player_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notifications": {
+                  Row: {
+                    "club_id": string,"created_at": string,"data": NonNullable<Json>,"email_attempts": number,"email_locked_until": string | null,"email_status": Database["public"]['Enums']["email_status"],"emailed_at": string | null,"id": string,"kind": Database["public"]['Enums']["notification_kind"],"link": string,"read_at": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "club_id": string,"created_at"?: string,"data"?: NonNullable<Json>,"email_attempts"?: number,"email_locked_until"?: string | null,"email_status"?: Database["public"]['Enums']["email_status"],"emailed_at"?: string | null,"id"?: string,"kind": Database["public"]['Enums']["notification_kind"],"link": string,"read_at"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "club_id"?: string,"created_at"?: string,"data"?: NonNullable<Json>,"email_attempts"?: number,"email_locked_until"?: string | null,"email_status"?: Database["public"]['Enums']["email_status"],"emailed_at"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["notification_kind"],"link"?: string,"read_at"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notifications_user_id_fkey"
+      columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -520,6 +545,74 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"slot_holds": {
+                  Row: {
+                    "booking_id": string | null,"club_id": string,"court_id": string,"created_at": string,"ended_at": string | null,"expires_at": string,"id": string,"occupancy_id": string | null,"period": unknown,"player_id": string,"starts_at": string | null,"status": Database["public"]['Enums']["slot_hold_status"],"wait_id": string
+                  }
+                  Insert: {
+                    "booking_id"?: string | null,"club_id": string,"court_id": string,"created_at"?: string,"ended_at"?: string | null,"expires_at": string,"id"?: string,"occupancy_id"?: string | null,"period": unknown,"player_id": string,"starts_at"?: never,"status"?: Database["public"]['Enums']["slot_hold_status"],"wait_id": string
+                  }
+                  Update: {
+                    "booking_id"?: string | null,"club_id"?: string,"court_id"?: string,"created_at"?: string,"ended_at"?: string | null,"expires_at"?: string,"id"?: string,"occupancy_id"?: string | null,"period"?: unknown,"player_id"?: string,"starts_at"?: never,"status"?: Database["public"]['Enums']["slot_hold_status"],"wait_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "slot_holds_booking_id_fkey"
+      columns: ["booking_id"]
+isOneToOne: false
+      referencedRelation: "bookings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "slot_holds_court_in_club"
+      columns: ["court_id","club_id"]
+isOneToOne: false
+      referencedRelation: "courts"
+      referencedColumns: ["id","club_id"]
+    },{
+      foreignKeyName: "slot_holds_occupancy_id_fkey"
+      columns: ["occupancy_id"]
+isOneToOne: true
+      referencedRelation: "court_occupancy"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "slot_holds_player_id_fkey"
+      columns: ["player_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "slot_holds_wait_in_club"
+      columns: ["wait_id","club_id"]
+isOneToOne: false
+      referencedRelation: "slot_waits"
+      referencedColumns: ["id","club_id"]
+    }
+                  ]
+                },"slot_waits": {
+                  Row: {
+                    "club_id": string,"court_ids": (string)[],"created_at": string,"ended_at": string | null,"from_time": string,"id": string,"on_date": string,"player_id": string,"status": Database["public"]['Enums']["slot_wait_status"],"to_time": string
+                  }
+                  Insert: {
+                    "club_id": string,"court_ids"?: (string)[],"created_at"?: string,"ended_at"?: string | null,"from_time": string,"id"?: string,"on_date": string,"player_id": string,"status"?: Database["public"]['Enums']["slot_wait_status"],"to_time": string
+                  }
+                  Update: {
+                    "club_id"?: string,"court_ids"?: (string)[],"created_at"?: string,"ended_at"?: string | null,"from_time"?: string,"id"?: string,"on_date"?: string,"player_id"?: string,"status"?: Database["public"]['Enums']["slot_wait_status"],"to_time"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "slot_waits_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "slot_waits_player_id_fkey"
+      columns: ["player_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"tournament_entries": {
                   Row: {
                     "club_id": string,"created_at": string,"created_by": string | null,"guest_name": string | null,"id": string,"player_id": string | null,"removed_at": string | null,"removed_by": string | null,"tournament_id": string
@@ -669,6 +762,7 @@ isOneToOne: false
 "created_by": string | null,
 "day_use_product_id": string | null,
 "ends_at": string | null,
+"expires_at": string | null,
 "id": string,
 "kind": Database["public"]['Enums']["occupancy_kind"],
 "note": string | null,
@@ -846,6 +940,25 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"cancel_slot_wait":
+{ Args: { "p_wait_id": string }; Returns: {
+              "club_id": string,
+"court_ids": (string)[],
+"created_at": string,
+"ended_at": string | null,
+"from_time": string,
+"id": string,
+"on_date": string,
+"player_id": string,
+"status": Database["public"]['Enums']["slot_wait_status"],
+"to_time": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "slot_waits"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "cancel_tournament":
 { Args: { "p_tournament_id": string }; Returns: {
               "cancelled_at": string | null,
@@ -899,6 +1012,38 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "day_use_passes"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"claim_notification_emails":
+{ Args: { "p_limit"?: number }; Returns: {
+              "club_logo_path": string,"club_name": string,"club_timezone": string,"data": Json,"email": string,"kind": Database["public"]['Enums']["notification_kind"],"link": string,"notification_id": string,"player_name": string
+            }[]
+                           },
+"claim_slot_hold":
+{ Args: { "p_hold_id": string }; Returns: {
+              "cancelled_at": string | null,
+"cancelled_by": string | null,
+"club_id": string,
+"court_id": string,
+"created_at": string,
+"created_by": string | null,
+"ends_at": string | null,
+"guest_name": string | null,
+"id": string,
+"match_id": string | null,
+"occupancy_id": string | null,
+"period": unknown,
+"player_id": string | null,
+"price": number,
+"series_id": string | null,
+"source": Database["public"]['Enums']["booking_source"],
+"starts_at": string | null,
+"status": Database["public"]['Enums']["booking_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "bookings"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -999,6 +1144,25 @@ isOneToOne: false
         isOneToOne: false
         isSetofReturn: true
       } },
+"create_slot_wait":
+{ Args: { "p_club_id": string,"p_court_ids"?: (string)[],"p_date": string,"p_from": string,"p_to": string }; Returns: {
+              "club_id": string,
+"court_ids": (string)[],
+"created_at": string,
+"ended_at": string | null,
+"from_time": string,
+"id": string,
+"on_date": string,
+"player_id": string,
+"status": Database["public"]['Enums']["slot_wait_status"],
+"to_time": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "slot_waits"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_tournament":
 { Args: { "p_category_max": number,"p_category_min": number,"p_court_ids": (string)[],"p_max_players": number,"p_name": string,"p_points_per_game": number,"p_price": number,"p_round_minutes": number,"p_rounds": number,"p_starts_at": string,"p_type": Database["public"]['Enums']["match_type"] }; Returns: {
               "cancelled_at": string | null,
@@ -1037,8 +1201,33 @@ isOneToOne: false
               "inside": number,"on_date": string,"product_id": string,"sold": number
             }[]
                            },
+"decline_slot_hold":
+{ Args: { "p_hold_id": string }; Returns: {
+              "booking_id": string | null,
+"club_id": string,
+"court_id": string,
+"created_at": string,
+"ended_at": string | null,
+"expires_at": string,
+"id": string,
+"occupancy_id": string | null,
+"period": unknown,
+"player_id": string,
+"starts_at": string | null,
+"status": Database["public"]['Enums']["slot_hold_status"],
+"wait_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "slot_holds"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "end_series":
 { Args: { "p_from_date": string,"p_series_id": string }; Returns: number
+                           },
+"finish_notification_email":
+{ Args: { "p_id": string,"p_status": Database["public"]['Enums']["email_status"] }; Returns: undefined
                            },
 "finish_tournament":
 { Args: { "p_tournament_id": string }; Returns: {
@@ -1158,6 +1347,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"mark_notifications_read":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "match_suggestions":
 { Args: { "p_match_id": string }; Returns: {
               "category": number,"display_name": string,"exact_side": boolean,"player_id": string,"prefers_court": boolean,"score": number,"side": Database["public"]['Enums']["player_side"],"spot": number,"times_played": number,"usually_free": boolean
@@ -1308,6 +1500,28 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"release_slot_hold":
+{ Args: { "p_occupancy_id": string }; Returns: {
+              "booking_id": string | null,
+"club_id": string,
+"court_id": string,
+"created_at": string,
+"ended_at": string | null,
+"expires_at": string,
+"id": string,
+"occupancy_id": string | null,
+"period": unknown,
+"player_id": string,
+"starts_at": string | null,
+"status": Database["public"]['Enums']["slot_hold_status"],
+"wait_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "slot_holds"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -1641,7 +1855,7 @@ isOneToOne: false
       } }
           }
           Enums: {
-            "booking_source": "online"|"reception","booking_status": "confirmed"|"cancelled","club_role": "admin"|"reception"|"player","day_band": "morning"|"afternoon"|"night","day_use_pass_status": "bought"|"inside"|"cancelled","dominant_hand": "right"|"left","gender": "male"|"female","match_status": "forming"|"confirmed"|"cancelled","match_type": "male"|"female"|"mixed","occupancy_kind": "booking"|"recurring"|"tournament"|"block"|"match"|"day_use","payment_method": "cash"|"transfer","payment_status": "reported"|"confirmed"|"rejected"|"refunded","player_side": "drive"|"backhand"|"both","tournament_status": "registration"|"closed"|"in_progress"|"finished"|"cancelled"
+            "booking_source": "online"|"reception","booking_status": "confirmed"|"cancelled","club_role": "admin"|"reception"|"player","day_band": "morning"|"afternoon"|"night","day_use_pass_status": "bought"|"inside"|"cancelled","dominant_hand": "right"|"left","email_status": "pending"|"sent"|"failed"|"skipped","gender": "male"|"female","match_status": "forming"|"confirmed"|"cancelled","match_type": "male"|"female"|"mixed","notification_kind": "slot_held"|"slot_free_now","occupancy_kind": "booking"|"recurring"|"tournament"|"block"|"match"|"day_use"|"hold","payment_method": "cash"|"transfer","payment_status": "reported"|"confirmed"|"rejected"|"refunded","player_side": "drive"|"backhand"|"both","slot_hold_status": "active"|"claimed"|"declined"|"expired"|"released","slot_wait_status": "waiting"|"booked"|"expired"|"cancelled","tournament_status": "registration"|"closed"|"in_progress"|"finished"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1757,7 +1971,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "booking_source": ["online", "reception"],"booking_status": ["confirmed", "cancelled"],"club_role": ["admin", "reception", "player"],"day_band": ["morning", "afternoon", "night"],"day_use_pass_status": ["bought", "inside", "cancelled"],"dominant_hand": ["right", "left"],"gender": ["male", "female"],"match_status": ["forming", "confirmed", "cancelled"],"match_type": ["male", "female", "mixed"],"occupancy_kind": ["booking", "recurring", "tournament", "block", "match", "day_use"],"payment_method": ["cash", "transfer"],"payment_status": ["reported", "confirmed", "rejected", "refunded"],"player_side": ["drive", "backhand", "both"],"tournament_status": ["registration", "closed", "in_progress", "finished", "cancelled"]
+            "booking_source": ["online", "reception"],"booking_status": ["confirmed", "cancelled"],"club_role": ["admin", "reception", "player"],"day_band": ["morning", "afternoon", "night"],"day_use_pass_status": ["bought", "inside", "cancelled"],"dominant_hand": ["right", "left"],"email_status": ["pending", "sent", "failed", "skipped"],"gender": ["male", "female"],"match_status": ["forming", "confirmed", "cancelled"],"match_type": ["male", "female", "mixed"],"notification_kind": ["slot_held", "slot_free_now"],"occupancy_kind": ["booking", "recurring", "tournament", "block", "match", "day_use", "hold"],"payment_method": ["cash", "transfer"],"payment_status": ["reported", "confirmed", "rejected", "refunded"],"player_side": ["drive", "backhand", "both"],"slot_hold_status": ["active", "claimed", "declined", "expired", "released"],"slot_wait_status": ["waiting", "booked", "expired", "cancelled"],"tournament_status": ["registration", "closed", "in_progress", "finished", "cancelled"]
           }
         }
 } as const

@@ -12,8 +12,10 @@ import { dayStats } from '@/lib/domain/grid'
 import { riskOf } from '@/lib/domain/match-risk'
 import { isLocalDate } from '@/lib/domain/input'
 import { addDays, localDateOf } from '@/lib/domain/time'
-import { cancelBooking, cancelMatch, endSeries, loadSlot, recordCash, removeFromMatch, unblockCourt } from './actions'
+import { cancelBooking, cancelMatch, endSeries, loadSlot, recordCash, releaseSlotHold, removeFromMatch, unblockCourt } from './actions'
 import { ClubBoard } from './club-board'
+import { WaitingPanel } from '@/components/club/waiting-panel'
+import { loadDayWaits } from '@/lib/data/waitlist'
 
 export const metadata: Metadata = { title: 'Grilla' }
 
@@ -30,7 +32,11 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
   const stripStart = date >= today && date <= addDays(today, 6) ? today : date
   const days = Array.from({ length: 7 }, (_, index) => addDays(stripStart, index))
 
-  const [grid, members] = await Promise.all([loadDayGrid(club, date, { userId: viewer.userId, audience: 'staff' }, now), loadMemberOptions(club.id)])
+  const [grid, members, waits] = await Promise.all([
+    loadDayGrid(club, date, { userId: viewer.userId, audience: 'staff' }, now),
+    loadMemberOptions(club.id),
+    loadDayWaits(club, date),
+  ])
   const stats = dayStats(grid)
   const forming = grid.matches.filter((match) => match.status === 'forming')
   const freeCourts = await loadFreeCourts(club, forming)
@@ -71,9 +77,13 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
             endSeries,
             cancelMatch,
             removeFromMatch,
+            release: releaseSlotHold,
           }}
         />
-        <FormingMatchesPanel items={panelItems} actions={{ cancelMatch, removeFromMatch }} />
+        <div className="flex flex-col gap-6">
+          <FormingMatchesPanel items={panelItems} actions={{ cancelMatch, removeFromMatch }} />
+          <WaitingPanel waits={waits} />
+        </div>
       </div>
     </>
   )

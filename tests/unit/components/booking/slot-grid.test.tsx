@@ -2,10 +2,22 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { SlotGrid } from '@/components/booking/slot-grid'
-import { at, booking, COURTS, makeGrid, occupancy } from '../../fixtures/grid'
+import { at, booking, COURTS, makeGrid, occupancy, TIMEZONE } from '../../fixtures/grid'
 import { makeMatch } from '../../fixtures/matches'
 
 describe('SlotGrid for players', () => {
+  it('offers to wait for a taken slot that is still ahead', async () => {
+    const grid = makeGrid({
+      now: at('09:00'),
+      occupancies: [occupancy('o1', 'court-1', '08:00', '09:30'), occupancy('o2', 'court-1', '11:00', '12:30')],
+    })
+    const onWait = vi.fn()
+    render(<SlotGrid courts={COURTS} rows={grid.rows} variant="player" onSelect={vi.fn()} onWait={onWait} />)
+    expect(screen.queryByRole('button', { name: 'Avisame si se libera Cancha 1 a las 08:00' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Avisame si se libera Cancha 1 a las 11:00' }))
+    expect(onWait).toHaveBeenCalledWith(grid.rows[2].cells[0])
+  })
+
   it('offers free slots with court, time and price', async () => {
     const grid = makeGrid()
     const onSelect = vi.fn()
@@ -35,6 +47,18 @@ describe('SlotGrid for players', () => {
 })
 
 describe('SlotGrid for the club', () => {
+  it('shows a held court, for whom and until when', async () => {
+    const hold = { ...occupancy('h1', 'court-1', '20:00', '21:30', 'hold', 'Ana'), expiresAt: at('17:42') }
+    const grid = makeGrid({ occupancies: [hold] })
+    const onSelect = vi.fn()
+    render(<SlotGrid courts={COURTS} rows={grid.rows} variant="club" timezone={TIMEZONE} onSelect={onSelect} />)
+    const cell = screen.getByRole('button', { name: 'Cancha 1, 20:00: Ana' })
+    expect(cell).toHaveTextContent('Retenido, lista de espera')
+    expect(cell).toHaveTextContent('Hasta las 17:42')
+    await userEvent.click(cell)
+    expect(onSelect).toHaveBeenCalledWith(grid.rows[8].cells[0])
+  })
+
   it('shows who holds each court and how it is paid', async () => {
     const grid = makeGrid({
       occupancies: [occupancy('o1', 'court-1', '08:00', '09:30')],

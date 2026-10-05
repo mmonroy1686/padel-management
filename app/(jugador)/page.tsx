@@ -22,6 +22,12 @@ import { openTournamentsText } from '@/lib/domain/tournaments'
 import { DayUseHomeCard } from '@/components/day-use/day-use-home-card'
 import { loadDayUseHome } from '@/lib/data/day-use'
 import { cancelMyBooking, reportTransfer } from './reservas/actions'
+import { HoldBanner } from '@/components/waitlist/hold-banner'
+import { WaitingCard } from '@/components/waitlist/waiting-card'
+import { cancelSlotWait, claimSlotHold, declineSlotHold } from '@/lib/actions/waitlist'
+import { loadMyWaitlist } from '@/lib/data/waitlist'
+import { paymentMethodsNote } from '@/lib/domain/payments'
+import { holdText, waitItems } from '@/lib/domain/waitlist'
 
 export default async function HomePage() {
   const viewer = await getViewer()
@@ -32,13 +38,14 @@ export default async function HomePage() {
   const now = new Date()
   const member = { ...viewer, membership }
   const windowEnd = zonedTime(addDays(localDateOf(now, club.timezone), club.booking_window_days + 1), 0, club.timezone)
-  const [grid, bookings, matches, context, tournaments, dayUse] = await Promise.all([
+  const [grid, bookings, matches, context, tournaments, dayUse, waitlist] = await Promise.all([
     loadDayGrid(club, localDateOf(now, club.timezone), { userId: viewer.userId, audience: 'player' }, now),
     loadMyBookings(viewer, now),
     loadMatches(club, { from: now, to: windowEnd }),
     loadPlayerContext(member, now),
     loadTournaments(club, { endsAfter: now }),
     loadDayUseHome(viewer, now),
+    loadMyWaitlist(viewer, now),
   ])
   const freeToday = countFree(grid.rows)
   const forMe = matchesForMe(
@@ -60,6 +67,17 @@ export default async function HomePage() {
 
   return (
     <>
+      {waitlist.hold ? (
+        <HoldBanner
+          holdId={waitlist.hold.id}
+          text={holdText(waitlist.hold, club.timezone, today)}
+          expiresAt={waitlist.hold.expiresAt.toISOString()}
+          price={waitlist.hold.price}
+          paymentNote={paymentMethodsNote(club)}
+          claimAction={claimSlotHold}
+          declineAction={declineSlotHold}
+        />
+      ) : null}
       <div>
         <h1 className="font-display text-4xl font-bold uppercase">Hola, {firstName(profile.display_name)}</h1>
         <p className="text-fg-muted">
@@ -87,6 +105,7 @@ export default async function HomePage() {
               </p>
             )}
           </section>
+          <WaitingCard waits={waitItems(waitlist.waits, waitlist.courts, today)} cancelAction={cancelSlotWait} />
           <Card className="flex flex-col gap-2">
             <h2 className="font-display text-2xl font-bold uppercase">Tu próximo partido</h2>
             {myMatches.length > 0 ? (
