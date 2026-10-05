@@ -5513,3 +5513,4 @@ Expected: `quality` y `db-and-e2e` en verde.
 
 - **v1 (2026-10-05)**: scaffold.
 - **v2 (2026-10-05)**: plan completo en 7 cortes (Tasks 1–28) sobre el diseño aprobado. Decisiones propias en "Decisiones que este plan toma".
+- **v3 (2026-10-05)**: tests pgTAP con los horarios de la grilla del fixture (18:30 y 20:00, no 19:00); arreglos de la revisión en `20261005000160`.
