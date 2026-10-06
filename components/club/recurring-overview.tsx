@@ -1,8 +1,9 @@
 import Link from 'next/link'
+import { DataTable, type DataColumn } from '@/components/ui/data-table'
 import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/cn'
 import { WEEKDAYS_LONG, WEEKDAYS_SHORT } from '@/lib/domain/format'
-import { nextOccurrence, seriesByWeekday, shortDate, skipsByDate, weeklyMinutes } from '@/lib/domain/series'
+import { nextOccurrence, seriesByWeekday, shortDate, weeklyMinutes } from '@/lib/domain/series'
 import type { LocalDate } from '@/lib/domain/time'
 
 export type OverviewSeries = {
@@ -21,6 +22,15 @@ const hoursText = (minutes: number) => {
   return rest === 0 ? `${hours} h` : `${hours} h ${rest}`
 }
 const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+
+const SKIP_COLUMNS: DataColumn[] = [
+  { key: 'date', label: 'Fecha', sortable: true },
+  { key: 'time', label: 'Hora' },
+  { key: 'court', label: 'Cancha' },
+  { key: 'holder', label: 'Titular', sortable: true },
+  { key: 'reason', label: 'Motivo' },
+  { key: 'actions', label: 'Acciones', hideLabel: true },
+]
 
 // Calendar: the club's recurring slots as a week at a glance, and the dates one of them could not
 // be booked, each with a way to fix it in the grid.
@@ -116,39 +126,33 @@ export function RecurringOverview({
           ) : null}
         </div>
         {skips.length > 0 ? (
-          <ul className="grid gap-3 md:grid-cols-2">
-            {skipsByDate(skips).map(({ date, items }) => (
-              <li key={date} className="flex gap-3 rounded-2xl border border-accent bg-surface p-3">
-                <span className="flex size-16 shrink-0 flex-col items-center justify-center rounded-xl bg-bg text-center">
-                  <span className="text-xs font-semibold uppercase text-fg-muted">{shortDate(date).split(' ')[0]}</span>
-                  <span className="font-display text-xl font-bold tabular-nums">{shortDate(date).split(' ')[1]}</span>
-                </span>
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
-                  <span className="sr-only">{shortDate(date)}</span>
-                  <ul className="flex flex-col gap-1">
-                    {items.map((item) => (
-                      <li key={item.id} className="text-sm">
-                        <p className="font-semibold">
-                          {item.startTime}, {item.courtName} · {item.holder}
-                        </p>
-                        <p className="flex items-center gap-1 text-fg-muted">
-                          <Icon name="clock" className="size-4 shrink-0" />
-                          {capitalized(item.reason)}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
+          <DataTable
+            caption="Fechas sin reservar"
+            columns={SKIP_COLUMNS}
+            rows={skips.map((item) => ({
+              id: item.id,
+              search: `${item.holder} ${item.courtName}`,
+              sort: { date: `${item.date} ${item.startTime}`, holder: item.holder },
+              cells: {
+                date: <span className="font-semibold tabular-nums">{shortDate(item.date)}</span>,
+                time: <span className="tabular-nums">{item.startTime}</span>,
+                court: item.courtName,
+                holder: item.holder,
+                reason: <span className="text-fg-muted">{capitalized(item.reason)}</span>,
+                actions: (
                   <Link
-                    href={`/club/grilla?dia=${date}`}
-                    aria-label={`Ver el ${shortDate(date)} en la grilla`}
-                    className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-accent-ink underline"
+                    href={`/club/grilla?dia=${item.date}`}
+                    aria-label={`Ver el ${shortDate(item.date)} en la grilla`}
+                    className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink underline"
                   >
                     Ver en la grilla
                   </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
+                ),
+              },
+            }))}
+            initialSort={{ key: 'date', dir: 'asc' }}
+            emptyText="Todos los turnos fijos tienen su reserva."
+          />
         ) : (
           <p className="flex items-center gap-3 rounded-2xl border border-dashed border-border p-4 text-fg-muted">
             <Icon name="check-circle" className="text-court-ink" />

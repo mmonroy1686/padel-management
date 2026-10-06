@@ -47,12 +47,3 @@ export function nextOccurrence(weekday: number, today: LocalDate): LocalDate {
 export function weeklyMinutes(series: unknown[], slotMinutes: number): number {
   return series.length * slotMinutes
 }
-
-// Skipped dates by day, so the calendar shows each day once with what fell through.
-export function skipsByDate<T extends { date: LocalDate }>(skips: T[]): { date: LocalDate; items: T[] }[] {
-  const days = new Map<LocalDate, T[]>()
-  for (const skip of [...skips].sort((a, b) => a.date.localeCompare(b.date))) {
-    days.set(skip.date, [...(days.get(skip.date) ?? []), skip])
-  }
-  return [...days.entries()].map(([date, items]) => ({ date, items }))
-}
