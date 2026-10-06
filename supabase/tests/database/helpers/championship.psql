@@ -118,3 +118,17 @@ as $$
   select data from public.notifications where user_id = p_user_id and kind::text = p_kind
   order by created_at desc, id desc limit 1;
 $$;
+
+
+-- The first p_count 2-hour blocks of a championship, as set_entry_unavailability takes them. Tests never write
+-- a block by hand: blocks start every 2 hours (08:00, 10:00...), off the club's grid.
+create function test_helpers.blocks(p_championship_id uuid, p_count integer)
+returns text[]
+language sql
+stable
+security definer
+as $$
+  select array(
+    select block_key from private.championship_blocks(p_championship_id) order by block_key limit p_count
+  );
+$$;
