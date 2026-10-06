@@ -428,3 +428,15 @@ export function championshipReadiness(championship: Pick<Championship, 'windows'
   if (openCategories(championship).length === 0) return 'Agregá al menos una categoría.'
   return null
 }
+
+// What the Torneos tab shows: championships out of draft, not cancelled nor finished, that did not end yet
+// (or have no days yet), the first to start first.
+export function upcomingChampionships(championships: Championship[], now: Date): Championship[] {
+  return championships
+    .filter(
+      (championship) =>
+        !['draft', 'cancelled', 'finished'].includes(championship.status) &&
+        (championship.endsAt === null || championship.endsAt.getTime() > now.getTime()),
+    )
+    .sort((a, b) => (a.startsAt?.getTime() ?? Infinity) - (b.startsAt?.getTime() ?? Infinity))
+}

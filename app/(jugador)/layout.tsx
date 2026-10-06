@@ -9,7 +9,7 @@ const PLAYER_TABS: TabItem[] = [
   { href: '/', label: 'Inicio', icon: 'home' },
   { href: '/reservar', label: 'Reservar', icon: 'calendar-plus' },
   { href: '/partidos', label: 'Partidos', icon: 'racket' },
-  { href: '/torneos', label: 'Torneos', icon: 'trophy' },
+  { href: '/torneos', label: 'Torneos', icon: 'trophy', also: ['/campeonatos'] },
   { href: '/perfil', label: 'Perfil', icon: 'user' },
 ]
 

@@ -19,6 +19,7 @@ import {
   waitingPosition,
   windowText,
   type ChampionshipRow,
+  upcomingChampionships,
 } from '@/lib/domain/championships'
 import { ANA, BRUNO, LUCIA, makeCategory, makeChampionship, makeEntry, NOW, PEDRO, TIMEZONE } from '../../fixtures/championships'
 
@@ -204,5 +205,16 @@ describe('texts', () => {
     expect(championshipReadiness(makeChampionship())).toBeNull()
     expect(championshipReadiness(makeChampionship({ windows: [] }))).toBe('Agregá al menos un día de juego.')
     expect(championshipReadiness(makeChampionship({ categories: [] }))).toBe('Agregá al menos una categoría.')
+  })
+})
+
+describe('upcomingChampionships', () => {
+  it('lists the ones members can sign up to or that are still to be played, first to start first', () => {
+    const later = makeChampionship({ id: 'later', startsAt: new Date('2026-11-01T11:00:00Z'), endsAt: new Date('2026-11-01T23:00:00Z') })
+    const sooner = makeChampionship({ id: 'sooner' })
+    const over = makeChampionship({ id: 'over', status: 'closed', startsAt: new Date('2026-10-01T11:00:00Z'), endsAt: new Date('2026-10-02T23:00:00Z') })
+    const cancelled = makeChampionship({ id: 'cancelled', status: 'cancelled' })
+    const draft = makeChampionship({ id: 'draft', status: 'draft' })
+    expect(upcomingChampionships([later, over, cancelled, sooner, draft], NOW).map((championship) => championship.id)).toEqual(['sooner', 'later'])
   })
 })

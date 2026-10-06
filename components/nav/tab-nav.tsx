@@ -7,7 +7,8 @@ import { useReportActivity } from '@/components/ui/activity'
 import { Icon, type IconName } from '@/components/ui/icon'
 import { cn } from '@/lib/cn'
 
-export type TabItem = { href: string; label: string; icon: IconName }
+// `also`: other paths that belong to this tab (e.g. /campeonatos under Torneos).
+export type TabItem = { href: string; label: string; icon: IconName; also?: string[] }
 
 export function isCurrent(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/'
@@ -49,7 +50,7 @@ export function TabNav({ label, items, variant }: { label: string; items: TabIte
     >
       <ul className={cn('mx-auto flex', bottom ? 'max-w-lg justify-around md:max-w-3xl lg:max-w-5xl' : 'max-w-6xl gap-1 px-4 2xl:max-w-7xl')}>
         {items.map((item) => {
-          const current = isCurrent(pathname, item.href)
+          const current = isCurrent(pathname, item.href) || (item.also ?? []).some((href) => isCurrent(pathname, href))
           return (
             <li key={item.href} className={cn(bottom && 'flex-1')}>
               <Link
