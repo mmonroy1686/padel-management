@@ -50,7 +50,18 @@ export function PairsTable({
         </span>
       ),
       state: row.stateText,
-      payment: <PaymentBadge state={row.paymentState} />,
+      // The badge, and cash right under it while it has a place and owes.
+      payment: (
+        <span className="flex flex-col items-start gap-2">
+          <PaymentBadge state={row.paymentState} />
+          {acceptsCash && row.status === 'active' && row.paymentState === 'pending' && row.due > 0 ? (
+            <ActionForm action={cashAction} submitLabel={`Cobrar ${formatPrice(row.due)}`} pendingLabel="Registrando…" variant="secondary">
+              <input type="hidden" name="entryId" value={row.entryId} />
+              <input type="hidden" name="amount" value={row.due} />
+            </ActionForm>
+          ) : null}
+        </span>
+      ),
       hours: (
         <span className="text-sm">
           {row.hoursText}
@@ -58,13 +69,7 @@ export function PairsTable({
         </span>
       ),
       actions: (
-        <span className="flex flex-wrap justify-end gap-2">
-          {acceptsCash && row.status === 'active' && row.paymentState === 'pending' && row.due > 0 ? (
-            <ActionForm action={cashAction} submitLabel={`Cobrar ${formatPrice(row.due)}`} pendingLabel="Registrando…" variant="secondary">
-              <input type="hidden" name="entryId" value={row.entryId} />
-              <input type="hidden" name="amount" value={row.due} />
-            </ActionForm>
-          ) : null}
+        <span className="flex justify-end gap-1">
           {editable ? (
             <>
               <Button variant="ghost" onClick={() => onAction('hours', row)}>
