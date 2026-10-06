@@ -9884,3 +9884,4 @@ Expected: `quality` y `db-and-e2e` en verde.
 
 - **v1 (2026-10-06)**: scaffold.
 - **v2 (2026-10-06)**: plan completo en 7 cortes (Tasks 1–31) sobre el diseño aprobado. Decisiones propias en "Decisiones que este plan toma". Tests pgTAP solo con horas de la grilla del fixture; las franjas de 2 horas se piden con `test_helpers.blocks`.
+- **v3 (2026-10-06)**: ejecutado sin cambios de comportamiento; arreglos de la revisión en `20261006000180` (notas fuera de la API, teléfono sin 0, movimientos bajo el candado).
