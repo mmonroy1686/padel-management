@@ -1,5 +1,44 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { BracketView } from '@/components/championships/bracket-view'
+import { FixtureSteps } from '@/components/championships/fixture-steps'
+import { FixtureTable } from '@/components/championships/fixture-table'
+import { GroupOrderForm } from '@/components/championships/group-order-form'
+import { MatchDayBoard } from '@/components/championships/match-day-board'
+import { MoveMatchSheet } from '@/components/championships/move-match-sheet'
+import { SeedsForm } from '@/components/championships/seeds-form'
+import { UnplacedList } from '@/components/championships/unplaced-list'
+import { ZonesView } from '@/components/championships/zones-view'
+import { LiveOccupancy } from '@/components/live/live-occupancy'
+import { buttonClasses } from '@/components/ui/button'
+import { ShareButton } from '@/components/ui/share-button'
+import { getSiteUrl } from '@/lib/auth/redirect'
+import { loadFixture } from '@/lib/data/championship-fixture'
+import { EMPTY_FIXTURE } from '@/lib/domain/championship-fixture'
+import { scheduleInput, slotOptions, unplacedReasons } from '@/lib/domain/championship-schedule'
+import {
+  brackets,
+  championshipShareText,
+  dayBoard,
+  finishable,
+  matchViews,
+  seedPairs,
+  zoneViews,
+} from '@/lib/domain/championship-views'
+import {
+  closeGroup,
+  drawFixture,
+  finishFixture,
+  moveMatch,
+  pinMatch,
+  publishFixture,
+  recordResult,
+  recordWalkover,
+  saveSeeds,
+  scheduleFixture,
+  startMatch,
+} from '../fixture-actions'
 import { CategoriesEditor } from '@/components/championships/categories-editor'
 import { ChampionshipControls } from '@/components/championships/championship-controls'
 import { ChampionshipDetailsForm } from '@/components/championships/championship-details-form'
@@ -17,6 +56,7 @@ import { loadActiveCourts } from '@/lib/data/tournaments'
 import { pairsCategories } from '@/lib/domain/championship-pairs'
 import { championshipPosterUrl } from '@/lib/domain/championship-poster'
 import {
+  activeEntries,
   categoryDetail,
   matchRulesText,
   CHAMPIONSHIP_STATUS_LABELS,
@@ -29,7 +69,7 @@ import {
   smallCategoryText,
   windowText,
 } from '@/lib/domain/championships'
-import { timeIn } from '@/lib/domain/format'
+import { dayLabel, timeIn } from '@/lib/domain/format'
 import { isUuid } from '@/lib/domain/input'
 import { TIME_OPTIONS } from '@/lib/domain/settings'
 import { localDateOf, parseTime } from '@/lib/domain/time'
@@ -57,11 +97,20 @@ import {
 export const metadata: Metadata = { title: 'Campeonato' }
 
 type Params = Promise<{ id: string }>
+type SearchParams = Promise<{ partido?: string }>
 
 // A draft is edited here (days of play and categories); from the opening of registration on, the same page
-// manages the pairs.
-export default async function ManageChampionshipPage({ params }: { params: Params }) {
+// manages the pairs; with registration closed, the seeds, the draw, the schedule and the tournament day.
+// ?partido=<id> opens "Mover partido" with the courts and times where it fits.
+export default async function ManageChampionshipPage({
+  params,
+  searchParams,
+}: {
+  params: Params
+  searchParams: SearchParams
+}) {
   const { id } = await params
+  const { partido } = await searchParams
   if (!isUuid(id)) notFound()
   const viewer = await requireStaff(`/club/torneos/campeonatos/${id}`)
   const { club } = viewer
@@ -82,6 +131,39 @@ export default async function ManageChampionshipPage({ params }: { params: Param
   const editable = championship.status !== 'finished' && championship.status !== 'cancelled'
   const closesAt = championship.registrationClosesAt
   const deadline = championship.status === 'registration' ? closesText(championship, club.timezone) : null
+  const showsFixture = ['drawn', 'published', 'in_progress', 'finished'].includes(championship.status)
+  const fixture = showsFixture ? await loadFixture(championship.id) : EMPTY_FIXTURE
+  const views = matchViews(championship, fixture, { timezone: club.timezone, today, courtName })
+  const board = dayBoard(views)
+  const live = championship.status === 'published' || championship.status === 'in_progress'
+  const movable = championship.status === 'drawn' || live
+  const input = movable ? scheduleInput(championship, fixture, club.timezone) : null
+  const pagePath = `/club/torneos/campeonatos/${championship.id}`
+  const unplaced =
+    championship.status === 'drawn' && input
+      ? unplacedReasons(input).map((item) => {
+          const view = views.find((match) => match.id === item.matchId)
+          return {
+            id: item.matchId,
+            title: view ? `${view.categoryName} · ${view.name}: ${view.sideA} vs ${view.sideB}` : 'Partido',
+            reason: item.reason,
+            href: `${pagePath}?partido=${item.matchId}`,
+          }
+        })
+      : []
+  const moving =
+    input && partido ? (views.find((match) => match.id === partido && match.status === 'scheduled') ?? null) : null
+  const moveOptions =
+    moving && input
+      ? slotOptions(input, moving.id).map((option) => ({
+          value: `${option.courtId}|${option.startsAt.toISOString()}`,
+          label: `${dayLabel(localDateOf(option.startsAt, club.timezone), today)} ${timeIn(option.startsAt, club.timezone)} · ${courtName.get(option.courtId) ?? 'Cancha'}`,
+        }))
+      : []
+  const rules = Object.fromEntries(
+    championship.categories.map((category) => [category.id, { thirdSet: category.thirdSet, timeLimit: category.timeLimit }]),
+  )
+  const shareUrl = championship.publicCode ? `${getSiteUrl()}/c/${championship.publicCode}` : null
 
   return (
     <>
@@ -143,6 +225,109 @@ export default async function ManageChampionshipPage({ params }: { params: Param
           actions={{ merge: mergeCategory, cancel: cancelCategory }}
         />
       ) : null}
+      {championship.status === 'closed' ? (
+        <section aria-labelledby="cabezas" className="flex flex-col gap-3">
+          <h2 id="cabezas" className="font-display text-2xl font-bold uppercase">
+            Cabezas de serie
+          </h2>
+          <p className="text-sm text-fg-muted">
+            Las parejas van por la suma de las categorías que declararon (menor primero). Numerá las que quieras fijar:
+            van una por zona.
+          </p>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {openCategories(championship)
+              .filter((category) => activeEntries(category).length >= 2)
+              .map((category) => (
+                <Card key={category.id} className="flex flex-col gap-2">
+                  <h3 className="font-display text-xl font-bold uppercase">{category.name}</h3>
+                  <SeedsForm categoryId={category.id} pairs={seedPairs(category)} action={saveSeeds} />
+                </Card>
+              ))}
+          </div>
+        </section>
+      ) : null}
+      <FixtureSteps
+        championshipId={championship.id}
+        status={championship.status}
+        scheduled={fixture.matches.filter((match) => match.courtId !== null).length}
+        unplaced={unplaced.length}
+        finishable={finishable(fixture)}
+        actions={{ draw: drawFixture, schedule: scheduleFixture, publish: publishFixture, finish: finishFixture }}
+      />
+      {shareUrl ? (
+        <div className="flex flex-wrap items-start gap-3">
+          <ShareButton title={championship.name} text={championshipShareText(championship.name, shareUrl)} />
+          <Link
+            href={`/c/${championship.publicCode}/tv`}
+            target="_blank"
+            className={buttonClasses({ variant: 'secondary' })}
+          >
+            Abrir modo TV
+          </Link>
+        </div>
+      ) : null}
+      {live ? (
+        <section aria-labelledby="dia" className="flex flex-col gap-3">
+          <h2 id="dia" className="font-display text-2xl font-bold uppercase">
+            Día del torneo
+          </h2>
+          <MatchDayBoard
+            championshipId={championship.id}
+            playing={board.playing}
+            upcoming={board.upcoming}
+            finished={board.finished}
+            rules={rules}
+            actions={{ start: startMatch, result: recordResult, walkover: recordWalkover }}
+          />
+        </section>
+      ) : null}
+      {showsFixture ? (
+        <section aria-labelledby="zonas" className="flex flex-col gap-3">
+          <h2 id="zonas" className="font-display text-2xl font-bold uppercase">
+            Zonas y llaves
+          </h2>
+          <ZonesView
+            zones={zoneViews(championship, fixture)}
+            footer={(zone) =>
+              live && zone.needsOrder ? (
+                <GroupOrderForm
+                  groupId={zone.id}
+                  rows={zone.rows.map((row) => ({ entryId: row.entryId, name: row.name }))}
+                  tiedNames={zone.tiedNames}
+                  action={closeGroup}
+                />
+              ) : null
+            }
+          />
+          {brackets(championship, views).map((bracket) => (
+            <BracketView key={bracket.categoryId} bracket={bracket} />
+          ))}
+        </section>
+      ) : null}
+      {showsFixture ? (
+        <section aria-labelledby="fixture" className="flex flex-col gap-3">
+          <h2 id="fixture" className="font-display text-2xl font-bold uppercase">
+            Fixture
+          </h2>
+          {unplaced.length > 0 ? <UnplacedList items={unplaced} /> : null}
+          <FixtureTable
+            matches={views}
+            basePath={pagePath}
+            editable={movable}
+            canPin={championship.status === 'drawn'}
+            pinAction={pinMatch}
+          />
+        </section>
+      ) : null}
+      {moving ? (
+        <MoveMatchSheet
+          matchId={moving.id}
+          title={`${moving.categoryName} · ${moving.name}: ${moving.sideA} vs ${moving.sideB}`}
+          options={moveOptions}
+          closeHref={pagePath}
+          action={moveMatch}
+        />
+      ) : null}
       {!draft ? (
         <PairsBoard
           categories={pairsCategories(championship, phones)}
@@ -188,6 +373,7 @@ export default async function ManageChampionshipPage({ params }: { params: Param
           </div>
         </section>
       ) : null}
+      <LiveOccupancy clubId={club.id} />
     </>
   )
 }
