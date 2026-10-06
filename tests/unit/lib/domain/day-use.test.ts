@@ -10,7 +10,6 @@ import {
   passCheckInPath,
   passTotal,
   scheduleText,
-  searchPasses,
   skippedNotice,
   spotsText,
   todayText,
@@ -163,14 +162,6 @@ describe('passes', () => {
     expect(canCancelPass(makePass(), at('12:30'))).toBe(false)
     expect(canCancelPass(makePass({ status: 'inside' }), at('09:00'))).toBe(false)
     expect(canCancelPass(makePass({ status: 'cancelled' }), at('09:00'))).toBe(false)
-  })
-
-  it('finds passes by name, without accents, or by code', () => {
-    const passes = [makePass(), makePass({ id: 'pass-2', code: 'DU-100200', holder: 'Bruno Díaz', playerId: 'bruno' })]
-    expect(searchPasses(passes, 'bru').map((pass) => pass.id)).toEqual(['pass-2'])
-    expect(searchPasses(passes, 'PEREZ').map((pass) => pass.id)).toEqual(['pass-1'])
-    expect(searchPasses(passes, 'du-1002').map((pass) => pass.id)).toEqual(['pass-2'])
-    expect(searchPasses(passes, '  ')).toHaveLength(2)
   })
 
   it('knows a pass code and where its QR leads', () => {

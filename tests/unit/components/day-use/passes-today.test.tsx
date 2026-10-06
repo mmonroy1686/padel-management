@@ -74,18 +74,28 @@ describe('SellSheet', () => {
 describe('PassesToday', () => {
   const PASSES = [makePass(), makePass({ id: 'pass-2', code: 'DU-100200', holder: 'Bruno Díaz', playerId: 'bruno' })]
 
-  it('lists today\'s passes and finds them by name or code', async () => {
+  it("lists the day's passes in a table and finds them by name or code", async () => {
     renderToday(PASSES)
     expect(screen.getByRole('heading', { name: 'Pases de hoy (2)' })).toBeInTheDocument()
-    await userEvent.type(screen.getByLabelText('Buscar por nombre o código'), 'bru')
-    expect(screen.getByRole('article', { name: 'Bruno Díaz' })).toBeInTheDocument()
-    expect(screen.queryByRole('article', { name: 'Ana Pérez' })).not.toBeInTheDocument()
-    await userEvent.clear(screen.getByLabelText('Buscar por nombre o código'))
-    await userEvent.type(screen.getByLabelText('Buscar por nombre o código'), 'DU-4821')
-    expect(screen.getByRole('article', { name: 'Ana Pérez' })).toBeInTheDocument()
-    await userEvent.clear(screen.getByLabelText('Buscar por nombre o código'))
-    await userEvent.type(screen.getByLabelText('Buscar por nombre o código'), 'zzz')
-    expect(screen.getByText('Nadie coincide con esa búsqueda.')).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'Pases de hoy' })).toBeInTheDocument()
+    const search = screen.getByRole('searchbox', { name: 'Buscar por nombre o código' })
+    await userEvent.type(search, 'bru')
+    expect(screen.getByRole('cell', { name: /Bruno Díaz/ })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: /Ana Pérez/ })).not.toBeInTheDocument()
+    await userEvent.clear(search)
+    await userEvent.type(search, 'DU-4821')
+    expect(screen.getByRole('cell', { name: /Ana Pérez/ })).toBeInTheDocument()
+    await userEvent.clear(search)
+    await userEvent.type(search, 'zzz')
+    expect(screen.getByText('Nadie coincide con la búsqueda o los filtros.')).toBeInTheDocument()
+  })
+
+  it('filters by status and opens a pass to manage it', async () => {
+    renderToday([...PASSES, makePass({ id: 'pass-3', code: 'DU-300300', holder: 'Carla Ruiz', status: 'inside', checkedInAt: new Date() })])
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Estado' }), 'inside')
+    expect(screen.getAllByRole('row')).toHaveLength(2)
+    await userEvent.click(screen.getByRole('button', { name: 'Gestionar el pase de Carla Ruiz' }))
+    expect(within(screen.getByRole('dialog', { name: 'Carla Ruiz' })).getByRole('article', { name: 'Carla Ruiz' })).toBeInTheDocument()
   })
 
   it('opens the sale sheet', async () => {
