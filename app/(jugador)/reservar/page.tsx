@@ -56,6 +56,7 @@ export default async function ReservarPage({ searchParams }: { searchParams: Sea
         createMatchAction={createMatch}
         waitOptions={waitRangeOptions(grid.rows.map((row) => row.slot), now)}
         activeWaits={waitItems(waitlist.waits, waitlist.courts, today)}
+        dayWaits={waitlist.waits.filter((wait) => wait.date === date)}
         waitAction={createSlotWait}
         cancelWaitAction={cancelSlotWait}
       />

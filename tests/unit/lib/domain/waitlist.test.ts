@@ -10,6 +10,7 @@ import {
   toNotificationView,
   toWait,
   unreadLabel,
+  waitCovers,
   waitItems,
   waitRangeOptions,
   waitRangeText,
@@ -59,6 +60,27 @@ describe('waits', () => {
         { value: '23:00', label: '23:00' },
       ],
     })
+  })
+})
+
+describe('waitCovers', () => {
+  const slots = daySlots(SCHEDULE, SATURDAY)
+  const slot = (label: string) => slots.find((item) => item.label === label)!
+
+  it('covers the slots that start and end inside the range, on that day', () => {
+    expect(['17:00', '18:30', '20:00', '21:30'].map((label) => waitCovers(WAIT, SATURDAY, 'court-1', slot(label)))).toEqual([
+      false,
+      true,
+      true,
+      false,
+    ])
+    expect(waitCovers(WAIT, DATE, 'court-1', slot('18:30'))).toBe(false)
+  })
+
+  it('only on the courts it names, or on any when it names none', () => {
+    const onCourt2 = { ...WAIT, courtIds: ['court-2'] }
+    expect(waitCovers(onCourt2, SATURDAY, 'court-1', slot('18:30'))).toBe(false)
+    expect(waitCovers(onCourt2, SATURDAY, 'court-2', slot('18:30'))).toBe(true)
   })
 })
 

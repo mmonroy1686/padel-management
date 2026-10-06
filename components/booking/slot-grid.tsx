@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/cn'
 import { formatPrice, timeIn } from '@/lib/domain/format'
 import {
@@ -23,6 +24,8 @@ export type SlotGridProps = {
   onSelect: (cell: GridCell) => void
   // Players: a taken slot still ahead offers "Avisame si se libera".
   onWait?: (cell: GridCell) => void
+  // Players: the taken slots she already waits for show a bell.
+  waited?: (cell: GridCell) => boolean
   // Club: the club's clock, to show until when a court is held.
   timezone?: string
 }
@@ -31,7 +34,7 @@ const CELL = 'flex h-full min-h-14 w-full flex-col items-start justify-center ro
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 // One grid for both sides: players see free, taken and their own; the club sees who and how paid.
-export function SlotGrid({ courts, rows, variant, onSelect, onWait, timezone }: SlotGridProps) {
+export function SlotGrid({ courts, rows, variant, onSelect, onWait, waited, timezone }: SlotGridProps) {
   return (
     <div className="-mx-4 overflow-x-auto px-4">
       <table className="w-full min-w-[18rem] border-separate border-spacing-1">
@@ -71,7 +74,7 @@ export function SlotGrid({ courts, rows, variant, onSelect, onWait, timezone }: 
                     className={cn('h-px', variant === 'player' ? 'min-w-0' : 'min-w-28')}
                   >
                     {variant === 'player' ? (
-                      <PlayerCell cell={cell} past={row.past} onSelect={onSelect} onWait={onWait} />
+                      <PlayerCell cell={cell} past={row.past} onSelect={onSelect} onWait={onWait} waited={waited?.(cell) ?? false} />
                     ) : (
                       <ClubCell cell={cell} until={blockEnd(rows, rowIndex, courtIndex)} timezone={timezone} onSelect={onSelect} />
                     )}
@@ -91,11 +94,13 @@ function PlayerCell({
   past,
   onSelect,
   onWait,
+  waited,
 }: {
   cell: GridCell
   past: boolean
   onSelect: (cell: GridCell) => void
   onWait?: (cell: GridCell) => void
+  waited: boolean
 }) {
   if (cell.state === 'free' && cell.formingMatch) {
     const missing = 4 - cell.formingMatch.filled
@@ -131,6 +136,22 @@ function PlayerCell({
         <b>Tuya</b>
         <span>{cell.booking?.matchId ? 'Partido' : 'Reserva'}</span>
       </div>
+    )
+  }
+  if (cell.state === 'taken' && !past && onWait && waited) {
+    return (
+      <button
+        type="button"
+        aria-label={`Te avisamos si se libera ${cell.court.name} a las ${cell.slot.label}`}
+        onClick={() => onWait(cell)}
+        className={cn(CELL, CELL_STYLES.taken, FOCUS, 'border border-accent')}
+      >
+        <span>Ocupada</span>
+        <span className="flex items-center gap-1 text-xs font-semibold text-accent-ink">
+          <Icon name="bell" className="size-3.5 shrink-0" />
+          Te avisamos
+        </span>
+      </button>
     )
   }
   if (cell.state === 'taken' && !past && onWait) {

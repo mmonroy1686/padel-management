@@ -22,6 +22,9 @@ test('waitlist: a player waits for a taken slot, it is held for her when it free
   await expect(sheet.getByLabel(booked.courtName)).toBeChecked()
   await sheet.getByRole('button', { name: 'Anotarme' }).click()
   await expect(page.getByRole('status')).toContainText('te anotamos')
+  // The screen keeps a mark: the note for that day and a bell on the slot.
+  await expect(page.getByRole('region', { name: 'Te avisamos si se libera' })).toBeVisible()
+  await expect(page.getByRole('button', { name: `Te avisamos si se libera ${booked.courtName} a las ${booked.time}` })).toBeVisible()
 
   // Reception cancels the booking: the slot is held for her, with an aviso.
   const desk = await signedInClient(reception)
