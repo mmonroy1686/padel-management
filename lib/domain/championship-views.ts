@@ -166,7 +166,8 @@ export function zoneViews(championship: Pick<Championship, 'categories'>, fixtur
         complete: standings.complete,
         closed,
         needsOrder: standings.complete && !closed,
-        tiedNames: closed
+        // Only a complete group has a tie to settle: a match still to play may break it.
+        tiedNames: closed || !standings.complete
           ? []
           : blockingTies(standings, places).map((level) => level.map((entryId) => names.get(entryId) ?? 'Pareja').join(' y ')),
         rows: rows.map((row) => ({

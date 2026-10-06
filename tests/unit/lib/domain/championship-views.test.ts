@@ -111,6 +111,12 @@ describe('zones and brackets', () => {
     ])
   })
 
+  it('names a tie only once the group is complete: a match still to play may break it', () => {
+    const PENDING = makeMatch({ id: 'p', status: 'scheduled', winner: null, sets: [] })
+    const [zone] = zoneViews(CHAMPIONSHIP, { groups: FIXTURE.groups, matches: [FINAL, PENDING] })
+    expect(zone).toMatchObject({ complete: false, tiedNames: [] })
+  })
+
   it('shows each category\'s bracket by rounds', () => {
     const views = matchViews(CHAMPIONSHIP, FIXTURE, CTX)
     expect(brackets(CHAMPIONSHIP, views)).toEqual([
