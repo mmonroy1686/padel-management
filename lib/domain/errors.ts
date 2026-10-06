@@ -39,6 +39,15 @@ const MESSAGES = {
   slot_available: 'Hay un turno libre en ese horario: reservalo desde la grilla.',
   too_many_waits: 'Ya estás esperando 3 turnos. Cancelá una espera para anotarte en otra.',
   hold_expired: 'Se terminó el tiempo para reservarlo y el turno pasó al siguiente de la lista.',
+  championship_closed: 'La inscripción de este campeonato está cerrada.',
+  championship_incomplete: 'Agregá al menos un día de juego y una categoría antes de abrir la inscripción.',
+  category_exists: 'Ya hay una categoría con ese nombre en este campeonato.',
+  already_in_category: 'Alguno de los dos ya está anotado en esa categoría.',
+  too_many_categories: 'Alguno de los dos ya está en el máximo de categorías de este campeonato.',
+  same_player: 'La pareja tiene que ser de dos jugadores distintos.',
+  partner_not_member: 'Ese jugador no es socio del club. Cargalo como de afuera.',
+  invalid_phone: 'Revisá el teléfono: tiene que tener entre 8 y 15 números.',
+  too_many_unavailable: 'Marcaste más del 40 % de los horarios. Para más, pedíselo al club.',
 } as const
 
 export type ErrorCode = keyof typeof MESSAGES
