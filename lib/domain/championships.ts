@@ -131,8 +131,6 @@ export type EntryRow = {
   player1_level: number
   player2_level: number
   status: EntryStatus
-  note: string | null
-  unavailability_note: string | null
   unavailability_approved: boolean
   created_at: string
   player1: PlayerRow | null
@@ -196,7 +194,10 @@ function toPlayer(row: PlayerRow | null): ChampionshipPlayer {
   return row ? { id: row.id, name: row.name, profileId: row.profile_id } : NO_PLAYER
 }
 
-function toEntry(row: EntryRow, categoryId: string): ChampionshipEntry {
+// A pair's notes come apart (column privileges): public.championship_entry_notes, for staff and the pair.
+export type EntryNotes = { note: string | null; unavailability_note: string | null }
+
+function toEntry(row: EntryRow, categoryId: string, notes: Map<string, EntryNotes>): ChampionshipEntry {
   return {
     id: row.id,
     categoryId,
@@ -205,8 +206,8 @@ function toEntry(row: EntryRow, categoryId: string): ChampionshipEntry {
     level1: row.player1_level,
     level2: row.player2_level,
     status: row.status,
-    note: row.note,
-    unavailabilityNote: row.unavailability_note,
+    note: notes.get(row.id)?.note ?? null,
+    unavailabilityNote: notes.get(row.id)?.unavailability_note ?? null,
     unavailabilityApproved: row.unavailability_approved,
     createdAt: new Date(row.created_at),
     payments: row.payments,
@@ -214,7 +215,7 @@ function toEntry(row: EntryRow, categoryId: string): ChampionshipEntry {
   }
 }
 
-function toCategory(row: CategoryRow): ChampionshipCategory {
+function toCategory(row: CategoryRow, notes: Map<string, EntryNotes>): ChampionshipCategory {
   const rules = readMatchRules(row.match_rules)
   return {
     id: row.id,
@@ -235,12 +236,12 @@ function toCategory(row: CategoryRow): ChampionshipCategory {
     status: row.status,
     mergedInto: row.merged_into,
     entries: row.entries
-      .map((entry) => toEntry(entry, row.id))
+      .map((entry) => toEntry(entry, row.id, notes))
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id)),
   }
 }
 
-export function toChampionship(row: ChampionshipRow, timezone: string): Championship {
+export function toChampionship(row: ChampionshipRow, timezone: string, notes: Map<string, EntryNotes> = new Map()): Championship {
   const windows = row.windows
     .map((window) => ({
       id: window.id,
@@ -263,7 +264,7 @@ export function toChampionship(row: ChampionshipRow, timezone: string): Champion
     windows,
     categories: [...row.categories]
       .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name, 'es'))
-      .map(toCategory),
+      .map((category) => toCategory(category, notes)),
     startsAt: periods.length > 0 ? new Date(Math.min(...periods.map((period) => period.startsAt.getTime()))) : null,
     endsAt: periods.length > 0 ? new Date(Math.max(...periods.map((period) => period.endsAt.getTime()))) : null,
   }
@@ -389,6 +390,7 @@ export function normalizePhone(raw: string): string | null {
   let digits = raw.replace(/[^0-9]/g, '')
   if (digits.startsWith('00598')) digits = `0${digits.slice(5)}`
   else if (digits.startsWith('598') && digits.length === 11) digits = `0${digits.slice(3)}`
+  else if (/^9[0-9]{7}$/.test(digits)) digits = `0${digits}`
   return /^[0-9]{8,15}$/.test(digits) ? digits : null
 }
 

@@ -1287,6 +1287,11 @@ isOneToOne: false
               "email": string,"phone": string,"player_id": string
             }[]
                            },
+"championship_entry_notes":
+{ Args: { "p_championship_id": string }; Returns: {
+              "entry_id": string,"note": string,"unavailability_note": string
+            }[]
+                           },
 "check_in_day_use":
 { Args: { "p_pass_id": string }; Returns: {
               "cancelled_at": string | null,

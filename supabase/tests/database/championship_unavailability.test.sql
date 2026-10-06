@@ -55,7 +55,8 @@ select is(
   (select count(*)::int from public.entry_unavailability where entry_id = 'c3a00000-0000-0000-0000-000000000001'),
   2, 'two blocks');
 select is(
-  (select unavailability_note from public.championship_entries where id = 'c3a00000-0000-0000-0000-000000000001'),
+  (select unavailability_note from public.championship_entry_notes('c1a00000-0000-0000-0000-000000000001')
+   where entry_id = 'c3a00000-0000-0000-0000-000000000001'),
   'Trabajo de mañana', 'and a note');
 select throws_ok(
   $$ select public.set_entry_unavailability('c3a00000-0000-0000-0000-000000000001',
@@ -81,8 +82,10 @@ select lives_ok(
        test_helpers.blocks('c1a00000-0000-0000-0000-000000000001', 4)) $$,
   'the organizer saves more than 40 % for a pair');
 select results_eq(
-  $$ select unavailability_approved, unavailability_note from public.championship_entries
-     where id = 'c3a00000-0000-0000-0000-000000000001' $$,
+  $$ select e.unavailability_approved, n.unavailability_note
+     from public.championship_entries e
+     join public.championship_entry_notes('c1a00000-0000-0000-0000-000000000001') n on n.entry_id = e.id
+     where e.id = 'c3a00000-0000-0000-0000-000000000001' $$,
   $$ values (true, null::text) $$,
   'which approves it');
 select is(

@@ -49,13 +49,13 @@ const ROW: ChampionshipRow = {
       match_rules: {}, status: 'open', merged_into: null, sort_order: 0,
       entries: [
         {
-          id: 'e2', player1_level: 5, player2_level: 5, status: 'waiting', note: null, unavailability_note: null,
+          id: 'e2', player1_level: 5, player2_level: 5, status: 'waiting',
           unavailability_approved: false, created_at: '2026-10-07T12:00:00+00:00',
           player1: { id: 'pl-bruno', name: 'Bruno', profile_id: 'u-bruno' }, player2: null, payments: [], unavailability: [],
         },
         {
-          id: 'e1', player1_level: 5, player2_level: 6, status: 'active', note: 'Prefieren de tarde',
-          unavailability_note: 'Trabajo', unavailability_approved: false, created_at: '2026-10-06T12:00:00+00:00',
+          id: 'e1', player1_level: 5, player2_level: 6, status: 'active',
+          unavailability_approved: false, created_at: '2026-10-06T12:00:00+00:00',
           player1: { id: 'pl-ana', name: 'Ana', profile_id: 'u-ana' }, player2: { id: 'pl-pedro', name: 'Pedro', profile_id: null },
           payments: [{ status: 'confirmed', amount: 2000, rejection_reason: null, created_at: '2026-10-08T12:00:00+00:00' }],
           unavailability: [{ on_date: '2026-10-17', from_time: '08:00:00' }],
@@ -67,7 +67,7 @@ const ROW: ChampionshipRow = {
 
 describe('toChampionship', () => {
   it('reads what the database returns, in order', () => {
-    const championship = toChampionship(ROW, TIMEZONE)
+    const championship = toChampionship(ROW, TIMEZONE, new Map([['e1', { note: 'Prefieren de tarde', unavailability_note: 'Trabajo' }]]))
     expect(championship.windows.map((window) => window.id)).toEqual(['w1', 'w2'])
     expect(championship.windows[0]).toEqual({ id: 'w1', date: '2026-10-17', fromTime: '08:00', toTime: '14:00', courtIds: ['court-1', 'court-2'] })
     expect(championship.startsAt).toEqual(new Date('2026-10-17T11:00:00Z'))
@@ -181,6 +181,7 @@ describe('normalizePhone', () => {
     expect(normalizePhone('099 123 456')).toBe('099123456')
     expect(normalizePhone('+598 99 123 456')).toBe('099123456')
     expect(normalizePhone('00598 99 123 456')).toBe('099123456')
+    expect(normalizePhone('99 123 456')).toBe('099123456')
     expect(normalizePhone('+54 9 11 5555 6666')).toBe('5491155556666')
     expect(normalizePhone('123')).toBeNull()
     expect(normalizePhone('')).toBeNull()
