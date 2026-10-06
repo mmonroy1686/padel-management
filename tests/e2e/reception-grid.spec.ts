@@ -26,13 +26,12 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
 
   // Confirm the payment in Cobros.
   await page.getByRole('link', { name: 'Cobros' }).click()
-  const transfer = page
-    .getByRole('region', { name: 'Transferencias para confirmar' })
-    .getByRole('listitem')
-    .filter({ hasText: player.name })
-  await expect(transfer.getByRole('link', { name: 'Ver comprobante' })).toBeVisible()
-  await transfer.getByRole('button', { name: 'Confirmar' }).click()
-  await expect(transfer).toHaveCount(0)
+  const transfers = page.getByRole('region', { name: 'Transferencias para confirmar' })
+  await expect(transfers.getByRole('link', { name: `Ver comprobante de ${player.name}` })).toBeVisible()
+  await transfers.getByRole('button', { name: `Revisar la transferencia de ${player.name}` }).click()
+  const review = page.getByRole('dialog', { name: `Transferencia de ${player.name}` })
+  await review.getByRole('button', { name: 'Confirmar' }).click()
+  await expect(review.getByRole('status')).toContainText('confirm')
 
   await page.goto(`/club/grilla?dia=${day}`)
   await expect(bookedCell).toContainText('Pagada')

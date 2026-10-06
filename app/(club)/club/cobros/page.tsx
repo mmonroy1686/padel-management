@@ -10,7 +10,7 @@ import { recordTournamentCash } from '../torneos/actions'
 import { confirmPayment, refundPayment, rejectPayment } from './actions'
 import { MoneyTable, type MoneyItem } from './money-table'
 import { PaymentsSection, SummaryTile } from './payments-section'
-import { TransferReviewCard } from './transfer-review-card'
+import { TransfersTable } from './transfers-table'
 
 export const metadata: Metadata = { title: 'Cobros' }
 
@@ -91,24 +91,19 @@ export default async function PaymentsPage() {
         totals={totals.transfers}
         emptyText="No hay transferencias para confirmar."
       >
-        <ul className="grid gap-3 md:grid-cols-2">
-        {transfers.map((transfer) => (
-          <li key={transfer.id}>
-            <TransferReviewCard
-              transfer={{
-                id: transfer.id,
-                amount: transfer.amount,
-                holder: transfer.holder,
-                when: transfer.startsAt ? when(transfer.startsAt) : '',
-                courtName: transfer.courtName,
-                receiptUrl: transfer.receiptUrl,
-              }}
-              confirmAction={confirmPayment}
-              rejectAction={rejectPayment}
-            />
-          </li>
-        ))}
-        </ul>
+        <TransfersTable
+          transfers={transfers.map((transfer) => ({
+            id: transfer.id,
+            amount: transfer.amount,
+            holder: transfer.holder,
+            when: transfer.startsAt ? when(transfer.startsAt) : '',
+            at: transfer.startsAt?.getTime() ?? 0,
+            courtName: transfer.courtName,
+            receiptUrl: transfer.receiptUrl,
+          }))}
+          confirmAction={confirmPayment}
+          rejectAction={rejectPayment}
+        />
       </PaymentsSection>
 
       <PaymentsSection
