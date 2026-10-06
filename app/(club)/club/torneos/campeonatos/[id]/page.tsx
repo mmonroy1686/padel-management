@@ -5,6 +5,7 @@ import { ChampionshipControls } from '@/components/championships/championship-co
 import { ChampionshipDetailsForm } from '@/components/championships/championship-details-form'
 import { PairsBoard } from '@/components/championships/pairs-board'
 import { PosterForm } from '@/components/championships/poster-form'
+import { SmallCategories } from '@/components/championships/small-categories'
 import { WindowsEditor } from '@/components/championships/windows-editor'
 import { BackLink } from '@/components/ui/back-link'
 import { Card } from '@/components/ui/card'
@@ -23,6 +24,8 @@ import {
   closesText,
   datesText,
   openCategories,
+  smallCategories,
+  smallCategoryText,
   windowText,
 } from '@/lib/domain/championships'
 import { timeIn } from '@/lib/domain/format'
@@ -34,11 +37,13 @@ import { getSupabaseEnv } from '@/lib/supabase/env'
 import {
   addCategory,
   addPair,
+  cancelCategory,
   addWindow,
   cancelChampionship,
   closeRegistration,
   deleteCategory,
   deleteWindow,
+  mergeCategory,
   movePair,
   openRegistration,
   recordChampionshipCash,
@@ -125,6 +130,17 @@ export default async function ManageChampionshipPage({ params }: { params: Param
             deleteAction={deleteCategory}
           />
         </>
+      ) : null}
+      {championship.status === 'closed' && smallCategories(championship).length > 0 ? (
+        <SmallCategories
+          categories={smallCategories(championship).map((category) => ({
+            id: category.id,
+            name: category.name,
+            text: smallCategoryText(category),
+          }))}
+          targets={openCategories(championship).map((category) => ({ id: category.id, name: category.name }))}
+          actions={{ merge: mergeCategory, cancel: cancelCategory }}
+        />
       ) : null}
       {!draft ? (
         <PairsBoard

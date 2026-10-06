@@ -440,3 +440,9 @@ export function upcomingChampionships(championships: Championship[], now: Date):
     )
     .sort((a, b) => (a.startsAt?.getTime() ?? Infinity) - (b.startsAt?.getTime() ?? Infinity))
 }
+
+// "1 pareja de 4 mínimas".
+export function smallCategoryText(category: Pick<ChampionshipCategory, 'entries' | 'minPairs'>): string {
+  const count = activeEntries(category).length
+  return `${count} ${count === 1 ? 'pareja' : 'parejas'} de ${category.minPairs} mínimas`
+}

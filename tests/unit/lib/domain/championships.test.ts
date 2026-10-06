@@ -19,6 +19,7 @@ import {
   waitingPosition,
   windowText,
   type ChampionshipRow,
+  smallCategoryText,
   upcomingChampionships,
 } from '@/lib/domain/championships'
 import { ANA, BRUNO, LUCIA, makeCategory, makeChampionship, makeEntry, NOW, PEDRO, TIMEZONE } from '../../fixtures/championships'
@@ -216,5 +217,12 @@ describe('upcomingChampionships', () => {
     const cancelled = makeChampionship({ id: 'cancelled', status: 'cancelled' })
     const draft = makeChampionship({ id: 'draft', status: 'draft' })
     expect(upcomingChampionships([later, over, cancelled, sooner, draft], NOW).map((championship) => championship.id)).toEqual(['sooner', 'later'])
+  })
+})
+
+describe('smallCategoryText', () => {
+  it('says how many pairs a category has of the ones it needs', () => {
+    expect(smallCategoryText(makeCategory({ minPairs: 4, entries: [makeEntry()] }))).toBe('1 pareja de 4 mínimas')
+    expect(smallCategoryText(makeCategory({ minPairs: 4 }))).toBe('0 parejas de 4 mínimas')
   })
 })
