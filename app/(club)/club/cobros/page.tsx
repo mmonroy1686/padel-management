@@ -6,6 +6,7 @@ import { totalsOf } from '@/lib/domain/payments-overview'
 import { localDateOf } from '@/lib/domain/time'
 import { recordCash } from '../grilla/actions'
 import { recordPassCash } from '../day-use/actions'
+import { recordChampionshipCash } from '../torneos/campeonatos/actions'
 import { recordTournamentCash } from '../torneos/actions'
 import { confirmPayment, refundPayment, rejectPayment } from './actions'
 import { MoneyTable, type MoneyItem } from './money-table'
@@ -17,7 +18,7 @@ export const metadata: Metadata = { title: 'Cobros' }
 export default async function PaymentsPage() {
   const viewer = await requireStaff('/club/cobros')
   const { club } = viewer
-  const { transfers, unpaid, unpaidEntries, unpaidPasses, refunds } = await loadPaymentsOverview(club)
+  const { transfers, unpaid, unpaidEntries, unpaidPasses, unpaidChampionships, refunds } = await loadPaymentsOverview(club)
   const when = (start: Date) => `${dayLongLabel(localDateOf(start, club.timezone))}, ${timeIn(start, club.timezone)}`
 
   const cash = (label: string, fields: Record<string, string>) => (club.accepts_cash ? { action: { label, fields } } : {})
@@ -56,6 +57,16 @@ export default async function PaymentsPage() {
       amount: item.due,
       ...cash('Cobrar en efectivo', { passId: item.passId, amount: String(item.due) }),
     })),
+    ...unpaidChampionships.map((item) => ({
+      id: item.entryId,
+      kind: 'championship' as const,
+      holder: item.holder,
+      what: item.what,
+      when: when(item.startsAt),
+      at: item.startsAt.getTime(),
+      amount: item.due,
+      ...cash('Cobrar en efectivo', { entryId: item.entryId, amount: String(item.due) }),
+    })),
   ]
   const toGiveBack: MoneyItem[] = refunds.map((item) => ({
     id: item.paymentId,
@@ -70,7 +81,7 @@ export default async function PaymentsPage() {
 
   const totals = {
     transfers: totalsOf(transfers, (transfer) => transfer.amount),
-    unpaid: totalsOf([...unpaid, ...unpaidEntries, ...unpaidPasses], (item) => item.due),
+    unpaid: totalsOf([...unpaid, ...unpaidEntries, ...unpaidPasses, ...unpaidChampionships], (item) => item.due),
     refunds: totalsOf(refunds, (item) => item.amount),
   }
 
@@ -111,7 +122,7 @@ export default async function PaymentsPage() {
         icon="clock"
         tone="accent"
         title="Jugado sin pagar"
-        hint="Turnos, torneos y day use de los últimos 30 días que todavía deben plata."
+        hint="Turnos, torneos, campeonatos y day use de los últimos 30 días que todavía deben plata."
         totals={totals.unpaid}
         emptyText="Nada pendiente en los últimos 30 días."
       >
@@ -119,7 +130,7 @@ export default async function PaymentsPage() {
           caption="Jugado sin pagar"
           items={owed}
           amountLabel="Debe"
-          actions={{ booking: recordCash, tournament: recordTournamentCash, day_use: recordPassCash }}
+          actions={{ booking: recordCash, tournament: recordTournamentCash, day_use: recordPassCash, championship: recordChampionshipCash }}
           emptyText="Nada pendiente en los últimos 30 días."
         />
       </PaymentsSection>
@@ -129,7 +140,7 @@ export default async function PaymentsPage() {
         icon="undo"
         tone="danger"
         title="Pagos a devolver"
-        hint="Reservas, torneos o pases de day use cancelados, o jugadores que se bajaron después de pagar."
+        hint="Reservas, torneos, campeonatos o pases de day use cancelados, o jugadores que se bajaron después de pagar."
         totals={totals.refunds}
         emptyText="No hay devoluciones pendientes."
       >
@@ -137,7 +148,7 @@ export default async function PaymentsPage() {
           caption="Pagos a devolver"
           items={toGiveBack}
           amountLabel="Devolver"
-          actions={{ booking: refundPayment, tournament: refundPayment, day_use: refundPayment }}
+          actions={{ booking: refundPayment, tournament: refundPayment, day_use: refundPayment, championship: refundPayment }}
           emptyText="No hay devoluciones pendientes."
         />
       </PaymentsSection>

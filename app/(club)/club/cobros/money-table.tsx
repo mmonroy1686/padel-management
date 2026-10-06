@@ -19,7 +19,12 @@ export type MoneyItem = {
   action?: { label: string; fields: Record<string, string> }
 }
 
-export const MONEY_KIND_LABELS: Record<MoneyKind, string> = { booking: 'Reserva', tournament: 'Torneo', day_use: 'Day use' }
+export const MONEY_KIND_LABELS: Record<MoneyKind, string> = {
+  booking: 'Reserva',
+  tournament: 'Torneo',
+  day_use: 'Day use',
+  championship: 'Campeonato',
+}
 
 // Cobros: one of the money lists (owed or to give back) as a table, every kind of item together.
 export function MoneyTable({
