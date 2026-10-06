@@ -12,7 +12,8 @@ import {
   type PairPlayerInput,
 } from '@/lib/domain/championship-form'
 import { errorMessage } from '@/lib/domain/errors'
-import { readInt, readUuid } from '@/lib/domain/input'
+import { isPosterPath } from '@/lib/domain/championship-poster'
+import { isUuid, readInt, readUuid } from '@/lib/domain/input'
 import { createClient } from '@/lib/supabase/server'
 
 type Supabase = Awaited<ReturnType<typeof createClient>>
@@ -233,5 +234,24 @@ export async function cancelCategory(_previous: ActionState, form: FormData): Pr
     'categoryId',
     (supabase, id) => supabase.rpc('cancel_championship_category', { p_category_id: id }),
     'Categoría cancelada. Lo cobrado está en Cobros para devolver.',
+  )
+}
+
+// The browser already uploaded the file (only staff can); this points the championship at it.
+export async function saveChampionshipPoster(championshipId: string, path: string): Promise<ActionState> {
+  const viewer = await getViewer()
+  if (!viewer) return SESSION_EXPIRED
+  if (!isUuid(championshipId) || typeof path !== 'string' || !isPosterPath(viewer.club.id, path)) return INVALID_INPUT
+  return run(
+    (supabase) => supabase.rpc('set_championship_poster', { p_championship_id: championshipId, p_path: path }),
+    'Afiche guardado.',
+  )
+}
+
+export async function removeChampionshipPoster(championshipId: string): Promise<ActionState> {
+  if (!isUuid(championshipId)) return INVALID_INPUT
+  return run(
+    (supabase) => supabase.rpc('set_championship_poster', { p_championship_id: championshipId, p_path: '' }),
+    'Afiche quitado.',
   )
 }

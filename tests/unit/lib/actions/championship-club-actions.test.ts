@@ -191,3 +191,17 @@ describe('the pairs', () => {
     expect(rpc).not.toHaveBeenCalled()
   })
 })
+
+describe('the poster', () => {
+  it('points the championship at a poster of the club, or at none', async () => {
+    expect(await club.saveChampionshipPoster(ID, 'otro-club/poster-1.png')).toEqual(INVALID_INPUT)
+    expect(await club.saveChampionshipPoster('ch1', 'club-1/poster-1.png')).toEqual(INVALID_INPUT)
+    expect(rpc).not.toHaveBeenCalled()
+    expect(await club.saveChampionshipPoster(ID, 'club-1/poster-1760000000000.png')).toEqual({ status: 'ok', message: 'Afiche guardado.' })
+    expect(await club.removeChampionshipPoster(ID)).toEqual({ status: 'ok', message: 'Afiche quitado.' })
+    expect(rpc.mock.calls).toEqual([
+      ['set_championship_poster', { p_championship_id: ID, p_path: 'club-1/poster-1760000000000.png' }],
+      ['set_championship_poster', { p_championship_id: ID, p_path: '' }],
+    ])
+  })
+})
