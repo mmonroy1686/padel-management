@@ -20,8 +20,8 @@ function renderBoard(overrides: Partial<ChampionshipBoardProps> = {}) {
     posterUrl: null,
     paymentNote: 'Se paga en el club o por transferencia.',
     categories: [
-      { id: 'k1', name: '6ta Libre', detail: 'Libre · $2.000 por pareja', spots: '1 de 4 parejas', full: false, available: false, reason: 'Ya estás anotado en esta categoría.' },
-      { id: 'k2', name: '5ta Damas', detail: 'Damas · $1.800 por pareja', spots: '8 de 8 parejas · 1 en espera', full: true, available: true, reason: null },
+      { id: 'k1', name: '6ta Libre', detail: 'Libre · $2.000 por pareja', playRules: 'Al mejor de 3 sets, sin límite de tiempo', spots: '1 de 4 parejas', full: false, available: false, reason: 'Ya estás anotado en esta categoría.' },
+      { id: 'k2', name: '5ta Damas', detail: 'Damas · $1.800 por pareja', playRules: 'Al mejor de 3 sets, con 50 minutos de juego', spots: '8 de 8 parejas · 1 en espera', full: true, available: true, reason: null },
     ],
     entries: [
       {
@@ -53,6 +53,7 @@ describe('ChampionshipBoard', () => {
   it('shows the championship, its rules, its categories and your pairs', () => {
     renderBoard()
     expect(screen.getByRole('heading', { name: 'Campeonato de Primavera' })).toBeInTheDocument()
+    expect(screen.getByText('Al mejor de 3 sets, con 50 minutos de juego')).toBeInTheDocument()
     expect(screen.getByText('sábado 17 de octubre, 08:00 a 14:00')).toBeInTheDocument()
     expect(screen.getByText('Hasta el viernes 16 de octubre, 08:00')).toBeInTheDocument()
     expect(screen.getByText('Al mejor de 3 sets.')).toBeInTheDocument()

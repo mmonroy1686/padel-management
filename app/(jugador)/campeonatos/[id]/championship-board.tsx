@@ -12,7 +12,8 @@ import type { Block } from '@/lib/domain/championships'
 import type { MemberOption } from '@/lib/domain/members'
 
 // A category as the page prepares it: reason says why the viewer cannot sign up to it.
-export type BoardCategory = RegisterOption & { spots: string; reason: string | null }
+// playRules: how a match is played ("Al mejor de 3 sets, sin límite de tiempo · …").
+export type BoardCategory = RegisterOption & { spots: string; reason: string | null; playRules: string }
 export type BoardEntry = MyEntryView & { unavailable: string[]; note: string | null }
 export type ChampionshipBoardProps = {
   name: string
@@ -133,6 +134,7 @@ export function ChampionshipBoard(props: ChampionshipBoardProps) {
                 <span className="shrink-0 text-sm text-fg-muted tabular-nums">{category.spots}</span>
               </div>
               <p className="text-sm text-fg-muted">{category.detail}</p>
+              <p className="text-sm">{category.playRules}</p>
               {category.available ? (
                 <Button
                   aria-label={`Anotarme en ${category.name}`}

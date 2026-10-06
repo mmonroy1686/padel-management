@@ -84,6 +84,8 @@ describe('CategoriesEditor', () => {
       qualifiers: '2',
       matchMinutes: '90',
       seeding: 'ranking',
+      timeLimitMode: 'none',
+      timeLimit: '60',
       thirdSet: 'super_tiebreak',
       goldenPoint: 'on',
     })

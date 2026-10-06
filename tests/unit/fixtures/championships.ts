@@ -50,6 +50,7 @@ export function makeCategory(overrides: Partial<ChampionshipCategory> = {}): Cha
     seeding: 'ranking',
     thirdSet: 'super_tiebreak',
     goldenPoint: false,
+    timeLimit: null,
     status: 'open',
     mergedInto: null,
     entries: [],

@@ -911,7 +911,7 @@ isOneToOne: false
           }
           Functions: {
             "add_championship_category":
-{ Args: { "p_championship_id": string,"p_format": Database["public"]['Enums']["championship_format"],"p_gender": Database["public"]['Enums']["championship_gender"],"p_golden_point": boolean,"p_group_size": number,"p_level_max"?: number,"p_level_min"?: number,"p_match_minutes": number,"p_max_pairs": number,"p_min_pairs": number,"p_name": string,"p_price": number,"p_qualifiers": number,"p_seeding": Database["public"]['Enums']["championship_seeding"],"p_third_set": string }; Returns: {
+{ Args: { "p_championship_id": string,"p_format": Database["public"]['Enums']["championship_format"],"p_gender": Database["public"]['Enums']["championship_gender"],"p_golden_point": boolean,"p_group_size": number,"p_level_max"?: number,"p_level_min"?: number,"p_match_minutes": number,"p_max_pairs": number,"p_min_pairs": number,"p_name": string,"p_price": number,"p_qualifiers": number,"p_seeding": Database["public"]['Enums']["championship_seeding"],"p_third_set": string,"p_time_limit"?: number }; Returns: {
               "championship_id": string,
 "club_id": string,
 "created_at": string,
