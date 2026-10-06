@@ -6,7 +6,8 @@ import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 // Reloads the current screen when a court is taken or freed anywhere in the club, or a match, one of
-// its spots, a tournament, an entry, a game, a day use pass or a wait changes. It does not patch state by
+// its spots, a tournament, an entry, a game, a day use pass, a wait, a championship match or one of its sets
+// changes. It does not patch state by
 // hand: the server renders the screen again.
 // Realtime cannot filter deletes, so those come unfiltered (with only the id) and trigger a reload too.
 export function LiveOccupancy({ clubId, debounceMs = 300 }: { clubId: string; debounceMs?: number }) {
@@ -69,6 +70,16 @@ export function LiveOccupancy({ clubId, debounceMs = 300 }: { clubId: string; de
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'slot_waits', filter: `club_id=eq.${clubId}` },
+          reload,
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'championship_matches', filter: `club_id=eq.${clubId}` },
+          reload,
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'championship_match_sets', filter: `club_id=eq.${clubId}` },
           reload,
         )
         .subscribe()
