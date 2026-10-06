@@ -40,3 +40,42 @@ export async function categoryIdByName(championshipId: string, name: string): Pr
 export function uniquePhone(): string {
   return `09${String(Date.now() + Math.floor(Math.random() * 100_000)).slice(-7)}`
 }
+
+
+export type FixtureRow = { id: string; stage: string; entryA: string | null; entryB: string | null }
+
+// The matches of a championship (service role).
+export async function fixtureMatches(championshipId: string): Promise<FixtureRow[]> {
+  const { data, error } = await adminClient()
+    .from('championship_matches')
+    .select('id, stage, entry_a_id, entry_b_id')
+    .eq('championship_id', championshipId)
+  if (error) throw error
+  return data.map((row) => ({ id: row.id, stage: row.stage, entryA: row.entry_a_id, entryB: row.entry_b_id }))
+}
+
+// Pair id → the number in its first player's name ("P3 Fixture" → 3), service role.
+export async function pairNumbers(categoryId: string): Promise<Map<string, number>> {
+  const { data, error } = await adminClient()
+    .from('championship_entries')
+    .select('id, player1:players!championship_entries_player1_in_club(name)')
+    .eq('category_id', categoryId)
+  if (error) throw error
+  return new Map(data.map((row) => [row.id, Number(/^P([0-9]+)/.exec(row.player1?.name ?? '')?.[1] ?? 0)]))
+}
+
+// A result recorded by staff through record_match_result: side a or b wins 6-2 6-3.
+export async function recordResultAs(user: TestUser, matchId: string, winner: 'a' | 'b'): Promise<void> {
+  const client = await signedInClient(user)
+  const sets = winner === 'a' ? [[6, 2], [6, 3]] : [[2, 6], [3, 6]]
+  const { error } = await client.rpc('record_match_result', { p_match_id: matchId, p_sets: sets })
+  if (error) throw error
+}
+
+// The public code publish_championship made (service role).
+export async function publicCode(championshipId: string): Promise<string> {
+  const { data, error } = await adminClient().from('championships').select('public_code').eq('id', championshipId).single()
+  if (error) throw error
+  if (!data.public_code) throw new Error('El campeonato no tiene código público')
+  return data.public_code
+}
