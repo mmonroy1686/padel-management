@@ -3,17 +3,22 @@ import { notFound } from 'next/navigation'
 import { CategoriesEditor } from '@/components/championships/categories-editor'
 import { ChampionshipControls } from '@/components/championships/championship-controls'
 import { ChampionshipDetailsForm } from '@/components/championships/championship-details-form'
+import { PairsBoard } from '@/components/championships/pairs-board'
 import { PosterForm } from '@/components/championships/poster-form'
 import { WindowsEditor } from '@/components/championships/windows-editor'
 import { BackLink } from '@/components/ui/back-link'
 import { Card } from '@/components/ui/card'
+import { saveUnavailability } from '@/lib/actions/championships'
 import { requireStaff } from '@/lib/auth/viewer'
-import { loadChampionship } from '@/lib/data/championships'
+import { loadChampionship, loadChampionshipPhones } from '@/lib/data/championships'
+import { loadMemberOptions } from '@/lib/data/members'
 import { loadActiveCourts } from '@/lib/data/tournaments'
+import { pairsCategories } from '@/lib/domain/championship-pairs'
 import { championshipPosterUrl } from '@/lib/domain/championship-poster'
 import {
   categoryDetail,
   CHAMPIONSHIP_STATUS_LABELS,
+  championshipBlocks,
   championshipReadiness,
   closesText,
   datesText,
@@ -28,13 +33,17 @@ import { courtsText } from '@/lib/domain/tournaments'
 import { getSupabaseEnv } from '@/lib/supabase/env'
 import {
   addCategory,
+  addPair,
   addWindow,
   cancelChampionship,
   closeRegistration,
   deleteCategory,
   deleteWindow,
+  movePair,
   openRegistration,
+  recordChampionshipCash,
   removeChampionshipPoster,
+  removePair,
   saveChampionshipPoster,
   updateChampionship,
 } from '../actions'
@@ -50,7 +59,12 @@ export default async function ManageChampionshipPage({ params }: { params: Param
   if (!isUuid(id)) notFound()
   const viewer = await requireStaff(`/club/torneos/campeonatos/${id}`)
   const { club } = viewer
-  const [championship, courts] = await Promise.all([loadChampionship(club, id), loadActiveCourts(club)])
+  const [championship, courts, phones, members] = await Promise.all([
+    loadChampionship(club, id),
+    loadActiveCourts(club),
+    loadChampionshipPhones(id),
+    loadMemberOptions(club.id),
+  ])
   if (!championship) notFound()
 
   const now = new Date()
@@ -111,6 +125,16 @@ export default async function ManageChampionshipPage({ params }: { params: Param
             deleteAction={deleteCategory}
           />
         </>
+      ) : null}
+      {!draft ? (
+        <PairsBoard
+          categories={pairsCategories(championship, phones)}
+          editable={championship.status === 'registration' || championship.status === 'closed'}
+          acceptsCash={club.accepts_cash && championship.status !== 'cancelled'}
+          members={members}
+          blocks={championshipBlocks(championship.windows)}
+          actions={{ cash: recordChampionshipCash, remove: removePair, move: movePair, add: addPair, hours: saveUnavailability }}
+        />
       ) : null}
 
       {editable ? (
