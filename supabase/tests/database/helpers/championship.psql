@@ -132,3 +132,57 @@ as $$
     select block_key from private.championship_blocks(p_championship_id) order by block_key limit p_count
   );
 $$;
+
+
+-- A group of a category with its pairs, in that draw order. Inserted as postgres.
+create procedure test_helpers.make_group(p_id uuid, p_category_id uuid, p_name text, p_entries uuid[])
+language sql
+as $$
+  insert into public.championship_groups (id, club_id, championship_id, category_id, name)
+  select p_id, 'a0000000-0000-0000-0000-000000000001', c.championship_id, p_category_id, p_name
+  from public.championship_categories c where c.id = p_category_id;
+  insert into public.championship_group_members (group_id, club_id, entry_id, draw_position)
+  select p_id, 'a0000000-0000-0000-0000-000000000001', e.id, e.n
+  from unnest(p_entries) with ordinality as e (id, n);
+$$;
+
+-- A match of a category, inserted as postgres: a group match takes p_group_id, a knockout one p_round and
+-- p_position (and its sources). With p_court and p_starts it lasts the category's minutes.
+create procedure test_helpers.make_cmatch(
+  p_id uuid,
+  p_category_id uuid,
+  p_entry_a uuid,
+  p_entry_b uuid,
+  p_group_id uuid default null,
+  p_round integer default null,
+  p_position integer default null,
+  p_court uuid default null,
+  p_starts timestamptz default null,
+  p_source_a jsonb default null,
+  p_source_b jsonb default null
+)
+language sql
+as $$
+  insert into public.championship_matches (id, club_id, championship_id, category_id, stage, group_id, round,
+                                           bracket_position, entry_a_id, entry_b_id, source_a, source_b, court_id,
+                                           starts_at, ends_at)
+  select p_id, 'a0000000-0000-0000-0000-000000000001', c.championship_id, p_category_id,
+         (case when p_group_id is null then 'knockout' else 'group' end)::public.championship_stage,
+         p_group_id, p_round, p_position, p_entry_a, p_entry_b, p_source_a, p_source_b, p_court, p_starts,
+         p_starts + make_interval(mins => c.match_minutes)
+  from public.championship_categories c where c.id = p_category_id;
+$$;
+
+-- A match finished 6-3 6-3 for p_winner, inserted as postgres (skips the result rules on purpose).
+create procedure test_helpers.finish_cmatch(p_id uuid, p_winner uuid)
+language sql
+as $$
+  update public.championship_matches
+     set status = 'finished', winner_entry_id = p_winner, recorded_at = now()
+   where id = p_id;
+  insert into public.championship_match_sets (match_id, club_id, set_number, games_a, games_b)
+  select p_id, 'a0000000-0000-0000-0000-000000000001', n,
+         case when m.entry_a_id = p_winner then 6 else 3 end, case when m.entry_a_id = p_winner then 3 else 6 end
+  from public.championship_matches m cross join generate_series(1, 2) as n
+  where m.id = p_id;
+$$;
