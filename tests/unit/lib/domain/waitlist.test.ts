@@ -7,7 +7,6 @@ import {
   notificationText,
   readNotificationData,
   shortTime,
-  toNotificationView,
   toWait,
   unreadLabel,
   waitCovers,
@@ -129,20 +128,6 @@ describe('avisos', () => {
       title: 'Se liberó la Cancha 2 a las 19:00: el primero que reserva se la queda',
       body: 'Falta poco para el turno, así que no se guarda para nadie. Si lo querés, reservalo ya.',
     })
-  })
-
-  it('turns a row into what /avisos shows', () => {
-    const row = { id: 'n1', kind: 'slot_held' as const, data: held, link: '/', created_at: '2026-10-03T20:27:00Z', read_at: null }
-    expect(toNotificationView(row, TIMEZONE)).toEqual({
-      id: 'n1',
-      title: 'Se liberó tu turno: sáb 3, 19:00, Cancha 2',
-      body: 'Te lo guardamos hasta las 17:42. Reservalo desde Inicio antes de que pase al siguiente de la lista.',
-      link: '/',
-      createdAt: new Date('2026-10-03T20:27:00Z'),
-      unread: true,
-    })
-    expect(toNotificationView({ ...row, read_at: '2026-10-03T20:30:00Z' }, TIMEZONE)?.unread).toBe(false)
-    expect(toNotificationView({ ...row, data: {} }, TIMEZONE)).toBeNull()
   })
 
   it('labels the bell with what is unread', () => {

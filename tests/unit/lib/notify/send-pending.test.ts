@@ -76,4 +76,19 @@ describe('sendPending', () => {
     expect(sender).not.toHaveBeenCalled()
     expect(finish.mock.calls.map(([, outcome]) => outcome)).toEqual(['skipped', 'skipped', 'skipped'])
   })
+
+  it('mails an aviso of a championship to come, and skips one of a championship that already started', async () => {
+    const data = { championship_name: 'Campeonato T', category_name: 'Libre', partner_name: 'Bruno', waiting: false }
+    const { store, finish } = fakeStore([
+      pending('n1', { kind: 'championship_promoted', link: '/campeonatos/ch1', data: { ...data, starts_at: '2026-10-17T11:00:00Z' } }),
+      pending('n2', { kind: 'championship_promoted', link: '/campeonatos/ch1', data: { ...data, starts_at: '2026-10-01T11:00:00Z' } }),
+    ])
+    const sender = vi.fn<EmailSender>(async () => {})
+    expect(await sendPending(store, sender, OPTIONS)).toEqual({ sent: 1, failed: 0, skipped: 1 })
+    expect(sender.mock.calls[0][0]).toMatchObject({ to: 'n1@test.local', subject: 'Entraste a Libre desde la lista de espera' })
+    expect(finish.mock.calls).toEqual([
+      ['n1', 'sent'],
+      ['n2', 'skipped'],
+    ])
+  })
 })

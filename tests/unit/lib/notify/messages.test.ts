@@ -48,4 +48,26 @@ describe('buildEmail', () => {
     expect(buildEmail({ ...HELD, email: null }, URLS)).toBeNull()
     expect(buildEmail({ ...HELD, data: {} }, URLS)).toBeNull()
   })
+
+  it('mails an aviso of a championship with its own button and reason', () => {
+    const mail = buildEmail(
+      {
+        ...HELD,
+        kind: 'championship_added',
+        data: {
+          championship_id: 'ch1',
+          championship_name: 'Campeonato de Primavera',
+          category_name: '6ta Libre',
+          partner_name: 'Bruno',
+          waiting: false,
+          starts_at: '2026-10-17T11:00:00Z',
+        },
+        link: '/campeonatos/ch1',
+      },
+      URLS,
+    )!
+    expect(mail.subject).toBe('Te anotaron con Bruno en 6ta Libre')
+    expect(mail.text).toContain('Ver el campeonato: https://rustic.test/campeonatos/ch1')
+    expect(mail.text).toContain('Rustic Pádel: te escribimos por tu inscripción en un campeonato.')
+  })
 })

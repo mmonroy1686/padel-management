@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/cn'
 import { dayLabel, timeIn } from '@/lib/domain/format'
 import { localDateOf, type LocalDate } from '@/lib/domain/time'
-import type { NotificationView } from '@/lib/domain/waitlist'
+import type { NotificationView } from '@/lib/domain/notifications'
 
 // Design: "/avisos", newest first; each one leads where it says (Inicio's banner, or /reservar that day).
 export function NotificationList({ items, timezone, today }: { items: NotificationView[]; timezone: string; today: LocalDate }) {

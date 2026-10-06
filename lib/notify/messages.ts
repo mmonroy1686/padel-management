@@ -1,6 +1,6 @@
 import { clubLogoUrl } from '@/lib/domain/club-logo'
+import { notificationContent, type NotificationKind } from '@/lib/domain/notifications'
 import { firstName } from '@/lib/domain/profile'
-import { notificationText, readNotificationData, type NotificationKind } from '@/lib/domain/waitlist'
 import type { EmailMessage } from './email'
 
 // One aviso waiting to be mailed, as claim_notification_emails returns it.
@@ -37,18 +37,16 @@ function escapeHtml(value: string): string {
 // The mail for one aviso: the same words as /avisos, the club's logo and a button to the app.
 // null when it cannot be built (no address, data it cannot read).
 export function buildEmail(item: PendingEmail, urls: { siteUrl: string; supabaseUrl: string }): EmailMessage | null {
-  const data = readNotificationData(item.data)
-  if (!item.email || !data) return null
-  const { title, body } = notificationText(item.kind, data, item.clubTimezone)
+  const content = notificationContent(item.kind, item.data, item.clubTimezone)
+  if (!item.email || !content) return null
+  const { title, body, button } = content
   const link = `${urls.siteUrl}${item.link}`
   const logo = clubLogoUrl(urls.supabaseUrl, item.clubLogoPath)
-  const button = item.kind === 'slot_held' ? 'Reservar ahora' : 'Ver el turno'
   const greeting = `Hola, ${firstName(item.playerName)}:`
-  const footer = `${item.clubName}: te escribimos porque te anotaste en la lista de espera.`
+  const footer = `${item.clubName}: ${content.reason}`
   const brand = logo
     ? `<img src="${escapeHtml(logo)}" alt="${escapeHtml(item.clubName)}" width="56" height="56" style="display:block;border-radius:12px;margin:0 0 16px">`
     : `<p style="margin:0 0 16px;font-weight:bold;color:${COLORS.accent}">${escapeHtml(item.clubName)}</p>`
-
   const html = [
     '<!doctype html>',
     `<html lang="es"><body style="margin:0;background:${COLORS.background};font-family:Arial,Helvetica,sans-serif;color:${COLORS.text}">`,

@@ -1,4 +1,4 @@
-import { readNotificationData } from '@/lib/domain/waitlist'
+import { isNotificationStale } from '@/lib/domain/notifications'
 import type { EmailSender } from './email'
 import { buildEmail, type PendingEmail } from './messages'
 
@@ -14,12 +14,9 @@ export type OutboxReport = Record<EmailOutcome, number>
 
 const BATCH = 20
 
-// Too late to be useful: the hold ran out, or the slot already started.
+// Too late to be useful: the hold ran out, or the slot or the championship already started.
 function isStale(item: PendingEmail, now: Date): boolean {
-  const data = readNotificationData(item.data)
-  if (!data) return true
-  const deadline = item.kind === 'slot_held' ? data.expiresAt : data.startsAt
-  return !deadline || deadline.getTime() <= now.getTime()
+  return isNotificationStale(item.kind, item.data, now)
 }
 
 // Claims a batch (two runs never take the same aviso), mails each one and marks how it went. Without a

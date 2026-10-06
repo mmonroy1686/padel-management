@@ -3,15 +3,14 @@ import type { Club } from '@/lib/auth/viewer'
 import { priceFor } from '@/lib/domain/slots'
 import { localDateOf, minutesOfDay, toDate, type LocalDate } from '@/lib/domain/time'
 import {
-  toNotificationView,
   toWait,
   waitRangeText,
   type CourtName,
   type DayWait,
   type Hold,
-  type NotificationView,
   type Wait,
 } from '@/lib/domain/waitlist'
+import { toNotificationView, type NotificationView } from '@/lib/domain/notifications'
 import { createClient } from '@/lib/supabase/server'
 
 export type MyWaitlist = { waits: Wait[]; hold: Hold | null; courts: CourtName[] }
