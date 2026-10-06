@@ -1,5 +1,16 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { MyMatches } from '@/components/championships/my-matches'
+import { LiveOccupancy } from '@/components/live/live-occupancy'
+import { buttonClasses } from '@/components/ui/button'
+import { ShareButton } from '@/components/ui/share-button'
+import { getSiteUrl } from '@/lib/auth/redirect'
+import { loadFixture } from '@/lib/data/championship-fixture'
+import { loadActiveCourts } from '@/lib/data/tournaments'
+import { EMPTY_FIXTURE, type Fixture } from '@/lib/domain/championship-fixture'
+import { championshipShareText, matchViews, myMatchViews } from '@/lib/domain/championship-views'
+import { localDateOf } from '@/lib/domain/time'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { reportChampionshipTransfer, registerPair, saveUnavailability, withdrawEntry } from '@/lib/actions/championships'
 import { loadChampionship, loadMemberDirectory } from '@/lib/data/championships'
@@ -45,8 +56,23 @@ export default async function ChampionshipPage({ params, searchParams }: { param
   const { categoria } = await searchParams
   const open = registrationOpen(championship, now)
   const blocks = championshipBlocks(championship.windows)
+  const live = ['published', 'in_progress', 'finished'].includes(championship.status)
+  const [fixture, courts]: [Fixture, { id: string; name: string }[]] = live
+    ? await Promise.all([loadFixture(championship.id), loadActiveCourts(club)])
+    : [EMPTY_FIXTURE, []]
+  const views = matchViews(championship, fixture, {
+    timezone: club.timezone,
+    today: localDateOf(now, club.timezone),
+    courtName: new Map(courts.map((court) => [court.id, court.name])),
+  })
+  const publicPath = championship.publicCode ? `/c/${championship.publicCode}` : null
+  const mine = myMatchViews(championship, views, viewer.userId).map((match) => ({
+    ...match,
+    href: publicPath ?? `/campeonatos/${championship.id}`,
+    championshipName: null,
+  }))
 
-  return (
+  const board = (
     <ChampionshipBoard
       name={championship.name}
       statusLabel={CHAMPIONSHIP_STATUS_LABELS[championship.status]}
@@ -94,5 +120,35 @@ export default async function ChampionshipPage({ params, searchParams }: { param
       initialCategoryId={categoria && isUuid(categoria) ? categoria : null}
       actions={{ register: registerPair, withdraw: withdrawEntry, hours: saveUnavailability, report: reportChampionshipTransfer }}
     />
+  )
+
+  return (
+    <>
+      {board}
+      {live ? (
+        <section aria-labelledby="mis-partidos" className="flex flex-col gap-3">
+          <h2 id="mis-partidos" className="font-display text-2xl font-bold uppercase">
+            Mis partidos
+          </h2>
+          {mine.length > 0 ? (
+            <MyMatches matches={mine} />
+          ) : (
+            <p className="text-fg-muted">No tenés partidos en este campeonato.</p>
+          )}
+          {publicPath ? (
+            <div className="flex flex-wrap items-start gap-3">
+              <Link href={publicPath} className={buttonClasses({ variant: 'secondary' })}>
+                Ver el fixture completo
+              </Link>
+              <ShareButton
+                title={championship.name}
+                text={championshipShareText(championship.name, `${getSiteUrl()}${publicPath}`)}
+              />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+      <LiveOccupancy clubId={club.id} />
+    </>
   )
 }
