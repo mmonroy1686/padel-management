@@ -6,6 +6,29 @@ import { at, booking, COURTS, makeGrid, occupancy, TIMEZONE } from '../../fixtur
 import { makeMatch } from '../../fixtures/matches'
 
 describe('SlotGrid for players', () => {
+  it('marks the taken slots she already waits for, and still opens the sheet', async () => {
+    const grid = makeGrid({
+      now: at('07:00'),
+      occupancies: [occupancy('o1', 'court-1', '11:00', '12:30'), occupancy('o2', 'court-2', '11:00', '12:30')],
+    })
+    const onWait = vi.fn()
+    render(
+      <SlotGrid
+        courts={COURTS}
+        rows={grid.rows}
+        variant="player"
+        onSelect={vi.fn()}
+        onWait={onWait}
+        waited={(cell) => cell.court.id === 'court-1'}
+      />,
+    )
+    const waited = screen.getByRole('button', { name: 'Te avisamos si se libera Cancha 1 a las 11:00' })
+    expect(waited).toHaveTextContent('Te avisamos')
+    expect(screen.getByRole('button', { name: 'Avisame si se libera Cancha 2 a las 11:00' })).toBeInTheDocument()
+    await userEvent.click(waited)
+    expect(onWait).toHaveBeenCalledTimes(1)
+  })
+
   it('offers to wait for a taken slot that is still ahead', async () => {
     const grid = makeGrid({
       now: at('09:00'),

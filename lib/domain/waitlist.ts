@@ -66,6 +66,17 @@ export function waitItems(waits: Wait[], courts: CourtName[], today: LocalDate):
   return waits.map((wait) => ({ id: wait.id, text: waitText(wait, courts, today) }))
 }
 
+// Whether a wait asks for this slot: that day, on that court (or any), starting at "Desde" or later and
+// ending at "Hasta" or earlier, as create_slot_wait reads the range.
+export function waitCovers(wait: Wait, date: LocalDate, courtId: string, slot: Slot): boolean {
+  return (
+    wait.date === date &&
+    (wait.courtIds.length === 0 || wait.courtIds.includes(courtId)) &&
+    slot.label >= wait.fromTime &&
+    slotEndLabel(slot) <= wait.toTime
+  )
+}
+
 export function slotEndLabel(slot: Slot): string {
   return formatMinutes(slot.startMinutes + Math.round((slot.endsAt.getTime() - slot.startsAt.getTime()) / 60_000))
 }

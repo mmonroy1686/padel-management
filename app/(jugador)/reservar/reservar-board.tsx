@@ -1,18 +1,19 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookingSheet, type BookingChoice } from '@/components/booking/booking-sheet'
 import { Legend } from '@/components/booking/legend'
 import { SlotGrid } from '@/components/booking/slot-grid'
 import { CreateMatchSheet, type MatchFormInitial } from '@/components/matches/create-match-sheet'
 import type { FormAction } from '@/components/ui/action-form'
 import { Button } from '@/components/ui/button'
+import { DayWaitsNote } from '@/components/waitlist/day-waits-note'
 import { WaitSheet, type WaitInitial } from '@/components/waitlist/wait-sheet'
 import { cn } from '@/lib/cn'
 import { visibleRows, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
 import type { MatchFormOptions } from '@/lib/domain/matches'
 import type { LocalDate } from '@/lib/domain/time'
-import { slotEndLabel, type TimeOption, type WaitItem } from '@/lib/domain/waitlist'
+import { slotEndLabel, waitCovers, waitRangeText, type TimeOption, type Wait, type WaitItem } from '@/lib/domain/waitlist'
 
 export function ReservarBoard({
   courts,
@@ -26,6 +27,7 @@ export function ReservarBoard({
   createMatchAction,
   waitOptions,
   activeWaits,
+  dayWaits,
   waitAction,
   cancelWaitAction,
 }: {
@@ -40,6 +42,8 @@ export function ReservarBoard({
   createMatchAction: FormAction
   waitOptions: { from: TimeOption[]; to: TimeOption[] }
   activeWaits: WaitItem[]
+  // Her waits for the day shown: the note above the grid and the bell on the slots they cover.
+  dayWaits: Wait[]
   waitAction: FormAction
   cancelWaitAction: FormAction
 }) {
@@ -60,6 +64,12 @@ export function ReservarBoard({
     setWaitOpen(false)
     setNotice(message)
   }, [])
+
+  // The outcome of an action shows on top of the grid: bring it into view.
+  const noticeRef = useRef<HTMLParagraphElement>(null)
+  useEffect(() => {
+    if (notice) noticeRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+  }, [notice])
 
   const pastCount = rows.filter((row) => row.past).length
   const shown = visibleRows(rows, { onlyFree, showPast })
@@ -85,10 +95,11 @@ export function ReservarBoard({
   return (
     <div className="flex flex-col gap-4">
       {notice ? (
-        <p role="status" className="rounded-xl border border-accent bg-surface p-3">
+        <p ref={noticeRef} role="status" className="rounded-xl border border-accent bg-surface p-3">
           {notice}
         </p>
       ) : null}
+      <DayWaitsNote items={dayWaits.map((wait) => waitRangeText(wait, courts))} onOpen={() => openWait(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Legend variant="player" />
         <button
@@ -122,6 +133,7 @@ export function ReservarBoard({
           variant="player"
           onSelect={select}
           onWait={(cell) => openWait({ fromTime: cell.slot.label, toTime: slotEndLabel(cell.slot), courtIds: [cell.court.id] })}
+          waited={(cell) => dayWaits.some((wait) => waitCovers(wait, date, cell.court.id, cell.slot))}
         />
       ) : (
         <p className="rounded-xl border border-border p-4 text-fg-muted">No quedan horarios libres este día. Probá con otro día.</p>
