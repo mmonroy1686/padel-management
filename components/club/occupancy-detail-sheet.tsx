@@ -60,6 +60,11 @@ export function OccupancyDetailSheet({
             Gestionar torneo
           </Link>
         ) : null}
+        {occupancy.championshipId ? (
+          <Link href={`/club/torneos/campeonatos/${occupancy.championshipId}`} className="font-semibold text-accent-ink underline">
+            Gestionar campeonato
+          </Link>
+        ) : null}
         {booking?.matchId ? (
           <MatchBookingDetail booking={booking} acceptsCash={acceptsCash} actions={actions} onDone={onDone} />
         ) : booking ? (

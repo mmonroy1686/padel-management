@@ -4,7 +4,7 @@ import type { PaymentState } from './payments'
 import { priceFor, type PricingRule, type Slot } from './slots'
 import { formatMinutes, toDate, type LocalDate } from './time'
 
-export type OccupancyKind = 'booking' | 'recurring' | 'tournament' | 'block' | 'match' | 'day_use' | 'hold'
+export type OccupancyKind = 'booking' | 'recurring' | 'tournament' | 'block' | 'match' | 'day_use' | 'hold' | 'championship'
 export type Court = { id: string; name: string; isCovered: boolean }
 export type Occupancy = {
   id: string
@@ -15,6 +15,8 @@ export type Occupancy = {
   note: string | null
   // The tournament that blocks the court (kind 'tournament'); members may read it.
   tournamentId?: string | null
+  // The championship that blocks the court (kind 'championship'); members may read it.
+  championshipId?: string | null
   // Until when a court is held for the waitlist (kind 'hold').
   expiresAt?: Date | null
 }
@@ -57,6 +59,7 @@ export const KIND_LABELS: Record<OccupancyKind, string> = {
   match: 'Partido',
   day_use: 'Day use',
   hold: 'Retenido',
+  championship: 'Campeonato',
 }
 
 function overlaps(occupancy: Occupancy, slot: Slot): boolean {
@@ -132,6 +135,7 @@ export type OccupancyRow = {
   ends_at: string | null
   note: string | null
   tournament_id?: string | null
+  championship_id?: string | null
   expires_at?: string | null
 }
 
@@ -145,6 +149,7 @@ export function toOccupancy(row: OccupancyRow, audience: 'player' | 'staff'): Oc
     startsAt: toDate(row.starts_at),
     endsAt: toDate(row.ends_at),
     ...(row.tournament_id ? { tournamentId: row.tournament_id } : {}),
+    ...(row.championship_id ? { championshipId: row.championship_id } : {}),
     ...(row.expires_at ? { expiresAt: new Date(row.expires_at) } : {}),
   }
 }

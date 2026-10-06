@@ -171,3 +171,20 @@ describe('holds', () => {
     expect(toOccupancy(row, 'staff').note).toBe('Ana')
   })
 })
+
+describe('championships', () => {
+  it('names a court a championship blocks, and members read which one', () => {
+    expect(KIND_LABELS.championship).toBe('Campeonato')
+    const row = {
+      id: 'o1',
+      court_id: 'court-1',
+      kind: 'championship' as const,
+      starts_at: '2026-10-17T11:00:00Z',
+      ends_at: '2026-10-17T17:00:00Z',
+      note: 'Campeonato de Primavera',
+      championship_id: 'ch1',
+    }
+    expect(toOccupancy(row, 'player')).toMatchObject({ kind: 'championship', note: null, championshipId: 'ch1' })
+    expect(toOccupancy(row, 'staff').note).toBe('Campeonato de Primavera')
+  })
+})

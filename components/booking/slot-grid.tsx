@@ -180,6 +180,7 @@ const CLUB_STYLES: Record<OccupancyKind, CellStyle> = {
   tournament: 'tournament',
   day_use: 'day_use',
   hold: 'hold',
+  championship: 'championship',
 }
 
 function ClubCell({

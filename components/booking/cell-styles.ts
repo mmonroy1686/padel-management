@@ -10,6 +10,7 @@ export const CELL_STYLES = {
   tournament: 'border-2 border-accent bg-surface text-fg',
   day_use: 'border-2 border-dotted border-court-ink bg-surface text-fg',
   hold: 'border-2 border-dotted border-accent bg-surface text-fg',
+  championship: 'border-2 border-dashed border-accent bg-surface text-fg',
   other: 'bg-surface text-fg',
 } as const
 
