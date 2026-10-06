@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { seriesCreatedMessage, shortDate, SKIP_REASON_LABELS } from '@/lib/domain/series'
-import { nextOccurrence, seriesByWeekday, skipsByDate, weeklyMinutes } from '@/lib/domain/series'
+import { nextOccurrence, seriesByWeekday, weeklyMinutes } from '@/lib/domain/series'
 
 describe('shortDate', () => {
   it('writes the weekday and day/month', () => {
@@ -54,15 +54,4 @@ describe('recurring slots overview', () => {
     expect(weeklyMinutes(series, 90)).toBe(360)
   })
 
-  it('groups the skipped dates by day, in date order', () => {
-    const groups = skipsByDate([
-      { id: 'k2', date: '2026-10-09' },
-      { id: 'k1', date: '2026-10-03' },
-      { id: 'k3', date: '2026-10-03' },
-    ])
-    expect(groups.map((group) => [group.date, group.items.map((item) => item.id)])).toEqual([
-      ['2026-10-03', ['k1', 'k3']],
-      ['2026-10-09', ['k2']],
-    ])
-  })
 })

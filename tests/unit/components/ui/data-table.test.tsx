@@ -86,4 +86,11 @@ describe('DataTable', () => {
     rerender(<DataTable caption="Jugadores" columns={COLUMNS} rows={[]} searchLabel="Buscar jugador" emptyText="Todavía no hay jugadores." />)
     expect(screen.getByText('Todavía no hay jugadores.')).toBeInTheDocument()
   })
+
+  it('keeps a short list plain: no pages when it fits, and no search when it has no label', () => {
+    render(<DataTable caption="Canchas" columns={COLUMNS} rows={rows.slice(0, 3)} emptyText="Nadie" />)
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Página siguiente' })).not.toBeInTheDocument()
+    expect(names()).toHaveLength(3)
+  })
 })

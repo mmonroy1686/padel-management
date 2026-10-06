@@ -34,6 +34,8 @@ export type CategoryInput = {
   seeding: Seeding
   thirdSet: ThirdSet
   goldenPoint: boolean
+  // Minutes a match lasts at most; null: best of 3 sets, as long as it takes.
+  timeLimit: number | null
 }
 export type PairPlayerInput =
   | { kind: 'member'; profileId: string; level: number }
@@ -122,6 +124,9 @@ export function parseCategoryForm(form: FormData): ParseResult<CategoryInput> {
   if (!seeding) return fail('Elegí cómo se ordenan los cabezas de serie.')
   const thirdSet = readEnum(form, 'thirdSet', THIRD_SETS)
   if (!thirdSet) return fail('Elegí cómo se juega el tercer set.')
+  const timed = form.get('timeLimitMode') === 'timed'
+  const timeLimit = timed ? readInt(form, 'timeLimit', { min: 20, max: matchMinutes }) : null
+  if (timed && timeLimit === null) return fail('El límite de tiempo va de 20 minutos a los minutos por partido.')
 
   return {
     ok: true,
@@ -141,6 +146,7 @@ export function parseCategoryForm(form: FormData): ParseResult<CategoryInput> {
       seeding,
       thirdSet,
       goldenPoint: readBoolean(form, 'goldenPoint'),
+      timeLimit,
     },
   }
 }

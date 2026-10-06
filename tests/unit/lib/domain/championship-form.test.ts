@@ -79,12 +79,21 @@ describe('parseCategoryForm', () => {
       value: {
         championshipId: ID, name: '6ta Libre', gender: 'open', levelMin: null, levelMax: null, minPairs: 4, maxPairs: 12,
         price: 2000, format: 'groups_knockout', groupSize: 4, qualifiers: 2, matchMinutes: 90, seeding: 'ranking',
-        thirdSet: 'super_tiebreak', goldenPoint: false,
+        thirdSet: 'super_tiebreak', goldenPoint: false, timeLimit: null,
       },
     })
     expect(parseCategoryForm(form({ ...VALID, levelMin: '5', levelMax: '6', goldenPoint: 'on' }))).toMatchObject({
       ok: true,
       value: { levelMin: 5, levelMax: 6, goldenPoint: true },
+    })
+  })
+
+  it('reads a time limit only when the matches have one', () => {
+    expect(parseCategoryForm(form({ ...VALID, timeLimitMode: 'timed', timeLimit: '50' }))).toMatchObject({ ok: true, value: { timeLimit: 50 } })
+    expect(parseCategoryForm(form({ ...VALID, timeLimitMode: 'none', timeLimit: '50' }))).toMatchObject({ ok: true, value: { timeLimit: null } })
+    expect(parseCategoryForm(form({ ...VALID, timeLimitMode: 'timed', timeLimit: '120' }))).toEqual({
+      ok: false,
+      message: 'El límite de tiempo va de 20 minutos a los minutos por partido.',
     })
   })
 

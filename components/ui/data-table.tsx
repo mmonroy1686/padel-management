@@ -35,7 +35,8 @@ export function DataTable({
   columns: DataColumn[]
   rows: DataRow[]
   filters?: DataFilter[]
-  searchLabel: string
+  // Without a label there is no search box (short lists).
+  searchLabel?: string
   searchPlaceholder?: string
   initialSort?: SortState
   pageSize?: number
@@ -58,6 +59,7 @@ export function DataTable({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end gap-3">
+        {searchLabel ? (
         <div className="flex min-w-48 flex-1 flex-col gap-1.5">
           <label htmlFor={`${id}-search`} className="text-sm font-semibold">
             {searchLabel}
@@ -74,6 +76,7 @@ export function DataTable({
             className={inputClasses}
           />
         </div>
+        ) : null}
         {filters.map((filter) => (
           <div key={filter.key} className="flex min-w-36 flex-col gap-1.5">
             <label htmlFor={`${id}-${filter.key}`} className="text-sm font-semibold">
@@ -181,6 +184,7 @@ export function DataTable({
           {shown.total === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-4 text-fg-muted">Nadie coincide con la búsqueda o los filtros.</p>
           ) : null}
+          {rows.length > PAGE_SIZES[0] || rows.length > initialPageSize ? (
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
             <p className="tabular-nums text-fg-muted" aria-live="polite">
               {pageRange(shown)}
@@ -227,6 +231,7 @@ export function DataTable({
               </button>
             </div>
           </div>
+          ) : null}
         </>
       )}
     </div>

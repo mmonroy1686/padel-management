@@ -6,11 +6,11 @@ import { Field, inputClasses } from '@/components/ui/field'
 import { requireAdmin } from '@/lib/auth/viewer'
 import { WEEKDAYS_SHORT } from '@/lib/domain/format'
 import { LOYALTY_EXPIRY_OPTIONS, loyaltyRuleOf, loyaltyRuleText } from '@/lib/domain/loyalty'
-import { describeRule, SLOT_LENGTHS, TIME_OPTIONS } from '@/lib/domain/settings'
+import { SLOT_LENGTHS, TIME_OPTIONS } from '@/lib/domain/settings'
 import { formatMinutes, parseTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
 import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, saveClubLogo } from './actions'
-import { DeleteCourtButton } from './delete-court-button'
+import { CourtsTable, PricesTable } from './settings-tables'
 
 export const metadata: Metadata = { title: 'Ajustes' }
 
@@ -158,32 +158,7 @@ export default async function SettingsPage() {
         <h2 id="canchas" className="font-display text-2xl font-bold uppercase">
           Canchas
         </h2>
-        <ul className="grid gap-3 md:grid-cols-2">
-          {courts.data.map((court) => (
-            <li key={court.id}>
-              <Card>
-                <ActionForm action={updateCourt} submitLabel="Guardar cancha" variant="secondary">
-                  <input type="hidden" name="courtId" value={court.id} />
-                  <Field label="Nombre" htmlFor={`court-${court.id}`}>
-                    <input id={`court-${court.id}`} name="name" required maxLength={40} defaultValue={court.name}
-                      className={inputClasses} />
-                  </Field>
-                  <label className="flex min-h-11 items-center gap-3">
-                    <input type="checkbox" name="is_covered" defaultChecked={court.is_covered} className="size-5 accent-accent" />
-                    Techada
-                  </label>
-                  <label className="flex min-h-11 items-center gap-3">
-                    <input type="checkbox" name="is_active" defaultChecked={court.is_active} className="size-5 accent-accent" />
-                    Activa (se ofrece para reservar)
-                  </label>
-                </ActionForm>
-                <div className="mt-3 border-t border-border pt-3">
-                  <DeleteCourtButton courtId={court.id} courtName={court.name} action={deleteCourt} />
-                </div>
-              </Card>
-            </li>
-          ))}
-        </ul>
+        <CourtsTable courts={courts.data} updateAction={updateCourt} deleteAction={deleteCourt} />
         <Card>
           <ActionForm action={addCourt} submitLabel="Agregar cancha" variant="secondary">
             <input type="hidden" name="sortOrder" value={courts.data.length + 1} />
@@ -205,20 +180,7 @@ export default async function SettingsPage() {
         <p className="text-sm text-fg-muted">
           El precio de un turno sale de la franja que cubre su hora de inicio. Un turno sin franja no se ofrece.
         </p>
-        <ul className="flex flex-col gap-2">
-          {rules.data.map((rule) => (
-            <li key={rule.id}>
-              <Card className="flex flex-wrap items-center justify-between gap-3">
-                <span>
-                  {describeRule({ weekdays: rule.weekdays, fromTime: rule.from_time, toTime: rule.to_time, price: rule.price })}
-                </span>
-                <ActionForm action={deletePricingRule} submitLabel="Borrar" variant="ghost">
-                  <input type="hidden" name="ruleId" value={rule.id} />
-                </ActionForm>
-              </Card>
-            </li>
-          ))}
-        </ul>
+        <PricesTable rules={rules.data} deleteAction={deletePricingRule} />
         <Card>
           <ActionForm action={addPricingRule} submitLabel="Agregar precio" variant="secondary">
             <fieldset className="flex flex-wrap gap-3">

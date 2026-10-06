@@ -248,6 +248,163 @@ if (liveTournament) {
 }
 if (await finishedTournament()) tournaments.push('Relámpago de la semana pasada (finalizado)')
 
+// ---------- championships ----------
+// Two December weekends, past the bookings: the "Copa de Verano" taking sign-ups (pairs with a place, a full
+// category with a waiting line, payments of every kind, a withdrawal) and the "Torneo Aniversario" with
+// registration closed and one category short of pairs (to merge or cancel).
+const championshipLines = []
+const decemberSaturdays = (() => {
+  const year = Number(today.slice(0, 4)) + (today.slice(5, 7) === '12' ? 1 : 0)
+  const out = []
+  for (let day = 1; day <= 31 && out.length < 3; day++) {
+    const date = `${year}-12-${String(day).padStart(2, '0')}`
+    if (weekday(date) === 6) out.push(date)
+  }
+  return out
+})()
+const dayEnd = club.closes_at.slice(0, 5) === '00:00' ? '24:00' : club.closes_at.slice(0, 5)
+const outside = (name, phone, level) => ({ name, phone, level })
+
+async function makeChampionship({ name, rules, saturday, categories, pairs, cash = [], transfer = [], withdraw = [], close = false }) {
+  const championship = await tryRpc(clubAdmin, 'create_championship', { p_club_id: club.id, p_name: name, p_rules: rules, p_max_categories: 2 })
+  if (!championship) return null
+  const courtIds = courts.map((item) => item.id)
+  await tryRpc(clubAdmin, 'add_championship_window', {
+    p_championship_id: championship.id, p_date: saturday, p_from: near('14:00'), p_to: dayEnd, p_court_ids: courtIds,
+  })
+  await tryRpc(clubAdmin, 'add_championship_window', {
+    p_championship_id: championship.id, p_date: addDays(saturday, 1), p_from: SLOTS[0],
+    p_to: SLOTS[SLOTS.indexOf(near('20:00')) + 1] ?? dayEnd, p_court_ids: courtIds,
+  })
+  const categoryIds = []
+  for (const category of categories) {
+    const created = await tryRpc(clubAdmin, 'add_championship_category', {
+      p_championship_id: championship.id,
+      p_name: category.name,
+      p_gender: category.gender,
+      p_min_pairs: category.min ?? 4,
+      p_max_pairs: category.max,
+      p_price: category.price,
+      p_format: category.format ?? 'groups_knockout',
+      p_group_size: category.groupSize ?? 4,
+      p_qualifiers: 2,
+      p_match_minutes: category.minutes ?? 90,
+      p_seeding: 'ranking',
+      p_third_set: category.thirdSet ?? 'super_tiebreak',
+      p_golden_point: category.goldenPoint ?? false,
+      ...(category.levels ? { p_level_min: category.levels[0], p_level_max: category.levels[1] } : {}),
+      ...(category.timeLimit ? { p_time_limit: category.timeLimit } : {}),
+    })
+    categoryIds.push(created?.id ?? null)
+  }
+  if (!(await tryRpc(clubAdmin, 'open_championship_registration', { p_championship_id: championship.id }))) return null
+
+  // A pair: [category, who signs up (a member key, or 'desk' for reception), partner (a member key, someone
+  // from outside, or for the desk both players from outside)].
+  const entries = {}
+  for (const [index, [categoryIndex, first, second]] of pairs.entries()) {
+    const categoryId = categoryIds[categoryIndex]
+    if (!categoryId) continue
+    const partner = typeof second === 'string' ? people[second] : null
+    const entry =
+      first === 'desk'
+        ? await tryRpc(reception, 'add_championship_pair', {
+            p_category_id: categoryId, p_player1_level: second[0].level, p_player2_level: second[1].level,
+            p_player1_name: second[0].name, p_player1_phone: second[0].phone,
+            p_player2_name: second[1].name, p_player2_phone: second[1].phone,
+            p_note: index % 2 === 0 ? 'Se anotaron por teléfono' : null,
+          }, { quiet: true })
+        : await tryRpc(people[first].client, 'register_championship_pair', {
+            p_category_id: categoryId,
+            p_my_level: people[first].category,
+            p_partner_level: partner ? partner.category : second.level,
+            ...(partner ? { p_partner_profile_id: partner.id } : { p_partner_name: second.name, p_partner_phone: second.phone }),
+          }, { quiet: true })
+    if (entry) entries[first === 'desk' ? `desk${index}` : first] = { ...entry, price: categories[categoryIndex].price }
+  }
+  for (const key of cash) {
+    if (entries[key]) await tryRpc(reception, 'record_championship_cash', { p_entry_id: entries[key].id, p_amount: entries[key].price }, { quiet: true })
+  }
+  for (const key of transfer) {
+    if (entries[key]) await reportTransfer(people[key], 'report_championship_transfer', { p_entry_id: entries[key].id }, entries[key].id)
+  }
+  for (const key of withdraw) {
+    if (entries[key]) await tryRpc(people[key].client, 'withdraw_championship_entry', { p_entry_id: entries[key].id }, { quiet: true })
+  }
+  if (close) await tryRpc(clubAdmin, 'close_championship_registration', { p_championship_id: championship.id })
+  return { id: championship.id, pairs: Object.keys(entries).length, categoryIds }
+}
+
+if (decemberSaturdays.length >= 2) {
+  const summer = await makeChampionship({
+    name: 'Copa de Verano',
+    rules: 'Zonas de 4 parejas y llave. Partidos al mejor de 3 sets con súper tie-break; en 6ta Damas, 50 minutos de juego. Tolerancia de 15 minutos.',
+    saturday: decemberSaturdays[1],
+    categories: [
+      { name: '6ta Libre', gender: 'open', max: 8, price: 2400 },
+      { name: '5ta Caballeros', gender: 'men', max: 4, price: 2400, levels: [3, 5] },
+      { name: '6ta Damas', gender: 'women', max: 6, price: 2000, format: 'round_robin', minutes: 60, timeLimit: 50, goldenPoint: true },
+      { name: 'Mixto B', gender: 'mixed', max: 6, price: 2200 },
+    ],
+    pairs: [
+      [0, 'joaquin', 'gonzalo'],
+      [0, 'matias', outside('Pedro Viera', '099 111 201', 6)],
+      [0, 'agustin', outside('Leandro Ríos', '099 111 202', 6)],
+      [0, 'desk', [outside('Hernán Pais', '099 111 203', 6), outside('Ignacio Bas', '099 111 204', 7)]],
+      [1, 'santiago', 'diego'],
+      [1, 'federico', 'martin'],
+      [1, 'nicolas', outside('Rodrigo Laens', '099 111 205', 4)],
+      [1, 'bruno', outside('Emilio Varela', '099 111 206', 5)],
+      [1, 'desk', [outside('Álvaro Cid', '099 111 207', 5), outside('Tomás Ugarte', '099 111 208', 5)]],
+      [1, 'gonzalo', outside('Raúl Mena', '099 111 215', 5)],
+      [1, 'desk', [outside('Ciro Lima', '099 111 216', 4), outside('Mateo Font', '099 111 217', 5)]],
+      [2, 'florencia', 'carolina'],
+      [2, 'sofia', 'lucia'],
+      [2, 'jimena', outside('Natalia Pose', '099 111 209', 7)],
+      [3, 'valentina', 'diego'],
+      [3, 'camila', 'joaquin'],
+      [3, 'paula', outside('Germán Silva', '099 111 210', 5)],
+    ],
+    cash: ['joaquin', 'santiago', 'florencia', 'valentina'],
+    transfer: ['matias', 'federico', 'sofia'],
+    withdraw: ['nicolas'],
+  })
+  if (summer) {
+    championshipLines.push(`Copa de Verano (inscripción abierta, ${summer.pairs} parejas)`)
+    // The featured account plays the 6ta Libre with Mariana.
+    if (featured && summer.categoryIds[0]) {
+      await tryRpc(featured.client, 'register_championship_pair', {
+        p_category_id: summer.categoryIds[0], p_my_level: 5, p_partner_level: people.mariana.category, p_partner_profile_id: people.mariana.id,
+      }, { quiet: true })
+    }
+  }
+  const anniversary = await makeChampionship({
+    name: 'Torneo Aniversario',
+    rules: 'Eliminación directa en 5ta y 6ta; Mixto todos contra todos. Al mejor de 3 sets, sin límite de tiempo.',
+    saturday: decemberSaturdays[0],
+    categories: [
+      { name: '5ta', gender: 'open', max: 8, price: 2600, format: 'knockout' },
+      { name: '6ta', gender: 'open', max: 8, price: 2600, format: 'knockout' },
+      { name: 'Mixto', gender: 'mixed', max: 6, price: 2400, format: 'round_robin', groupSize: 3 },
+    ],
+    pairs: [
+      [0, 'martin', 'nicolas'],
+      [0, 'santiago', 'federico'],
+      [0, 'mariana', 'andrea'],
+      [0, 'diego', outside('Pablo Rocca', '099 111 211', 5)],
+      [1, 'gonzalo', 'matias'],
+      [1, 'carolina', 'sofia'],
+      [1, 'agustin', outside('Martín Cabral', '099 111 212', 6)],
+      [1, 'desk', [outside('Sergio Gil', '099 111 213', 6), outside('Luis Arce', '099 111 214', 6)]],
+      [2, 'paula', 'bruno'],
+    ],
+    cash: ['martin', 'santiago', 'gonzalo', 'carolina'],
+    transfer: ['mariana'],
+    close: true,
+  })
+  if (anniversary) championshipLines.push(`Torneo Aniversario (inscripción cerrada, ${anniversary.pairs} parejas; Mixto con pocas parejas)`)
+}
+
 // ---------- recurring slots and a block ----------
 let series = 0
 for (const [days, time, courtIndex, holder] of [
@@ -406,6 +563,7 @@ Listo. Demo cargada:
   ${waits} esperas en la lista de espera
   ${matches} partidos abiertos
   ${tournaments.length} torneos: ${tournaments.join('; ')}
+  ${championshipLines.length} campeonatos: ${championshipLines.join('; ') || 'ninguno'}
   2 pases de day use, ${passes} pases vendidos y sellos de ejemplo (Valentina tiene una recompensa)
 ${featured ? `  ${FEATURED_EMAIL} tiene reservas, un partido, una inscripción y 4 de 5 sellos.\n` : ''}
 Mostralo con tu cuenta de admin (Panel del club) o sumá tu cuenta de jugador con --player=<email>.
@@ -788,6 +946,9 @@ async function clean(ids) {
   if (seriesIds.length > 0) await check(admin.from('recurring_series').delete().in('id', seriesIds))
   if (matchIds.length > 0) await check(admin.from('open_matches').delete().in('id', matchIds))
   await check(admin.from('tournaments').delete().in('created_by', ids))
+  await check(admin.from('championship_entries').delete().in('created_by', ids))
+  await check(admin.from('championships').delete().in('created_by', ids))
+  await check(admin.from('players').delete().or(`created_by.in.${idList},profile_id.in.${idList}`))
   await check(admin.from('tournament_entries').delete().in('player_id', ids))
   await check(admin.from('day_use_passes').delete().or(`player_id.in.${idList},created_by.in.${idList}`))
   await check(admin.from('day_use_products').delete().in('created_by', ids))

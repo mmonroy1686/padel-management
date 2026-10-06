@@ -35,12 +35,15 @@ describe('RecurringOverview', () => {
     expect(screen.getByRole('region', { name: 'viernes' })).toHaveTextContent('hasta el vie 27/11')
   })
 
-  it('lists the skipped dates by day with what to do about them', () => {
+  it('lists the skipped dates in a table, first date first, with a way to the grid', () => {
     renderOverview()
     const skipped = screen.getByRole('region', { name: /Fechas sin reservar/ })
-    const saturday = within(skipped).getAllByRole('listitem')[0]
+    expect(within(skipped).getByRole('table', { name: 'Fechas sin reservar' })).toBeInTheDocument()
+    const saturday = within(skipped).getAllByRole('row')[1]
     expect(saturday).toHaveTextContent('sáb 3/10')
-    expect(saturday).toHaveTextContent('20:30, Cancha 1 · Escuela de pádel')
+    expect(saturday).toHaveTextContent('20:30')
+    expect(saturday).toHaveTextContent('Cancha 1')
+    expect(saturday).toHaveTextContent('Escuela de pádel')
     expect(saturday).toHaveTextContent('La cancha estaba ocupada')
     expect(within(saturday).getByRole('link', { name: 'Ver el sáb 3/10 en la grilla' })).toHaveAttribute('href', '/club/grilla?dia=2026-10-03')
   })

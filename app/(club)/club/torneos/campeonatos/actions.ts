@@ -121,6 +121,7 @@ export async function addCategory(_previous: ActionState, form: FormData): Promi
         p_seeding: input.seeding,
         p_third_set: input.thirdSet,
         p_golden_point: input.goldenPoint,
+        ...(input.timeLimit !== null ? { p_time_limit: input.timeLimit } : {}),
         ...(input.levelMin !== null && input.levelMax !== null ? { p_level_min: input.levelMin, p_level_max: input.levelMax } : {}),
       }),
     'Categoría agregada.',

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   categoryDetail,
+  championshipPeopleText,
+  matchRulesText,
+  readMatchRules,
   championshipBlocks,
   championshipReadiness,
   closesText,
@@ -225,5 +228,32 @@ describe('smallCategoryText', () => {
   it('says how many pairs a category has of the ones it needs', () => {
     expect(smallCategoryText(makeCategory({ minPairs: 4, entries: [makeEntry()] }))).toBe('1 pareja de 4 mínimas')
     expect(smallCategoryText(makeCategory({ minPairs: 4 }))).toBe('0 parejas de 4 mínimas')
+  })
+})
+
+describe('match rules', () => {
+  it('reads the time limit; none means best of 3 sets as long as it takes', () => {
+    expect(readMatchRules({ third_set: 'full', golden_point: true, time_limit_minutes: 50 })).toEqual({
+      thirdSet: 'full',
+      goldenPoint: true,
+      timeLimit: 50,
+    })
+    expect(readMatchRules({})).toEqual({ thirdSet: 'super_tiebreak', goldenPoint: false, timeLimit: null })
+  })
+
+  it('says how a match is played', () => {
+    expect(matchRulesText(makeCategory())).toBe('Al mejor de 3 sets, sin límite de tiempo · Tercer set: súper tie-break a 10')
+    expect(matchRulesText(makeCategory({ timeLimit: 50, thirdSet: 'full', goldenPoint: true }))).toBe(
+      'Al mejor de 3 sets, con 50 minutos de juego · Tercer set: set completo · Punto de oro',
+    )
+  })
+})
+
+describe('championshipPeopleText', () => {
+  it('counts the pairs with a place and the ones waiting, over every open category', () => {
+    const libre = makeCategory({ id: 'k1', entries: [makeEntry({ id: 'e1' }), makeEntry({ id: 'e2', status: 'waiting' })] })
+    const damas = makeCategory({ id: 'k2', entries: [makeEntry({ id: 'e3' }), makeEntry({ id: 'e4', status: 'withdrawn' })] })
+    expect(championshipPeopleText(makeChampionship({ categories: [libre, damas] }))).toBe('2 parejas · 1 en espera')
+    expect(championshipPeopleText(makeChampionship({ categories: [makeCategory({ entries: [makeEntry()] })] }))).toBe('1 pareja')
   })
 })

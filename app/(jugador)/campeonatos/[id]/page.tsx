@@ -6,6 +6,7 @@ import { loadChampionship, loadMemberDirectory } from '@/lib/data/championships'
 import { championshipPosterUrl } from '@/lib/domain/championship-poster'
 import {
   categoryDetail,
+  matchRulesText,
   championshipBlocks,
   CHAMPIONSHIP_STATUS_LABELS,
   closesText,
@@ -61,6 +62,7 @@ export default async function ChampionshipPage({ params, searchParams }: { param
           id: category.id,
           name: category.name,
           detail: categoryDetail(category),
+          playRules: matchRulesText(category),
           spots: spotsText(category),
           full: status.ok && status.full,
           available: status.ok,

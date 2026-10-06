@@ -125,6 +125,13 @@ export function CategoriesEditor({
               ))}
             </select>
           </Field>
+          <Field label="Tiempo de juego" htmlFor="category-time-mode">
+            <select id="category-time-mode" name="timeLimitMode" defaultValue="none" className={inputClasses}>
+              <option value="none">Sin límite: al mejor de 3 sets</option>
+              <option value="timed">Con límite de tiempo</option>
+            </select>
+          </Field>
+          <NumberField id="category-time-limit" name="timeLimit" label="Minutos de juego, si hay límite" min={20} max={240} value={60} />
           <Field label="Tercer set" htmlFor="category-third-set">
             <select id="category-third-set" name="thirdSet" defaultValue={CATEGORY_DEFAULTS.thirdSet} className={inputClasses}>
               {THIRD_SETS.map((thirdSet) => (

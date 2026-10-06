@@ -59,6 +59,7 @@ export const CATEGORY_DEFAULTS = {
   seeding: 'ranking',
   thirdSet: 'super_tiebreak',
   goldenPoint: false,
+  timeLimit: null,
 } as const
 export const MAX_CATEGORIES_DEFAULT = 2
 // The blocks of the "horarios imposibles", like private.championship_blocks.
@@ -99,6 +100,8 @@ export type ChampionshipCategory = {
   seeding: Seeding
   thirdSet: ThirdSet
   goldenPoint: boolean
+  // Minutes a match lasts at most; null: best of 3 sets, as long as it takes.
+  timeLimit: number | null
   status: CategoryStatus
   mergedInto: string | null
   // Oldest first: the order of the waiting line.
@@ -177,10 +180,29 @@ export function blockKey(date: LocalDate, fromTime: string): string {
   return `${date}@${fromTime}`
 }
 
-// The match rules jsonb; anything missing is the default (third set a super tie-break, no golden point).
-export function readMatchRules(value: unknown): { thirdSet: ThirdSet; goldenPoint: boolean } {
-  const record = value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {}
-  return { thirdSet: record.third_set === 'full' ? 'full' : 'super_tiebreak', goldenPoint: record.golden_point === true }
+// The match rules jsonb; anything missing is the default (third set a super tie-break, no golden point, no time
+// limit).
+export function readMatchRules(value: unknown): { thirdSet: ThirdSet; goldenPoint: boolean; timeLimit: number | null } {
+  const record = value !== null && typeof value === 'object' ? (value as Record<string, unknown>) : {}
+  const limit = record.time_limit_minutes
+  return {
+    thirdSet: record.third_set === 'full' ? 'full' : 'super_tiebreak',
+    goldenPoint: record.golden_point === true,
+    timeLimit: typeof limit === 'number' && Number.isInteger(limit) && limit > 0 ? limit : null,
+  }
+}
+
+// "Al mejor de 3 sets, sin límite de tiempo · Tercer set: súper tie-break a 10 · Punto de oro".
+export function matchRulesText(category: Pick<ChampionshipCategory, 'thirdSet' | 'goldenPoint' | 'timeLimit'>): string {
+  return [
+    category.timeLimit === null
+      ? 'Al mejor de 3 sets, sin límite de tiempo'
+      : `Al mejor de 3 sets, con ${category.timeLimit} minutos de juego`,
+    `Tercer set: ${THIRD_SET_LABELS[category.thirdSet].toLowerCase()}`,
+    category.goldenPoint ? 'Punto de oro' : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }
 
 export function windowPeriod(window: ChampionshipWindow, timezone: string): { startsAt: Date; endsAt: Date } {
@@ -233,6 +255,7 @@ function toCategory(row: CategoryRow, notes: Map<string, EntryNotes>): Champions
     seeding: row.seeding,
     thirdSet: rules.thirdSet,
     goldenPoint: rules.goldenPoint,
+    timeLimit: rules.timeLimit,
     status: row.status,
     mergedInto: row.merged_into,
     entries: row.entries
@@ -447,4 +470,13 @@ export function upcomingChampionships(championships: Championship[], now: Date):
 export function smallCategoryText(category: Pick<ChampionshipCategory, 'entries' | 'minPairs'>): string {
   const count = activeEntries(category).length
   return `${count} ${count === 1 ? 'pareja' : 'parejas'} de ${category.minPairs} mínimas`
+}
+
+// "17 parejas · 2 en espera", over the open categories: the club's list of championships.
+export function championshipPeopleText(championship: Pick<Championship, 'categories'>): string {
+  const categories = openCategories(championship)
+  const active = categories.reduce((sum, category) => sum + activeEntries(category).length, 0)
+  const waiting = categories.reduce((sum, category) => sum + waitingEntries(category).length, 0)
+  const places = `${active} ${active === 1 ? 'pareja' : 'parejas'}`
+  return waiting > 0 ? `${places} · ${waiting} en espera` : places
 }

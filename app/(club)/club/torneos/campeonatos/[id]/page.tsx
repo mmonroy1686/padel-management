@@ -18,6 +18,7 @@ import { pairsCategories } from '@/lib/domain/championship-pairs'
 import { championshipPosterUrl } from '@/lib/domain/championship-poster'
 import {
   categoryDetail,
+  matchRulesText,
   CHAMPIONSHIP_STATUS_LABELS,
   championshipBlocks,
   championshipReadiness,
@@ -124,7 +125,7 @@ export default async function ManageChampionshipPage({ params }: { params: Param
             categories={openCategories(championship).map((category) => ({
               id: category.id,
               name: category.name,
-              detail: categoryDetail(category),
+              detail: `${categoryDetail(category)} · ${matchRulesText(category)}`,
             }))}
             addAction={addCategory}
             deleteAction={deleteCategory}

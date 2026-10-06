@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import { OverrideCalendar } from '@/components/day-use/override-calendar'
 import { ProductForm } from '@/components/day-use/product-form'
-import { ActionForm } from '@/components/ui/action-form'
+import { ProductsTable } from '@/components/day-use/products-table'
 import { BackLink } from '@/components/ui/back-link'
 import { Card } from '@/components/ui/card'
 import { requireAdmin } from '@/lib/auth/viewer'
 import { loadDayUseOccupancies, loadOverrides, loadProducts } from '@/lib/data/day-use'
 import { loadActiveCourts } from '@/lib/data/tournaments'
-import { scheduleText, unblockedCourts } from '@/lib/domain/day-use'
+import { unblockedCourts } from '@/lib/domain/day-use'
 import { dayLabel } from '@/lib/domain/format'
 import { addDays, localDateOf, zonedTime } from '@/lib/domain/time'
 import { saveDayUseProduct, setDayUseOverride, setProductActive } from '../actions'
@@ -72,31 +72,7 @@ export default async function DayUseSettingsPage() {
           <h3 id="pases" className="font-display text-xl font-bold uppercase">
             Pases
           </h3>
-          <ul className="grid gap-3 md:grid-cols-2">
-            {products.map((product) => (
-              <li key={product.id}>
-                <Card className="flex h-full flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-semibold">{product.name}</p>
-                    <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-semibold">
-                      {product.isActive ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </div>
-                  <p className="text-sm text-fg-muted">{scheduleText(product)}</p>
-                  <ProductForm product={product} courts={courts} action={saveDayUseProduct} idPrefix={`pase-${product.id}`} />
-                  <ActionForm
-                    action={setProductActive}
-                    submitLabel={product.isActive ? 'Desactivar' : 'Activar'}
-                    pendingLabel="Guardando…"
-                    variant="ghost"
-                  >
-                    <input type="hidden" name="productId" value={product.id} />
-                    <input type="hidden" name="active" value={String(!product.isActive)} />
-                  </ActionForm>
-                </Card>
-              </li>
-            ))}
-          </ul>
+          <ProductsTable products={products} courts={courts} saveAction={saveDayUseProduct} activeAction={setProductActive} />
         </section>
       ) : null}
 
