@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeRule, parseClubSettings, parsePricingRule, TIME_OPTIONS } from '@/lib/domain/settings'
+import { describeDays, parseClubSettings, parsePricingRule, TIME_OPTIONS } from '@/lib/domain/settings'
 
 function form(entries: [string, string][]): FormData {
   const data = new FormData()
@@ -85,14 +85,12 @@ describe('parsePricingRule', () => {
   })
 })
 
-describe('describeRule', () => {
-  const band = { fromTime: '18:30:00', toTime: '24:00:00', price: 1600 }
-
+describe('describeDays', () => {
   it('names common day groups', () => {
-    expect(describeRule({ ...band, weekdays: [0, 1, 2, 3, 4, 5, 6] })).toBe('Todos los días, 18:30 a 24:00: $1.600')
-    expect(describeRule({ ...band, weekdays: [1, 2, 3, 4, 5] })).toBe('Lunes a viernes, 18:30 a 24:00: $1.600')
-    expect(describeRule({ ...band, weekdays: [0, 6] })).toBe('Sábados y domingos, 18:30 a 24:00: $1.600')
-    expect(describeRule({ ...band, weekdays: [5, 1, 3] })).toBe('lun, mié, vie, 18:30 a 24:00: $1.600')
+    expect(describeDays([0, 1, 2, 3, 4, 5, 6])).toBe('Todos los días')
+    expect(describeDays([1, 2, 3, 4, 5])).toBe('Lunes a viernes')
+    expect(describeDays([0, 6])).toBe('Sábados y domingos')
+    expect(describeDays([5, 1, 3])).toBe('lun, mié, vie')
   })
 })
 

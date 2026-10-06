@@ -1,6 +1,5 @@
-import { formatPrice, WEEKDAYS_SHORT } from './format'
+import { WEEKDAYS_SHORT } from './format'
 import { readBoolean, readInt, readTime } from './input'
-import type { PricingRule } from './slots'
 import { formatMinutes, parseTime } from './time'
 
 export const SLOT_LENGTHS = [60, 90, 120] as const
@@ -94,7 +93,7 @@ export function parsePricingRule(form: FormData): ParseResult<PricingRuleInput> 
 
 const MONDAY_FIRST = [1, 2, 3, 4, 5, 6, 0]
 
-function describeDays(weekdays: number[]): string {
+export function describeDays(weekdays: number[]): string {
   const days = new Set(weekdays)
   if (days.size === 7) return 'Todos los días'
   if (days.size === 5 && [1, 2, 3, 4, 5].every((day) => days.has(day))) return 'Lunes a viernes'
@@ -102,10 +101,4 @@ function describeDays(weekdays: number[]): string {
   return MONDAY_FIRST.filter((day) => days.has(day))
     .map((day) => WEEKDAYS_SHORT[day])
     .join(', ')
-}
-
-export function describeRule(rule: PricingRule): string {
-  const from = formatMinutes(parseTime(rule.fromTime))
-  const to = formatMinutes(parseTime(rule.toTime))
-  return `${describeDays(rule.weekdays)}, ${from} a ${to}: ${formatPrice(rule.price)}`
 }
