@@ -1484,6 +1484,21 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"close_championship_group":
+{ Args: { "p_entry_ids": (string)[],"p_group_id": string }; Returns: {
+              "category_id": string,
+"championship_id": string,
+"club_id": string,
+"id": string,
+"name": string,
+"sort_order": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "championship_groups"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "close_championship_registration":
 { Args: { "p_championship_id": string }; Returns: {
               "cancelled_at": string | null,
@@ -1716,6 +1731,29 @@ isOneToOne: false
 "end_series":
 { Args: { "p_from_date": string,"p_series_id": string }; Returns: number
                            },
+"finish_championship":
+{ Args: { "p_championship_id": string }; Returns: {
+              "cancelled_at": string | null,
+"club_id": string,
+"created_at": string,
+"created_by": string | null,
+"draw_seed": number | null,
+"id": string,
+"max_categories_per_player": number,
+"name": string,
+"poster_path": string | null,
+"public_code": string | null,
+"registration_closes_at": string | null,
+"registration_opens_at": string | null,
+"rules": string,
+"status": Database["public"]['Enums']["championship_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "championships"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "finish_notification_email":
 { Args: { "p_id": string,"p_status": Database["public"]['Enums']["email_status"] }; Returns: undefined
                            },
@@ -1932,6 +1970,32 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"public_championship":
+{ Args: { "p_code": string }; Returns: Json
+                           },
+"publish_championship":
+{ Args: { "p_championship_id": string,"p_release_free"?: boolean }; Returns: {
+              "cancelled_at": string | null,
+"club_id": string,
+"created_at": string,
+"created_by": string | null,
+"draw_seed": number | null,
+"id": string,
+"max_categories_per_player": number,
+"name": string,
+"poster_path": string | null,
+"public_code": string | null,
+"registration_closes_at": string | null,
+"registration_opens_at": string | null,
+"rules": string,
+"status": Database["public"]['Enums']["championship_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "championships"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "record_cash":
 { Args: { "p_amount": number,"p_booking_id": string,"p_payer_id"?: string }; Returns: {
               "amount": number,
@@ -2007,6 +2071,36 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"record_match_result":
+{ Args: { "p_match_id": string,"p_sets": Json }; Returns: {
+              "bracket_position": number | null,
+"category_id": string,
+"championship_id": string,
+"club_id": string,
+"court_id": string | null,
+"ends_at": string | null,
+"entry_a_id": string | null,
+"entry_b_id": string | null,
+"group_id": string | null,
+"id": string,
+"pinned": boolean,
+"recorded_at": string | null,
+"recorded_by": string | null,
+"round": number | null,
+"source_a": Json | null,
+"source_b": Json | null,
+"stage": Database["public"]['Enums']["championship_stage"],
+"starts_at": string | null,
+"status": Database["public"]['Enums']["championship_match_status"],
+"walkover_entry_id": string | null,
+"winner_entry_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "championship_matches"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "record_tournament_cash":
 { Args: { "p_amount": number,"p_entry_id": string }; Returns: {
               "amount": number,
@@ -2052,6 +2146,36 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "tournament_games"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"record_walkover":
+{ Args: { "p_absent_entry_id": string,"p_match_id": string }; Returns: {
+              "bracket_position": number | null,
+"category_id": string,
+"championship_id": string,
+"club_id": string,
+"court_id": string | null,
+"ends_at": string | null,
+"entry_a_id": string | null,
+"entry_b_id": string | null,
+"group_id": string | null,
+"id": string,
+"pinned": boolean,
+"recorded_at": string | null,
+"recorded_by": string | null,
+"round": number | null,
+"source_a": Json | null,
+"source_b": Json | null,
+"stage": Database["public"]['Enums']["championship_stage"],
+"starts_at": string | null,
+"status": Database["public"]['Enums']["championship_match_status"],
+"walkover_entry_id": string | null,
+"winner_entry_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "championship_matches"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -2350,6 +2474,32 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"save_championship_draw":
+{ Args: { "p_championship_id": string,"p_draw": Json,"p_seed": number }; Returns: {
+              "cancelled_at": string | null,
+"club_id": string,
+"created_at": string,
+"created_by": string | null,
+"draw_seed": number | null,
+"id": string,
+"max_categories_per_player": number,
+"name": string,
+"poster_path": string | null,
+"public_code": string | null,
+"registration_closes_at": string | null,
+"registration_opens_at": string | null,
+"rules": string,
+"status": Database["public"]['Enums']["championship_status"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "championships"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"save_championship_schedule":
+{ Args: { "p_championship_id": string,"p_slots": Json }; Returns: number
+                           },
 "save_day_use_product":
 { Args: { "p_capacity": number,"p_club_id": string,"p_court_ids": (string)[],"p_from_time": string,"p_includes": (string)[],"p_name": string,"p_price": number,"p_product_id"?: string,"p_sort_order"?: number,"p_to_time": string,"p_weekdays": (number)[] }; Returns: {
               "saved_id": string,"skipped_count": number
@@ -2444,6 +2594,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_championship_seeds":
+{ Args: { "p_category_id": string,"p_entry_ids": (string)[] }; Returns: number
+                           },
 "set_day_use_override":
 { Args: { "p_date": string,"p_enabled": boolean,"p_product_id": string }; Returns: number
                            },
@@ -2472,6 +2625,66 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "championship_entries"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"set_match_pinned":
+{ Args: { "p_match_id": string,"p_pinned": boolean }; Returns: {
+              "bracket_position": number | null,
+"category_id": string,
+"championship_id": string,
+"club_id": string,
+"court_id": string | null,
+"ends_at": string | null,
+"entry_a_id": string | null,
+"entry_b_id": string | null,
+"group_id": string | null,
+"id": string,
+"pinned": boolean,
+"recorded_at": string | null,
+"recorded_by": string | null,
+"round": number | null,
+"source_a": Json | null,
+"source_b": Json | null,
+"stage": Database["public"]['Enums']["championship_stage"],
+"starts_at": string | null,
+"status": Database["public"]['Enums']["championship_match_status"],
+"walkover_entry_id": string | null,
+"winner_entry_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "championship_matches"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"set_match_slot":
+{ Args: { "p_court_id": string,"p_match_id": string,"p_starts_at": string }; Returns: {
+              "bracket_position": number | null,
+"category_id": string,
+"championship_id": string,
+"club_id": string,
+"court_id": string | null,
+"ends_at": string | null,
+"entry_a_id": string | null,
+"entry_b_id": string | null,
+"group_id": string | null,
+"id": string,
+"pinned": boolean,
+"recorded_at": string | null,
+"recorded_by": string | null,
+"round": number | null,
+"source_a": Json | null,
+"source_b": Json | null,
+"stage": Database["public"]['Enums']["championship_stage"],
+"starts_at": string | null,
+"status": Database["public"]['Enums']["championship_match_status"],
+"walkover_entry_id": string | null,
+"winner_entry_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "championship_matches"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -2532,6 +2745,36 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "bookings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"start_match":
+{ Args: { "p_match_id": string }; Returns: {
+              "bracket_position": number | null,
+"category_id": string,
+"championship_id": string,
+"club_id": string,
+"court_id": string | null,
+"ends_at": string | null,
+"entry_a_id": string | null,
+"entry_b_id": string | null,
+"group_id": string | null,
+"id": string,
+"pinned": boolean,
+"recorded_at": string | null,
+"recorded_by": string | null,
+"round": number | null,
+"source_a": Json | null,
+"source_b": Json | null,
+"stage": Database["public"]['Enums']["championship_stage"],
+"starts_at": string | null,
+"status": Database["public"]['Enums']["championship_match_status"],
+"walkover_entry_id": string | null,
+"winner_entry_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "championship_matches"
         isOneToOne: true
         isSetofReturn: false
       } },
