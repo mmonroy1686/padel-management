@@ -48,6 +48,13 @@ const MESSAGES = {
   partner_not_member: 'Ese jugador no es socio del club. Cargalo como de afuera.',
   invalid_phone: 'Revisá el teléfono: tiene que tener entre 8 y 15 números.',
   too_many_unavailable: 'Marcaste más del 40 % de los horarios. Para más, pedíselo al club.',
+  category_too_small: 'Hay una categoría con menos de 2 parejas. Fusionala o cancelala antes de sortear.',
+  outside_play_days: 'Ese horario queda fuera de los días de juego o de sus canchas.',
+  pair_busy: 'Alguno de los jugadores ya juega o descansa a esa hora (45 minutos entre partidos).',
+  unavailable_pair: 'Esa pareja marcó que no puede jugar a esa hora.',
+  too_early: 'Ese partido tiene que empezar 45 minutos después de los partidos que lo definen.',
+  schedule_incomplete: 'Faltan partidos por ubicar. Programalos o movelos a mano antes de publicar.',
+  invalid_result: 'Ese resultado no es posible con las reglas de la categoría.',
 } as const
 
 export type ErrorCode = keyof typeof MESSAGES
