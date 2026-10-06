@@ -257,3 +257,28 @@ describe('championshipPeopleText', () => {
     expect(championshipPeopleText(makeChampionship({ categories: [makeCategory({ entries: [makeEntry()] })] }))).toBe('1 pareja')
   })
 })
+
+
+describe('the draw and the public link', () => {
+  it('reads each pair\'s seed and the public code', () => {
+    const championship = toChampionship(
+      {
+        ...ROW,
+        public_code: 'primavera-7k2f',
+        categories: ROW.categories.map((category) => ({
+          ...category,
+          entries: category.entries.map((entry) => ({ ...entry, seed: entry.id === 'e1' ? 1 : null })),
+        })),
+      },
+      TIMEZONE,
+    )
+    expect(championship.publicCode).toBe('primavera-7k2f')
+    expect(championship.categories[0].entries.map((entry) => entry.seed)).toEqual([1, null])
+  })
+
+  it('has none when the database did not send them', () => {
+    const championship = toChampionship(ROW, TIMEZONE)
+    expect(championship.publicCode).toBeNull()
+    expect(championship.categories[0].entries[0].seed).toBeNull()
+  })
+})

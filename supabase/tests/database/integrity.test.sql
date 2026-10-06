@@ -4,12 +4,15 @@ create extension if not exists pgtap with schema extensions;
 \ir helpers/club.psql
 select plan(21);
 
--- Grants: Supabase gives EXECUTE on new public functions to anon by default. None of ours may keep it,
--- and authenticated never runs the private helpers that write or skip the permission checks.
-select is_empty(
-  $$ select p.oid::regprocedure::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-     where n.nspname in ('public', 'private') and has_function_privilege('anon', p.oid, 'execute') $$,
-  'anon cannot execute any function in public or private');
+-- Grants: Supabase gives EXECUTE on new public functions to anon by default. None of ours may keep it but the
+-- public page of a championship, and authenticated never runs the private helpers that write or skip the
+-- permission checks.
+select is(
+  array(select n.nspname || '.' || p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname in ('public', 'private') and has_function_privilege('anon', p.oid, 'execute')
+        order by 1),
+  array['public.public_championship'],
+  'anon executes only public_championship (the read-only public page of a championship)');
 select is_empty(
   $$ select p.oid::regprocedure::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'private'

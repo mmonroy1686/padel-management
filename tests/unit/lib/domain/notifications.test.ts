@@ -87,3 +87,15 @@ describe('toNotificationView', () => {
     expect(toNotificationView(championship, TIMEZONE)?.title).toBe('Te anotaron con Ana en 6ta Libre')
   })
 })
+
+
+describe('the fixture aviso', () => {
+  it('tells each pair the fixture is out', () => {
+    expect(notificationContent('championship_fixture', ADDED, TIMEZONE)).toEqual({
+      title: 'Ya está el fixture de Campeonato de Primavera',
+      body: '6ta Libre, con Ana. Mirá tus partidos, canchas y horarios en el campeonato.',
+      button: 'Ver el campeonato',
+      reason: 'te escribimos por tu inscripción en un campeonato.',
+    })
+  })
+})

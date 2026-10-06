@@ -75,6 +75,8 @@ export type ChampionshipEntry = {
   level1: number
   level2: number
   status: EntryStatus
+  // The organizer's seed (1 = strongest) for the draw; null for none.
+  seed: number | null
   note: string | null
   unavailabilityNote: string | null
   unavailabilityApproved: boolean
@@ -112,6 +114,8 @@ export type Championship = {
   name: string
   rules: string
   posterPath: string | null
+  // The public link (/c/<code>), made when the fixture is published.
+  publicCode: string | null
   status: ChampionshipStatus
   registrationOpensAt: Date | null
   registrationClosesAt: Date | null
@@ -134,6 +138,7 @@ export type EntryRow = {
   player1_level: number
   player2_level: number
   status: EntryStatus
+  seed?: number | null
   unavailability_approved: boolean
   created_at: string
   player1: PlayerRow | null
@@ -166,6 +171,7 @@ export type ChampionshipRow = {
   name: string
   rules: string
   poster_path: string | null
+  public_code?: string | null
   status: ChampionshipStatus
   registration_opens_at: string | null
   registration_closes_at: string | null
@@ -228,6 +234,7 @@ function toEntry(row: EntryRow, categoryId: string, notes: Map<string, EntryNote
     level1: row.player1_level,
     level2: row.player2_level,
     status: row.status,
+    seed: row.seed ?? null,
     note: notes.get(row.id)?.note ?? null,
     unavailabilityNote: notes.get(row.id)?.unavailability_note ?? null,
     unavailabilityApproved: row.unavailability_approved,
@@ -280,6 +287,7 @@ export function toChampionship(row: ChampionshipRow, timezone: string, notes: Ma
     name: row.name,
     rules: row.rules,
     posterPath: row.poster_path,
+    publicCode: row.public_code ?? null,
     status: row.status,
     registrationOpensAt: row.registration_opens_at ? new Date(row.registration_opens_at) : null,
     registrationClosesAt: row.registration_closes_at ? new Date(row.registration_closes_at) : null,

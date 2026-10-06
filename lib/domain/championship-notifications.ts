@@ -6,6 +6,7 @@ export const CHAMPIONSHIP_NOTIFICATION_KINDS = [
   'championship_promoted',
   'championship_moved',
   'championship_cancelled',
+  'championship_fixture',
 ] as const
 export type ChampionshipNotificationKind = (typeof CHAMPIONSHIP_NOTIFICATION_KINDS)[number]
 
@@ -69,6 +70,11 @@ export function championshipNotificationText(
       return {
         title: `Se canceló ${where}`,
         body: `${data.categoryName ? `${data.championshipName}. ` : ''}Si ya pagaste, el club te devuelve la plata.`,
+      }
+    case 'championship_fixture':
+      return {
+        title: `Ya está el fixture de ${data.championshipName}`,
+        body: `${where}${withPartner}. Mirá tus partidos, canchas y horarios en el campeonato.`,
       }
   }
 }

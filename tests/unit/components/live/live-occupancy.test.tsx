@@ -124,3 +124,29 @@ describe('LiveOccupancy', () => {
     expect(mocks.channel.subscribe).not.toHaveBeenCalled()
   })
 })
+
+
+describe('LiveOccupancy and the championships', () => {
+  beforeEach(() => {
+    mocks.handlers.length = 0
+    mocks.calls.length = 0
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('listens to the matches of the championships and their sets', async () => {
+    render(<LiveOccupancy clubId="club-1" />)
+    await settle()
+    for (const table of ['championship_matches', 'championship_match_sets']) {
+      expect(mocks.channel.on).toHaveBeenCalledWith(
+        'postgres_changes',
+        { event: '*', schema: 'public', table, filter: 'club_id=eq.club-1' },
+        expect.any(Function),
+      )
+    }
+  })
+})

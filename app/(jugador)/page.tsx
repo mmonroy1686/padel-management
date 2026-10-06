@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { MyBookingCard } from '@/components/booking/my-booking-card'
+import { MyMatches } from '@/components/championships/my-matches'
 import { MatchCard } from '@/components/matches/match-card'
 import { buttonClasses } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -9,6 +10,7 @@ import { getViewer } from '@/lib/auth/viewer'
 import { loadDayGrid } from '@/lib/data/day'
 import { loadFreeCourts, loadMatches, loadPlayerContext } from '@/lib/data/matches'
 import { loadMyBookings } from '@/lib/data/my-bookings'
+import { loadMyChampionshipMatches } from '@/lib/data/championship-fixture'
 import { loadTournaments } from '@/lib/data/tournaments'
 import { dayLabel, timeIn } from '@/lib/domain/format'
 import { countFree } from '@/lib/domain/grid'
@@ -38,7 +40,7 @@ export default async function HomePage() {
   const now = new Date()
   const member = { ...viewer, membership }
   const windowEnd = zonedTime(addDays(localDateOf(now, club.timezone), club.booking_window_days + 1), 0, club.timezone)
-  const [grid, bookings, matches, context, tournaments, dayUse, waitlist] = await Promise.all([
+  const [grid, bookings, matches, context, tournaments, dayUse, waitlist, championshipMatches] = await Promise.all([
     loadDayGrid(club, localDateOf(now, club.timezone), { userId: viewer.userId, audience: 'player' }, now),
     loadMyBookings(viewer, now),
     loadMatches(club, { from: now, to: windowEnd }),
@@ -46,6 +48,7 @@ export default async function HomePage() {
     loadTournaments(club, { endsAfter: now }),
     loadDayUseHome(viewer, now),
     loadMyWaitlist(viewer, now),
+    loadMyChampionshipMatches(club, viewer.userId, now),
   ])
   const freeToday = countFree(grid.rows)
   const forMe = matchesForMe(
@@ -106,6 +109,12 @@ export default async function HomePage() {
             )}
           </section>
           <WaitingCard waits={waitItems(waitlist.waits, waitlist.courts, today)} cancelAction={cancelSlotWait} />
+          {championshipMatches.length > 0 ? (
+            <Card className="flex flex-col gap-2">
+              <h2 className="font-display text-2xl font-bold uppercase">Mis partidos</h2>
+              <MyMatches matches={championshipMatches} />
+            </Card>
+          ) : null}
           <Card className="flex flex-col gap-2">
             <h2 className="font-display text-2xl font-bold uppercase">Tu próximo partido</h2>
             {myMatches.length > 0 ? (

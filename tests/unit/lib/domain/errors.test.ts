@@ -14,6 +14,8 @@ const DATABASE_CODES = [
   'slot_available', 'too_many_waits', 'hold_expired',
   'championship_closed', 'championship_incomplete', 'category_exists', 'already_in_category', 'too_many_categories',
   'same_player', 'partner_not_member', 'invalid_phone', 'too_many_unavailable',
+  'category_too_small', 'outside_play_days', 'pair_busy', 'unavailable_pair', 'too_early', 'schedule_incomplete',
+  'invalid_result',
 ]
 
 describe('errorMessage', () => {
@@ -57,5 +59,17 @@ describe('errorMessage', () => {
     expect(errorMessage('boom')).toBe(FALLBACK_MESSAGE)
     expect(errorMessage('constructor')).toBe(FALLBACK_MESSAGE)
     expect(errorMessage(undefined)).toBe(FALLBACK_MESSAGE)
+  })
+})
+
+
+describe('the fixture of a championship', () => {
+  it('explains the draw, schedule and result rules in words', () => {
+    expect(errorMessage('category_too_small')).toBe(
+      'Hay una categoría con menos de 2 parejas. Fusionala o cancelala antes de sortear.',
+    )
+    expect(errorMessage('pair_busy')).toBe('Alguno de los jugadores ya juega o descansa a esa hora (45 minutos entre partidos).')
+    expect(errorMessage('too_early')).toBe('Ese partido tiene que empezar 45 minutos después de los partidos que lo definen.')
+    expect(errorMessage('invalid_result')).toBe('Ese resultado no es posible con las reglas de la categoría.')
   })
 })
