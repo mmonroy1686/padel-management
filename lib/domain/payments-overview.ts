@@ -27,6 +27,8 @@ export type OverviewBooking = HolderRow & {
 }
 
 export type UnpaidItem = { bookingId: string; holder: string; startsAt: Date; courtName: string; due: number; payerId?: string }
+// What a money item in Cobros is for.
+export type MoneyKind = 'booking' | 'tournament' | 'day_use'
 export type RefundItem = { paymentId: string; holder: string; startsAt: Date; courtName: string; amount: number }
 
 export function holderLabel(row: HolderRow): string {

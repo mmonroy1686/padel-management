@@ -6,6 +6,7 @@ import {
   leftPlayerRefunds,
   refundsDue,
   unpaidBookings,
+  type MoneyKind,
   type RefundItem,
   type UnpaidItem,
 } from '@/lib/domain/payments-overview'
@@ -27,7 +28,7 @@ export type PaymentsOverview = {
   unpaid: UnpaidItem[]
   unpaidEntries: UnpaidEntryItem[]
   unpaidPasses: UnpaidPassItem[]
-  refunds: RefundItem[]
+  refunds: (RefundItem & { kind: MoneyKind })[]
 }
 
 const RECEIPT_URL_SECONDS = 300
@@ -133,10 +134,9 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
     unpaidEntries: unpaidEntries(tournaments.data, entries.data, now),
     unpaidPasses: unpaidPasses(passes.data, now, club.timezone),
     refunds: [
-      ...refundsDue(cancelled.data),
-      ...leftPlayerRefunds(matchBookings.data),
-      ...entryRefunds(tournaments.data, entries.data),
-      ...passRefunds(passes.data, club.timezone),
+      ...[...refundsDue(cancelled.data), ...leftPlayerRefunds(matchBookings.data)].map((item) => ({ ...item, kind: 'booking' as const })),
+      ...entryRefunds(tournaments.data, entries.data).map((item) => ({ ...item, kind: 'tournament' as const })),
+      ...passRefunds(passes.data, club.timezone).map((item) => ({ ...item, kind: 'day_use' as const })),
     ],
   }
 }

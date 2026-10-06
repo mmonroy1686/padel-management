@@ -1,6 +1,4 @@
 import type { Metadata } from 'next'
-import { ActionForm } from '@/components/ui/action-form'
-import { Card } from '@/components/ui/card'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadPaymentsOverview } from '@/lib/data/payments'
 import { dayLongLabel, timeIn } from '@/lib/domain/format'
@@ -10,7 +8,8 @@ import { recordCash } from '../grilla/actions'
 import { recordPassCash } from '../day-use/actions'
 import { recordTournamentCash } from '../torneos/actions'
 import { confirmPayment, refundPayment, rejectPayment } from './actions'
-import { PaymentItemHead, PaymentsSection, SummaryTile } from './payments-section'
+import { MoneyTable, type MoneyItem } from './money-table'
+import { PaymentsSection, SummaryTile } from './payments-section'
 import { TransferReviewCard } from './transfer-review-card'
 
 export const metadata: Metadata = { title: 'Cobros' }
@@ -20,6 +19,54 @@ export default async function PaymentsPage() {
   const { club } = viewer
   const { transfers, unpaid, unpaidEntries, unpaidPasses, refunds } = await loadPaymentsOverview(club)
   const when = (start: Date) => `${dayLongLabel(localDateOf(start, club.timezone))}, ${timeIn(start, club.timezone)}`
+
+  const cash = (label: string, fields: Record<string, string>) => (club.accepts_cash ? { action: { label, fields } } : {})
+  const owed: MoneyItem[] = [
+    ...unpaid.map((item) => ({
+      id: `${item.bookingId}-${item.payerId ?? ''}`,
+      kind: 'booking' as const,
+      holder: item.holder,
+      what: item.courtName,
+      when: when(item.startsAt),
+      at: item.startsAt.getTime(),
+      amount: item.due,
+      ...cash('Cobrar en efectivo', {
+        bookingId: item.bookingId,
+        amount: String(item.due),
+        ...(item.payerId ? { payerId: item.payerId } : {}),
+      }),
+    })),
+    ...unpaidEntries.map((item) => ({
+      id: item.entryId,
+      kind: 'tournament' as const,
+      holder: item.holder,
+      what: `Torneo ${item.tournamentName}`,
+      when: when(item.startsAt),
+      at: item.startsAt.getTime(),
+      amount: item.due,
+      ...cash('Cobrar en efectivo', { entryId: item.entryId, amount: String(item.due) }),
+    })),
+    ...unpaidPasses.map((item) => ({
+      id: item.passId,
+      kind: 'day_use' as const,
+      holder: item.holder,
+      what: item.productName,
+      when: when(item.startsAt),
+      at: item.startsAt.getTime(),
+      amount: item.due,
+      ...cash('Cobrar en efectivo', { passId: item.passId, amount: String(item.due) }),
+    })),
+  ]
+  const toGiveBack: MoneyItem[] = refunds.map((item) => ({
+    id: item.paymentId,
+    kind: item.kind,
+    holder: item.holder,
+    what: item.courtName,
+    when: when(item.startsAt),
+    at: item.startsAt.getTime(),
+    amount: item.amount,
+    action: { label: 'Marcar devuelto', fields: { paymentId: item.paymentId } },
+  }))
 
   const totals = {
     transfers: totalsOf(transfers, (transfer) => transfer.amount),
@@ -44,6 +91,7 @@ export default async function PaymentsPage() {
         totals={totals.transfers}
         emptyText="No hay transferencias para confirmar."
       >
+        <ul className="grid gap-3 md:grid-cols-2">
         {transfers.map((transfer) => (
           <li key={transfer.id}>
             <TransferReviewCard
@@ -60,6 +108,7 @@ export default async function PaymentsPage() {
             />
           </li>
         ))}
+        </ul>
       </PaymentsSection>
 
       <PaymentsSection
@@ -71,52 +120,13 @@ export default async function PaymentsPage() {
         totals={totals.unpaid}
         emptyText="Nada pendiente en los últimos 30 días."
       >
-        {unpaid.map((item) => (
-          <li key={`${item.bookingId}-${item.payerId ?? ''}`}>
-            <Card className="flex h-full flex-col gap-3">
-              <PaymentItemHead holder={item.holder} when={when(item.startsAt)} courtName={item.courtName}
-                amount={item.due} amountLabel="Debe" />
-              {club.accepts_cash ? (
-                <ActionForm action={recordCash} submitLabel="Cobrar en efectivo" pendingLabel="Registrando…" variant="secondary"
-                  className="mt-auto">
-                  <input type="hidden" name="bookingId" value={item.bookingId} />
-                  <input type="hidden" name="amount" value={item.due} />
-                  {item.payerId ? <input type="hidden" name="payerId" value={item.payerId} /> : null}
-                </ActionForm>
-              ) : null}
-            </Card>
-          </li>
-        ))}
-        {unpaidEntries.map((item) => (
-          <li key={item.entryId}>
-            <Card className="flex h-full flex-col gap-3">
-              <PaymentItemHead holder={item.holder} when={when(item.startsAt)} courtName={`Torneo ${item.tournamentName}`}
-                amount={item.due} amountLabel="Debe" />
-              {club.accepts_cash ? (
-                <ActionForm action={recordTournamentCash} submitLabel="Cobrar en efectivo" pendingLabel="Registrando…" variant="secondary"
-                  className="mt-auto">
-                  <input type="hidden" name="entryId" value={item.entryId} />
-                  <input type="hidden" name="amount" value={item.due} />
-                </ActionForm>
-              ) : null}
-            </Card>
-          </li>
-        ))}
-        {unpaidPasses.map((item) => (
-          <li key={item.passId}>
-            <Card className="flex h-full flex-col gap-3">
-              <PaymentItemHead holder={item.holder} when={when(item.startsAt)} courtName={item.productName}
-                amount={item.due} amountLabel="Debe" />
-              {club.accepts_cash ? (
-                <ActionForm action={recordPassCash} submitLabel="Cobrar en efectivo" pendingLabel="Registrando…" variant="secondary"
-                  className="mt-auto">
-                  <input type="hidden" name="passId" value={item.passId} />
-                  <input type="hidden" name="amount" value={item.due} />
-                </ActionForm>
-              ) : null}
-            </Card>
-          </li>
-        ))}
+        <MoneyTable
+          caption="Jugado sin pagar"
+          items={owed}
+          amountLabel="Debe"
+          actions={{ booking: recordCash, tournament: recordTournamentCash, day_use: recordPassCash }}
+          emptyText="Nada pendiente en los últimos 30 días."
+        />
       </PaymentsSection>
 
       <PaymentsSection
@@ -128,18 +138,13 @@ export default async function PaymentsPage() {
         totals={totals.refunds}
         emptyText="No hay devoluciones pendientes."
       >
-        {refunds.map((item) => (
-          <li key={item.paymentId}>
-            <Card className="flex h-full flex-col gap-3">
-              <PaymentItemHead holder={item.holder} when={when(item.startsAt)} courtName={item.courtName}
-                amount={item.amount} amountLabel="Devolver" />
-              <ActionForm action={refundPayment} submitLabel="Marcar devuelto" pendingLabel="Guardando…" variant="secondary"
-                className="mt-auto">
-                <input type="hidden" name="paymentId" value={item.paymentId} />
-              </ActionForm>
-            </Card>
-          </li>
-        ))}
+        <MoneyTable
+          caption="Pagos a devolver"
+          items={toGiveBack}
+          amountLabel="Devolver"
+          actions={{ booking: refundPayment, tournament: refundPayment, day_use: refundPayment }}
+          emptyText="No hay devoluciones pendientes."
+        />
       </PaymentsSection>
     </>
   )

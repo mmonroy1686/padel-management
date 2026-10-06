@@ -53,7 +53,7 @@ export function PaymentsSection({
         </div>
       </header>
       {totals.count > 0 ? (
-        <ul className="grid gap-3 md:grid-cols-2">{children}</ul>
+        children
       ) : (
         <p className="flex items-center gap-3 rounded-2xl border border-dashed border-border p-4 text-fg-muted">
           <Icon name="check-circle" className="text-court-ink" />
