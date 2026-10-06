@@ -1,7 +1,7 @@
 ---
 feature: campeonatos-inscripcion
 type: design
-status: design
+status: approved
 date: 2026-10-06
 branch: feat/campeonatos-inscripcion
 references: ../lista-de-espera/design.md, ../fase-3a-torneos/design.md, ../fase-1-reservas/design.md, ../buscador-jugador (components/ui/member-picker.tsx)
