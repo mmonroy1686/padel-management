@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ChampionshipCard } from '@/components/championships/championship-card'
+import { EventsTable } from '@/components/club/events-table'
 import { buttonClasses } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadChampionships } from '@/lib/data/championships'
 import { loadTournaments } from '@/lib/data/tournaments'
 import { dayLabel, timeIn } from '@/lib/domain/format'
+import { CHAMPIONSHIP_STATUS_LABELS, championshipPeopleText, datesText } from '@/lib/domain/championships'
 import { localDateOf } from '@/lib/domain/time'
-import { courtsText, spotsLabel, TOURNAMENT_STATUS_LABELS } from '@/lib/domain/tournaments'
+import { courtsText, TOURNAMENT_STATUS_LABELS } from '@/lib/domain/tournaments'
 
 export const metadata: Metadata = { title: 'Torneos' }
 
@@ -37,19 +37,21 @@ export default async function ClubTournamentsPage() {
             Nuevo campeonato
           </Link>
         </div>
-        {shown.length > 0 ? (
-          <ul className="grid gap-3 md:grid-cols-2">
-            {shown.map((championship) => (
-              <li key={championship.id}>
-                <ChampionshipCard championship={championship} href={`/club/torneos/campeonatos/${championship.id}`} actionLabel="Gestionar" />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="rounded-2xl border border-dashed border-border p-4 text-fg-muted">
-            Todavía no hay campeonatos. Armá el primero con &quot;Nuevo campeonato&quot;.
-          </p>
-        )}
+        <EventsTable
+          caption="Campeonatos"
+          peopleLabel="Parejas"
+          rows={shown.map((championship) => ({
+            id: championship.id,
+            name: championship.name,
+            when: datesText(championship),
+            at: championship.startsAt?.getTime() ?? Number.MAX_SAFE_INTEGER,
+            status: championship.status,
+            statusLabel: CHAMPIONSHIP_STATUS_LABELS[championship.status],
+            people: championshipPeopleText(championship),
+            href: `/club/torneos/campeonatos/${championship.id}`,
+          }))}
+          emptyText='Todavía no hay campeonatos. Armá el primero con "Nuevo campeonato".'
+        />
       </section>
 
       <section aria-labelledby="americanos" className="flex flex-col gap-3">
@@ -61,34 +63,21 @@ export default async function ClubTournamentsPage() {
             Nuevo americano
           </Link>
         </div>
-        {tournaments.length > 0 ? (
-          <ul className="grid gap-3 md:grid-cols-2">
-            {tournaments.map((tournament) => (
-              <li key={tournament.id}>
-                <Card className="flex h-full flex-col gap-2">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-semibold">{tournament.name}</p>
-                    <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-semibold">
-                      {spotsLabel(tournament)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-fg-muted">
-                    {dayLabel(localDateOf(tournament.startsAt, club.timezone), today)} {timeIn(tournament.startsAt, club.timezone)} a{' '}
-                    {timeIn(tournament.endsAt, club.timezone)}, {courtsText(tournament.courtNames)}
-                  </p>
-                  <p className="text-sm">{TOURNAMENT_STATUS_LABELS[tournament.status]}</p>
-                  <Link href={`/club/torneos/${tournament.id}`} className={buttonClasses({ variant: 'secondary', className: 'mt-auto' })}>
-                    Gestionar
-                  </Link>
-                </Card>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="rounded-2xl border border-dashed border-border p-4 text-fg-muted">
-            Todavía no hay americanos. Armá el primero con &quot;Nuevo americano&quot;.
-          </p>
-        )}
+        <EventsTable
+          caption="Americanos"
+          peopleLabel="Anotados"
+          rows={tournaments.map((tournament) => ({
+            id: tournament.id,
+            name: tournament.name,
+            when: `${dayLabel(localDateOf(tournament.startsAt, club.timezone), today)} ${timeIn(tournament.startsAt, club.timezone)} a ${timeIn(tournament.endsAt, club.timezone)}, ${courtsText(tournament.courtNames)}`,
+            at: tournament.startsAt.getTime(),
+            status: tournament.status,
+            statusLabel: TOURNAMENT_STATUS_LABELS[tournament.status],
+            people: `${tournament.entries.length} de ${tournament.maxPlayers} jugadores`,
+            href: `/club/torneos/${tournament.id}`,
+          }))}
+          emptyText='Todavía no hay americanos. Armá el primero con "Nuevo americano".'
+        />
       </section>
     </>
   )

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   categoryDetail,
+  championshipPeopleText,
   matchRulesText,
   readMatchRules,
   championshipBlocks,
@@ -245,5 +246,14 @@ describe('match rules', () => {
     expect(matchRulesText(makeCategory({ timeLimit: 50, thirdSet: 'full', goldenPoint: true }))).toBe(
       'Al mejor de 3 sets, con 50 minutos de juego · Tercer set: set completo · Punto de oro',
     )
+  })
+})
+
+describe('championshipPeopleText', () => {
+  it('counts the pairs with a place and the ones waiting, over every open category', () => {
+    const libre = makeCategory({ id: 'k1', entries: [makeEntry({ id: 'e1' }), makeEntry({ id: 'e2', status: 'waiting' })] })
+    const damas = makeCategory({ id: 'k2', entries: [makeEntry({ id: 'e3' }), makeEntry({ id: 'e4', status: 'withdrawn' })] })
+    expect(championshipPeopleText(makeChampionship({ categories: [libre, damas] }))).toBe('2 parejas · 1 en espera')
+    expect(championshipPeopleText(makeChampionship({ categories: [makeCategory({ entries: [makeEntry()] })] }))).toBe('1 pareja')
   })
 })

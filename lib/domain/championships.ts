@@ -471,3 +471,12 @@ export function smallCategoryText(category: Pick<ChampionshipCategory, 'entries'
   const count = activeEntries(category).length
   return `${count} ${count === 1 ? 'pareja' : 'parejas'} de ${category.minPairs} mínimas`
 }
+
+// "17 parejas · 2 en espera", over the open categories: the club's list of championships.
+export function championshipPeopleText(championship: Pick<Championship, 'categories'>): string {
+  const categories = openCategories(championship)
+  const active = categories.reduce((sum, category) => sum + activeEntries(category).length, 0)
+  const waiting = categories.reduce((sum, category) => sum + waitingEntries(category).length, 0)
+  const places = `${active} ${active === 1 ? 'pareja' : 'parejas'}`
+  return waiting > 0 ? `${places} · ${waiting} en espera` : places
+}
