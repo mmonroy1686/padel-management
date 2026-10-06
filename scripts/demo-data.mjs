@@ -9,7 +9,7 @@
 //   npm run demo:data -- --prod            production: needs SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 //                                          and SUPABASE_PUBLISHABLE_KEY in the environment
 // Locally the demo fills the courts the e2e flows book: run --clean before npm run test:e2e.
-import { randomBytes } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { localSupabase } from './local-supabase.mjs'
 
@@ -127,6 +127,10 @@ const horizon = (() => {
   return Math.round((Date.parse(lastOfNext) - Date.parse(today)) / 86_400_000)
 })()
 
+// ---------- a championship being played today ----------
+// It takes this afternoon's courts before anything else does, so the bookings below leave them free.
+const liveChampionship = await championshipToday()
+
 // Things that take whole courts go first: day use, tournaments, recurring slots and the block.
 // ---------- day use ----------
 const products = {}
@@ -212,11 +216,11 @@ if (nextMonthTournament) {
   }
 }
 
-// Today if it still fits before closing, otherwise tomorrow; started with some results.
-const playDay = futureSlot(0, '17:00') ? 0 : 1
+// Today after the championship if it still fits before closing, otherwise tomorrow; started with some results.
+const playDay = futureSlot(0, '20:00') ? 0 : 1
 const liveTournament = await tryRpc(reception, 'create_tournament', {
   p_name: 'Americano mixto de la casa',
-  p_starts_at: at(playDay, '17:00').toISOString(),
+  p_starts_at: at(playDay, '20:00').toISOString(),
   p_court_ids: [court(0).id, court(1).id],
   p_max_players: 8,
   p_points_per_game: 24,
@@ -252,7 +256,9 @@ if (await finishedTournament()) tournaments.push('Relámpago de la semana pasada
 // Two December weekends, past the bookings: the "Copa de Verano" taking sign-ups (pairs with a place, a full
 // category with a waiting line, payments of every kind, a withdrawal) and the "Torneo Aniversario" with
 // registration closed and one category short of pairs (to merge or cancel).
-const championshipLines = []
+const championshipLines = liveChampionship
+  ? [`Copa de la Casa (jugándose hoy: ${liveChampionship.finished} terminados, ${liveChampionship.playing} en juego, el resto por jugar)`]
+  : []
 const decemberSaturdays = (() => {
   const year = Number(today.slice(0, 4)) + (today.slice(5, 7) === '12' ? 1 : 0)
   const out = []
@@ -434,7 +440,7 @@ await tryRpc(reception, 'block_court', {
 // ---------- open matches ----------
 let matches = 0
 for (const [days, time, courtIndex, creator, joiners] of [
-  [0, '21:30', 1, 'diego', ['camila', 'valentina']],
+  [0, '21:30', 2, 'diego', ['camila', 'valentina']],
   [1, '21:30', 0, 'bruno', ['gonzalo']],
   [2, '20:00', 1, 'florencia', ['carolina', 'sofia']],
   [3, '18:30', 0, 'santiago', []],
@@ -915,6 +921,138 @@ async function dayUsePasses() {
     break
   }
   return count
+}
+
+// "Copa de la Casa", being played this afternoon on the first three courts: 5ta Libre in two groups of 3 and a
+// final between their winners, 6ta Damas by direct knockout; 60-minute matches from 12:30 to 19:30. Inserted
+// directly: the functions never schedule nor record results in the past. The demo's clock stays between 15:00
+// and 17:00, so there are always matches played, one being played and the rest to come. In each match the first
+// pair named wins 6-3 6-4.
+async function championshipToday() {
+  if (courts.length < 3) {
+    console.warn('  (se saltea el campeonato de hoy: necesita 3 canchas)')
+    return null
+  }
+  const used = courts.slice(0, 3)
+  const name = 'Copa de la Casa'
+  const startAt = (time) => zoned(today, time)
+  const clock = Math.min(Math.max(now.getTime(), startAt('15:00').getTime()), startAt('17:00').getTime())
+  const statusAt = (start) =>
+    start.getTime() + 3_600_000 <= clock ? 'finished' : start.getTime() <= clock ? 'playing' : 'scheduled'
+  const insert = async (table, rows) => {
+    const { data, error } = await admin.from(table).insert(rows).select('*')
+    if (error) throw new Error(`${table}: ${error.message}`)
+    return data
+  }
+
+  const created = await admin
+    .from('championships')
+    .insert({
+      club_id: club.id,
+      name,
+      rules: 'Zonas de 3 parejas y final en 5ta; llave directa en 6ta Damas. Partidos de 60 minutos, al mejor de 3 sets con súper tie-break.',
+      status: 'in_progress',
+      registration_opens_at: new Date(now.getTime() - 10 * 86_400_000).toISOString(),
+      registration_closes_at: new Date(now.getTime() - 86_400_000).toISOString(),
+      public_code: `copa-de-la-casa-${randomBytes(2).toString('hex')}`,
+      draw_seed: 1,
+      created_by: staffId,
+    })
+    .select('id')
+    .single()
+  if (created.error) {
+    console.warn(`  (se saltea el campeonato de hoy: ${created.error.message})`)
+    return null
+  }
+  const id = created.data.id
+
+  try {
+    await insert('championship_windows', [
+      { club_id: club.id, championship_id: id, on_date: today, from_time: '12:30', to_time: '19:30', court_ids: used.map((item) => item.id) },
+    ])
+    const period = `[${startAt('12:30').toISOString()},${startAt('19:30').toISOString()})`
+    for (const item of used) {
+      await insert('court_occupancy', [
+        { club_id: club.id, court_id: item.id, kind: 'championship', period, note: name, championship_id: id, created_by: staffId },
+      ])
+    }
+    const [libre, damas] = await insert('championship_categories', [
+      { club_id: club.id, championship_id: id, name: '5ta Libre', gender: 'open', min_pairs: 4, max_pairs: 8, price: 2000, format: 'groups_knockout', group_size: 3, qualifiers_per_group: 1, match_minutes: 60, seeding: 'ranking', sort_order: 0 },
+      { club_id: club.id, championship_id: id, name: '6ta Damas', gender: 'women', min_pairs: 4, max_pairs: 4, price: 1800, format: 'knockout', group_size: 4, qualifiers_per_group: 2, match_minutes: 60, seeding: 'ranking', sort_order: 1 },
+    ])
+
+    const members = ['martin', 'nicolas', 'santiago', 'federico', 'diego', 'joaquin', 'gonzalo', 'matias', 'agustin', 'bruno', 'valentina', 'camila', 'florencia', 'carolina', 'mariana', 'andrea', 'paula']
+    const memberRows = await insert('players', members.map((key) => ({ club_id: club.id, name: people[key].name, profile_id: people[key].id, created_by: staffId })))
+    const outsideRows = await insert('players', [['Marcos Lima', '099111301'], ['Ignacio Paz', '099111302'], ['Rocío Vidal', '099111303']].map(([player, phone]) => ({ club_id: club.id, name: player, phone, created_by: staffId })))
+    const playerId = Object.fromEntries([...members.map((key, index) => [key, memberRows[index].id]), ...outsideRows.map((row) => [row.name, row.id])])
+    const entries = async (categoryId, pairs) =>
+      (await insert('championship_entries', pairs.map(([first, second]) => ({
+        club_id: club.id,
+        category_id: categoryId,
+        player1_id: playerId[first],
+        player2_id: playerId[second],
+        player1_level: people[first]?.category ?? 6,
+        player2_level: people[second]?.category ?? 6,
+        status: 'active',
+        created_by: staffId,
+      })))).map((row) => row.id)
+    const libreEntries = await entries(libre.id, [['martin', 'nicolas'], ['santiago', 'federico'], ['diego', 'Marcos Lima'], ['joaquin', 'gonzalo'], ['matias', 'agustin'], ['bruno', 'Ignacio Paz']])
+    const damasEntries = await entries(damas.id, [['valentina', 'camila'], ['florencia', 'carolina'], ['mariana', 'andrea'], ['paula', 'Rocío Vidal']])
+
+    const [zoneA, zoneB] = await insert('championship_groups', ['Zona A', 'Zona B'].map((zone, index) => ({ club_id: club.id, championship_id: id, category_id: libre.id, name: zone, sort_order: index })))
+    const zones = [[zoneA.id, libreEntries.slice(0, 3)], [zoneB.id, libreEntries.slice(3)]]
+    await insert('championship_group_members', zones.flatMap(([groupId, ids]) => ids.map((entryId, index) => ({ group_id: groupId, club_id: club.id, entry_id: entryId, draw_position: index + 1 }))))
+
+    // A group of 3 plays as championship-draw.ts draws it: 2nd-3rd, 1st-3rd, 1st-2nd, an hour of rest between.
+    const plan = []
+    zones.forEach(([groupId, ids], courtIndex) => {
+      ;[[1, 2], [0, 2], [0, 1]].forEach(([a, b], index) => {
+        plan.push({ key: `${groupId}-${index}`, category: libre.id, group: groupId, a: ids[a], b: ids[b], court: used[courtIndex], start: ['12:30', '14:30', '16:30'][index] })
+      })
+    })
+    plan.push({ key: 'F5', category: libre.id, round: 1, position: 1, sourceA: { group: zoneA.id, place: 1 }, sourceB: { group: zoneB.id, place: 1 }, court: used[0], start: '18:30' })
+    plan.push({ key: 'SF1', category: damas.id, round: 2, position: 1, a: damasEntries[0], b: damasEntries[3], court: used[2], start: '12:30' })
+    plan.push({ key: 'SF2', category: damas.id, round: 2, position: 2, a: damasEntries[1], b: damasEntries[2], court: used[2], start: '13:30' })
+    plan.push({ key: 'F6', category: damas.id, round: 1, position: 1, a: damasEntries[0], b: damasEntries[1], winnerOf: ['SF1', 'SF2'], court: used[2], start: '15:30' })
+    const ids = Object.fromEntries(plan.map((match) => [match.key, randomUUID()]))
+    const rows = plan.map((match) => {
+      const startsAt = startAt(match.start)
+      const endsAt = new Date(startsAt.getTime() + 3_600_000)
+      const status = match.a && match.b ? statusAt(startsAt) : 'scheduled'
+      const done = status === 'finished'
+      return {
+        id: ids[match.key],
+        club_id: club.id,
+        championship_id: id,
+        category_id: match.category,
+        stage: match.group ? 'group' : 'knockout',
+        group_id: match.group ?? null,
+        round: match.round ?? null,
+        bracket_position: match.position ?? null,
+        entry_a_id: match.a ?? null,
+        entry_b_id: match.b ?? null,
+        source_a: match.sourceA ?? (match.winnerOf ? { winner_of: ids[match.winnerOf[0]] } : null),
+        source_b: match.sourceB ?? (match.winnerOf ? { winner_of: ids[match.winnerOf[1]] } : null),
+        court_id: match.court.id,
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+        status,
+        winner_entry_id: done ? match.a : null,
+        recorded_by: done ? staffId : null,
+        recorded_at: done ? endsAt.toISOString() : null,
+      }
+    })
+    await insert('championship_matches', rows)
+    const finished = rows.filter((row) => row.status === 'finished')
+    if (finished.length > 0) {
+      await insert('championship_match_sets', finished.flatMap((row) => [[1, 6, 3], [2, 6, 4]].map(([set, a, b]) => ({ match_id: row.id, club_id: club.id, set_number: set, games_a: a, games_b: b }))))
+    }
+    return { id, finished: finished.length, playing: rows.filter((row) => row.status === 'playing').length }
+  } catch (error) {
+    console.warn(`  (se saltea el campeonato de hoy: ${error.message})`)
+    await admin.from('championships').delete().eq('id', id)
+    return null
+  }
 }
 
 async function joinAnywhere(client, matchId) {
