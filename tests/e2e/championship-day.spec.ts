@@ -59,7 +59,7 @@ test('campeonato: the organizer draws, schedules and publishes, loads the group,
   await expect(page.getByRole('heading', { name: 'Zona A' })).toBeVisible()
   await page.getByRole('button', { name: 'Programar' }).click()
   await expect(page.getByText('Todos los partidos tienen cancha y horario. Revisalos y publicá el fixture.')).toBeVisible()
-  await expect(page.getByRole('table', { name: 'Fixture' }).getByRole('row')).toHaveCount(8)
+  await expect(page.getByRole('table', { name: 'Fixture', exact: true }).getByRole('row')).toHaveCount(8)
   await page.getByRole('button', { name: 'Publicar fixture' }).click()
   await expect(page.getByRole('heading', { name: 'Día del torneo' })).toBeVisible()
 
