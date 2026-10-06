@@ -17,16 +17,6 @@ export type Hold = { id: string; courtName: string; startsAt: Date; expiresAt: D
 
 export type NotificationKind = 'slot_held' | 'slot_free_now'
 export type NotificationData = { courtName: string; startsAt: Date; expiresAt: Date | null }
-export type NotificationRow = {
-  id: string
-  kind: NotificationKind
-  data: unknown
-  link: string
-  created_at: string
-  read_at: string | null
-}
-export type NotificationView = { id: string; title: string; body: string; link: string; createdAt: Date; unread: boolean }
-
 // Postgres time comes as 'HH:MM:SS'; the screens use 'HH:MM' ('24:00:00' stays '24:00').
 export function shortTime(value: string): string {
   return value.slice(0, 5)
@@ -145,18 +135,6 @@ export function notificationText(
   return {
     title: `Se liberó la ${data.courtName} a las ${time}: el primero que reserva se la queda`,
     body: 'Falta poco para el turno, así que no se guarda para nadie. Si lo querés, reservalo ya.',
-  }
-}
-
-export function toNotificationView(row: NotificationRow, timezone: string): NotificationView | null {
-  const data = readNotificationData(row.data)
-  if (!data) return null
-  return {
-    id: row.id,
-    ...notificationText(row.kind, data, timezone),
-    link: row.link,
-    createdAt: new Date(row.created_at),
-    unread: row.read_at === null,
   }
 }
 

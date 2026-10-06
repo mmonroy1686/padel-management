@@ -53,6 +53,12 @@ export default async function globalSetup(): Promise<void> {
   // passes e2e admins created (their exceptions, occupancies and remaining passes go with them).
   await check(admin.from('day_use_passes').delete().or(`player_id.in.${idList},created_by.in.${idList}`))
   await check(admin.from('day_use_products').delete().in('created_by', ids))
+  // Championships: pairs e2e users signed up or loaded (their payments and hours go with them), the
+  // championships e2e staff created (days, categories, pairs and blocked courts go with them), and the
+  // players e2e users made or are.
+  await check(admin.from('championship_entries').delete().in('created_by', ids))
+  await check(admin.from('championships').delete().in('created_by', ids))
+  await check(admin.from('players').delete().or(`created_by.in.${idList},profile_id.in.${idList}`))
   const occupancyFilter = [`created_by.in.${idList}`]
   if (occupancyIds.length > 0) occupancyFilter.push(`id.in.(${occupancyIds.join(',')})`)
   await check(admin.from('court_occupancy').delete().or(occupancyFilter.join(',')))

@@ -1,7 +1,6 @@
 import { dayLabel, formatPrice } from './format'
 import type { Loyalty, LoyaltyRule } from './loyalty'
 import type { Period } from './matches'
-import { normalizeText } from './members'
 import { courtsText, type EntryPayment } from './tournaments'
 import { addDays, formatMinutes, parseTime, toDate, weekdayOf, zonedTime, type LocalDate } from './time'
 
@@ -268,13 +267,6 @@ export function toPass(row: PassRow, timezone: string): DayUsePass {
 // Same rule as cancel_day_use for a player: before check-in, and until the pass hours end.
 export function canCancelPass(pass: Pick<DayUsePass, 'status' | 'endsAt'>, now: Date): boolean {
   return pass.status === 'bought' && pass.endsAt > now
-}
-
-// Reception's search: by name (without accents) or by code.
-export function searchPasses(passes: DayUsePass[], query: string): DayUsePass[] {
-  const needle = normalizeText(query)
-  if (!needle) return passes
-  return passes.filter((pass) => normalizeText(pass.holder).includes(needle) || normalizeText(pass.code).includes(needle))
 }
 
 const PASS_CODE = /^DU-\d{6}$/

@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { NotificationList } from '@/components/waitlist/notification-list'
-import type { NotificationView } from '@/lib/domain/waitlist'
+import type { NotificationView } from '@/lib/domain/notifications'
 
 const ITEMS: NotificationView[] = [
   {

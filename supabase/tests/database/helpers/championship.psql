@@ -1,0 +1,134 @@
+-- Campeonatos fixture. Include it after slot.psql, club.psql, match.psql and day_use.psql:
+--   \ir helpers/championship.psql
+-- Players: Ana, Bruno, Gabi, Hugo, Iván and Juli have their member row (linked to their profile);
+-- Pedro, Lucía, Marta, Nico, Olga and Raúl play from outside, with a phone. c4a...a1 is Ana's row,
+-- c4a...f01 Pedro's. Everything is inserted as postgres (skips the RPC rules on purpose).
+insert into public.players (id, club_id, name, phone, profile_id) values
+  ('c4a00000-0000-0000-0000-0000000000a1', 'a0000000-0000-0000-0000-000000000001', 'Ana', null,
+   '00000000-0000-0000-0000-0000000000a1'),
+  ('c4a00000-0000-0000-0000-0000000000b1', 'a0000000-0000-0000-0000-000000000001', 'Bruno', null,
+   '00000000-0000-0000-0000-0000000000b1'),
+  ('c4a00000-0000-0000-0000-0000000000a2', 'a0000000-0000-0000-0000-000000000001', 'Gabi', null,
+   '00000000-0000-0000-0000-0000000000a2'),
+  ('c4a00000-0000-0000-0000-0000000000a3', 'a0000000-0000-0000-0000-000000000001', 'Hugo', null,
+   '00000000-0000-0000-0000-0000000000a3'),
+  ('c4a00000-0000-0000-0000-0000000000a4', 'a0000000-0000-0000-0000-000000000001', 'Iván', null,
+   '00000000-0000-0000-0000-0000000000a4'),
+  ('c4a00000-0000-0000-0000-0000000000a5', 'a0000000-0000-0000-0000-000000000001', 'Juli', null,
+   '00000000-0000-0000-0000-0000000000a5'),
+  ('c4a00000-0000-0000-0000-000000000f01', 'a0000000-0000-0000-0000-000000000001', 'Pedro', '099111001', null),
+  ('c4a00000-0000-0000-0000-000000000f02', 'a0000000-0000-0000-0000-000000000001', 'Lucía', '099111002', null),
+  ('c4a00000-0000-0000-0000-000000000f03', 'a0000000-0000-0000-0000-000000000001', 'Marta', '099111003', null),
+  ('c4a00000-0000-0000-0000-000000000f04', 'a0000000-0000-0000-0000-000000000001', 'Nico', '099111004', null),
+  ('c4a00000-0000-0000-0000-000000000f05', 'a0000000-0000-0000-0000-000000000001', 'Olga', '099111005', null),
+  ('c4a00000-0000-0000-0000-000000000f06', 'a0000000-0000-0000-0000-000000000001', 'Raúl', '099111006', null);
+
+-- A championship of club T. Unless told otherwise it is open for registration until 5 days from now
+-- and takes 2 categories per player.
+create procedure test_helpers.make_championship(
+  p_id uuid,
+  p_status public.championship_status default 'registration',
+  p_closes_at timestamptz default now() + interval '5 days',
+  p_max_categories integer default 2
+)
+language sql
+as $$
+  insert into public.championships (id, club_id, name, status, registration_opens_at, registration_closes_at,
+                                    max_categories_per_player, cancelled_at)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', 'Campeonato T', p_status,
+          case when p_status <> 'draft' then now() end, p_closes_at, p_max_categories,
+          case when p_status = 'cancelled' then now() end);
+$$;
+
+-- A day of play: `p_days` days from today, from p_from to p_to, on both courts unless told otherwise.
+create procedure test_helpers.make_window(
+  p_championship_id uuid,
+  p_days integer,
+  p_from time,
+  p_to time,
+  p_courts uuid[] default array['c0000000-0000-0000-0000-000000000001',
+                                'c0000000-0000-0000-0000-000000000002']::uuid[]
+)
+language sql
+as $$
+  insert into public.championship_windows (club_id, championship_id, on_date, from_time, to_time, court_ids)
+  values ('a0000000-0000-0000-0000-000000000001', p_championship_id, test_helpers.today() + p_days, p_from, p_to,
+          p_courts);
+$$;
+
+-- A category: 'Libre' for at most p_max pairs at $2.000 a pair, at least p_min pairs to be played.
+create procedure test_helpers.make_category(
+  p_id uuid,
+  p_championship_id uuid,
+  p_name text default 'Libre',
+  p_max integer default 4,
+  p_min integer default 2,
+  p_price integer default 2000
+)
+language sql
+as $$
+  insert into public.championship_categories (id, club_id, championship_id, name, min_pairs, max_pairs, price)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', p_championship_id, p_name, p_min, p_max, p_price);
+$$;
+
+-- A pair; both declare 5ª. p_created_at sets its place in the waiting line.
+create procedure test_helpers.make_entry(
+  p_id uuid,
+  p_category_id uuid,
+  p_player1 uuid,
+  p_player2 uuid,
+  p_status public.championship_entry_status default 'active',
+  p_created_at timestamptz default now()
+)
+language sql
+as $$
+  insert into public.championship_entries (id, club_id, category_id, player1_id, player2_id, player1_level,
+                                           player2_level, status, created_at, ended_at)
+  values (p_id, 'a0000000-0000-0000-0000-000000000001', p_category_id, p_player1, p_player2, 5, 5, p_status,
+          p_created_at, case when p_status in ('withdrawn', 'removed') then now() end);
+$$;
+
+-- The status of a pair, read past RLS (a test acting as a member can ask about anyone's).
+create function test_helpers.entry_status(p_entry_id uuid)
+returns text
+language sql
+stable
+security definer
+as $$
+  select status::text from public.championship_entries where id = p_entry_id;
+$$;
+
+-- How many avisos of a kind a person got, read past RLS.
+create function test_helpers.notices(p_user_id uuid, p_kind text)
+returns integer
+language sql
+stable
+security definer
+as $$
+  select count(*)::integer from public.notifications where user_id = p_user_id and kind::text = p_kind;
+$$;
+
+-- The data of the latest aviso of a kind a person got, read past RLS.
+create function test_helpers.last_notice(p_user_id uuid, p_kind text)
+returns jsonb
+language sql
+stable
+security definer
+as $$
+  select data from public.notifications where user_id = p_user_id and kind::text = p_kind
+  order by created_at desc, id desc limit 1;
+$$;
+
+
+-- The first p_count 2-hour blocks of a championship, as set_entry_unavailability takes them. Tests never write
+-- a block by hand: blocks start every 2 hours (08:00, 10:00...), off the club's grid.
+create function test_helpers.blocks(p_championship_id uuid, p_count integer)
+returns text[]
+language sql
+stable
+security definer
+as $$
+  select array(
+    select block_key from private.championship_blocks(p_championship_id) order by block_key limit p_count
+  );
+$$;

@@ -12,9 +12,17 @@ const DATABASE_CODES = [
   'invalid_score', 'courts_busy', 'outside_hours',
   'day_use_closed', 'day_use_full', 'already_has_pass', 'no_reward', 'already_checked_in', 'not_today',
   'slot_available', 'too_many_waits', 'hold_expired',
+  'championship_closed', 'championship_incomplete', 'category_exists', 'already_in_category', 'too_many_categories',
+  'same_player', 'partner_not_member', 'invalid_phone', 'too_many_unavailable',
 ]
 
 describe('errorMessage', () => {
+  it('explains the championship rules in words', () => {
+    expect(errorMessage('championship_closed')).toBe('La inscripción de este campeonato está cerrada.')
+    expect(errorMessage('too_many_categories')).toBe('Alguno de los dos ya está en el máximo de categorías de este campeonato.')
+    expect(errorMessage('too_many_unavailable')).toBe('Marcaste más del 40 % de los horarios. Para más, pedíselo al club.')
+  })
+
   it('explains the waitlist rules in words', () => {
     expect(errorMessage('slot_available')).toBe('Hay un turno libre en ese horario: reservalo desde la grilla.')
     expect(errorMessage('too_many_waits')).toBe('Ya estás esperando 3 turnos. Cancelá una espera para anotarte en otra.')

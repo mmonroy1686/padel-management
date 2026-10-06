@@ -10,6 +10,11 @@ const ITEMS: TabItem[] = [
 ]
 
 describe('TabNav', () => {
+  it('marks a tab for the other paths it covers', () => {
+    render(<TabNav label="Secciones" items={[{ href: '/torneos', label: 'Torneos', icon: 'trophy', also: ['/reservas'] }]} variant="bottom" />)
+    expect(screen.getByRole('link', { name: 'Torneos' })).toHaveAttribute('aria-current', 'page')
+  })
+
   it('is a named navigation landmark', () => {
     render(<TabNav label="Secciones" items={ITEMS} variant="bottom" />)
     expect(screen.getByRole('navigation', { name: 'Secciones' })).toBeInTheDocument()
