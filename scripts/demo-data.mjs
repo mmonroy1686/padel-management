@@ -1,6 +1,6 @@
-// Demo data to show the app to Rustic: players, bookings and payments, recurring slots, a block,
-// open matches, three americanos (open, in play, finished) and day use with stamps, all relative
-// to today. Every row hangs from accounts @demo.rustic.test, so each run first removes the previous
+// Demo data to show the app to Rustic: players, bookings and payments from the first day of this
+// month to the end of the next one, recurring slots, a block, open matches, americanos (open, in
+// play, finished, next month), waits on the waitlist and day use with stamps, all relative to today. Every row hangs from accounts @demo.rustic.test, so each run first removes the previous
 // demo and `--clean` removes it for good. Real members and their data are never touched.
 //
 //   npm run demo:data                      local Supabase (supabase start)
@@ -119,6 +119,13 @@ const near = (time) => {
 const at = (days, time) => zoned(addDays(today, days), near(time))
 const futureSlot = (days, time) => at(days, time) > new Date(now.getTime() + 30 * 60_000)
 const court = (index) => courts[index % courts.length]
+// This month and the next: from the 1st of this month to the last day of the next one.
+const monthStart = -(Number(today.slice(8, 10)) - 1)
+const horizon = (() => {
+  const [year, month] = today.split('-').map(Number)
+  const lastOfNext = new Date(Date.UTC(year, month + 1, 0)).toISOString().slice(0, 10)
+  return Math.round((Date.parse(lastOfNext) - Date.parse(today)) / 86_400_000)
+})()
 
 // Things that take whole courts go first: day use, tournaments, recurring slots and the block.
 // ---------- day use ----------
@@ -180,6 +187,30 @@ if (openTournament) {
   if (featured) await tryRpc(featured.client, 'join_tournament', { p_tournament_id: openTournament.id })
   await payEntries(openTournament.id, { cash: ['santiago', 'valentina'], transfer: ['camila'] })
 }
+// Next month: a bigger one, just opened. The first Saturday afternoon from three weeks ahead.
+let nextMonthTournament = null
+for (let days = 21; days <= horizon && !nextMonthTournament; days++) {
+  if (weekday(addDays(today, days)) !== 6) continue
+  nextMonthTournament = await tryRpc(reception, 'create_tournament', {
+    p_name: 'Americano de primavera',
+    p_starts_at: at(days, '14:00').toISOString(),
+    p_court_ids: courts.slice(0, Math.min(courts.length, 3)).map((item) => item.id),
+    p_max_players: courts.length >= 3 ? 12 : 8,
+    p_points_per_game: 24,
+    p_round_minutes: 20,
+    p_rounds: 7,
+    p_category_min: 3,
+    p_category_max: 7,
+    p_type: 'mixed',
+    p_price: 500,
+  }, { quiet: true })
+}
+if (nextMonthTournament) {
+  tournaments.push('Americano de primavera (el mes que viene)')
+  for (const key of ['nicolas', 'federico', 'mariana', 'paula']) {
+    await tryRpc(people[key].client, 'join_tournament', { p_tournament_id: nextMonthTournament.id })
+  }
+}
 
 // Today if it still fits before closing, otherwise tomorrow; started with some results.
 const playDay = futureSlot(0, '17:00') ? 0 : 1
@@ -223,6 +254,8 @@ for (const [days, time, courtIndex, holder] of [
   [1, '20:00', 0, { p_guest_name: 'Los de siempre' }],
   [2, '18:30', 1, { p_player_id: people.gonzalo.id }],
   [3, '21:30', 0, { p_guest_name: 'Escuela de pádel' }],
+  [4, '20:00', 1, { p_player_id: people.mariana.id }],
+  [5, '17:00', 2, { p_guest_name: 'Empresa Andes' }],
 ]) {
   const date = addDays(today, days)
   const created = await tryRpc(reception, 'create_series', {
@@ -249,6 +282,10 @@ for (const [days, time, courtIndex, creator, joiners] of [
   [2, '20:00', 1, 'florencia', ['carolina', 'sofia']],
   [3, '18:30', 0, 'santiago', []],
   [4, '20:00', 1, 'agustin', ['lucia', 'jimena', 'joaquin']],
+  [6, '21:30', 2, 'nicolas', ['federico']],
+  [8, '20:00', 0, 'paula', ['sofia', 'andrea']],
+  [10, '18:30', 1, 'matias', []],
+  [12, '21:30', 0, 'camila', ['valentina', 'florencia']],
 ]) {
   // A match stops taking players match_close_hours before it starts.
   if (at(days, time) <= new Date(now.getTime() + (club.match_close_hours * 60 + 30) * 60_000)) continue
@@ -272,13 +309,18 @@ for (const [days, time, courtIndex, creator, joiners] of [
 const bookingPlan = []
 const holders = ['nicolas', 'federico', 'gonzalo', 'matias', 'bruno', 'mariana', 'paula', 'sofia', 'andrea', 'carolina']
 let turn = 0
-for (let days = 0; days <= 6; days++) {
+for (let days = 0; days <= horizon; days++) {
   const evening = SLOTS.filter((time) => time >= '17:00')
   const daytime = SLOTS.filter((time) => time < '17:00')
-  const times = [...evening, ...daytime.filter((_, index) => (index + days) % 3 === 0)]
+  const weekend = [0, 6].includes(weekday(addDays(today, days)))
+  // The first week is busy; further ahead, about half the evenings and some weekend mornings.
+  const times = days <= 6
+    ? [...evening, ...daytime.filter((_, index) => (index + days) % 3 === 0)]
+    : [...evening, ...daytime.filter((_, index) => weekend && (index + days) % 2 === 0)]
   for (const time of times) {
     for (let index = 0; index < courts.length; index++) {
       if ((days + index + time.length + turn) % 4 === 3) continue // leave some free
+      if (days > 6 && (days + index + turn) % 2 === 0) { turn++; continue }
       turn++
       if (!futureSlot(days, time)) continue
       const guest = turn % 5 === 0
@@ -288,6 +330,7 @@ for (let days = 0; days <= 6; days++) {
 }
 const GUESTS = ['Rodríguez', 'Familia García', 'Méndez y amigos', 'Barrios', 'Clínica Pádel Kids']
 let booked = 0
+const bookedCells = []
 let paidCash = 0
 let transfers = 0
 for (const [index, plan] of bookingPlan.entries()) {
@@ -299,9 +342,10 @@ for (const [index, plan] of bookingPlan.entries()) {
   }, { quiet: true })
   if (!booking) continue
   booked++
+  bookedCells.push(plan)
   if (index % 3 === 0) {
     if (await tryRpc(reception, 'record_cash', { p_booking_id: booking.id, p_amount: booking.price })) paidCash++
-  } else if (index % 3 === 1 && plan.holder) {
+  } else if (index % 3 === 1 && plan.holder && plan.days <= 6) {
     if (await reportTransfer(people[plan.holder], 'report_transfer', { p_booking_id: booking.id }, booking.id)) transfers++
   }
 }
@@ -315,14 +359,51 @@ if (featured) {
   }
 }
 const pastUnpaid = await pastBookings()
+const played = await monthPlayed()
+
+// ---------- waitlist ----------
+// Players waiting for a taken evening slot in the next days: that court, that time.
+let waits = 0
+const waiters = ['lucia', 'joaquin', 'jimena', 'valentina', 'diego', 'florencia']
+const waitCells = bookedCells.filter((cell) => cell.days >= 1 && cell.days <= 4 && cell.time >= '18:30')
+for (const [index, key] of waiters.entries()) {
+  const cell = waitCells[(index * 5) % Math.max(waitCells.length, 1)]
+  if (!cell) break
+  const end = SLOTS[SLOTS.indexOf(cell.time) + 1] ?? club.closes_at.slice(0, 5)
+  const waited = await tryRpc(people[key].client, 'create_slot_wait', {
+    p_club_id: club.id,
+    p_date: addDays(today, cell.days),
+    p_from: cell.time,
+    p_to: end,
+    p_court_ids: [cell.courtId],
+  }, { quiet: true })
+  if (waited) waits++
+}
+// The featured account is real: the clean step never removes its waits, so add one only if it has none.
+const featuredWaits = featured
+  ? await admin.from('slot_waits').select('id', { count: 'exact', head: true }).eq('player_id', featured.id).eq('status', 'waiting')
+  : null
+if (featured && waitCells.length > 0 && (featuredWaits?.count ?? 0) === 0) {
+  const cell = waitCells[waitCells.length - 1]
+  const end = SLOTS[SLOTS.indexOf(cell.time) + 1] ?? club.closes_at.slice(0, 5)
+  const waited = await tryRpc(featured.client, 'create_slot_wait', {
+    p_club_id: club.id,
+    p_date: addDays(today, cell.days),
+    p_from: cell.time,
+    p_to: end,
+    p_court_ids: [cell.courtId],
+  }, { quiet: true })
+  if (waited) waits++
+}
 
 // ---------- day use passes and stamps ----------
 const passes = await dayUsePasses()
 
 console.log(`
 Listo. Demo cargada:
-  ${booked} reservas en los próximos 7 días (${paidCash} cobradas en efectivo, ${transfers} transferencias para confirmar)
-  ${pastUnpaid} turnos ya jugados sin pagar, ${series} turnos fijos, 1 bloqueo ("Clase de menores")
+  ${booked} reservas de hoy a fin del mes que viene (${paidCash} cobradas en efectivo, ${transfers} transferencias para confirmar)
+  ${played} turnos jugados este mes, ${pastUnpaid} sin pagar, ${series} turnos fijos, 1 bloqueo ("Clase de menores")
+  ${waits} esperas en la lista de espera
   ${matches} partidos abiertos
   ${tournaments.length} torneos: ${tournaments.join('; ')}
   2 pases de day use, ${passes} pases vendidos y sellos de ejemplo (Valentina tiene una recompensa)
@@ -514,6 +595,56 @@ async function pastBookings() {
   return count
 }
 
+// Played earlier this month (before yesterday): evenings on every court, mostly paid at the desk or by
+// transfer, inserted directly because the RPCs only book ahead.
+async function monthPlayed() {
+  let count = 0
+  for (let days = monthStart; days <= -3; days++) {
+    for (const time of SLOTS.filter((slot) => slot >= '17:00')) {
+      for (let courtIndex = 0; courtIndex < courts.length; courtIndex++) {
+        if ((days + courtIndex + Number(time.slice(0, 2))) % 3 === 0) continue
+        const startsAt = at(days, time)
+        const period = `[${startsAt.toISOString()},${new Date(startsAt.getTime() + club.slot_minutes * 60_000).toISOString()})`
+        const occupancy = await admin
+          .from('court_occupancy')
+          .insert({ club_id: club.id, court_id: court(courtIndex).id, kind: 'booking', period, created_by: staffId })
+          .select('id')
+          .single()
+        if (occupancy.error) continue
+        const price = time >= '18:30' ? 1600 : 1200
+        const booking = await admin
+          .from('bookings')
+          .insert({
+            club_id: club.id,
+            court_id: court(courtIndex).id,
+            period,
+            player_id: people[holders[(count + courtIndex) % holders.length]].id,
+            source: count % 3 === 0 ? 'online' : 'reception',
+            price,
+            occupancy_id: occupancy.data.id,
+            created_by: staffId,
+          })
+          .select('id')
+          .single()
+        if (booking.error) continue
+        count++
+        if (count % 7 === 0) continue // a few still owed
+        await admin.from('payments').insert({
+          club_id: club.id,
+          booking_id: booking.data.id,
+          method: count % 4 === 0 ? 'transfer' : 'cash',
+          amount: price,
+          status: 'confirmed',
+          reported_by: staffId,
+          confirmed_by: staffId,
+          confirmed_at: startsAt.toISOString(),
+        })
+      }
+    }
+  }
+  return count
+}
+
 // Last week's americano, finished: inserted directly with its fixture and every result.
 async function finishedTournament() {
   const startsAt = at(-6, '18:00')
@@ -652,16 +783,16 @@ async function clean(ids) {
   const bookings = await admin.from('bookings').select('id, occupancy_id').or(filters.join(','))
   if (bookings.error) fail(bookings.error.message)
   const occupancyIds = bookings.data.flatMap((row) => (row.occupancy_id ? [row.occupancy_id] : []))
-  if (bookings.data.length > 0) await check(admin.from('bookings').delete().in('id', bookings.data.map((row) => row.id)))
+  // By id in batches: hundreds of ids do not fit in one request URL.
+  for (const batch of chunks(bookings.data.map((row) => row.id))) await check(admin.from('bookings').delete().in('id', batch))
   if (seriesIds.length > 0) await check(admin.from('recurring_series').delete().in('id', seriesIds))
   if (matchIds.length > 0) await check(admin.from('open_matches').delete().in('id', matchIds))
   await check(admin.from('tournaments').delete().in('created_by', ids))
   await check(admin.from('tournament_entries').delete().in('player_id', ids))
   await check(admin.from('day_use_passes').delete().or(`player_id.in.${idList},created_by.in.${idList}`))
   await check(admin.from('day_use_products').delete().in('created_by', ids))
-  const occupancyFilter = [`created_by.in.${idList}`]
-  if (occupancyIds.length > 0) occupancyFilter.push(`id.in.(${occupancyIds.join(',')})`)
-  await check(admin.from('court_occupancy').delete().or(occupancyFilter.join(',')))
+  await check(admin.from('court_occupancy').delete().in('created_by', ids))
+  for (const batch of chunks(occupancyIds)) await check(admin.from('court_occupancy').delete().in('id', batch))
   for (const id of ids) {
     const files = await admin.storage.from('receipts').list(id)
     if (files.data && files.data.length > 0) {
@@ -670,6 +801,12 @@ async function clean(ids) {
     const deleted = await admin.auth.admin.deleteUser(id)
     if (deleted.error) fail(deleted.error.message)
   }
+}
+
+function chunks(list, size = 100) {
+  const out = []
+  for (let index = 0; index < list.length; index += size) out.push(list.slice(index, index + size))
+  return out
 }
 
 // ---------- dates on the club's clock ----------
