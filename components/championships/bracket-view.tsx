@@ -27,8 +27,8 @@ export function BracketView({ bracket, large = false, showTitle = true }: { brac
             </h4>
             <div className="flex flex-1 flex-col justify-around gap-3">
               {round.matches.map((match) => (
-                <div key={match.id} className={cn('rounded-2xl border border-border bg-surface p-3', large && 'p-6')}>
-                  <MatchLine match={match} large={large} showName={round.matches.length > 1} />
+                <div key={match.id} className={cn('rounded-2xl border border-border bg-surface p-3', large && 'p-5')}>
+                  <MatchLine match={match} large={large} compact={large} showName={round.matches.length > 1} />
                 </div>
               ))}
             </div>

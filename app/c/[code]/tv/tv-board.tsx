@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { BracketView } from '@/components/championships/bracket-view'
 import { MatchLine } from '@/components/championships/match-line'
 import { cn } from '@/lib/cn'
@@ -17,6 +17,22 @@ export function TvBoard({ name, screens, seconds = 20 }: { name: string; screens
     const timer = setInterval(() => setTurn((current) => current + 1), seconds * 1000)
     return () => clearInterval(timer)
   }, [seconds])
+
+  // Whatever a screen holds fits the monitor: when it is taller than the space left, it shrinks (never grows).
+  const area = useRef<HTMLDivElement>(null)
+  const content = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+  useLayoutEffect(() => {
+    const fit = () => {
+      if (!area.current || !content.current) return
+      const needed = content.current.scrollHeight
+      const room = area.current.clientHeight
+      setScale(needed > room && needed > 0 ? room / needed : 1)
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [turn, screens])
 
   const index = screens.length > 0 ? turn % screens.length : 0
   const screen = screens.length > 0 ? screens[index] : null
@@ -48,7 +64,12 @@ export function TvBoard({ name, screens, seconds = 20 }: { name: string; screens
         </div>
       ) : null}
 
-      <div className="flex flex-1 flex-col gap-8 overflow-hidden px-10 py-8">
+      <div ref={area} className="flex-1 overflow-hidden px-10 py-8">
+      <div
+        ref={content}
+        className="flex origin-top-left flex-col gap-8"
+        style={scale < 1 ? { transform: `scale(${scale})`, width: `${100 / scale}%` } : undefined}
+      >
         {screen === null ? <p className="text-4xl">Todavía no hay partidos.</p> : null}
         {screen ? <h1 className="font-display text-6xl font-bold uppercase text-accent-ink">{screen.title}</h1> : null}
         {screen && 'bracket' in screen ? <BracketView bracket={screen.bracket} large showTitle={false} /> : null}
@@ -65,6 +86,7 @@ export function TvBoard({ name, screens, seconds = 20 }: { name: string; screens
             </ul>
           )
         ) : null}
+      </div>
       </div>
     </div>
   )
