@@ -99,5 +99,8 @@ test('campeonato: the organizer draws, schedules and publishes, loads the group,
   const publicBracket = page.getByRole('region', { name: 'Llave de 6ta Fixture' })
   await expect(publicBracket).toContainText(pair(1))
   await expect(publicBracket).toContainText(pair(2))
-  await expect(page.getByText(/6-2 6-3|2-6 3-6/).first()).toBeVisible()
+  // The result recorded on the screen: the winner's row, marked, with the games of each set.
+  const winnerRow = page.locator('[role="row"][data-winner="true"]').filter({ hasText: winner }).first()
+  await expect(winnerRow).toContainText('Ganó')
+  await expect(winnerRow.getByRole('cell')).toHaveText(['6', '6'])
 })

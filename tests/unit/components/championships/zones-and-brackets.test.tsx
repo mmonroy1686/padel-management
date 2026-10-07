@@ -14,7 +14,7 @@ describe('ZonesView', () => {
     )
     const table = screen.getByRole('table', { name: 'Tabla de Zona A' })
     expect(within(table).getAllByRole('row')).toHaveLength(3)
-    expect(within(table).getByRole('row', { name: /1[.] Ana y Pedro/ })).toHaveTextContent('2-0')
+    expect(within(table).getByRole('row', { name: /1 Ana y Pedro/ })).toHaveTextContent('2-0')
     expect(screen.getByText('Empate a definir: Ana y Pedro y Bruno y Lucía.')).toBeInTheDocument()
     expect(screen.getByText('Cerrar Zona A')).toBeInTheDocument()
   })
