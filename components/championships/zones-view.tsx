@@ -5,7 +5,16 @@ import type { ZoneView } from '@/lib/domain/championship-views'
 
 // Design: "zonas con su tabla": position, pair, played, won, sets and games; the leader stands out; a tie the
 // organizer decides; footer adds what the page needs under a group ("Cerrar zona").
-export function ZonesView({ zones, footer }: { zones: ZoneView[]; footer?: (zone: ZoneView) => ReactNode }) {
+// highlight: the pair whose card is open (the player search).
+export function ZonesView({
+  zones,
+  footer,
+  highlight,
+}: {
+  zones: ZoneView[]
+  footer?: (zone: ZoneView) => ReactNode
+  highlight?: string
+}) {
   if (zones.length === 0) return null
   return (
     <div className="grid gap-3 md:grid-cols-2">
@@ -45,7 +54,11 @@ export function ZonesView({ zones, footer }: { zones: ZoneView[]; footer?: (zone
             </thead>
             <tbody>
               {zone.rows.map((row, index) => (
-                <tr key={row.entryId} className="border-t border-border align-middle">
+                <tr
+                  key={row.entryId}
+                  aria-current={row.entryId === highlight ? 'true' : undefined}
+                  className={cn('border-t border-border align-middle', row.entryId === highlight && 'bg-accent/15')}
+                >
                   <td className="py-2">
                     <span
                       className={cn(
