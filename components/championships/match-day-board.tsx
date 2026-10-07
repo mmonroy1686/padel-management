@@ -6,6 +6,7 @@ import { ResultSheet } from '@/components/championships/result-sheet'
 import { WalkoverSheet } from '@/components/championships/walkover-sheet'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/cn'
 import type { MatchRules } from '@/lib/domain/championship-results'
 import type { MatchView } from '@/lib/domain/championship-views'
 
@@ -49,14 +50,17 @@ export function MatchDayBoard({
       {matches.length === 0 ? (
         <p className="text-fg-muted">{empty}</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="grid gap-3 lg:grid-cols-2">
           {matches.map((match) => (
             <li
               key={match.id}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3 md:flex-row md:items-center md:justify-between"
+              className={cn(
+                'flex flex-col gap-3 rounded-2xl border bg-surface p-4',
+                match.status === 'playing' ? 'border-2 border-accent' : 'border-border',
+              )}
             >
               <MatchLine match={match} showCategory />
-              <div className="flex flex-wrap items-center gap-2">{buttons(match)}</div>
+              <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">{buttons(match)}</div>
             </li>
           ))}
         </ul>

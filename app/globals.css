@@ -104,6 +104,16 @@ body {
   }
 }
 
+/* Modo TV: how long until the next screen. */
+@keyframes tv-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @keyframes stamp-pop {
   0% { transform: scale(0.4); opacity: 0; }
   70% { transform: scale(1.15); opacity: 1; }
