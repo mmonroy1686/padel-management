@@ -100,6 +100,8 @@ export function MatchDayBoard({
               submitLabel={`+1 ${side === 'a' ? match.sideA : match.sideB}`}
               pendingLabel="Sumando…"
               onDone={quiet}
+              // The pair's full name, in plain small letters: it fits a phone in one or two lines.
+              className="[&_button]:min-h-14 [&_button]:px-3 [&_button]:font-sans [&_button]:text-sm [&_button]:normal-case [&_button]:leading-tight [&_button]:tracking-normal"
             >
               <input type="hidden" name="matchId" value={match.id} />
               <input type="hidden" name="side" value={side} />
