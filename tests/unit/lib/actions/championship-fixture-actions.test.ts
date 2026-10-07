@@ -126,3 +126,19 @@ describe('the tournament day', () => {
     expect(rpc).toHaveBeenCalledWith('close_championship_group', { p_group_id: ID, p_entry_ids: [E2, E1] })
   })
 })
+
+
+describe('the live score', () => {
+  it('adds a game to side a or b, and nothing else', async () => {
+    expect(await actions.scoreGame(IDLE, form({ matchId: MATCH, side: 'c' }))).toEqual(INVALID_INPUT)
+    expect(await actions.scoreGame(IDLE, form({ matchId: 'nope', side: 'a' }))).toEqual(INVALID_INPUT)
+    expect(rpc).not.toHaveBeenCalled()
+    expect(await actions.scoreGame(IDLE, form({ matchId: MATCH, side: 'b' }))).toMatchObject({ status: 'ok' })
+    expect(rpc).toHaveBeenCalledWith('score_live_game', { p_match_id: MATCH, p_side: 'b' })
+  })
+
+  it('takes the last game back', async () => {
+    expect(await actions.undoGame(IDLE, form({ matchId: MATCH }))).toMatchObject({ status: 'ok' })
+    expect(rpc).toHaveBeenCalledWith('undo_live_game', { p_match_id: MATCH })
+  })
+})

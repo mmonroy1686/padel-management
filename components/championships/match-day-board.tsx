@@ -7,16 +7,24 @@ import { WalkoverSheet } from '@/components/championships/walkover-sheet'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
+import { liveFinish } from '@/lib/domain/championship-live'
 import type { MatchRules } from '@/lib/domain/championship-results'
 import type { MatchView } from '@/lib/domain/championship-views'
 
-export type DayBoardActions = { start: FormAction; result: FormAction; walkover: FormAction }
+export type DayBoardActions = {
+  start: FormAction
+  result: FormAction
+  walkover: FormAction
+  score: FormAction
+  undo: FormAction
+}
 type Sheet = { kind: 'result' | 'walkover'; match: MatchView }
 
 const DEFAULT_RULES: MatchRules = { thirdSet: 'super_tiebreak', timeLimit: null }
 
-// Design: "Día del torneo": "En juego ahora" and "Próximos" with "Empezar", "Cargar resultado" and "W.O.", and
-// the last ones played, to correct a result.
+// Design: "Día del torneo": "En juego ahora" with the live score ("+1" for each pair, "Deshacer" and, once the score
+// is a result, "Terminar partido"), "Próximos" with "Empezar", "Cargar resultado" and "W.O.", and the last ones
+// played, to correct a result.
 export function MatchDayBoard({
   championshipId,
   playing,
@@ -41,6 +49,8 @@ export function MatchDayBoard({
     setSheet(null)
     setNotice(message)
   }, [])
+  // A game loaded says nothing (the score is the answer) and clears the last notice.
+  const quiet = useCallback(() => setNotice(null), [])
 
   const list = (key: string, title: string, matches: MatchView[], empty: string, buttons: (match: MatchView) => ReactNode) => (
     <section aria-labelledby={`${id}-${key}`} className="flex flex-col gap-2">
@@ -78,10 +88,50 @@ export function MatchDayBoard({
     </>
   )
 
+  const liveButtons = (match: MatchView) => {
+    const finish = liveFinish(match.sets, rules[match.categoryId] ?? DEFAULT_RULES)
+    return (
+      <div className="flex w-full flex-col gap-3">
+        <div className="grid grid-cols-2 gap-2">
+          {(['a', 'b'] as const).map((side) => (
+            <ActionForm
+              key={side}
+              action={actions.score}
+              submitLabel={`+1 ${side === 'a' ? match.sideA : match.sideB}`}
+              pendingLabel="Sumando…"
+              onDone={quiet}
+            >
+              <input type="hidden" name="matchId" value={match.id} />
+              <input type="hidden" name="side" value={side} />
+            </ActionForm>
+          ))}
+        </div>
+        {finish ? (
+          <ActionForm action={actions.result} submitLabel={finish.label} pendingLabel="Guardando…" onDone={setNotice}>
+            <input type="hidden" name="championshipId" value={championshipId} />
+            <input type="hidden" name="matchId" value={match.id} />
+            {[1, 2, 3].flatMap((number) => [
+              <input key={`a${number}`} type="hidden" name={`a${number}`} value={finish.sets[number - 1]?.[0] ?? ''} />,
+              <input key={`b${number}`} type="hidden" name={`b${number}`} value={finish.sets[number - 1]?.[1] ?? ''} />,
+            ])}
+          </ActionForm>
+        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {match.sets.length > 0 ? (
+            <ActionForm action={actions.undo} submitLabel="Deshacer" pendingLabel="Deshaciendo…" variant="ghost" onDone={quiet}>
+              <input type="hidden" name="matchId" value={match.id} />
+            </ActionForm>
+          ) : null}
+          {resultButtons(match)}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {notice ? <p role="status">{notice}</p> : null}
-      {list('playing', 'En juego ahora', playing, 'No hay partidos en juego.', resultButtons)}
+      {list('playing', 'En juego ahora', playing, 'No hay partidos en juego.', liveButtons)}
       {list('upcoming', 'Próximos', upcoming, 'No quedan partidos por jugar.', (match) =>
         match.ready ? (
           <>
