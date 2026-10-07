@@ -1,9 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { StatusBadge } from '@/components/championships/match-line'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { buttonClasses } from '@/components/ui/button'
 import { DataTable, type DataColumn, type DataRow } from '@/components/ui/data-table'
+import { Icon } from '@/components/ui/icon'
+import { cn } from '@/lib/cn'
 import type { MatchView } from '@/lib/domain/championship-views'
 
 const COLUMNS: DataColumn[] = [
@@ -53,7 +56,7 @@ export function FixtureTable({
           <span className="block text-sm">{`${match.sideA} vs ${match.sideB}`}</span>
         </span>
       ),
-      status: [match.statusLabel, match.score, match.pinned ? 'Fijado' : null].filter(Boolean).join(' · '),
+      status: <FixtureStatus match={match} />,
       actions: (
         <div className="flex flex-wrap justify-end gap-2">
           {editable && match.status === 'scheduled' ? (
@@ -93,5 +96,39 @@ export function FixtureTable({
       pageSize={50}
       emptyText="Todavía no hay partidos programados."
     />
+  )
+}
+
+// The state as its badge; the result as one small score per set (the side that won it in bold); "Fijado" apart.
+function FixtureStatus({ match }: { match: MatchView }) {
+  const sets = match.sets.filter((set) => !set.inProgress || set.a + set.b > 0)
+  return (
+    <span className="flex flex-col items-start gap-1.5">
+      <StatusBadge match={match} large={false} />
+      {sets.length > 0 ? (
+        <span aria-label={`Resultado: ${sets.map((set) => `${set.a}-${set.b}`).join(' ')}`} className="flex flex-wrap gap-1">
+          {sets.map((set, index) => (
+            <span
+              key={index}
+              aria-hidden="true"
+              className={cn(
+                'rounded-md px-1.5 py-0.5 font-display text-base tabular-nums ring-1',
+                set.inProgress ? 'ring-accent' : 'ring-border',
+              )}
+            >
+              <b className={cn(set.a > set.b ? 'text-fg' : 'font-normal text-fg-muted')}>{set.a}</b>
+              <span className="text-fg-muted">-</span>
+              <b className={cn(set.b > set.a ? 'text-fg' : 'font-normal text-fg-muted')}>{set.b}</b>
+            </span>
+          ))}
+        </span>
+      ) : null}
+      {match.pinned ? (
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent-ink">
+          <Icon name="pin" className="size-3.5" />
+          Fijado
+        </span>
+      ) : null}
+    </span>
   )
 }

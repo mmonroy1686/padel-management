@@ -34,6 +34,37 @@ describe('FixtureTable', () => {
   })
 })
 
+describe('FixtureTable status', () => {
+  it('shows the state as a badge and each set as its own score', () => {
+    render(
+      <FixtureTable
+        matches={[
+          makeView({
+            status: 'finished',
+            statusLabel: 'Terminado',
+            winner: 'a',
+            score: '6-3 6-4',
+            sets: [
+              { a: 6, b: 3, superTiebreak: false, inProgress: false },
+              { a: 6, b: 4, superTiebreak: false, inProgress: false },
+            ],
+          }),
+          makeView({ id: 'm2', pinned: true }),
+        ]}
+        basePath="/club/torneos/campeonatos/ch1"
+        editable={false}
+        canPin={false}
+        pinAction={vi.fn<FormAction>(ok)}
+      />,
+    )
+    const [finished, pinned] = within(screen.getByRole('table', { name: 'Fixture' })).getAllByRole('row').slice(1)
+    expect(within(finished).getByText('Terminado')).toBeInTheDocument()
+    expect(within(finished).getByLabelText('Resultado: 6-3 6-4')).toBeInTheDocument()
+    expect(within(pinned).getByText('Programado')).toBeInTheDocument()
+    expect(within(pinned).getByText('Fijado')).toBeInTheDocument()
+  })
+})
+
 describe('UnplacedList', () => {
   it('says why each match has no place, with a way to place it by hand', () => {
     render(
