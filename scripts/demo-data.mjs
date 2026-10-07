@@ -923,17 +923,17 @@ async function dayUsePasses() {
   return count
 }
 
-// "Copa de la Casa", being played this afternoon on the first three courts: 5ta Libre in two groups of 3 and a
-// final between their winners, 6ta Damas by direct knockout; 60-minute matches from 12:30 to 19:30. Inserted
+// "Copa de la Casa", being played this afternoon on the first two courts: 5ta Libre in two groups of 3 and a
+// final between their winners, 6ta Damas by direct knockout in the hours the groups leave free; 60-minute matches from 12:30 to 19:30. Inserted
 // directly: the functions never schedule nor record results in the past. The demo's clock stays between 15:00
 // and 17:00, so there are always matches played, one being played and the rest to come. In each match the first
 // pair named wins 6-3 6-4.
 async function championshipToday() {
-  if (courts.length < 3) {
-    console.warn('  (se saltea el campeonato de hoy: necesita 3 canchas)')
+  if (courts.length < 2) {
+    console.warn('  (se saltea el campeonato de hoy: necesita 2 canchas)')
     return null
   }
-  const used = courts.slice(0, 3)
+  const used = courts.slice(0, 2)
   const name = 'Copa de la Casa'
   const startAt = (time) => zoned(today, time)
   const clock = Math.min(Math.max(now.getTime(), startAt('15:00').getTime()), startAt('17:00').getTime())
@@ -1011,9 +1011,9 @@ async function championshipToday() {
       })
     })
     plan.push({ key: 'F5', category: libre.id, round: 1, position: 1, sourceA: { group: zoneA.id, place: 1 }, sourceB: { group: zoneB.id, place: 1 }, court: used[0], start: '18:30' })
-    plan.push({ key: 'SF1', category: damas.id, round: 2, position: 1, a: damasEntries[0], b: damasEntries[3], court: used[2], start: '12:30' })
-    plan.push({ key: 'SF2', category: damas.id, round: 2, position: 2, a: damasEntries[1], b: damasEntries[2], court: used[2], start: '13:30' })
-    plan.push({ key: 'F6', category: damas.id, round: 1, position: 1, a: damasEntries[0], b: damasEntries[1], winnerOf: ['SF1', 'SF2'], court: used[2], start: '15:30' })
+    plan.push({ key: 'SF1', category: damas.id, round: 2, position: 1, a: damasEntries[0], b: damasEntries[3], court: used[0], start: '13:30' })
+    plan.push({ key: 'SF2', category: damas.id, round: 2, position: 2, a: damasEntries[1], b: damasEntries[2], court: used[1], start: '13:30' })
+    plan.push({ key: 'F6', category: damas.id, round: 1, position: 1, a: damasEntries[0], b: damasEntries[1], winnerOf: ['SF1', 'SF2'], court: used[0], start: '15:30' })
     const ids = Object.fromEntries(plan.map((match) => [match.key, randomUUID()]))
     const rows = plan.map((match) => {
       const startsAt = startAt(match.start)
