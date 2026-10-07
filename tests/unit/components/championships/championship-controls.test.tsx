@@ -40,3 +40,25 @@ describe('ChampionshipControls', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 })
+
+
+describe('ChampionshipControls in parts', () => {
+  it('shows the steps without cancelling, or only cancelling', () => {
+    const { unmount } = render(
+      <ChampionshipControls championshipId="ch1" status="registration" readiness={null} actions={actions()} part="steps" />,
+    )
+    expect(screen.getByRole('button', { name: 'Cerrar inscripción' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cancelar campeonato' })).not.toBeInTheDocument()
+    unmount()
+    render(<ChampionshipControls championshipId="ch1" status="registration" readiness={null} actions={actions()} part="cancel" />)
+    expect(screen.queryByRole('button', { name: 'Cerrar inscripción' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancelar campeonato' })).toBeInTheDocument()
+  })
+
+  it('renders nothing when its part has nothing to offer', () => {
+    const { container } = render(
+      <ChampionshipControls championshipId="ch1" status="in_progress" readiness={null} actions={actions()} part="steps" />,
+    )
+    expect(container).toBeEmptyDOMElement()
+  })
+})
