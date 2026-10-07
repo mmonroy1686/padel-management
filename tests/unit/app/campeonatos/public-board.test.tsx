@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { PublicBoard, type PublicCategory } from '@/app/c/[code]/public-board'
+import type { PairCard } from '@/lib/domain/championship-search'
 import { makeView, makeZone } from '../../fixtures/championship-views'
 
 const LIBRE: PublicCategory = {
@@ -38,5 +39,32 @@ describe('PublicBoard', () => {
   it('says when the fixture is not out yet', () => {
     render(<PublicBoard name="Copa" subtitle="" categories={[]} shareText="" tvHref="/c/copa-1a2b/tv" />)
     expect(screen.getByText('El fixture todavía no está publicado.')).toBeInTheDocument()
+  })
+})
+
+
+const CARD: PairCard = {
+  entryId: 'e1',
+  categoryId: 'k1',
+  categoryName: '6ta Libre',
+  pair: 'Ana y Pedro',
+  label: 'Ana y Pedro · 6ta Libre',
+  situation: 'En la Zona A',
+  live: [],
+  upcoming: [makeView()],
+  played: [],
+  zone: makeZone(),
+  bracket: null,
+  private: null,
+}
+
+describe('PublicBoard search', () => {
+  it('finds a pair and opens its card, without the club data', async () => {
+    render(<PublicBoard name="Copa" subtitle="" categories={[LIBRE]} shareText="" tvHref="/c/copa-1a2b/tv" pairs={[CARD]} />)
+    await userEvent.type(screen.getByLabelText('Buscar jugador'), 'pedro')
+    await userEvent.click(screen.getByRole('button', { name: 'Ana y Pedro · 6ta Libre' }))
+    const card = screen.getByRole('dialog', { name: 'Ana y Pedro' })
+    expect(card).toHaveTextContent('En la Zona A')
+    expect(within(card).queryByRole('region', { name: 'Datos del club' })).not.toBeInTheDocument()
   })
 })

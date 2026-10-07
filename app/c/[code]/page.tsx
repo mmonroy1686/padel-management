@@ -4,6 +4,7 @@ import { AutoRefresh } from '@/components/live/auto-refresh'
 import { getSiteUrl } from '@/lib/auth/redirect'
 import { loadPublicChampionship } from '@/lib/data/championship-fixture'
 import { isPublicCode } from '@/lib/domain/championship-public'
+import { pairCards } from '@/lib/domain/championship-search'
 import { brackets, byDay, championshipShareText, matchViews, zoneViews } from '@/lib/domain/championship-views'
 import { CHAMPIONSHIP_STATUS_LABELS, datesText, matchRulesText } from '@/lib/domain/championships'
 import { localDateOf } from '@/lib/domain/time'
@@ -29,6 +30,8 @@ export default async function PublicChampionshipPage({ params }: { params: Param
   const views = matchViews(championship, fixture, ctx)
   const zones = zoneViews(championship, fixture)
   const allBrackets = brackets(championship, views)
+  // Built without the club's pairs table: the public card has no payment, hours or phones.
+  const pairs = pairCards({ championship, fixture, views, zones })
   const categories =
     fixture.matches.length === 0
       ? []
@@ -49,6 +52,7 @@ export default async function PublicChampionshipPage({ params }: { params: Param
         categories={categories}
         shareText={championshipShareText(championship.name, `${getSiteUrl()}/c/${data.code}`)}
         tvHref={`/c/${data.code}/tv`}
+        pairs={pairs}
       />
       <AutoRefresh seconds={15} />
     </>

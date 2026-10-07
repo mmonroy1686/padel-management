@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { BracketView } from '@/components/championships/bracket-view'
 import { MatchLine } from '@/components/championships/match-line'
+import { PlayerSearch } from '@/components/championships/player-search'
 import { ZonesView } from '@/components/championships/zones-view'
 import { buttonClasses } from '@/components/ui/button'
 import { ShareButton } from '@/components/ui/share-button'
 import { cn } from '@/lib/cn'
+import type { PairCard } from '@/lib/domain/championship-search'
 import type { Bracket, DayGroup, ZoneView } from '@/lib/domain/championship-views'
 
 export type PublicCategory = {
@@ -27,12 +29,15 @@ export function PublicBoard({
   categories,
   shareText,
   tvHref,
+  pairs = [],
 }: {
   name: string
   subtitle: string
   categories: PublicCategory[]
   shareText: string
   tvHref: string
+  // "Buscar jugador": the cards of the pairs, without payments, hours or phones.
+  pairs?: PairCard[]
 }) {
   const [selected, setSelected] = useState(categories[0]?.id ?? '')
   const category = categories.find((item) => item.id === selected) ?? categories[0]
@@ -51,6 +56,7 @@ export function PublicBoard({
           Modo TV
         </Link>
       </div>
+      {pairs.length > 0 ? <PlayerSearch pairs={pairs} /> : null}
       {categories.length === 0 ? <p className="text-fg-muted">El fixture todavía no está publicado.</p> : null}
       {tabs ? (
         <div role="tablist" aria-label="Categorías" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
