@@ -79,3 +79,13 @@ export async function publicCode(championshipId: string): Promise<string> {
   if (!data.public_code) throw new Error('El campeonato no tiene código público')
   return data.public_code
 }
+
+
+// Live games through score_live_game, as staff: one per letter ('aab' = a, a, b).
+export async function scoreGamesAs(user: TestUser, matchId: string, sides: string): Promise<void> {
+  const client = await signedInClient(user)
+  for (const side of sides) {
+    const { error } = await client.rpc('score_live_game', { p_match_id: matchId, p_side: side })
+    if (error) throw error
+  }
+}
