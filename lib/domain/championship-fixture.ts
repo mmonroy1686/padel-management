@@ -6,7 +6,8 @@ export const MATCH_STATUSES = ['scheduled', 'playing', 'finished', 'walkover'] a
 export type MatchStatus = (typeof MATCH_STATUSES)[number]
 export type MatchStage = 'group' | 'knockout'
 export type MatchSource = { kind: 'group'; groupId: string; place: number } | { kind: 'winner'; matchId: string }
-export type MatchSet = { a: number; b: number; superTiebreak: boolean }
+// inProgress: the set being played (the live score); the others are closed.
+export type MatchSet = { a: number; b: number; superTiebreak: boolean; inProgress: boolean }
 export type FixtureMatch = {
   id: string
   categoryId: string
@@ -44,7 +45,14 @@ export const MATCH_STATUS_LABELS: Record<MatchStatus, string> = {
 
 // What lib/data/championship-fixture.ts and public_championship return. If supabase-js infers a slightly
 // different shape for the embeds, adjust these types to match; never cast the query result.
-export type SetRow = { set_number: number; games_a: number; games_b: number; super_tiebreak: boolean }
+export type SetRow = {
+  set_number: number
+  games_a: number
+  games_b: number
+  super_tiebreak: boolean
+  // Missing reads as false (a closed set).
+  in_progress?: boolean
+}
 export type MatchRow = {
   id: string
   category_id: string
@@ -122,7 +130,12 @@ function toMatch(row: MatchRow): FixtureMatch {
     absent: row.walkover_entry_id,
     sets: [...row.sets]
       .sort((a, b) => a.set_number - b.set_number)
-      .map((item) => ({ a: item.games_a, b: item.games_b, superTiebreak: item.super_tiebreak })),
+      .map((item) => ({
+        a: item.games_a,
+        b: item.games_b,
+        superTiebreak: item.super_tiebreak,
+        inProgress: item.in_progress === true,
+      })),
   }
 }
 

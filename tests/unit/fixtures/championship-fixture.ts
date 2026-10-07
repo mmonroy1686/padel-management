@@ -34,8 +34,8 @@ export function members(entryIds: string[]): GroupMember[] {
   return entryIds.map((entryId, index) => ({ entryId, drawPosition: index + 1, place: null }))
 }
 
-export function set(a: number, b: number, superTiebreak = false): MatchSet {
-  return { a, b, superTiebreak }
+export function set(a: number, b: number, superTiebreak = false, inProgress = false): MatchSet {
+  return { a, b, superTiebreak, inProgress }
 }
 
 // A match of Zona A already played: side a or b wins, 6-3 6-3 unless other sets are given.

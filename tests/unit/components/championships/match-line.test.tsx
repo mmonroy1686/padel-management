@@ -9,8 +9,8 @@ const FINISHED = makeView({
   score: '6-3 6-4',
   winner: 'a',
   sets: [
-    { a: 6, b: 3, superTiebreak: false },
-    { a: 6, b: 4, superTiebreak: false },
+    { a: 6, b: 3, superTiebreak: false, inProgress: false },
+    { a: 6, b: 4, superTiebreak: false, inProgress: false },
   ],
 })
 
