@@ -9,8 +9,8 @@ const FINISHED = makeView({
   score: '6-3 6-4',
   winner: 'a',
   sets: [
-    { a: 6, b: 3, superTiebreak: false },
-    { a: 6, b: 4, superTiebreak: false },
+    { a: 6, b: 3, superTiebreak: false, inProgress: false },
+    { a: 6, b: 4, superTiebreak: false, inProgress: false },
   ],
 })
 
@@ -43,5 +43,29 @@ describe('MatchLine', () => {
     )
     expect(screen.getByText('En juego')).toBeInTheDocument()
     expect(screen.getByText('1° Zona B')).toHaveClass('italic')
+  })
+})
+
+
+describe('MatchLine live', () => {
+  it('marks the set being played', () => {
+    render(
+      <MatchLine
+        match={makeView({
+          status: 'playing',
+          statusLabel: 'En juego',
+          score: '6-4 2-1',
+          sets: [
+            { a: 6, b: 4, superTiebreak: false, inProgress: false },
+            { a: 2, b: 1, superTiebreak: false, inProgress: true },
+          ],
+        })}
+      />,
+    )
+    const [a, b] = screen.getAllByRole('row')
+    expect(within(a).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['6', '2'])
+    expect(within(a).getByRole('cell', { name: '2 (set en juego)' })).toHaveAttribute('data-live', 'true')
+    expect(within(a).getAllByRole('cell')[0]).not.toHaveAttribute('data-live')
+    expect(within(b).getByRole('cell', { name: '1 (set en juego)' })).toBeInTheDocument()
   })
 })

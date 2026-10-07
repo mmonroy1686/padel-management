@@ -47,7 +47,8 @@ export function ResultSheet({
             <div className="grid grid-cols-2 gap-2">
               {(['a', 'b'] as const).map((side) => {
                 const name = side === 'a' ? match.sideA : match.sideB
-                const saved = match.sets[number - 1]
+                // The set being played is not a result yet: the sheet starts from the closed ones.
+                const saved = match.sets.filter((item) => !item.inProgress)[number - 1]
                 return (
                   <label key={side} className="flex flex-col gap-1 text-sm">
                     <span>{name}</span>

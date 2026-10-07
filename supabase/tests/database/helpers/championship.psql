@@ -186,3 +186,20 @@ as $$
   from public.championship_matches m cross join generate_series(1, 2) as n
   where m.id = p_id;
 $$;
+
+
+-- Live games for a match, as the caller (not security definer): one public.score_live_game per letter of p_sides
+-- ('aab' = a, a, b). Returns what the last one returned.
+create function test_helpers.score(p_match_id uuid, p_sides text)
+returns jsonb
+language plpgsql
+as $$
+declare
+  v_result jsonb;
+begin
+  for i in 1 .. length(p_sides) loop
+    v_result := public.score_live_game(p_match_id, substr(p_sides, i, 1));
+  end loop;
+  return v_result;
+end;
+$$;

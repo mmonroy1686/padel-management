@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase/server'
 const GROUP_SELECT =
   'id, category_id, name, sort_order, members:championship_group_members!championship_group_members_group_in_club(entry_id, draw_position, place)'
 const MATCH_SELECT =
-  'id, category_id, stage, group_id, round, bracket_position, entry_a_id, entry_b_id, source_a, source_b, court_id, starts_at, ends_at, pinned, status, winner_entry_id, walkover_entry_id, sets:championship_match_sets!championship_match_sets_match_in_club(set_number, games_a, games_b, super_tiebreak)'
+  'id, category_id, stage, group_id, round, bracket_position, entry_a_id, entry_b_id, source_a, source_b, court_id, starts_at, ends_at, pinned, status, winner_entry_id, walkover_entry_id, sets:championship_match_sets!championship_match_sets_match_in_club(set_number, games_a, games_b, super_tiebreak, in_progress)'
 
 // The groups and matches of a championship, read with the viewer's session: staff from the draw on, members once
 // it is published (RLS).

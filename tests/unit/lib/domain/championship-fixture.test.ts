@@ -144,3 +144,24 @@ describe('scores', () => {
     expect(isDone(makeMatch({ status: 'playing' }))).toBe(false)
   })
 })
+
+
+describe('the set being played', () => {
+  it('reads in_progress; a set without it is closed', () => {
+    const [match] = toFixture(
+      [],
+      [
+        {
+          ...FINAL,
+          status: 'playing',
+          sets: [
+            { set_number: 1, games_a: 6, games_b: 4, super_tiebreak: false },
+            { set_number: 2, games_a: 2, games_b: 1, super_tiebreak: false, in_progress: true },
+          ],
+        },
+      ],
+    ).matches
+    expect(match.sets).toEqual([set(6, 4), set(2, 1, false, true)])
+    expect(scoreText(match)).toBe('6-4 2-1')
+  })
+})

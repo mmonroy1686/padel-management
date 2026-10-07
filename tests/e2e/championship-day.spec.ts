@@ -2,11 +2,19 @@ import { expect, test } from '@playwright/test'
 import { addDays, localDateOf } from '../../lib/domain/time'
 import { adminClient, clubRow, createMember, signedInClient } from './support/admin'
 import { signInWithMagicLink } from './support/auth'
-import { fixtureMatches, pairNumbers, publicCode, recordResultAs, registerPairAs, uniquePhone } from './support/championships'
+import {
+  fixtureMatches,
+  pairNumbers,
+  publicCode,
+  recordResultAs,
+  registerPairAs,
+  scoreGamesAs,
+  uniquePhone,
+} from './support/championships'
 
 // Next's dev indicator covers the bottom-left tab on mobile (fase 3a notes): navigate with page.goto.
-test('campeonato: the organizer draws, schedules and publishes, loads the group, and the public page follows it', async ({ page }) => {
-  test.setTimeout(240_000)
+test('campeonato: the organizer draws, schedules and publishes, loads the group and the final live, and the public page follows it', async ({ page, browser }) => {
+  test.setTimeout(300_000)
   const club = await clubRow()
   // Day 22: past the booking window and apart from the registration flow (day 20).
   const day = addDays(localDateOf(new Date(), club.timezone), 22)
@@ -56,7 +64,8 @@ test('campeonato: the organizer draws, schedules and publishes, loads the group,
   // The organizer draws, schedules and publishes.
   await signInWithMagicLink(page, admin.email, `/club/torneos/campeonatos/${championshipId}`)
   await page.getByRole('button', { name: 'Sortear' }).click()
-  await expect(page.getByRole('heading', { name: 'Zona A' })).toBeVisible()
+  // Drawn: the page stays on Fixture (the groups are on "Zonas y llaves").
+  await expect(page.getByRole('button', { name: 'Programar' })).toBeVisible()
   await page.getByRole('button', { name: 'Programar' }).click()
   await expect(page.getByText('Todos los partidos tienen cancha y horario. Revisalos y publicá el fixture.')).toBeVisible()
   await expect(page.getByRole('table', { name: 'Fixture', exact: true }).getByRole('row')).toHaveCount(8)
@@ -85,13 +94,47 @@ test('campeonato: the organizer draws, schedules and publishes, loads the group,
   await sheet.getByRole('button', { name: 'Guardar resultado' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'La zona terminó' })).toBeVisible()
 
-  // The 1st and the 2nd of the group are in the final.
+  // The 1st and the 2nd of the group are in the final ("Zonas y llaves").
+  await page.goto(`/club/torneos/campeonatos/${championshipId}?ver=zonas`)
   const bracket = page.getByRole('region', { name: 'Llave de 6ta Fixture' })
   await expect(bracket).toContainText(pair(1))
   await expect(bracket).toContainText(pair(2))
 
-  // The public page, without a session.
+  // Reception starts the final ("Hoy") and loads it game by game: three on the screen, the rest through the API.
+  await page.goto(`/club/torneos/campeonatos/${championshipId}`)
+  await page
+    .getByRole('region', { name: 'Próximos' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Final' })
+    .getByRole('button', { name: 'Empezar' })
+    .click()
+  const live = page.getByRole('region', { name: 'En juego ahora' })
+  for (const games of [1, 2, 3]) {
+    await live.getByRole('button', { name: `+1 ${pair(1)}`, exact: true }).click()
+    await expect(live.getByRole('cell', { name: `${games} (set en juego)` })).toBeVisible()
+  }
+  const final = (await fixtureMatches(championshipId)).find((match) => match.stage === 'knockout')
+  if (!final) throw new Error('El campeonato no tiene final')
+  await scoreGamesAs(admin, final.id, 'aaaaa')
+
+  // Not finished yet, the public page (no session) shows the score so far: 6-0, and 2-0 in the set being played.
   const code = await publicCode(championshipId)
+  const viewer = await browser.newPage()
+  await viewer.goto(new URL(`/c/${code}`, page.url()).toString())
+  await expect(viewer.getByRole('cell', { name: '2 (set en juego)' }).first()).toBeVisible()
+  await viewer.close()
+
+  // Decided at 6-0 6-0: "Terminar partido" saves it and the winner shows in the bracket.
+  await scoreGamesAs(admin, final.id, 'aaaa')
+  await page.reload()
+  await live.getByRole('button', { name: 'Terminar partido con 6-0 6-0' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Resultado guardado.' })).toBeVisible()
+  await page.goto(`/club/torneos/campeonatos/${championshipId}?ver=zonas`)
+  const champion = bracket.locator('[role="row"][data-winner="true"]')
+  await expect(champion).toContainText(pair(1))
+  await expect(champion).toContainText('Ganó')
+
+  // The public page, without a session.
   await page.context().clearCookies()
   await page.goto(`/c/${code}`)
   await expect(page.getByRole('heading', { name: 'Fixture E2E', level: 1 })).toBeVisible()
@@ -103,4 +146,11 @@ test('campeonato: the organizer draws, schedules and publishes, loads the group,
   const winnerRow = page.locator('[role="row"][data-winner="true"]').filter({ hasText: winner }).first()
   await expect(winnerRow).toContainText('Ganó')
   await expect(winnerRow.getByRole('cell')).toHaveText(['6', '6'])
+
+  // "Buscar jugador": the champion's card, without payments or phones.
+  await page.getByLabel('Buscar jugador').fill('socio 1')
+  await page.getByRole('button', { name: `${pair(1)} · 6ta Fixture` }).click()
+  const card = page.getByRole('dialog', { name: pair(1) })
+  await expect(card).toContainText('Campeona')
+  await expect(card.getByRole('region', { name: 'Datos del club' })).toHaveCount(0)
 })

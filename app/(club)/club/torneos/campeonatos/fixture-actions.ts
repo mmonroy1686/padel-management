@@ -241,3 +241,21 @@ export async function finishFixture(_previous: ActionState, form: FormData): Pro
     'Campeonato finalizado.',
   )
 }
+
+
+// "+1": a game for one pair of a match being played; the database closes the sets (private.live_sets).
+export async function scoreGame(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const side = form.get('side')
+  if (side !== 'a' && side !== 'b') return INVALID_INPUT
+  return onId(
+    form,
+    'matchId',
+    (supabase, id) => supabase.rpc('score_live_game', { p_match_id: id, p_side: side }),
+    'Game sumado.',
+  )
+}
+
+// "Deshacer": the last game loaded goes away.
+export async function undoGame(_previous: ActionState, form: FormData): Promise<ActionState> {
+  return onId(form, 'matchId', (supabase, id) => supabase.rpc('undo_live_game', { p_match_id: id }), 'Game borrado.')
+}

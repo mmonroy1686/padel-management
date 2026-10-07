@@ -59,19 +59,38 @@ export function MatchLine({
                 Ganó
               </span>
             ) : null}
-            {side.games.map((games, index) => (
-              <span
-                key={index}
-                role="cell"
-                className={cn(
-                  'grid size-8 shrink-0 place-items-center rounded-lg font-display text-lg font-bold tabular-nums',
-                  games > side.rival[index] ? 'bg-accent text-on-accent' : 'bg-surface text-fg-muted ring-1 ring-border',
-                  large && 'size-14 text-4xl',
-                )}
-              >
-                {games}
-              </span>
-            ))}
+            {side.games.map((games, index) => {
+              // The set being played: amber border, no winner yet, and the "en vivo" dot on the first row.
+              const live = match.sets[index]?.inProgress === true
+              return (
+                <span
+                  key={index}
+                  role="cell"
+                  data-live={live || undefined}
+                  aria-label={live ? `${games} (set en juego)` : undefined}
+                  className={cn(
+                    'relative grid size-8 shrink-0 place-items-center rounded-lg font-display text-lg font-bold tabular-nums',
+                    live
+                      ? 'bg-bg text-fg ring-2 ring-accent'
+                      : games > side.rival[index]
+                        ? 'bg-accent text-on-accent'
+                        : 'bg-surface text-fg-muted ring-1 ring-border',
+                    large && 'size-14 text-4xl',
+                  )}
+                >
+                  {games}
+                  {live && side.key === 'a' ? (
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'absolute -right-1 -top-1 size-2.5 rounded-full bg-accent motion-safe:animate-pulse',
+                        large && 'size-4',
+                      )}
+                    />
+                  ) : null}
+                </span>
+              )
+            })}
           </div>
         ))}
       </div>
