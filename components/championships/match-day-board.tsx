@@ -44,6 +44,7 @@ export function MatchDayBoard({
   const id = useId()
   const [sheet, setSheet] = useState<Sheet | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState<string | null>(null)
   const close = useCallback(() => setSheet(null), [])
   const done = useCallback((message: string) => {
     setSheet(null)
@@ -89,9 +90,13 @@ export function MatchDayBoard({
   )
 
   const liveButtons = (match: MatchView) => {
-    const finish = liveFinish(match.sets, rules[match.categoryId] ?? DEFAULT_RULES)
+    const matchRules = rules[match.categoryId] ?? DEFAULT_RULES
+    const finish = liveFinish(match.sets, matchRules)
+    // Without a time limit a result means the match is decided: no more games to add.
+    const decided = finish !== null && matchRules.timeLimit === null
     return (
       <div className="flex w-full flex-col gap-3">
+        {decided ? null : (
         <div className="grid grid-cols-2 gap-2">
           {(['a', 'b'] as const).map((side) => (
             <ActionForm
@@ -108,8 +113,20 @@ export function MatchDayBoard({
             </ActionForm>
           ))}
         </div>
-        {finish ? (
-          <ActionForm action={actions.result} submitLabel={finish.label} pendingLabel="Guardando…" onDone={setNotice}>
+        )}
+        {finish && !decided && confirming !== match.id ? (
+          // With a time limit the match goes on: ending it is a choice, asked once more.
+          <Button variant="secondary" onClick={() => setConfirming(match.id)}>
+            {finish.label}
+          </Button>
+        ) : null}
+        {finish && (decided || confirming === match.id) ? (
+          <ActionForm
+            action={actions.result}
+            submitLabel={decided ? finish.label : finish.label.replace('Terminar partido con', 'Sí, terminar con')}
+            pendingLabel="Guardando…"
+            onDone={setNotice}
+          >
             <input type="hidden" name="championshipId" value={championshipId} />
             <input type="hidden" name="matchId" value={match.id} />
             {[1, 2, 3].flatMap((number) => [

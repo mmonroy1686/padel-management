@@ -169,6 +169,7 @@ describe('MatchDayBoard live score', () => {
         actions={steps}
       />,
     )
+    expect(screen.queryByRole('button', { name: /^\+1/ })).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Terminar partido con 6-4 6-3' }))
     await waitFor(() => expect(steps.result).toHaveBeenCalled())
     const form = vi.mocked(steps.result).mock.calls[0][1]
@@ -183,5 +184,50 @@ describe('MatchDayBoard live score', () => {
       '',
     ])
     expect(await screen.findByRole('status')).toHaveTextContent('Listo.')
+  })
+
+  it('asks before ending a match with a time limit, where one wrong tap cannot be undone', async () => {
+    const steps = actions()
+    render(
+      <MatchDayBoard
+        championshipId="ch1"
+        playing={[makeView({ status: 'playing', statusLabel: 'En juego', sets: [{ a: 3, b: 1, superTiebreak: false, inProgress: true }] })]}
+        upcoming={[]}
+        finished={[]}
+        rules={{ k1: { thirdSet: 'super_tiebreak', timeLimit: 50 } }}
+        actions={steps}
+      />,
+    )
+    expect(screen.getByRole('button', { name: '+1 Ana y Pedro' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Terminar partido con 3-1' }))
+    expect(steps.result).not.toHaveBeenCalled()
+    await userEvent.click(screen.getByRole('button', { name: 'Sí, terminar con 3-1' }))
+    await waitFor(() => expect(steps.result).toHaveBeenCalled())
+  })
+
+  it('opens "Cargar resultado" with the closed sets only, not the one being played', async () => {
+    render(
+      <MatchDayBoard
+        championshipId="ch1"
+        playing={[
+          makeView({
+            status: 'playing',
+            statusLabel: 'En juego',
+            sets: [
+              { a: 6, b: 4, superTiebreak: false, inProgress: false },
+              { a: 0, b: 0, superTiebreak: false, inProgress: true },
+            ],
+          }),
+        ]}
+        upcoming={[]}
+        finished={[]}
+        rules={RULES}
+        actions={actions()}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Cargar resultado' }))
+    const sheet = screen.getByRole('dialog', { name: 'Cargar resultado' })
+    expect(within(sheet).getByLabelText('Set 1 · Ana y Pedro')).toHaveValue(6)
+    expect(within(sheet).getByLabelText('Set 2 · Ana y Pedro')).toHaveValue(null)
   })
 })
