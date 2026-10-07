@@ -184,15 +184,40 @@ isOneToOne: false
       referencedColumns: ["id","club_id"]
     }
                   ]
-                },"championship_match_sets": {
+                },"championship_live_games": {
                   Row: {
-                    "club_id": string,"games_a": number,"games_b": number,"match_id": string,"set_number": number,"super_tiebreak": boolean
+                    "club_id": string,"created_at": string,"created_by": string | null,"match_id": string,"seq": number,"side": string
                   }
                   Insert: {
-                    "club_id": string,"games_a": number,"games_b": number,"match_id": string,"set_number": number,"super_tiebreak"?: boolean
+                    "club_id": string,"created_at"?: string,"created_by"?: string | null,"match_id": string,"seq": number,"side": string
                   }
                   Update: {
-                    "club_id"?: string,"games_a"?: number,"games_b"?: number,"match_id"?: string,"set_number"?: number,"super_tiebreak"?: boolean
+                    "club_id"?: string,"created_at"?: string,"created_by"?: string | null,"match_id"?: string,"seq"?: number,"side"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "championship_live_games_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "championship_live_games_match_in_club"
+      columns: ["match_id","club_id"]
+isOneToOne: false
+      referencedRelation: "championship_matches"
+      referencedColumns: ["id","club_id"]
+    }
+                  ]
+                },"championship_match_sets": {
+                  Row: {
+                    "club_id": string,"games_a": number,"games_b": number,"in_progress": boolean,"match_id": string,"set_number": number,"super_tiebreak": boolean
+                  }
+                  Insert: {
+                    "club_id": string,"games_a": number,"games_b": number,"in_progress"?: boolean,"match_id": string,"set_number": number,"super_tiebreak"?: boolean
+                  }
+                  Update: {
+                    "club_id"?: string,"games_a"?: number,"games_b"?: number,"in_progress"?: boolean,"match_id"?: string,"set_number"?: number,"super_tiebreak"?: boolean
                   }
                   Relationships: [
                     {
@@ -2543,6 +2568,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"score_live_game":
+{ Args: { "p_match_id": string,"p_side": string }; Returns: Json
+                           },
 "sell_day_use":
 { Args: { "p_date": string,"p_guest_name"?: string,"p_player_id"?: string,"p_product_id": string,"p_use_reward"?: boolean }; Returns: {
               "cancelled_at": string | null,
@@ -2808,6 +2836,9 @@ isOneToOne: false
       } },
 "unblock":
 { Args: { "p_occupancy_id": string }; Returns: undefined
+                           },
+"undo_live_game":
+{ Args: { "p_match_id": string }; Returns: Json
                            },
 "update_championship":
 { Args: { "p_championship_id": string,"p_max_categories"?: number,"p_name": string,"p_registration_closes_at"?: string,"p_rules"?: string }; Returns: {
