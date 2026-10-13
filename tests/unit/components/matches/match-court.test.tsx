@@ -14,6 +14,16 @@ describe('MatchCourt', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
+  it('draws a missing spot as a hole with the club colors, unlike a taken one', () => {
+    render(<MatchCourt match={withPlayers(makeMatch(), ['ana', null, null, null])} viewerId="me" />)
+    const missing = screen.getAllByText('Falta')[0].parentElement!
+    expect(missing).toHaveClass('bg-bg', 'border-dashed', 'border-accent', 'text-accent-ink')
+    expect(missing).not.toHaveClass('border-on-court')
+    const taken = screen.getByText('Jugador').parentElement!
+    expect(taken).toHaveClass('border-on-court')
+    expect(taken).not.toHaveClass('bg-bg')
+  })
+
   it('lets the viewer tap a spot he can take', async () => {
     const onJoin = vi.fn()
     render(<MatchCourt match={makeMatch()} viewerId="me" joinable={[2, 4]} onJoin={onJoin} />)
