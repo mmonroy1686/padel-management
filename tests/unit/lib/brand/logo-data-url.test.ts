@@ -22,4 +22,17 @@ describe('logoDataUrl', () => {
     expect(await logoDataUrl('https://db.test/logo.png', answer('', 'text/plain', 404))).toBeNull()
     expect(await logoDataUrl('https://db.test/logo.png', vi.fn<typeof fetch>(async () => Promise.reject(new Error('offline'))))).toBeNull()
   })
+
+  it('keeps the logo in the server cache: a new logo has a new path', async () => {
+    const fetcher = answer('png', 'image/png')
+    await logoDataUrl('https://db.test/logo-1.png', fetcher)
+    expect(fetcher).toHaveBeenCalledWith('https://db.test/logo-1.png', { cache: 'force-cache' })
+  })
+
+  it('turns down a logo over 2 MB by its length, without reading it', async () => {
+    const response = new Response('png', { headers: { 'content-type': 'image/png', 'content-length': String(3 * 1024 * 1024) } })
+    const read = vi.spyOn(response, 'arrayBuffer')
+    expect(await logoDataUrl('https://db.test/logo.png', vi.fn<typeof fetch>(async () => response))).toBeNull()
+    expect(read).not.toHaveBeenCalled()
+  })
 })

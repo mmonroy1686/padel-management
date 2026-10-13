@@ -5,6 +5,11 @@ import type { LoadedBrand } from './load-brand'
 
 const PREVIEW_SIZE = { width: 1200, height: 630 }
 
+// The icon and the previews are public: the CDN keeps them an hour and serves the old one for a day while it
+// refreshes, so a crawler or a shared link does not reach the database and Storage on every hit.
+export const IMAGE_CACHE_CONTROL = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400'
+const HEADERS = { 'cache-control': IMAGE_CACHE_CONTROL }
+
 // The logo on the club's background, or the initials on its primary color. ImageResponse only knows flexbox and
 // inline styles.
 function Mark({ brand, size }: { brand: LoadedBrand; size: number }) {
@@ -32,7 +37,7 @@ export function iconImage(brand: LoadedBrand, size: number): ImageResponse {
         <Mark brand={brand} size={size} />
       </div>
     ),
-    { width: size, height: size },
+    { width: size, height: size, headers: HEADERS },
   )
 }
 
@@ -49,6 +54,6 @@ export function previewImage(brand: LoadedBrand, preview: SharePreview): ImageRe
         </div>
       </div>
     ),
-    PREVIEW_SIZE,
+    { ...PREVIEW_SIZE, headers: HEADERS },
   )
 }

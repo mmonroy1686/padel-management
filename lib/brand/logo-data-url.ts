@@ -6,9 +6,11 @@ const MAX_BYTES = 2 * 1024 * 1024
 export async function logoDataUrl(url: string | null, fetcher: typeof fetch = fetch): Promise<string | null> {
   if (!url) return null
   try {
-    const response = await fetcher(url)
+    // The path carries the upload's timestamp, so a cached logo is never a stale one.
+    const response = await fetcher(url, { cache: 'force-cache' })
     const type = response.headers.get('content-type')?.split(';')[0].trim() ?? ''
     if (!response.ok || !DRAWABLE.includes(type)) return null
+    if (Number(response.headers.get('content-length')) > MAX_BYTES) return null
     const bytes = await response.arrayBuffer()
     if (bytes.byteLength > MAX_BYTES) return null
     return `data:${type};base64,${Buffer.from(bytes).toString('base64')}`
