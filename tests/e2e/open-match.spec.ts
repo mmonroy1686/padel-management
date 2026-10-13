@@ -22,7 +22,7 @@ test('a player creates a match, three more join and the court gets booked', asyn
   await sheet.getByRole('button', { name: 'Publicar partido' }).click()
   await expect(page).toHaveURL(/\/partidos\/[0-9a-f-]{36}$/)
   const matchId = new URL(page.url()).pathname.split('/').pop() ?? ''
-  await expect(page.getByText('Faltan 3: 1 de drive y 2 de revés')).toBeVisible()
+  await expect(page.getByText('Faltan 3: 1 de drive y 2 de revés', { exact: true })).toBeVisible()
 
   // Two more join through the API.
   await joinMatchAs(bruno, matchId, 2)

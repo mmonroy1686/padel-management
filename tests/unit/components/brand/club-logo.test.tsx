@@ -17,4 +17,11 @@ describe('ClubLogo', () => {
     render(<ClubLogo club={{ name: 'Rustic Pádel', logo_path: null }} />)
     expect(screen.getByRole('img', { name: 'Rustic Pádel' }).tagName.toLowerCase()).toBe('svg')
   })
+
+  it("draws the placeholder with the club's initials on its primary color", () => {
+    render(<ClubLogo club={{ name: 'Club del Lago', logo_path: null }} />)
+    const placeholder = screen.getByRole('img', { name: 'Club del Lago' })
+    expect(placeholder).toHaveTextContent('CD')
+    expect(placeholder.querySelector('circle')).toHaveAttribute('fill', 'var(--accent)')
+  })
 })

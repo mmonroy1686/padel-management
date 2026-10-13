@@ -31,13 +31,14 @@ select throws_ok($$ select public.finish_notification_email('e2000000-0000-0000-
 -- The service role (lib/notify/outbox.ts)
 set local role service_role;
 select results_eq(
-  $$ select notification_id, kind::text, email, player_name, club_name, club_timezone, link
+  $$ select notification_id, kind::text, email, player_name, club_name, club_timezone, link, club_brand_primary,
+            club_brand_background
      from public.claim_notification_emails(10) $$,
   $$ values ('e2000000-0000-0000-0000-000000000001'::uuid, 'slot_held', 'ana@test.local', 'Ana', 'Club T',
-             'America/Montevideo', '/'),
+             'America/Montevideo', '/', '#FCB021', '#021716'),
             ('e2000000-0000-0000-0000-000000000002'::uuid, 'slot_free_now', 'bruno@test.local', 'Bruno', 'Club T',
-             'America/Montevideo', '/reservar') $$,
-  'the service role takes the pending avisos, oldest first, with each player''s email');
+             'America/Montevideo', '/reservar', '#FCB021', '#021716') $$,
+  'the service role takes the pending avisos, oldest first, with each player''s email and the club''s colors');
 select results_eq(
   $$ select email_attempts::int, email_locked_until > now() from public.notifications order by created_at $$,
   $$ values (1, true), (1, true) $$,

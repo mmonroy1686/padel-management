@@ -20,6 +20,8 @@ const ROW = {
   club_name: 'Rustic Pádel',
   club_timezone: 'America/Montevideo',
   club_logo_path: null,
+  club_brand_primary: '#FCB021',
+  club_brand_background: '#021716',
 }
 
 beforeEach(() => {

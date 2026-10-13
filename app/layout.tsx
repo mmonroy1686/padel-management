@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import { Barlow, Barlow_Condensed } from 'next/font/google'
 import { ActivityProvider } from '@/components/ui/activity'
+import { getSiteUrl } from '@/lib/auth/redirect'
+import { getClub } from '@/lib/auth/viewer'
+import { brandOf, brandViewport } from '@/lib/domain/club-brand'
+import { clubTheme, themeCss } from '@/lib/domain/club-theme'
 import './globals.css'
 
 const barlow = Barlow({
@@ -17,23 +21,30 @@ const barlowCondensed = Barlow_Condensed({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  title: { default: 'Rustic Pádel', template: '%s · Rustic Pádel' },
-  description: 'Reservá cancha y armá partido en Rustic Pádel.',
+export async function generateMetadata(): Promise<Metadata> {
+  const { name } = await getClub()
+  const description = `Reservá cancha y armá partido en ${name}.`
+  return {
+    metadataBase: new URL(getSiteUrl()),
+    title: { default: name, template: `%s · ${name}` },
+    description,
+    openGraph: { title: name, description, siteName: name, locale: 'es_UY', type: 'website' },
+  }
 }
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#021716' },
-    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
-  ],
+export async function generateViewport(): Promise<Viewport> {
+  return { width: 'device-width', initialScale: 1, ...brandViewport(brandOf(await getClub())) }
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+// The club's colors, written by the server before anything paints (no flash). globals.css keeps Rustic's as a
+// fallback and maps the tokens to Tailwind; this style replaces their values.
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const brand = brandOf(await getClub())
   return (
     <html lang="es" className={`${barlow.variable} ${barlowCondensed.variable}`}>
+      <head>
+        <style id="club-theme" dangerouslySetInnerHTML={{ __html: themeCss(clubTheme(brand), brand.mode) }} />
+      </head>
       <body className="min-h-dvh bg-bg font-sans text-fg antialiased">
         <ActivityProvider>{children}</ActivityProvider>
       </body>

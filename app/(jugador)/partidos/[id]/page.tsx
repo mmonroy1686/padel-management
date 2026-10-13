@@ -5,6 +5,7 @@ import { SuggestionsList } from '@/components/matches/suggestions-list'
 import { getSiteUrl } from '@/lib/auth/redirect'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { loadFreeCourts, loadMatch, loadPlayerContext, loadSuggestions } from '@/lib/data/matches'
+import { matchPreviewMetadata } from '@/lib/data/share-preview'
 import { dayLongLabel, timeIn } from '@/lib/domain/format'
 import { isUuid } from '@/lib/domain/input'
 import { canJoin, joinStatus } from '@/lib/domain/match-join'
@@ -17,9 +18,13 @@ import { localDateOf } from '@/lib/domain/time'
 import { joinMatch, leaveMatch } from '../actions'
 import { MatchBoard } from './match-board'
 
-export const metadata: Metadata = { title: 'Partido' }
-
 type Params = Promise<{ id: string }>
+
+// WhatsApp's preview of a shared match: what is missing, the day and the time (never names).
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { id } = await params
+  return (await matchPreviewMetadata(id)) ?? { title: 'Partido' }
+}
 type SearchParams = Promise<{ sumarme?: string }>
 
 export default async function MatchPage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {

@@ -65,8 +65,9 @@ function Spot({ slot, viewerId, onJoin }: { slot: MatchSlot; viewerId: string; o
       </button>
     )
   }
+  // A hole in the court: the club's background with a dashed edge, so it never reads as a taken spot.
   return (
-    <div className={cn(SPOT, 'border border-dashed border-on-court')}>
+    <div className={cn(SPOT, 'border-2 border-dashed border-accent bg-bg text-accent-ink')}>
       <b>Falta</b>
       <span className="text-xs">{side}</span>
     </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { ClubLogo } from '@/components/brand/club-logo'
 import { BracketView } from '@/components/championships/bracket-view'
 import { MatchLine } from '@/components/championships/match-line'
 import { cn } from '@/lib/cn'
@@ -10,7 +11,14 @@ export type TvScreen = { key: string; title: string; matches: MatchView[] } | { 
 
 // Design: "Modo TV": the whole screen, big letters, the club's colors; it turns every 20 seconds between "En juego
 // ahora", "Próximos" and each bracket. A bar and dots tell which screen is on and when the next one comes.
-export function TvBoard({ name, screens, seconds = 20 }: { name: string; screens: TvScreen[]; seconds?: number }) {
+export type TvBoardProps = {
+  club: { name: string; logo_path: string | null }
+  name: string
+  screens: TvScreen[]
+  seconds?: number
+}
+
+export function TvBoard({ club, name, screens, seconds = 20 }: TvBoardProps) {
   const [turn, setTurn] = useState(0)
 
   useEffect(() => {
@@ -39,7 +47,10 @@ export function TvBoard({ name, screens, seconds = 20 }: { name: string; screens
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-bg text-fg">
       <header className="flex items-center justify-between gap-8 border-b border-border px-10 py-6">
-        <p className="font-display text-3xl font-bold uppercase text-fg-muted">{name}</p>
+        <div className="flex min-w-0 items-center gap-6">
+          <ClubLogo club={club} className="size-24 shrink-0" />
+          <p className="font-display text-3xl font-bold uppercase text-fg-muted">{name}</p>
+        </div>
         {screens.length > 1 ? (
           <ol aria-label="Pantallas" className="flex items-center gap-3">
             {screens.map((item, position) => (
