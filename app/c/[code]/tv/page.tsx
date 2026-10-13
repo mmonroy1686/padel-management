@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { AutoRefresh } from '@/components/live/auto-refresh'
+import { getClub } from '@/lib/auth/viewer'
 import { loadPublicChampionship } from '@/lib/data/championship-fixture'
 import { isPublicCode } from '@/lib/domain/championship-public'
 import { brackets, dayBoard, matchViews } from '@/lib/domain/championship-views'
@@ -15,7 +16,7 @@ type Params = Promise<{ code: string }>
 export default async function ChampionshipTvPage({ params }: { params: Params }) {
   const { code } = await params
   if (!isPublicCode(code)) notFound()
-  const data = await loadPublicChampionship(code)
+  const [data, club] = await Promise.all([loadPublicChampionship(code), getClub()])
   if (!data) notFound()
 
   const views = matchViews(data.championship, data.fixture, {
@@ -35,7 +36,7 @@ export default async function ChampionshipTvPage({ params }: { params: Params })
   ]
   return (
     <>
-      <TvBoard name={data.championship.name} screens={screens} />
+      <TvBoard club={club} name={data.championship.name} screens={screens} />
       <AutoRefresh seconds={15} />
     </>
   )
