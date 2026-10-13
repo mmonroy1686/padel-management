@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { BrandForm } from '@/components/club/brand-form'
 import { LogoForm } from '@/components/club/logo-form'
 import { ActionForm } from '@/components/ui/action-form'
 import { Card } from '@/components/ui/card'
@@ -9,7 +10,7 @@ import { LOYALTY_EXPIRY_OPTIONS, loyaltyRuleOf, loyaltyRuleText } from '@/lib/do
 import { SLOT_LENGTHS, TIME_OPTIONS } from '@/lib/domain/settings'
 import { formatMinutes, parseTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
-import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, saveClubLogo } from './actions'
+import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, saveClubBrand, saveClubLogo } from './actions'
 import { CourtsTable, PricesTable } from './settings-tables'
 
 export const metadata: Metadata = { title: 'Ajustes' }
@@ -48,6 +49,19 @@ export default async function SettingsPage() {
         </h2>
         <Card>
           <LogoForm club={club} saveAction={saveClubLogo} removeAction={removeClubLogo} />
+        </Card>
+      </section>
+
+      <section aria-labelledby="marca" className="flex flex-col gap-3">
+        <h2 id="marca" className="font-display text-2xl font-bold uppercase">
+          Marca del club
+        </h2>
+        <p className="text-sm text-fg-muted">
+          El color principal va en los botones y lo que se destaca; el fondo, detrás de todo. La app arma el resto y
+          corrige lo que haga falta para que todo se lea.
+        </p>
+        <Card>
+          <BrandForm club={club} action={saveClubBrand} />
         </Card>
       </section>
 
