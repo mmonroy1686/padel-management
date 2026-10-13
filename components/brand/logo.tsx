@@ -1,8 +1,10 @@
-// Placeholder until the club sends its SVG. Replace the <svg> contents, keep the props.
-export function Logo({ className }: { className?: string }) {
+import { clubInitials } from '@/lib/domain/club-brand'
+
+// Placeholder until the club uploads its logo: its initials on its primary color (the tokens follow the club).
+export function Logo({ name, className }: { name: string; className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" role="img" aria-label="Rustic Pádel" className={className}>
-      <circle cx="32" cy="32" r="30" fill="#FCB021" />
+    <svg viewBox="0 0 64 64" role="img" aria-label={name} className={className}>
+      <circle cx="32" cy="32" r="30" fill="var(--accent)" />
       <text
         x="32"
         y="41"
@@ -10,9 +12,9 @@ export function Logo({ className }: { className?: string }) {
         fontFamily="var(--font-barlow-condensed), sans-serif"
         fontWeight="700"
         fontSize="26"
-        fill="#000000"
+        fill="var(--on-accent)"
       >
-        RP
+        {clubInitials(name)}
       </text>
     </svg>
   )
