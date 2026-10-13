@@ -1,8 +1,9 @@
 'use server'
 
-import { failed, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
+import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { getViewer } from '@/lib/auth/viewer'
+import { parseBrandForm } from '@/lib/domain/club-brand'
 import { isClubLogoPath } from '@/lib/domain/club-logo'
 import { errorMessage } from '@/lib/domain/errors'
 import { readBoolean, readInt, readText, readUuid } from '@/lib/domain/input'
@@ -154,4 +155,23 @@ async function setClubLogo(clubId: string, path: string | null, message: string)
   if (data.length === 0) return FORBIDDEN
   revalidateBookings()
   return ok(message)
+}
+
+// Ajustes → "Marca del club": two colors and the mode, through save_club_brand (admins of the club only).
+export async function saveClubBrand(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  const parsed = parseBrandForm(form)
+  if (!parsed.ok) return failed(parsed.message)
+
+  const supabase = await createClient()
+  const { primary, background, mode } = parsed.value
+  const { error } = await supabase.rpc('save_club_brand', {
+    p_club_id: clubId,
+    p_primary: primary,
+    p_background: background,
+    p_mode: mode,
+  })
+  if (!error) revalidateBookings()
+  return fromRpc(error, 'Marca guardada. Se ve en toda la app al recargar.')
 }
