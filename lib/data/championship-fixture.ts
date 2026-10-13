@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import type { Club } from '@/lib/auth/viewer'
 import { loadChampionships } from '@/lib/data/championships'
 import { loadActiveCourts } from '@/lib/data/tournaments'
@@ -29,12 +30,13 @@ export async function loadFixture(championshipId: string): Promise<Fixture> {
 }
 
 // The public page: anyone with the link, with or without a session.
-export async function loadPublicChampionship(code: string): Promise<PublicChampionship | null> {
+// Cached per request: the page, its metadata and its preview image read it once.
+export const loadPublicChampionship = cache(async (code: string): Promise<PublicChampionship | null> => {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('public_championship', { p_code: code })
   if (error) throw error
   return readPublicChampionship(data)
-}
+})
 
 // Inicio's "Mis partidos": what the viewer's pairs still have to play in championships published or in progress.
 export async function loadMyChampionshipMatches(club: Club, profileId: string, now: Date): Promise<MyMatchItem[]> {

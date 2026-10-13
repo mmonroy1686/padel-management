@@ -7,12 +7,20 @@ import { isPublicCode } from '@/lib/domain/championship-public'
 import { pairCards } from '@/lib/domain/championship-search'
 import { brackets, byDay, championshipShareText, matchViews, zoneViews } from '@/lib/domain/championship-views'
 import { CHAMPIONSHIP_STATUS_LABELS, datesText, matchRulesText } from '@/lib/domain/championships'
+import { championshipPreview } from '@/lib/domain/share-preview'
 import { localDateOf } from '@/lib/domain/time'
 import { PublicBoard } from './public-board'
 
-export const metadata: Metadata = { title: 'Campeonato en vivo' }
-
 type Params = Promise<{ code: string }>
+
+// WhatsApp's preview of the link: the championship's name and dates (the image is ./opengraph-image.tsx).
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { code } = await params
+  const data = isPublicCode(code) ? await loadPublicChampionship(code) : null
+  if (!data) return { title: 'Campeonato en vivo' }
+  const preview = championshipPreview(data.championship)
+  return { title: preview.title, description: preview.description, openGraph: preview }
+}
 
 // Design: the page to share, no session needed; it renders again every 15 seconds.
 export default async function PublicChampionshipPage({ params }: { params: Params }) {

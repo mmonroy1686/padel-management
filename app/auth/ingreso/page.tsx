@@ -4,17 +4,26 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { Card } from '@/components/ui/card'
 import { safeNextPath } from '@/lib/auth/redirect'
 import { getClub } from '@/lib/auth/viewer'
+import { matchPreviewMetadata } from '@/lib/data/share-preview'
 import { signInWithGoogle } from './actions'
 import { MagicLinkForm } from './magic-link-form'
 
-export const metadata: Metadata = { title: 'Ingresar' }
+type SearchParams = Promise<{ next?: string; error?: string }>
+
+const MATCH_PREFIX = '/partidos/'
+
+// A shared match link opened without a session lands here (requirePlayer): WhatsApp follows that redirect, so the
+// preview of the match is given here too.
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  const path = safeNextPath((await searchParams).next)
+  const matchId = path.startsWith(MATCH_PREFIX) ? path.slice(MATCH_PREFIX.length) : null
+  return (matchId ? await matchPreviewMetadata(matchId) : null) ?? { title: 'Ingresar' }
+}
 
 const ERROR_MESSAGES: Record<string, string> = {
   callback: 'El enlace venció o ya se usó. Pedí uno nuevo.',
   google: 'No pudimos conectar con Google. Probá de nuevo o usá tu email.',
 }
-
-type SearchParams = Promise<{ next?: string; error?: string }>
 
 export default async function SignInPage({ searchParams }: { searchParams: SearchParams }) {
   const { next, error } = await searchParams
