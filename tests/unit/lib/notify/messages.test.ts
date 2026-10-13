@@ -13,6 +13,8 @@ const HELD: PendingEmail = {
   clubName: 'Rustic Pádel',
   clubTimezone: 'America/Montevideo',
   clubLogoPath: 'club-1/logo-1.png',
+  clubPrimary: '#FCB021',
+  clubBackground: '#021716',
 }
 const URLS = { siteUrl: 'https://rustic.test', supabaseUrl: 'https://db.test' }
 
@@ -36,6 +38,14 @@ describe('buildEmail', () => {
     expect(mail.html).toContain('Ver el turno')
     expect(mail.html).not.toContain('<img')
     expect(mail.html).toContain('Rustic Pádel')
+  })
+
+  it("paints the mail with the club's colors, in its dark version", () => {
+    const mail = buildEmail({ ...HELD, clubPrimary: '#E11D48', clubBackground: '#1A1A2E' }, URLS)!
+    expect(mail.html).toContain('<body style="margin:0;background:#1A1A2E;')
+    expect(mail.html).toContain('display:inline-block;background:#E11D48;')
+    expect(mail.html).not.toContain('#FCB021')
+    expect(mail.html).not.toContain('#021716')
   })
 
   it('escapes what people typed', () => {

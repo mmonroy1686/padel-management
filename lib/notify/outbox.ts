@@ -25,6 +25,8 @@ function databaseStore(): OutboxStore | null {
         clubName: row.club_name,
         clubTimezone: row.club_timezone,
         clubLogoPath: row.club_logo_path,
+        clubPrimary: row.club_brand_primary,
+        clubBackground: row.club_brand_background,
       }))
     },
     async finish(id, outcome) {

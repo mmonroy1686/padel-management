@@ -19,6 +19,8 @@ function pending(id: string, overrides: Partial<PendingEmail> = {}): PendingEmai
     clubName: 'Rustic Pádel',
     clubTimezone: 'America/Montevideo',
     clubLogoPath: null,
+    clubPrimary: '#FCB021',
+    clubBackground: '#021716',
     ...overrides,
   }
 }
