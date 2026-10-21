@@ -12,7 +12,8 @@ import { dayStats } from '@/lib/domain/grid'
 import { riskOf } from '@/lib/domain/match-risk'
 import { isLocalDate } from '@/lib/domain/input'
 import { addDays, localDateOf } from '@/lib/domain/time'
-import { cancelBooking, cancelMatch, endSeries, loadSlot, recordCash, releaseSlotHold, removeFromMatch, unblockCourt } from './actions'
+import { chargeRest, chargeShare, saveBookingPlayers } from '@/lib/actions/booking-charges'
+import { cancelBooking, cancelMatch, endSeries, loadSlot, releaseSlotHold, removeFromMatch, unblockCourt } from './actions'
 import { ClubBoard } from './club-board'
 import { WaitingPanel } from '@/components/club/waiting-panel'
 import { loadDayWaits } from '@/lib/data/waitlist'
@@ -68,12 +69,14 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
           timezone={club.timezone}
           grid={grid}
           members={members}
-          acceptsCash={club.accepts_cash}
+          methods={{ cash: club.accepts_cash, transfer: club.accepts_transfer }}
           loadAction={loadSlot}
           detailActions={{
             cancel: cancelBooking,
             unblock: unblockCourt,
-            cash: recordCash,
+            chargeShare,
+            chargeRest,
+            savePlayers: saveBookingPlayers,
             endSeries,
             cancelMatch,
             removeFromMatch,

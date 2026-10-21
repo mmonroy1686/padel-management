@@ -1,8 +1,9 @@
 import 'server-only'
 import type { Club } from '@/lib/auth/viewer'
 import { buildDayGrid, holderName, toOccupancy, type DayGrid, type GridBooking } from '@/lib/domain/grid'
-import { matchPlayerPayments, type SlotHolder } from '@/lib/domain/match-payments'
-import { amountDue, paymentState, type PaymentStatus } from '@/lib/domain/payments'
+import { turnPlayers, type ExtraPlayerRow, type HomePayment } from '@/lib/domain/club-home'
+import type { SlotHolder } from '@/lib/domain/match-payments'
+import { amountDue, paymentState } from '@/lib/domain/payments'
 import { daySlots, type ClubSchedule } from '@/lib/domain/slots'
 import { addDays, zonedTime, type LocalDate } from '@/lib/domain/time'
 import { loadMatches } from './matches'
@@ -26,7 +27,8 @@ type BookingRow = {
   match_id: string | null
   player: { display_name: string } | null
   match: { slots: SlotHolder[] } | null
-  payments: { status: PaymentStatus; amount: number; payer_id: string | null }[]
+  players: ExtraPlayerRow[]
+  payments: HomePayment[]
 }
 
 function toGridBooking(row: BookingRow, occupancyId: string, viewerId: string): GridBooking {
@@ -43,7 +45,7 @@ function toGridBooking(row: BookingRow, occupancyId: string, viewerId: string): 
     paymentState: paymentState(row, row.payments),
     amountDue: amountDue(row.price, row.payments),
     matchId: row.match_id,
-    matchPlayers: row.match ? matchPlayerPayments(row, slots, row.payments) : [],
+    turn: turnPlayers(row),
   }
 }
 
@@ -78,7 +80,7 @@ export async function loadDayGrid(
     supabase
       .from('bookings')
       .select(
-        'id, occupancy_id, player_id, guest_name, price, status, source, series_id, match_id, player:profiles!bookings_player_id_fkey(display_name), match:open_matches!bookings_match_id_fkey(slots:match_slots(position, player_id, player:profiles(display_name))), payments(status, amount, payer_id)',
+        'id, occupancy_id, player_id, guest_name, price, status, source, series_id, match_id, player:profiles!bookings_player_id_fkey(display_name), match:open_matches!bookings_match_id_fkey(slots:match_slots(position, player_id, player:profiles(display_name))), players:booking_players(position, player_id, name, player:profiles!booking_players_player_id_fkey(display_name)), payments(status, amount, payer_id, payer_position)',
       )
       .eq('club_id', club.id)
       .eq('status', 'confirmed')
