@@ -17,6 +17,7 @@ const DATABASE_CODES = [
   'category_too_small', 'outside_play_days', 'pair_busy', 'unavailable_pair', 'too_early', 'schedule_incomplete',
   'invalid_result',
   'invalid_color',
+  'player_repeated',
 ]
 
 describe('errorMessage', () => {

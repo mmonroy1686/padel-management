@@ -5,7 +5,44 @@ export type Database = {
   
   "public": {
           Tables: {
-            "bookings": {
+            "booking_players": {
+                  Row: {
+                    "booking_id": string,"club_id": string,"created_at": string,"created_by": string | null,"name": string | null,"player_id": string | null,"position": number
+                  }
+                  Insert: {
+                    "booking_id": string,"club_id": string,"created_at"?: string,"created_by"?: string | null,"name"?: string | null,"player_id"?: string | null,"position": number
+                  }
+                  Update: {
+                    "booking_id"?: string,"club_id"?: string,"created_at"?: string,"created_by"?: string | null,"name"?: string | null,"player_id"?: string | null,"position"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "booking_players_booking_in_club"
+      columns: ["booking_id","club_id"]
+isOneToOne: false
+      referencedRelation: "bookings"
+      referencedColumns: ["id","club_id"]
+    },{
+      foreignKeyName: "booking_players_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "booking_players_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "booking_players_player_id_fkey"
+      columns: ["player_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"bookings": {
                   Row: {
                     "cancelled_at": string | null,"cancelled_by": string | null,"club_id": string,"court_id": string,"created_at": string,"created_by": string | null,"ends_at": string | null,"guest_name": string | null,"id": string,"match_id": string | null,"occupancy_id": string | null,"period": unknown,"player_id": string | null,"price": number,"series_id": string | null,"source": Database["public"]['Enums']["booking_source"],"starts_at": string | null,"status": Database["public"]['Enums']["booking_status"]
                   }
@@ -646,13 +683,13 @@ isOneToOne: false
                   ]
                 },"payments": {
                   Row: {
-                    "amount": number,"booking_id": string | null,"championship_entry_id": string | null,"club_id": string,"confirmed_at": string | null,"confirmed_by": string | null,"created_at": string,"day_use_pass_id": string | null,"id": string,"method": Database["public"]['Enums']["payment_method"],"payer_id": string | null,"receipt_path": string | null,"rejection_reason": string | null,"reported_by": string | null,"status": Database["public"]['Enums']["payment_status"],"tournament_entry_id": string | null
+                    "amount": number,"booking_id": string | null,"championship_entry_id": string | null,"club_id": string,"confirmed_at": string | null,"confirmed_by": string | null,"created_at": string,"day_use_pass_id": string | null,"id": string,"method": Database["public"]['Enums']["payment_method"],"payer_id": string | null,"payer_position": number | null,"receipt_path": string | null,"rejection_reason": string | null,"reported_by": string | null,"status": Database["public"]['Enums']["payment_status"],"tournament_entry_id": string | null
                   }
                   Insert: {
-                    "amount": number,"booking_id"?: string | null,"championship_entry_id"?: string | null,"club_id": string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"day_use_pass_id"?: string | null,"id"?: string,"method": Database["public"]['Enums']["payment_method"],"payer_id"?: string | null,"receipt_path"?: string | null,"rejection_reason"?: string | null,"reported_by"?: string | null,"status": Database["public"]['Enums']["payment_status"],"tournament_entry_id"?: string | null
+                    "amount": number,"booking_id"?: string | null,"championship_entry_id"?: string | null,"club_id": string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"day_use_pass_id"?: string | null,"id"?: string,"method": Database["public"]['Enums']["payment_method"],"payer_id"?: string | null,"payer_position"?: number | null,"receipt_path"?: string | null,"rejection_reason"?: string | null,"reported_by"?: string | null,"status": Database["public"]['Enums']["payment_status"],"tournament_entry_id"?: string | null
                   }
                   Update: {
-                    "amount"?: number,"booking_id"?: string | null,"championship_entry_id"?: string | null,"club_id"?: string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"day_use_pass_id"?: string | null,"id"?: string,"method"?: Database["public"]['Enums']["payment_method"],"payer_id"?: string | null,"receipt_path"?: string | null,"rejection_reason"?: string | null,"reported_by"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"tournament_entry_id"?: string | null
+                    "amount"?: number,"booking_id"?: string | null,"championship_entry_id"?: string | null,"club_id"?: string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"day_use_pass_id"?: string | null,"id"?: string,"method"?: Database["public"]['Enums']["payment_method"],"payer_id"?: string | null,"payer_position"?: number | null,"receipt_path"?: string | null,"rejection_reason"?: string | null,"reported_by"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"tournament_entry_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -1591,6 +1628,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2037,6 +2075,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2062,6 +2101,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2087,6 +2127,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2142,6 +2183,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2220,6 +2262,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2270,6 +2313,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2415,6 +2459,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2440,6 +2485,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2465,6 +2511,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2490,6 +2537,7 @@ isOneToOne: false
 "id": string,
 "method": Database["public"]['Enums']["payment_method"],
 "payer_id": string | null,
+"payer_position": number | null,
 "receipt_path": string | null,
 "rejection_reason": string | null,
 "reported_by": string | null,
@@ -2604,6 +2652,22 @@ isOneToOne: false
         to: "day_use_passes"
         isOneToOne: true
         isSetofReturn: false
+      } },
+"set_booking_players":
+{ Args: { "p_booking_id": string,"p_players": Json }; Returns: {
+              "booking_id": string,
+"club_id": string,
+"created_at": string,
+"created_by": string | null,
+"name": string | null,
+"player_id": string | null,
+"position": number
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "booking_players"
+        isOneToOne: false
+        isSetofReturn: true
       } },
 "set_championship_poster":
 { Args: { "p_championship_id": string,"p_path": string }; Returns: {
