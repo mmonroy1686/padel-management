@@ -1486,6 +1486,58 @@ isOneToOne: false
               "entry_id": string,"note": string,"unavailability_note": string
             }[]
                            },
+"charge_booking_rest":
+{ Args: { "p_booking_id": string,"p_method": Database["public"]['Enums']["payment_method"] }; Returns: {
+              "amount": number,
+"booking_id": string | null,
+"championship_entry_id": string | null,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"day_use_pass_id": string | null,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"payer_id": string | null,
+"payer_position": number | null,
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"],
+"tournament_entry_id": string | null
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
+"charge_booking_share":
+{ Args: { "p_booking_id": string,"p_method": Database["public"]['Enums']["payment_method"],"p_position": number }; Returns: {
+              "amount": number,
+"booking_id": string | null,
+"championship_entry_id": string | null,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"day_use_pass_id": string | null,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"payer_id": string | null,
+"payer_position": number | null,
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"],
+"tournament_entry_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "check_in_day_use":
 { Args: { "p_pass_id": string }; Returns: {
               "cancelled_at": string | null,
