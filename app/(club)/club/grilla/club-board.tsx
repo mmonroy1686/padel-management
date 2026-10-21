@@ -5,6 +5,7 @@ import { Legend } from '@/components/booking/legend'
 import { SlotGrid } from '@/components/booking/slot-grid'
 import { LoadSheet } from '@/components/club/load-sheet'
 import { OccupancyDetailSheet, type DetailActions } from '@/components/club/occupancy-detail-sheet'
+import type { PayMethods } from '@/components/club/charge-choice'
 import type { FormAction } from '@/components/ui/action-form'
 import { timeIn } from '@/lib/domain/format'
 import { KIND_LABELS, type DayGrid, type GridCell } from '@/lib/domain/grid'
@@ -17,7 +18,7 @@ export function ClubBoard({
   timezone,
   grid,
   members,
-  acceptsCash,
+  methods,
   loadAction,
   detailActions,
 }: {
@@ -26,7 +27,7 @@ export function ClubBoard({
   timezone: string
   grid: DayGrid
   members: MemberOption[]
-  acceptsCash: boolean
+  methods: PayMethods
   loadAction: FormAction
   detailActions: DetailActions
 }) {
@@ -95,7 +96,8 @@ export function ClubBoard({
           date={date}
           dayText={dayText}
           timezone={timezone}
-          acceptsCash={acceptsCash}
+          methods={methods}
+          members={members}
           actions={detailActions}
           onClose={close}
           onDone={done}

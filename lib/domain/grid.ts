@@ -1,4 +1,4 @@
-import type { MatchPlayerPayment } from './match-payments'
+import type { TurnPlayers } from './club-home'
 import { filledCount, type Match } from './matches'
 import type { PaymentState } from './payments'
 import { priceFor, type PricingRule, type Slot } from './slots'
@@ -33,7 +33,8 @@ export type GridBooking = {
   paymentState: PaymentState
   amountDue: number
   matchId?: string | null
-  matchPlayers?: MatchPlayerPayment[]
+  // Its players and their shares (staff only: lib/data/day.ts).
+  turn?: TurnPlayers
 }
 // A forming match that wants this court at this time. It does not block it.
 export type FormingMatchRef = { id: string; filled: number }

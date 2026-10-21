@@ -56,6 +56,7 @@ const MESSAGES = {
   schedule_incomplete: 'Faltan partidos por ubicar. Programalos o movelos a mano antes de publicar.',
   invalid_result: 'Ese resultado no es posible con las reglas de la categoría.',
   invalid_color: 'Ese color no es válido. Usá el formato #RRGGBB, por ejemplo #FCB021.',
+  player_repeated: 'Ese jugador ya está en el turno.',
 } as const
 
 export type ErrorCode = keyof typeof MESSAGES

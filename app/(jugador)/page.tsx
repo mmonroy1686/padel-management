@@ -190,7 +190,7 @@ export default async function HomePage() {
           </details>
         ) : null}
         {isStaffRole(membership.role) ? (
-          <Link href="/club/grilla" className={buttonClasses({ variant: 'secondary', fullWidth: true, className: 'lg:col-span-2' })}>
+          <Link href="/club/inicio" className={buttonClasses({ variant: 'secondary', fullWidth: true, className: 'lg:col-span-2' })}>
             Panel del club
           </Link>
         ) : null}

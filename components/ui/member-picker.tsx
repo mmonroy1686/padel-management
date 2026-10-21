@@ -3,7 +3,7 @@
 import { useId, useMemo, useState } from 'react'
 import { inputClasses } from '@/components/ui/field'
 import { cn } from '@/lib/cn'
-import { normalizeText, type MemberOption } from '@/lib/domain/members'
+import { searchMembers, type MemberOption } from '@/lib/domain/members'
 
 const MAX_SHOWN = 8
 
@@ -18,14 +18,7 @@ export function MemberPicker({ id, name, members }: { id: string; name: string; 
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
 
-  const matches = useMemo(() => {
-    const words = normalizeText(query).split(/\s+/).filter(Boolean)
-    const found = members.filter((member) => {
-      const text = normalizeText(member.name)
-      return words.every((word) => text.includes(word))
-    })
-    return found.slice(0, MAX_SHOWN)
-  }, [members, query])
+  const matches = useMemo(() => searchMembers(members, query, MAX_SHOWN), [members, query])
 
   const pick = (member: MemberOption) => {
     setPicked(member)
