@@ -7,7 +7,7 @@ import { clubTabs } from '@/lib/club/tabs'
 
 // Reception and admin only. Each page checks it again (layouts do not re-run on every navigation).
 export default async function ClubLayout({ children }: { children: React.ReactNode }) {
-  const viewer = await requireStaff('/club/grilla')
+  const viewer = await requireStaff('/club/inicio')
   const tabs = clubTabs(viewer.membership.role)
 
   return (

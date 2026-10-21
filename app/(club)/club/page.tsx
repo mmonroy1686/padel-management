@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
 
 export default function ClubHome() {
-  redirect('/club/grilla')
+  redirect('/club/inicio')
 }
