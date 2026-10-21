@@ -1,7 +1,7 @@
 ---
 feature: inicio-del-club
 type: design
-status: approved
+status: done
 date: 2026-10-20
 branch: feat/inicio-del-club
 references: ../fase-1-reservas/design.md, ../fase-2-partidos/design.md, ../lista-de-espera/design.md

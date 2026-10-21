@@ -1,7 +1,7 @@
 ---
 feature: inicio-del-club
 type: plan
-status: in-progress
+status: done
 date: 2026-10-20
 branch: feat/inicio-del-club
 references: ./design.md
