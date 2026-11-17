@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
-import { canAddPlayers } from '@/lib/domain/club-home'
+import { canAddPlayers, playerLabel } from '@/lib/domain/club-home'
 import { formatPrice, timeIn } from '@/lib/domain/format'
 import { KIND_LABELS, type GridBooking, type GridCell, type Occupancy } from '@/lib/domain/grid'
 import type { MemberOption } from '@/lib/domain/members'
@@ -177,7 +177,13 @@ function MatchBookingDetail({
           canAddPlayers={false}
           playerExtra={(player) =>
             player.playerId ? (
-              <RemovePlayerForm matchId={matchId} playerId={player.playerId} action={actions.removeFromMatch} onDone={onDone} />
+              <RemovePlayerForm
+                matchId={matchId}
+                playerId={player.playerId}
+                playerName={playerLabel(player)}
+                action={actions.removeFromMatch}
+                onDone={onDone}
+              />
             ) : null
           }
         />
