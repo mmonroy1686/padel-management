@@ -11,9 +11,7 @@ import {
   occupancyLine,
   playerLabel,
   timeLeft,
-  todayLines,
   transfersCard,
-  transfersLine,
   turnLabel,
   turnPlayers,
   type HomePayment,
@@ -235,7 +233,7 @@ describe('turnLabel', () => {
   })
 })
 
-describe('Lo que pasa hoy', () => {
+describe('competitionsToday', () => {
   it('lists the tournaments and championships of the day once each', () => {
     expect(
       competitionsToday([
@@ -248,41 +246,6 @@ describe('Lo que pasa hoy', () => {
       { kind: 'tournament', id: 't1', name: 'Copa de la Casa' },
       { kind: 'championship', id: 'c1', name: 'Apertura' },
     ])
-  })
-
-  it('writes a short line with a link for each thing that happens', () => {
-    expect(
-      todayLines({
-        forming: 2,
-        competitions: [
-          { kind: 'tournament', id: 't1', name: 'Copa de la Casa' },
-          { kind: 'championship', id: 'c1', name: 'Apertura' },
-        ],
-        inside: 8,
-        waiting: 3,
-      }),
-    ).toEqual([
-      { text: '2 partidos armándose', href: '/club/grilla' },
-      { text: 'Torneo Copa de la Casa', href: '/club/torneos/t1' },
-      { text: 'Campeonato Apertura', href: '/club/torneos/campeonatos/c1' },
-      { text: '8 en el club hoy', href: '/club/day-use' },
-      { text: '3 esperando turno hoy', href: '/club/grilla' },
-    ])
-  })
-
-  it('says one match in singular and leaves out what does not happen', () => {
-    expect(todayLines({ forming: 1, competitions: [], inside: 0, waiting: 0 })).toEqual([
-      { text: '1 partido armándose', href: '/club/grilla' },
-    ])
-    expect(todayLines({ forming: 0, competitions: [], inside: 0, waiting: 0 })).toEqual([])
-  })
-})
-
-describe('transfersLine', () => {
-  it('counts the transfers to confirm and their money', () => {
-    expect(transfersLine({ count: 3, total: 4800 })).toBe('3 transferencias por confirmar · $4.800')
-    expect(transfersLine({ count: 1, total: 1200 })).toBe('1 transferencia por confirmar · $1.200')
-    expect(transfersLine({ count: 0, total: 0 })).toBeNull()
   })
 })
 

@@ -81,7 +81,6 @@ export type HomeSections = {
   next: CourtItem | null
 }
 export type Competition = { kind: 'tournament' | 'championship'; id: string; name: string }
-export type TodayLine = { text: string; href: string }
 export type AlertKind = 'forming' | 'waiting' | 'tournament' | 'championship' | 'day_use'
 // count: the number the card shows big; null for a competition (its name says it).
 export type HomeAlert = { kind: AlertKind; text: string; href: string; count: number | null }
@@ -288,34 +287,6 @@ export function competitionsToday(occupancies: Occupancy[]): Competition[] {
 
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
 
-// "Lo que pasa hoy": short lines with a link; nothing for what does not happen.
-export function todayLines(input: {
-  forming: number
-  competitions: Competition[]
-  inside: number
-  waiting: number
-}): TodayLine[] {
-  const lines: TodayLine[] = []
-  if (input.forming > 0) {
-    lines.push({ text: plural(input.forming, 'partido armándose', 'partidos armándose'), href: '/club/grilla' })
-  }
-  for (const competition of input.competitions) {
-    lines.push(
-      competition.kind === 'tournament'
-        ? { text: `Torneo ${competition.name}`, href: `/club/torneos/${competition.id}` }
-        : { text: `Campeonato ${competition.name}`, href: `/club/torneos/campeonatos/${competition.id}` },
-    )
-  }
-  if (input.inside > 0) lines.push({ text: `${input.inside} en el club hoy`, href: '/club/day-use' })
-  if (input.waiting > 0) lines.push({ text: `${input.waiting} esperando turno hoy`, href: '/club/grilla' })
-  return lines
-}
-
-// "3 transferencias por confirmar · $4.800", or nothing.
-export function transfersLine(totals: { count: number; total: number }): string | null {
-  if (totals.count === 0) return null
-  return `${plural(totals.count, 'transferencia por confirmar', 'transferencias por confirmar')} · ${formatPrice(totals.total)}`
-}
 
 // Avisos: only what asks for something, each with its link; nothing for what does not happen.
 export function alerts(input: {
