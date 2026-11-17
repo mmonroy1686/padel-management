@@ -1,5 +1,5 @@
 import { WEEKDAYS_SHORT } from './format'
-import { readBoolean, readInt, readTime } from './input'
+import { readBoolean, readInt, readText, readTime } from './input'
 import { formatMinutes, parseTime } from './time'
 
 export const SLOT_LENGTHS = [60, 90, 120] as const
@@ -101,4 +101,11 @@ export function describeDays(weekdays: number[]): string {
   return MONDAY_FIRST.filter((day) => days.has(day))
     .map((day) => WEEKDAYS_SHORT[day])
     .join(', ')
+}
+
+// Ajustes → "Nombre del club": what every screen, the tab title and the shared links show.
+export function parseClubName(form: FormData): ParseResult<{ name: string }> {
+  const name = readText(form, 'name', { maxLength: 40 })
+  if (!name || name.length < 2) return fail('Escribí el nombre del club, de 2 a 40 letras.')
+  return { ok: true, value: { name } }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeDays, parseClubSettings, parsePricingRule, TIME_OPTIONS } from '@/lib/domain/settings'
+import { describeDays, parseClubName, parseClubSettings, parsePricingRule, TIME_OPTIONS } from '@/lib/domain/settings'
 
 function form(entries: [string, string][]): FormData {
   const data = new FormData()
@@ -99,5 +99,23 @@ describe('TIME_OPTIONS', () => {
     expect(TIME_OPTIONS).toHaveLength(49)
     expect(TIME_OPTIONS[0]).toBe('00:00')
     expect(TIME_OPTIONS.at(-1)).toBe('24:00')
+  })
+})
+
+describe('parseClubName', () => {
+  const form = (name: string) => {
+    const data = new FormData()
+    data.set('name', name)
+    return data
+  }
+
+  it('takes the name without the spaces around it', () => {
+    expect(parseClubName(form('  Club Norte Pádel '))).toEqual({ ok: true, value: { name: 'Club Norte Pádel' } })
+  })
+
+  it('asks for a name of 2 to 40 letters', () => {
+    expect(parseClubName(form(''))).toEqual({ ok: false, message: 'Escribí el nombre del club, de 2 a 40 letras.' })
+    expect(parseClubName(form('A'))).toEqual({ ok: false, message: 'Escribí el nombre del club, de 2 a 40 letras.' })
+    expect(parseClubName(form('x'.repeat(41)))).toEqual({ ok: false, message: 'Escribí el nombre del club, de 2 a 40 letras.' })
   })
 })

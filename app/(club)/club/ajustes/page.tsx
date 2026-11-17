@@ -10,7 +10,7 @@ import { LOYALTY_EXPIRY_OPTIONS, loyaltyRuleOf, loyaltyRuleText } from '@/lib/do
 import { SLOT_LENGTHS, TIME_OPTIONS } from '@/lib/domain/settings'
 import { formatMinutes, parseTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
-import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, saveClubBrand, saveClubLogo } from './actions'
+import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubName, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, saveClubBrand, saveClubLogo } from './actions'
 import { CourtsTable, PricesTable } from './settings-tables'
 
 export const metadata: Metadata = { title: 'Ajustes' }
@@ -43,6 +43,28 @@ export default async function SettingsPage() {
 
   return (
     <>
+      <section aria-labelledby="nombre" className="flex flex-col gap-3">
+        <h2 id="nombre" className="font-display text-2xl font-bold uppercase">
+          Nombre del club
+        </h2>
+        <Card>
+          <ActionForm action={updateClubName} submitLabel="Guardar nombre">
+            <Field label="Nombre" htmlFor="club-name">
+              <input
+                id="club-name"
+                name="name"
+                required
+                minLength={2}
+                maxLength={40}
+                defaultValue={club.name}
+                className={inputClasses}
+              />
+            </Field>
+            <p className="text-sm text-fg-muted">Se ve arriba en todas las pantallas, en la pestaña y al compartir links.</p>
+          </ActionForm>
+        </Card>
+      </section>
+
       <section aria-labelledby="logo" className="flex flex-col gap-3">
         <h2 id="logo" className="font-display text-2xl font-bold uppercase">
           Logo
