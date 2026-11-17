@@ -1,7 +1,7 @@
 ---
 feature: inicio-cancha
 type: plan
-status: ready
+status: done
 date: 2026-11-17
 branch: feat/inicio-cancha
 references: ./design.md

@@ -1,7 +1,7 @@
 ---
 feature: inicio-cancha
 type: design
-status: approved
+status: done
 date: 2026-11-17
 branch: feat/inicio-cancha
 references: ../inicio-del-club/design.md, ../marca-del-club/design.md
