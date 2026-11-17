@@ -1,4 +1,4 @@
-import { formatPrice } from './format'
+import { formatPrice, timeIn } from './format'
 import { holderName, KIND_LABELS, type Occupancy } from './grid'
 import { shareFor, type SlotHolder } from './match-payments'
 import type { PaymentStatus } from './payments'
@@ -62,16 +62,27 @@ export type CourtEvent = {
   courtName: string
   startsAt: Date
   endsAt: Date
+  // What holds the court: the card's icon.
+  occupancyKind: Occupancy['kind']
   label: string
   href: string | null
 }
 export type CourtItem = CourtTurn | CourtEvent
-export type HomeSections = { playing: CourtItem[]; upcoming: CourtItem[]; pending: CourtTurn[]; next: CourtItem | null }
+export type HomeSections = {
+  playing: CourtItem[]
+  // Ended within RECENT_MINUTES and still owe something: they stay in "En cancha ahora".
+  recent: CourtTurn[]
+  upcoming: CourtItem[]
+  pending: CourtTurn[]
+  next: CourtItem | null
+}
 export type Competition = { kind: 'tournament' | 'championship'; id: string; name: string }
 export type TodayLine = { text: string; href: string }
 
 // "Próximos": what starts in the next hour and a half.
 export const UPCOMING_MINUTES = 90
+// A court that ended this long ago and still owes stays in "En cancha ahora".
+export const RECENT_MINUTES = 30
 const POSITIONS = [1, 2, 3, 4] as const
 const BOOKING_KINDS = new Set<Occupancy['kind']>(['booking', 'recurring', 'match'])
 
@@ -79,6 +90,11 @@ const total = (payments: HomePayment[]) => payments.reduce((sum, payment) => sum
 
 export function playerLabel(player: Pick<PlayerShare, 'position' | 'name'>): string {
   return player.name ?? `Jugador ${player.position}`
+}
+
+// The name of the button that charges one share, and of its confirmation: "Cobrar $300 a Bruno".
+export function chargeLabel(player: Pick<PlayerShare, 'position' | 'name' | 'due'>): string {
+  return `Cobrar ${formatPrice(player.due)} a ${playerLabel(player)}`
 }
 
 function shareState(owed: number, due: number): ShareState {
@@ -183,21 +199,33 @@ export function courtItems(input: {
         const booking = bookingByOccupancy.get(occupancy.id)
         return booking ? [{ ...base, kind: 'turn', bookingId: booking.id, ...turnPlayers(booking) }] : []
       }
-      return [{ ...base, kind: 'event', label: occupancy.note ?? KIND_LABELS[occupancy.kind], href: eventHref(occupancy) }]
+      return [
+        {
+          ...base,
+          kind: 'event',
+          occupancyKind: occupancy.kind,
+          label: occupancy.note ?? KIND_LABELS[occupancy.kind],
+          href: eventHref(occupancy),
+        },
+      ]
     })
 }
 
-// En cancha ahora: started (at `now` included) and not ended. Próximos: starts within 90 minutes. Pendientes de
-// cobro: a booking that ended (at `now` included) and still owes something.
+// En cancha ahora: started (at `now` included) and not ended. Recientes: a booking that ended (at `now` included)
+// up to 30 minutes ago and still owes something. Próximos: starts within 90 minutes. Pendientes de cobro: a booking
+// that ended before that and still owes something.
 export function homeSections(items: CourtItem[], now: Date): HomeSections {
   const time = now.getTime()
   const horizon = time + UPCOMING_MINUTES * 60_000
+  const recentFrom = time - RECENT_MINUTES * 60_000
+  const owing = items.filter(
+    (item): item is CourtTurn => item.kind === 'turn' && item.endsAt.getTime() <= time && item.restDue > 0,
+  )
   return {
     playing: items.filter((item) => item.startsAt.getTime() <= time && time < item.endsAt.getTime()),
+    recent: owing.filter((item) => item.endsAt.getTime() >= recentFrom),
     upcoming: items.filter((item) => item.startsAt.getTime() > time && item.startsAt.getTime() <= horizon),
-    pending: items.filter(
-      (item): item is CourtTurn => item.kind === 'turn' && item.endsAt.getTime() <= time && item.restDue > 0,
-    ),
+    pending: owing.filter((item) => item.endsAt.getTime() < recentFrom),
     next: items.find((item) => item.startsAt.getTime() > time) ?? null,
   }
 }
@@ -211,6 +239,15 @@ export function timeLeft(item: { startsAt: Date; endsAt: Date }, now: Date): { p
     percentDone: length > 0 ? Math.round((done / length) * 100) : 100,
     text: minutes === 1 ? 'Falta 1 min' : `Faltan ${minutes} min`,
   }
+}
+
+// The header of a court: "Empieza 14:30", "Faltan 34 min" or "Terminó hace 12 min".
+export function turnLabel(item: { startsAt: Date; endsAt: Date }, now: Date, timezone: string): string {
+  const time = now.getTime()
+  if (item.startsAt.getTime() > time) return `Empieza ${timeIn(item.startsAt, timezone)}`
+  if (time < item.endsAt.getTime()) return timeLeft(item, now).text
+  const minutes = Math.floor((time - item.endsAt.getTime()) / 60_000)
+  return minutes === 0 ? 'Terminó recién' : `Terminó hace ${minutes} min`
 }
 
 // The tournaments and championships that hold a court today, once each.

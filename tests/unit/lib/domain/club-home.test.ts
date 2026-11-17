@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  chargeLabel,
   competitionsToday,
   courtItems,
   homeSections,
@@ -7,11 +8,12 @@ import {
   timeLeft,
   todayLines,
   transfersLine,
+  turnLabel,
   turnPlayers,
   type HomePayment,
   type TurnBookingRow,
 } from '@/lib/domain/club-home'
-import { at, COURTS, occupancy } from '../../fixtures/grid'
+import { at, COURTS, occupancy, TIMEZONE } from '../../fixtures/grid'
 
 function row(overrides: Partial<TurnBookingRow> = {}): TurnBookingRow {
   return {
@@ -43,6 +45,8 @@ describe('turnPlayers, a booking', () => {
     ])
     expect(turn).toMatchObject({ isMatch: false, restDue: 1202, missingNames: true })
     expect(playerLabel(turn.players[2])).toBe('Jugador 3')
+    expect(chargeLabel(turn.players[0])).toBe('Cobrar $302 a Ana')
+    expect(chargeLabel(turn.players[2])).toBe('Cobrar $300 a Jugador 3')
   })
 
   it('names players 2 to 4 by member or by name', () => {
@@ -161,6 +165,7 @@ describe('courtItems and homeSections', () => {
     expect(ids(items)).toEqual(['o-early', 'o-paid', 'o-ended', 'o-now', 'o-class', 'o-cup'])
     expect(items.find((item) => item.id === 'o-class')).toMatchObject({
       kind: 'event',
+      occupancyKind: 'block',
       courtName: 'Cancha 2',
       label: 'Clase de menores',
       href: null,
@@ -169,10 +174,24 @@ describe('courtItems and homeSections', () => {
     expect(items.find((item) => item.id === 'o-now')).toMatchObject({ kind: 'turn', bookingId: 'b-now', restDue: 1200 })
   })
 
-  it('a booking is in play from the minute it starts, and pending from the minute it ends', () => {
+  it('a booking is in play from the minute it starts, and recent from the minute it ends', () => {
     const sections = homeSections(items, at('11:00'))
     expect(ids(sections.playing)).toEqual(['o-now', 'o-class'])
-    expect(ids(sections.pending)).toEqual(['o-early', 'o-ended'])
+    expect(ids(sections.recent)).toEqual(['o-ended'])
+    expect(ids(sections.pending)).toEqual(['o-early'])
+  })
+
+  it('a booking that owes stays recent up to 30 minutes after it ends, then goes to pending', () => {
+    expect(ids(homeSections(items, at('11:30')).recent)).toEqual(['o-ended'])
+    const later = homeSections(items, at('11:31'))
+    expect(later.recent).toEqual([])
+    expect(ids(later.pending)).toEqual(['o-early', 'o-ended'])
+  })
+
+  it('a paid booking is neither recent nor pending', () => {
+    const sections = homeSections(items, at('09:30'))
+    expect(ids(sections.recent)).toEqual(['o-early'])
+    expect(sections.pending).toEqual([])
   })
 
   it('Próximos: what starts within the next 90 minutes, the 90th included', () => {
@@ -195,6 +214,17 @@ describe('timeLeft', () => {
     expect(timeLeft(slot, at('11:30'))).toEqual({ percentDone: 33, text: 'Faltan 60 min' })
     expect(timeLeft(slot, at('12:29'))).toEqual({ percentDone: 99, text: 'Falta 1 min' })
     expect(timeLeft(slot, at('11:00'))).toEqual({ percentDone: 0, text: 'Faltan 90 min' })
+  })
+})
+
+describe('turnLabel', () => {
+  const slot = { startsAt: at('11:00'), endsAt: at('12:30') }
+
+  it('says when it starts, what is left or how long ago it ended', () => {
+    expect(turnLabel(slot, at('10:15'), TIMEZONE)).toBe('Empieza 11:00')
+    expect(turnLabel(slot, at('11:56'), TIMEZONE)).toBe('Faltan 34 min')
+    expect(turnLabel(slot, at('12:30'), TIMEZONE)).toBe('Terminó recién')
+    expect(turnLabel(slot, at('12:42'), TIMEZONE)).toBe('Terminó hace 12 min')
   })
 })
 
