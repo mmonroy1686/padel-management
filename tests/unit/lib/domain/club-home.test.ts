@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   alerts,
+  canAddPlayers,
   cancellationsToday,
   chargeLabel,
   competitionsToday,
@@ -219,6 +220,35 @@ describe('timeLeft', () => {
     expect(timeLeft(slot, at('11:30'))).toEqual({ percentDone: 33, text: 'Faltan 60 min' })
     expect(timeLeft(slot, at('12:29'))).toEqual({ percentDone: 99, text: 'Falta 1 min' })
     expect(timeLeft(slot, at('11:00'))).toEqual({ percentDone: 0, text: 'Faltan 90 min' })
+  })
+})
+
+describe('canAddPlayers', () => {
+  const endsAt = at('12:30')
+  const full = row({
+    players: [
+      { position: 2, player_id: null, name: 'Pepe', player: null },
+      { position: 3, player_id: null, name: 'Lucho', player: null },
+      { position: 4, player_id: null, name: 'Gabi', player: null },
+    ],
+  })
+
+  it('takes players while the booking has someone missing and has not ended', () => {
+    expect(canAddPlayers(turnPlayers(row()), endsAt, at('12:00'))).toBe(true)
+  })
+
+  it('not once it ended', () => {
+    expect(canAddPlayers(turnPlayers(row()), endsAt, at('12:30'))).toBe(false)
+    expect(canAddPlayers(turnPlayers(row()), endsAt, at('17:30'))).toBe(false)
+  })
+
+  it('not when the four are there', () => {
+    expect(canAddPlayers(turnPlayers(full), endsAt, at('12:00'))).toBe(false)
+  })
+
+  it('not in a match: its players join from the app', () => {
+    const match = row({ match_id: 'm1', match: { slots: [] } })
+    expect(canAddPlayers(turnPlayers(match), endsAt, at('12:00'))).toBe(false)
   })
 })
 

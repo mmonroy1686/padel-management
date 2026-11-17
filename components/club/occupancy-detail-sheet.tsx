@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
+import { canAddPlayers } from '@/lib/domain/club-home'
 import { formatPrice, timeIn } from '@/lib/domain/format'
 import { KIND_LABELS, type GridBooking, type GridCell, type Occupancy } from '@/lib/domain/grid'
 import type { MemberOption } from '@/lib/domain/members'
@@ -84,6 +85,7 @@ export function OccupancyDetailSheet({
                 members={members}
                 actions={actions}
                 onDone={onDone}
+                canAddPlayers={canAddPlayers(booking.turn, occupancy.endsAt, new Date())}
               />
             ) : null}
             <ActionForm
@@ -172,6 +174,7 @@ function MatchBookingDetail({
           members={members}
           actions={actions}
           onDone={onDone}
+          canAddPlayers={false}
           playerExtra={(player) =>
             player.playerId ? (
               <RemovePlayerForm matchId={matchId} playerId={player.playerId} action={actions.removeFromMatch} onDone={onDone} />
