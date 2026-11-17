@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
 import type { FormAction } from '@/components/ui/action-form'
 import { Button } from '@/components/ui/button'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -34,13 +34,22 @@ export function ChargeChoice({
     if (result.status === 'error') onError(result.message ?? '')
     return result
   }, IDLE)
+  // Focus moves here on open: the button that opened it is gone.
+  const group = useRef<HTMLDivElement>(null)
+  useEffect(() => group.current?.focus(), [])
   const options = [
     ...(methods.cash ? [{ value: 'cash', label: 'Efectivo' }] : []),
     ...(methods.transfer ? [{ value: 'transfer', label: 'Me transfirió' }] : []),
   ]
 
   return (
-    <div role="group" aria-label={title} className="flex flex-col gap-2 rounded-xl border border-accent bg-surface p-3">
+    <div
+      ref={group}
+      tabIndex={-1}
+      role="group"
+      aria-label={title}
+      className="flex flex-col gap-2 rounded-xl border border-accent bg-surface p-3 focus-visible:outline-2 focus-visible:outline-accent"
+    >
       <p className="text-sm font-semibold">{title}</p>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (

@@ -40,7 +40,9 @@ export type PaymentsOverview = {
 
 const RECEIPT_URL_SECONDS = 300
 
-const BOOKING_SELECT =
+// A booking with its court, holder, match spots and payments (OverviewBooking): Cobros, and the Inicio's
+// cancellations (lib/data/club-home.ts).
+export const BOOKING_SELECT =
   'id, starts_at, price, status, guest_name, match_id, court:courts(name), player:profiles!bookings_player_id_fkey(display_name), match:open_matches!bookings_match_id_fkey(slots:match_slots(position, player_id, player:profiles(display_name))), payments(id, status, amount, payer_id, payer:profiles!payments_payer_id_fkey(display_name))'
 
 const PASS_SELECT =

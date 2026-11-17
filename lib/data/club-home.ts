@@ -1,22 +1,35 @@
 import 'server-only'
 import type { Club } from '@/lib/auth/viewer'
 import {
+  alerts,
+  cancellationsToday,
   competitionsToday,
   courtItems,
-  todayLines,
+  dayOccupancy,
+  transfersCard,
+  type Cancellation,
   type CourtItem,
-  type TodayLine,
+  type DayOccupancy,
+  type HomeAlert,
+  type TransfersSummary,
   type TurnBookingRow,
 } from '@/lib/domain/club-home'
 import { toOccupancy } from '@/lib/domain/grid'
-import { totalsOf, type PaymentsTotals } from '@/lib/domain/payments-overview'
 import { addDays, localDateOf, zonedTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
+import { loadDayGrid } from './day'
 import { loadInside } from './day-use'
 import { loadMatches } from './matches'
+import { BOOKING_SELECT } from './payments'
 import { loadDayWaits } from './waitlist'
 
-export type ClubHomeData = { items: CourtItem[]; today: TodayLine[]; transfers: PaymentsTotals }
+export type ClubHomeData = {
+  items: CourtItem[]
+  alerts: HomeAlert[]
+  transfers: TransfersSummary | null
+  occupancy: DayOccupancy
+  cancellations: Cancellation[]
+}
 
 // booking_players reaches profiles through player_id and created_by: the hint picks the player.
 const TURN_SELECT =
@@ -26,8 +39,9 @@ const TURN_SELECT =
 type HomeBookingRow = TurnBookingRow & { occupancy_id: string | null }
 
 // Everything the Inicio shows, read in parallel with the staff session: the club's day (occupancies, bookings with
-// their players and payments, notes), forming matches, day use inside, waits and reported transfers.
-export async function loadClubHome(club: Club, now = new Date()): Promise<ClubHomeData> {
+// their players and payments, notes), the day's grid (occupancy and free slots), today's cancelled bookings, forming
+// matches, day use inside, waits and reported transfers.
+export async function loadClubHome(club: Club, viewerId: string, now = new Date()): Promise<ClubHomeData> {
   const supabase = await createClient()
   const today = localDateOf(now, club.timezone)
   const dayStart = zonedTime(today, 0, club.timezone)
@@ -35,7 +49,7 @@ export async function loadClubHome(club: Club, now = new Date()): Promise<ClubHo
   const from = dayStart.toISOString()
   const to = dayEnd.toISOString()
 
-  const [courts, occupancies, bookings, notes, reported, forming, inside, waits] = await Promise.all([
+  const [courts, occupancies, bookings, notes, reported, cancelled, grid, forming, inside, waits] = await Promise.all([
     supabase.from('courts').select('id, name').eq('club_id', club.id).order('sort_order'),
     supabase
       .from('court_occupancy')
@@ -51,7 +65,15 @@ export async function loadClubHome(club: Club, now = new Date()): Promise<ClubHo
       .lt('starts_at', to)
       .gt('ends_at', from),
     supabase.rpc('occupancy_notes', { p_club_id: club.id, p_from: from, p_to: to }),
-    supabase.from('payments').select('amount').eq('club_id', club.id).eq('status', 'reported'),
+    supabase.from('payments').select('amount, created_at').eq('club_id', club.id).eq('status', 'reported'),
+    supabase
+      .from('bookings')
+      .select(BOOKING_SELECT)
+      .eq('club_id', club.id)
+      .eq('status', 'cancelled')
+      .gte('starts_at', from)
+      .lt('starts_at', to),
+    loadDayGrid(club, today, { userId: viewerId, audience: 'staff' }, now),
     loadMatches(club, { from: dayStart, to: dayEnd }, ['forming']),
     loadInside(club, today),
     loadDayWaits(club, today),
@@ -61,6 +83,7 @@ export async function loadClubHome(club: Club, now = new Date()): Promise<ClubHo
   if (bookings.error) throw bookings.error
   if (notes.error) throw notes.error
   if (reported.error) throw reported.error
+  if (cancelled.error) throw cancelled.error
 
   const noteById = new Map((notes.data ?? []).map((row) => [row.id, row.note]))
   const day = occupancies.data.map((row) => toOccupancy({ ...row, note: noteById.get(row.id) ?? null }, 'staff'))
@@ -68,12 +91,14 @@ export async function loadClubHome(club: Club, now = new Date()): Promise<ClubHo
 
   return {
     items: courtItems({ courts: courts.data, occupancies: day, bookings: turns }),
-    today: todayLines({
-      forming: forming.length,
+    alerts: alerts({
+      forming,
       competitions: competitionsToday(day),
       inside: inside.length,
       waiting: waits.length,
     }),
-    transfers: totalsOf(reported.data, (payment) => payment.amount),
+    transfers: transfersCard(reported.data, now),
+    occupancy: dayOccupancy(grid, now),
+    cancellations: cancellationsToday(cancelled.data),
   }
 }

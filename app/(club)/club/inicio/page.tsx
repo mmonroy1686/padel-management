@@ -1,14 +1,16 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { CourtList } from '@/components/club/court-card'
+import { HomeDay } from '@/components/club/home-day'
+import { PendingList } from '@/components/club/pending-list'
+import { TransfersCard } from '@/components/club/transfers-card'
 import { AutoRefresh } from '@/components/live/auto-refresh'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { chargeRest, chargeShare, saveBookingPlayers } from '@/lib/actions/booking-charges'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadClubHome } from '@/lib/data/club-home'
 import { loadMemberOptions } from '@/lib/data/members'
-import { homeSections, transfersLine } from '@/lib/domain/club-home'
+import { homeSections } from '@/lib/domain/club-home'
 import { timeIn } from '@/lib/domain/format'
 
 export const metadata: Metadata = { title: 'Inicio' }
@@ -24,21 +26,22 @@ function HomeSection({ id, title, children }: { id: string; title: string; child
   )
 }
 
-// Reception's and the admin's first screen: what is played now, what comes next, what is still owed today and what
-// else happens. It renders again when an occupancy changes (Realtime) and every minute, so bookings move from
-// Próximos to En cancha and to Pendientes on their own.
+// Reception's and the admin's first screen: transfers to review, the courts in play (and the ones that just ended
+// and still owe), what comes next, what is still owed today and the day. It renders again when an occupancy changes
+// (Realtime) and every minute, so bookings move from Próximos to En cancha and to Pendientes on their own.
 export default async function ClubHomePage() {
   const viewer = await requireStaff('/club/inicio')
   const { club } = viewer
   const now = new Date()
-  const [home, members] = await Promise.all([loadClubHome(club, now), loadMemberOptions(club.id)])
-  const { playing, upcoming, pending, next } = homeSections(home.items, now)
-  const transfers = transfersLine(home.transfers)
+  const [home, members] = await Promise.all([loadClubHome(club, viewer.userId, now), loadMemberOptions(club.id)])
+  const { playing, recent, upcoming, pending, next } = homeSections(home.items, now)
+  const inPlay = [...playing, ...recent]
   const list = {
     timezone: club.timezone,
     methods: { cash: club.accepts_cash, transfer: club.accepts_transfer },
     members,
     actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers },
+    now,
   }
 
   return (
@@ -46,13 +49,15 @@ export default async function ClubHomePage() {
       <LiveOccupancy clubId={club.id} />
       <AutoRefresh seconds={60} />
 
+      {home.transfers ? <TransfersCard summary={home.transfers} /> : null}
+
       <HomeSection id="en-cancha" title="En cancha ahora">
-        {playing.length > 0 ? (
-          <CourtList items={playing} now={now} {...list} />
+        {inPlay.length > 0 ? (
+          <CourtList items={inPlay} {...list} />
         ) : (
           <p className="text-fg-muted">
             No hay canchas en juego ahora.
-            {next ? ` El próximo turno: ${next.courtName} a las ${timeIn(next.startsAt, club.timezone)}.` : ''}
+            {next ? ` Próximo turno: ${next.courtName} a las ${timeIn(next.startsAt, club.timezone)}.` : ''}
           </p>
         )}
       </HomeSection>
@@ -67,30 +72,20 @@ export default async function ClubHomePage() {
 
       <HomeSection id="pendientes" title="Pendientes de cobro">
         {pending.length > 0 ? (
-          <CourtList items={pending} {...list} />
+          <PendingList turns={pending} {...list} />
         ) : (
           <p className="text-fg-muted">Lo jugado hoy está cobrado.</p>
         )}
-        {transfers ? (
-          <Link href="/club/cobros#transferencias" className="font-semibold text-accent-ink underline">
-            {transfers}
-          </Link>
-        ) : null}
       </HomeSection>
 
-      {home.today.length > 0 ? (
-        <HomeSection id="hoy" title="Lo que pasa hoy">
-          <ul className="flex flex-col gap-2">
-            {home.today.map((line) => (
-              <li key={line.text}>
-                <Link href={line.href} className="font-semibold text-accent-ink underline">
-                  {line.text}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </HomeSection>
-      ) : null}
+      <HomeSection id="el-dia" title="El día">
+        <HomeDay
+          occupancy={home.occupancy}
+          alerts={home.alerts}
+          cancellations={home.cancellations}
+          timezone={club.timezone}
+        />
+      </HomeSection>
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { createMember } from './support/admin'
 import { signInWithMagicLink } from './support/auth'
-import { insertPlayingBooking, paymentsOf } from './support/club-home'
+import { insertPlayingBooking, insertRecentBooking, paymentsOf } from './support/club-home'
 
 test('reception charges each player of the court in play from the Inicio', async ({ page }) => {
   const holder = await createMember({ name: 'Lucía Inicio E2E', prefix: 'inicio-titular' })
@@ -42,7 +42,7 @@ test('reception charges each player of the court in play from the Inicio', async
   await card.getByRole('button', { name: 'Cobrar todo lo que falta ($900)' }).click()
   await card.getByRole('group', { name: 'Cobrar todo lo que falta ($900)' }).getByRole('button', { name: 'Me transfirió' }).click()
   await expect(card.getByRole('status')).toHaveText('Cobramos $900 por transferencia.')
-  await expect(players.getByText('Pagó', { exact: true })).toHaveCount(4)
+  await expect(players.getByText('Pagó ✓', { exact: true })).toHaveCount(4)
   await expect(card.getByRole('button', { name: /^Cobrar/ })).toHaveCount(0)
 
   // Both are confirmed payments, the transfer without a receipt: Cobros has nothing to confirm for them.
@@ -61,4 +61,30 @@ test('reception charges each player of the court in play from the Inicio', async
   const detail = page.getByRole('dialog', { name: holder.name })
   await expect(detail.getByRole('list', { name: 'Jugadores' })).toContainText(partner.name)
   await expect(detail.getByText('Pagó', { exact: true })).toHaveCount(4)
+})
+
+test('a court that just ended stays in play while it owes, and leaves once it is paid', async ({ page }) => {
+  const holder = await createMember({ name: 'Paula Reciente E2E', prefix: 'inicio-reciente' })
+  const reception = await createMember({ name: 'Recepción Reciente E2E', prefix: 'inicio-recepcion-reciente', role: 'reception' })
+  const recent = await insertRecentBooking(holder)
+  test.skip(recent === null, 'El turno de hace un rato habría empezado ayer')
+  if (!recent) return
+
+  // Ended 10 minutes ago and owes everything: still in "En cancha ahora", without the bar, not in Pendientes.
+  await signInWithMagicLink(page, reception.email, '/club/inicio')
+  const card = page.getByRole('region', { name: 'En cancha ahora' }).getByRole('article').filter({ hasText: holder.name })
+  await expect(card).toContainText(recent.courtName)
+  await expect(card).toContainText(/Terminó hace 1\d min/)
+  await expect(card.getByRole('progressbar')).toHaveCount(0)
+  await expect(card.getByRole('list', { name: 'Jugadores' }).getByRole('listitem')).toHaveCount(4)
+  await expect(page.getByRole('region', { name: 'Pendientes de cobro' })).not.toContainText(holder.name)
+
+  // Everything in cash from the court: once paid, it leaves the Inicio.
+  await card.getByRole('button', { name: 'Cobrar todo lo que falta ($1.200)' }).click()
+  await card.getByRole('group', { name: 'Cobrar todo lo que falta ($1.200)' }).getByRole('button', { name: 'Efectivo' }).click()
+  await expect(card).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Pendientes de cobro' })).not.toContainText(holder.name)
+  expect(await paymentsOf(recent.bookingId)).toEqual([
+    { method: 'cash', amount: 1200, status: 'confirmed', payer_position: null, receipt_path: null },
+  ])
 })
