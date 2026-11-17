@@ -1,10 +1,14 @@
 import { formatPrice, timeIn } from './format'
-import { holderName, KIND_LABELS, type Occupancy } from './grid'
+import { countFree, dayStats, holderName, KIND_LABELS, type DayGrid, type Occupancy } from './grid'
 import { shareFor, type SlotHolder } from './match-payments'
+import { openSlots, type Match } from './matches'
 import type { PaymentStatus } from './payments'
+import { holderLabel, refundsDue, type OverviewBooking } from './payments-overview'
+import { toDate } from './time'
 
-// The club's Inicio: what is being played now, what comes next, what was played today and is still owed, and
-// each player's share of a booking. Same rules as charge_booking_share and charge_booking_rest.
+// The club's Inicio: what is being played now, what comes next, what was played today and is still owed, each
+// player's share of a booking, and the day (occupancy, alerts, cancellations). Same rules as charge_booking_share
+// and charge_booking_rest.
 
 export type HomePayment = {
   status: PaymentStatus
@@ -78,11 +82,21 @@ export type HomeSections = {
 }
 export type Competition = { kind: 'tournament' | 'championship'; id: string; name: string }
 export type TodayLine = { text: string; href: string }
+export type AlertKind = 'forming' | 'waiting' | 'tournament' | 'championship' | 'day_use'
+// count: the number the card shows big; null for a competition (its name says it).
+export type HomeAlert = { kind: AlertKind; text: string; href: string; count: number | null }
+export type Cancellation = { bookingId: string; courtName: string; startsAt: Date; holder: string; refund: number }
+export type FreeSlot = { courtName: string; startsAt: Date; label: string }
+export type DayOccupancy = { percent: number; free: number; slots: FreeSlot[] }
+export type ReportedTransfer = { amount: number; created_at: string }
+export type TransfersSummary = { count: number; total: number; text: string; age: string }
 
 // "Próximos": what starts in the next hour and a half.
 export const UPCOMING_MINUTES = 90
 // A court that ended this long ago and still owes stays in "En cancha ahora".
 export const RECENT_MINUTES = 30
+// "El día": how many free slots the Ocupación card lists.
+export const FREE_SLOTS_SHOWN = 4
 const POSITIONS = [1, 2, 3, 4] as const
 const BOOKING_KINDS = new Set<Occupancy['kind']>(['booking', 'recurring', 'match'])
 
@@ -301,4 +315,115 @@ export function todayLines(input: {
 export function transfersLine(totals: { count: number; total: number }): string | null {
   if (totals.count === 0) return null
   return `${plural(totals.count, 'transferencia por confirmar', 'transferencias por confirmar')} · ${formatPrice(totals.total)}`
+}
+
+// Avisos: only what asks for something, each with its link; nothing for what does not happen.
+export function alerts(input: {
+  forming: Pick<Match, 'slots'>[]
+  competitions: Competition[]
+  inside: number
+  waiting: number
+}): HomeAlert[] {
+  const list: HomeAlert[] = []
+  if (input.forming.length > 0) {
+    const missing = input.forming.reduce((sum, match) => sum + openSlots(match).length, 0)
+    const matches = plural(input.forming.length, 'partido armándose', 'partidos armándose')
+    const players = `${missing === 1 ? 'falta' : 'faltan'} ${plural(missing, 'jugador', 'jugadores')}`
+    list.push({
+      kind: 'forming',
+      count: input.forming.length,
+      href: '/club/grilla',
+      text: missing > 0 ? `${matches} · ${players}` : matches,
+    })
+  }
+  if (input.waiting > 0) {
+    list.push({ kind: 'waiting', count: input.waiting, href: '/club/grilla', text: `${input.waiting} esperando turno hoy` })
+  }
+  for (const competition of input.competitions) {
+    list.push(
+      competition.kind === 'tournament'
+        ? {
+            kind: 'tournament',
+            count: null,
+            href: `/club/torneos/${competition.id}`,
+            text: `Torneo ${competition.name} en juego`,
+          }
+        : {
+            kind: 'championship',
+            count: null,
+            href: `/club/torneos/campeonatos/${competition.id}`,
+            text: `Campeonato ${competition.name} en juego`,
+          },
+    )
+  }
+  if (input.inside > 0) {
+    list.push({ kind: 'day_use', count: input.inside, href: '/club/day-use', text: `${input.inside} en el club (day use)` })
+  }
+  return list
+}
+
+// Today's cancelled bookings, in time order, with what the club has to give back: its confirmed payments, the same
+// rule as Cobros (refundsDue).
+export function cancellationsToday(rows: OverviewBooking[]): Cancellation[] {
+  return rows
+    .map((row) => ({
+      bookingId: row.id,
+      courtName: row.court?.name ?? 'Cancha',
+      startsAt: toDate(row.starts_at),
+      holder: row.match_id && !row.guest_name && !row.player ? 'Partido abierto' : holderLabel(row),
+      refund: refundsDue([row]).reduce((sum, item) => sum + item.amount, 0),
+    }))
+    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
+}
+
+// The next free slots of the day after `now`, in time order and, at the same time, in the club's court order.
+export function freeSlotsAhead(grid: Pick<DayGrid, 'rows'>, now: Date, limit: number): FreeSlot[] {
+  return grid.rows
+    .filter((row) => row.slot.startsAt.getTime() > now.getTime())
+    .flatMap((row) =>
+      row.cells
+        .filter((cell) => cell.state === 'free')
+        .map((cell) => ({
+          courtName: cell.court.name,
+          startsAt: row.slot.startsAt,
+          label: `${row.slot.label} ${cell.court.name}`,
+        })),
+    )
+    .slice(0, limit)
+}
+
+// Ocupación: the day's occupancy, how many slots are still free and the next ones.
+export function dayOccupancy(grid: DayGrid, now: Date): DayOccupancy {
+  return {
+    percent: dayStats(grid).occupancyPercent,
+    free: countFree(grid.rows),
+    slots: freeSlotsAhead(grid, now, FREE_SLOTS_SHOWN),
+  }
+}
+
+// "68 % ocupado · 7 turnos libres".
+export function occupancyLine(occupancy: Pick<DayOccupancy, 'percent' | 'free'>): string {
+  return `${occupancy.percent} % ocupado · ${plural(occupancy.free, 'turno libre', 'turnos libres')}`
+}
+
+function ago(milliseconds: number): string {
+  const minutes = Math.max(0, Math.floor(milliseconds / 60_000))
+  if (minutes === 0) return 'un momento'
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} h`
+  return plural(Math.floor(hours / 24), 'día', 'días')
+}
+
+// The transfers card: "11 transferencias por confirmar · $13.800" and "la más vieja hace 2 h"; null without any.
+export function transfersCard(rows: ReportedTransfer[], now: Date): TransfersSummary | null {
+  if (rows.length === 0) return null
+  const money = rows.reduce((sum, row) => sum + row.amount, 0)
+  const since = ago(now.getTime() - Math.min(...rows.map((row) => new Date(row.created_at).getTime())))
+  return {
+    count: rows.length,
+    total: money,
+    text: `${plural(rows.length, 'transferencia por confirmar', 'transferencias por confirmar')} · ${formatPrice(money)}`,
+    age: rows.length === 1 ? `hace ${since}` : `la más vieja hace ${since}`,
+  }
 }

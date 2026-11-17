@@ -1,19 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import {
+  alerts,
+  cancellationsToday,
   chargeLabel,
   competitionsToday,
   courtItems,
+  dayOccupancy,
+  freeSlotsAhead,
   homeSections,
+  occupancyLine,
   playerLabel,
   timeLeft,
   todayLines,
+  transfersCard,
   transfersLine,
   turnLabel,
   turnPlayers,
   type HomePayment,
   type TurnBookingRow,
 } from '@/lib/domain/club-home'
-import { at, COURTS, occupancy, TIMEZONE } from '../../fixtures/grid'
+import type { OverviewBooking } from '@/lib/domain/payments-overview'
+import { at, COURTS, makeGrid, occupancy, TIMEZONE } from '../../fixtures/grid'
 
 function row(overrides: Partial<TurnBookingRow> = {}): TurnBookingRow {
   return {
@@ -276,5 +283,154 @@ describe('transfersLine', () => {
     expect(transfersLine({ count: 3, total: 4800 })).toBe('3 transferencias por confirmar · $4.800')
     expect(transfersLine({ count: 1, total: 1200 })).toBe('1 transferencia por confirmar · $1.200')
     expect(transfersLine({ count: 0, total: 0 })).toBeNull()
+  })
+})
+
+
+describe('alerts', () => {
+  const spots = (...players: (string | null)[]) => ({
+    slots: players.map((playerId, index) => ({
+      position: index + 1,
+      side: index % 2 === 0 ? ('drive' as const) : ('backhand' as const),
+      playerId,
+      playerName: playerId,
+    })),
+  })
+
+  it('writes what asks for something, with its number and link, and how many players the matches miss', () => {
+    expect(
+      alerts({
+        forming: [spots('ana', null, null, 'bruno'), spots('hugo', 'pepe', 'lucho', null)],
+        competitions: [
+          { kind: 'tournament', id: 't1', name: 'Copa de la Casa' },
+          { kind: 'championship', id: 'c1', name: 'Apertura' },
+        ],
+        inside: 8,
+        waiting: 3,
+      }),
+    ).toEqual([
+      { kind: 'forming', count: 2, href: '/club/grilla', text: '2 partidos armándose · faltan 3 jugadores' },
+      { kind: 'waiting', count: 3, href: '/club/grilla', text: '3 esperando turno hoy' },
+      { kind: 'tournament', count: null, href: '/club/torneos/t1', text: 'Torneo Copa de la Casa en juego' },
+      {
+        kind: 'championship',
+        count: null,
+        href: '/club/torneos/campeonatos/c1',
+        text: 'Campeonato Apertura en juego',
+      },
+      { kind: 'day_use', count: 8, href: '/club/day-use', text: '8 en el club (day use)' },
+    ])
+  })
+
+  it('says one match and one player in singular, and leaves out what does not happen', () => {
+    expect(alerts({ forming: [spots('ana', 'bruno', 'hugo', null)], competitions: [], inside: 0, waiting: 0 })).toEqual([
+      { kind: 'forming', count: 1, href: '/club/grilla', text: '1 partido armándose · falta 1 jugador' },
+    ])
+    expect(alerts({ forming: [], competitions: [], inside: 0, waiting: 0 })).toEqual([])
+  })
+})
+
+describe('cancellationsToday', () => {
+  function cancelled(overrides: Partial<OverviewBooking> = {}): OverviewBooking {
+    return {
+      id: 'b1',
+      starts_at: '2026-10-01T21:30:00+00:00',
+      price: 1600,
+      status: 'cancelled',
+      guest_name: null,
+      court: { name: 'Cancha 2' },
+      player: { display_name: 'Martina' },
+      payments: [],
+      ...overrides,
+    }
+  }
+
+  it('lists the cancelled bookings in time order, with the confirmed money to give back', () => {
+    expect(
+      cancellationsToday([
+        cancelled({
+          id: 'late',
+          payments: [
+            { id: 'p1', status: 'confirmed', amount: 1000 },
+            { id: 'p2', status: 'confirmed', amount: 600 },
+            { id: 'p3', status: 'rejected', amount: 1600 },
+          ],
+        }),
+        cancelled({ id: 'early', starts_at: '2026-10-01T12:30:00+00:00', guest_name: 'Rodríguez', court: { name: 'Cancha 1' } }),
+      ]),
+    ).toEqual([
+      { bookingId: 'early', courtName: 'Cancha 1', startsAt: new Date('2026-10-01T12:30:00Z'), holder: 'Rodríguez', refund: 0 },
+      { bookingId: 'late', courtName: 'Cancha 2', startsAt: new Date('2026-10-01T21:30:00Z'), holder: 'Martina', refund: 1600 },
+    ])
+  })
+
+  it('a refunded payment is no longer owed, and an open match has no holder', () => {
+    const [match] = cancellationsToday([
+      cancelled({ match_id: 'm1', player: null, payments: [{ id: 'p1', status: 'refunded', amount: 400 }] }),
+    ])
+    expect(match).toMatchObject({ holder: 'Partido abierto', refund: 0 })
+  })
+})
+
+describe('freeSlotsAhead and dayOccupancy', () => {
+  const taken = [occupancy('o1', 'court-1', '17:00', '18:30')]
+
+  it('lists the next free slots after now, in time and court order, up to the limit', () => {
+    const grid = makeGrid({ occupancies: taken, now: at('16:00') })
+    expect(freeSlotsAhead(grid, at('16:00'), 4).map((slot) => slot.label)).toEqual([
+      '17:00 Cancha 2',
+      '18:30 Cancha 1',
+      '18:30 Cancha 2',
+      '20:00 Cancha 1',
+    ])
+    expect(freeSlotsAhead(grid, at('16:00'), 1)[0]).toEqual({
+      courtName: 'Cancha 2',
+      startsAt: at('17:00'),
+      label: '17:00 Cancha 2',
+    })
+  })
+
+  it('leaves out the slot that starts now and the ones before it', () => {
+    expect(freeSlotsAhead(makeGrid({ now: at('20:00') }), at('20:00'), 4).map((slot) => slot.label)).toEqual([
+      '21:30 Cancha 1',
+      '21:30 Cancha 2',
+    ])
+    expect(freeSlotsAhead(makeGrid({ now: at('21:30') }), at('21:30'), 4)).toEqual([])
+  })
+
+  it('sums up the day: occupancy, free slots left and the next ones', () => {
+    const day = dayOccupancy(makeGrid({ occupancies: taken, now: at('16:00') }), at('16:00'))
+    expect(day).toMatchObject({ percent: 5, free: 7 })
+    expect(day.slots).toHaveLength(4)
+    expect(occupancyLine(day)).toBe('5 % ocupado · 7 turnos libres')
+    expect(occupancyLine({ percent: 95, free: 1 })).toBe('95 % ocupado · 1 turno libre')
+  })
+})
+
+describe('transfersCard', () => {
+  const now = new Date('2026-10-01T15:00:00Z')
+  const transfer = (amount: number, minutesAgo: number) => ({
+    amount,
+    created_at: new Date(now.getTime() - minutesAgo * 60_000).toISOString(),
+  })
+
+  it('counts the transfers to confirm, their money and how old the oldest is', () => {
+    expect(transfersCard([transfer(1200, 20), transfer(1600, 135), transfer(400, 5)], now)).toEqual({
+      count: 3,
+      total: 3200,
+      text: '3 transferencias por confirmar · $3.200',
+      age: 'la más vieja hace 2 h',
+    })
+  })
+
+  it('says the age in minutes, hours or days, and nothing without transfers', () => {
+    expect(transfersCard([transfer(1200, 12)], now)).toMatchObject({
+      text: '1 transferencia por confirmar · $1.200',
+      age: 'hace 12 min',
+    })
+    expect(transfersCard([transfer(1200, 0)], now)?.age).toBe('hace un momento')
+    expect(transfersCard([transfer(1200, 60 * 24)], now)?.age).toBe('hace 1 día')
+    expect(transfersCard([transfer(1200, 60 * 50)], now)?.age).toBe('hace 2 días')
+    expect(transfersCard([], now)).toBeNull()
   })
 })
