@@ -6,7 +6,7 @@ type ButtonStyle = { variant?: ButtonVariant; fullWidth?: boolean; className?: s
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & ButtonStyle
 
 const BASE =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 font-display text-lg font-bold uppercase tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 font-display text-lg font-bold uppercase tracking-wide transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50'
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-accent text-on-accent hover:brightness-95',
