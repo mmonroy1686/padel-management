@@ -4,13 +4,16 @@ import { useState, type ReactNode } from 'react'
 import type { FormAction } from '@/components/ui/action-form'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
-import { playerLabel, type PlayerShare, type TurnPlayers } from '@/lib/domain/club-home'
+import { chargeLabel, playerLabel, type PlayerShare, type TurnPlayers } from '@/lib/domain/club-home'
 import { formatPrice } from '@/lib/domain/format'
 import type { MemberOption } from '@/lib/domain/members'
 import { ChargeChoice, type PayMethods } from './charge-choice'
 import { PlayersSheet } from './players-sheet'
+import { TurnCourt } from './turn-court'
 
 export type PlayersActions = { chargeShare: FormAction; chargeRest: FormAction; savePlayers: FormAction }
+// list: a row per player (the Grilla). court: the four players drawn on a court (the Inicio).
+export type PlayersLayout = 'list' | 'court'
 
 type Notice = { tone: 'ok' | 'error'; text: string }
 
@@ -25,6 +28,7 @@ export function BookingPlayers({
   actions,
   onDone,
   playerExtra,
+  layout = 'list',
 }: {
   bookingId: string
   turn: TurnPlayers
@@ -33,6 +37,7 @@ export function BookingPlayers({
   actions: PlayersActions
   onDone?: (message: string) => void
   playerExtra?: (player: PlayerShare) => ReactNode
+  layout?: PlayersLayout
 }) {
   const [charging, setCharging] = useState<number | 'rest' | null>(null)
   const [editing, setEditing] = useState(false)
@@ -53,43 +58,49 @@ export function BookingPlayers({
     setNotice(null)
     setCharging(target)
   }
+  const shareChoice = (player: PlayerShare) => (
+    <ChargeChoice
+      title={chargeLabel(player)}
+      fields={{ bookingId, position: String(player.position) }}
+      action={actions.chargeShare}
+      methods={methods}
+      onDone={succeed}
+      onError={fail}
+      onCancel={() => setCharging(null)}
+    />
+  )
+  const chargingPosition = typeof charging === 'number' ? charging : null
+  const chargingPlayer = turn.players.find((player) => player.position === chargingPosition)
 
   return (
     <div className="flex flex-col gap-3">
-      <ul aria-label="Jugadores" className="flex flex-col gap-2">
-        {turn.players.map((player) => {
-          const label = playerLabel(player)
-          const title = `Cobrar ${formatPrice(player.due)} a ${label}`
-          return (
+      {layout === 'court' ? (
+        <>
+          <TurnCourt turn={turn} canCharge={canCharge} charging={chargingPosition} onCharge={startCharge} />
+          {chargingPlayer ? shareChoice(chargingPlayer) : null}
+        </>
+      ) : (
+        <ul aria-label="Jugadores" className="flex flex-col gap-2">
+          {turn.players.map((player) => (
             <li key={player.position} className="flex flex-col gap-2 rounded-xl border border-border bg-bg p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className={cn('font-semibold', player.name === null && 'text-fg-muted')}>{label}</span>
+                <span className={cn('font-semibold', player.name === null && 'text-fg-muted')}>{playerLabel(player)}</span>
                 {player.state === 'paid' ? (
                   <span className="text-sm font-semibold text-court-ink">Pagó</span>
                 ) : player.state === 'reported' ? (
                   <span className="text-sm text-accent-ink">Transferencia informada</span>
                 ) : canCharge && charging !== player.position ? (
-                  <Button variant="secondary" aria-label={title} onClick={() => startCharge(player.position)}>
+                  <Button variant="secondary" aria-label={chargeLabel(player)} onClick={() => startCharge(player.position)}>
                     Cobrar {formatPrice(player.due)}
                   </Button>
                 ) : null}
               </div>
-              {charging === player.position ? (
-                <ChargeChoice
-                  title={title}
-                  fields={{ bookingId, position: String(player.position) }}
-                  action={actions.chargeShare}
-                  methods={methods}
-                  onDone={succeed}
-                  onError={fail}
-                  onCancel={() => setCharging(null)}
-                />
-              ) : null}
+              {charging === player.position ? shareChoice(player) : null}
               {playerExtra?.(player)}
             </li>
-          )
-        })}
-      </ul>
+          ))}
+        </ul>
+      )}
       {turn.isMatch ? null : (
         <Button
           variant="ghost"
