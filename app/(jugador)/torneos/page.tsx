@@ -10,6 +10,8 @@ import { entryStatus, type Tournament } from '@/lib/domain/tournaments'
 import { ChampionshipCard } from '@/components/championships/championship-card'
 import { loadChampionships } from '@/lib/data/championships'
 import { registrationOpen, upcomingChampionships } from '@/lib/domain/championships'
+import { championshipPosterUrl } from '@/lib/domain/championship-poster'
+import { getSupabaseEnv } from '@/lib/supabase/env'
 
 export const metadata: Metadata = { title: 'Torneos' }
 
@@ -55,6 +57,7 @@ export default async function TournamentsPage() {
                 <li key={championship.id}>
                   <ChampionshipCard
                     championship={championship}
+                    posterUrl={championshipPosterUrl(getSupabaseEnv().url, championship.posterPath)}
                     href={`/campeonatos/${championship.id}`}
                     actionLabel={open ? 'Ver categorías y anotarme' : 'Ver campeonato'}
                     primary={open}

@@ -41,13 +41,19 @@ export function iconImage(brand: LoadedBrand, size: number): ImageResponse {
   )
 }
 
-// The opengraph-image of every page: the mark, the title and a line under it, on the club's background.
-export function previewImage(brand: LoadedBrand, preview: SharePreview): ImageResponse {
+// The opengraph-image of every page: the mark, the title and a line under it, on the club's background. A championship
+// with a poster (a data: URL, lib/brand/logo-data-url) shows the poster instead of the mark.
+export function previewImage(brand: LoadedBrand, preview: SharePreview, poster: string | null = null): ImageResponse {
   const { colors } = brand
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', gap: 64, padding: 80, background: colors.bg, borderBottom: `24px solid ${colors.accent}` }}>
-        <Mark brand={brand} size={240} />
+      <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', gap: 64, padding: poster ? 48 : 80, background: colors.bg, borderBottom: `24px solid ${colors.accent}` }}>
+        {poster ? (
+          // eslint-disable-next-line @next/next/no-img-element -- ImageResponse draws plain img only
+          <img src={poster} alt={preview.title} width={400} height={510} style={{ objectFit: 'contain', borderRadius: 24 }} />
+        ) : (
+          <Mark brand={brand} size={240} />
+        )}
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 24 }}>
           <div style={{ fontSize: 72, fontWeight: 700, lineHeight: 1.1, color: colors.fg }}>{preview.title}</div>
           <div style={{ fontSize: 36, color: colors['fg-muted'] }}>{preview.description}</div>
