@@ -230,6 +230,7 @@ describe('turnLabel', () => {
     expect(turnLabel(slot, at('11:56'), TIMEZONE)).toBe('Faltan 34 min')
     expect(turnLabel(slot, at('12:30'), TIMEZONE)).toBe('Terminó recién')
     expect(turnLabel(slot, at('12:42'), TIMEZONE)).toBe('Terminó hace 12 min')
+    expect(turnLabel(slot, at('16:40'), TIMEZONE)).toBe('Terminó hace 4 h')
   })
 })
 
@@ -272,22 +273,21 @@ describe('alerts', () => {
         waiting: 3,
       }),
     ).toEqual([
-      { kind: 'forming', count: 2, href: '/club/grilla', text: '2 partidos armándose · faltan 3 jugadores' },
-      { kind: 'waiting', count: 3, href: '/club/grilla', text: '3 esperando turno hoy' },
-      { kind: 'tournament', count: null, href: '/club/torneos/t1', text: 'Torneo Copa de la Casa en juego' },
+      { kind: 'forming', href: '/club/grilla', text: '2 partidos armándose · faltan 3 jugadores' },
+      { kind: 'waiting', href: '/club/grilla', text: '3 esperando turno hoy' },
+      { kind: 'tournament', href: '/club/torneos/t1', text: 'Torneo Copa de la Casa en juego' },
       {
         kind: 'championship',
-        count: null,
         href: '/club/torneos/campeonatos/c1',
         text: 'Campeonato Apertura en juego',
       },
-      { kind: 'day_use', count: 8, href: '/club/day-use', text: '8 en el club (day use)' },
+      { kind: 'day_use', href: '/club/day-use', text: '8 en el club (day use)' },
     ])
   })
 
   it('says one match and one player in singular, and leaves out what does not happen', () => {
     expect(alerts({ forming: [spots('ana', 'bruno', 'hugo', null)], competitions: [], inside: 0, waiting: 0 })).toEqual([
-      { kind: 'forming', count: 1, href: '/club/grilla', text: '1 partido armándose · falta 1 jugador' },
+      { kind: 'forming', href: '/club/grilla', text: '1 partido armándose · falta 1 jugador' },
     ])
     expect(alerts({ forming: [], competitions: [], inside: 0, waiting: 0 })).toEqual([])
   })

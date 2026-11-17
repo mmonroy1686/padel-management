@@ -28,7 +28,7 @@ export function TurnCourt({ turn, ...spot }: SpotProps & { turn: Pick<TurnPlayer
             {player ? (
               <PlayerSpot player={player} {...spot} />
             ) : (
-              // An open match's empty spot: dashed, so it never reads as a taken one.
+              // An open match's empty spot: a dashed edge.
               <div className={cn(SPOT, 'justify-center border-2 border-dashed border-on-court')}>
                 <b>Libre</b>
               </div>

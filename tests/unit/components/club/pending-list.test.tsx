@@ -56,7 +56,7 @@ describe('PendingList', () => {
     expect(open).toHaveAttribute('aria-expanded', 'false')
     await userEvent.click(open)
     const card = screen.getByRole('article', { name: 'Cancha 2, 08:00 a 09:30' })
-    expect(card).toHaveTextContent('Terminó hace 90 min')
+    expect(card).toHaveTextContent('Terminó hace 1 h')
     expect(within(card).getByRole('button', { name: 'Cobrar todo lo que falta ($900)' })).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar Cancha 2, 08:00 a 09:30' }))

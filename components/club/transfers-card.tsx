@@ -4,7 +4,7 @@ import { Icon } from '@/components/ui/icon'
 import type { TransfersSummary } from '@/lib/domain/club-home'
 
 // The top of the Inicio when players reported transfers: how many, how much, how old the oldest is, and "Revisar"
-// to confirm them in Cobros. The Inicio does not confirm them.
+// to confirm them in Cobros.
 export function TransfersCard({ summary }: { summary: TransfersSummary }) {
   return (
     <section

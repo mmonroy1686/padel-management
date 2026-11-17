@@ -82,8 +82,7 @@ export type HomeSections = {
 }
 export type Competition = { kind: 'tournament' | 'championship'; id: string; name: string }
 export type AlertKind = 'forming' | 'waiting' | 'tournament' | 'championship' | 'day_use'
-// count: the number the card shows big; null for a competition (its name says it).
-export type HomeAlert = { kind: AlertKind; text: string; href: string; count: number | null }
+export type HomeAlert = { kind: AlertKind; text: string; href: string }
 export type Cancellation = { bookingId: string; courtName: string; startsAt: Date; holder: string; refund: number }
 export type FreeSlot = { courtName: string; startsAt: Date; label: string }
 export type DayOccupancy = { percent: number; free: number; slots: FreeSlot[] }
@@ -260,7 +259,7 @@ export function turnLabel(item: { startsAt: Date; endsAt: Date }, now: Date, tim
   if (item.startsAt.getTime() > time) return `Empieza ${timeIn(item.startsAt, timezone)}`
   if (time < item.endsAt.getTime()) return timeLeft(item, now).text
   const minutes = Math.floor((time - item.endsAt.getTime()) / 60_000)
-  return minutes === 0 ? 'Terminó recién' : `Terminó hace ${minutes} min`
+  return minutes === 0 ? 'Terminó recién' : `Terminó hace ${ago(time - item.endsAt.getTime())}`
 }
 
 // The tournaments and championships that hold a court today, once each.
@@ -287,7 +286,6 @@ export function competitionsToday(occupancies: Occupancy[]): Competition[] {
 
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
 
-
 // Avisos: only what asks for something, each with its link; nothing for what does not happen.
 export function alerts(input: {
   forming: Pick<Match, 'slots'>[]
@@ -302,33 +300,30 @@ export function alerts(input: {
     const players = `${missing === 1 ? 'falta' : 'faltan'} ${plural(missing, 'jugador', 'jugadores')}`
     list.push({
       kind: 'forming',
-      count: input.forming.length,
       href: '/club/grilla',
       text: missing > 0 ? `${matches} · ${players}` : matches,
     })
   }
   if (input.waiting > 0) {
-    list.push({ kind: 'waiting', count: input.waiting, href: '/club/grilla', text: `${input.waiting} esperando turno hoy` })
+    list.push({ kind: 'waiting', href: '/club/grilla', text: `${input.waiting} esperando turno hoy` })
   }
   for (const competition of input.competitions) {
     list.push(
       competition.kind === 'tournament'
         ? {
             kind: 'tournament',
-            count: null,
             href: `/club/torneos/${competition.id}`,
             text: `Torneo ${competition.name} en juego`,
           }
         : {
             kind: 'championship',
-            count: null,
             href: `/club/torneos/campeonatos/${competition.id}`,
             text: `Campeonato ${competition.name} en juego`,
           },
     )
   }
   if (input.inside > 0) {
-    list.push({ kind: 'day_use', count: input.inside, href: '/club/day-use', text: `${input.inside} en el club (day use)` })
+    list.push({ kind: 'day_use', href: '/club/day-use', text: `${input.inside} en el club (day use)` })
   }
   return list
 }

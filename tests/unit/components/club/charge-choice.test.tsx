@@ -28,6 +28,11 @@ function renderChoice(
 }
 
 describe('ChargeChoice', () => {
+  it('takes the focus when it opens', () => {
+    renderChoice()
+    expect(screen.getByRole('group', { name: 'Cobrar $300 a Bruno' })).toHaveFocus()
+  })
+
   it('asks how the player paid and sends the method with the fields', async () => {
     const { action, onDone } = renderChoice()
     const group = screen.getByRole('group', { name: 'Cobrar $300 a Bruno' })

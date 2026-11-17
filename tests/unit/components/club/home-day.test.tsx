@@ -33,8 +33,8 @@ describe('HomeDay', () => {
       <HomeDay
         occupancy={occupancy}
         alerts={[
-          { kind: 'forming', count: 2, href: '/club/grilla', text: '2 partidos armándose · faltan 3 jugadores' },
-          { kind: 'tournament', count: null, href: '/club/torneos/t1', text: 'Torneo Copa de la Casa en juego' },
+          { kind: 'forming', href: '/club/grilla', text: '2 partidos armándose · faltan 3 jugadores' },
+          { kind: 'tournament', href: '/club/torneos/t1', text: 'Torneo Copa de la Casa en juego' },
         ]}
         cancellations={[]}
         timezone={TIMEZONE}
