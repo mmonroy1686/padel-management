@@ -85,11 +85,6 @@ export function HomeDay({
             {alerts.map((alert) => (
               <li key={alert.text} className="flex items-center gap-2">
                 <Icon name={ALERT_ICONS[alert.kind]} className="text-accent-ink" />
-                {alert.count !== null ? (
-                  <span aria-hidden="true" className="font-display text-xl font-bold">
-                    {alert.count}
-                  </span>
-                ) : null}
                 <Link href={alert.href} className={LINK}>
                   {alert.text}
                 </Link>
