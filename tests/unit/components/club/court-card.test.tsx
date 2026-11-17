@@ -28,7 +28,7 @@ const items = courtItems({
   ],
 })
 
-function renderList(now?: Date) {
+function renderList(now: Date) {
   const action = vi.fn<FormAction>(async () => ({ status: 'ok', message: 'Listo.' }))
   render(
     <CourtList
@@ -42,22 +42,39 @@ function renderList(now?: Date) {
   )
 }
 
+const card = () => screen.getByRole('article', { name: 'Cancha 1, 11:00 a 12:30' })
+
 describe('CourtList', () => {
-  it('shows a booking as a card with its players and how much is left', () => {
+  it('shows a booking in play as a court with its players and how much is left', () => {
     renderList(at('11:30'))
-    const card = screen.getByRole('article', { name: 'Cancha 1, 11:00 a 12:30' })
-    expect(within(card).getByRole('progressbar', { name: 'Tiempo de juego en Cancha 1' })).toHaveAttribute(
+    expect(within(card()).getByRole('progressbar', { name: 'Tiempo de juego en Cancha 1' })).toHaveAttribute(
       'aria-valuenow',
       '33',
     )
-    expect(card).toHaveTextContent('Faltan 60 min')
-    expect(within(card).getByRole('list', { name: 'Jugadores' })).toHaveTextContent('Rodríguez')
+    expect(card()).toHaveTextContent('Faltan 60 min')
+    expect(within(card()).getByRole('list', { name: 'Jugadores' })).toHaveTextContent('Rodríguez')
+    expect(within(card()).getAllByRole('listitem')).toHaveLength(4)
   })
 
-  it('shows blocks and tournaments as a line, a tournament with its link', () => {
-    renderList()
-    expect(screen.getByText('Cancha 2 · Clase de menores')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Cancha 2 · Copa de la Casa' })).toHaveAttribute('href', '/club/torneos/t1')
-    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+  it('an upcoming booking says when it starts, without the bar', () => {
+    renderList(at('10:15'))
+    expect(card()).toHaveTextContent('Empieza 11:00')
+    expect(within(card()).queryByRole('progressbar')).not.toBeInTheDocument()
+  })
+
+  it('a booking that ended says how long ago', () => {
+    renderList(at('12:42'))
+    expect(within(card()).getByText('Terminó hace 12 min')).toBeInTheDocument()
+    expect(within(card()).queryByRole('progressbar')).not.toBeInTheDocument()
+  })
+
+  it('shows blocks and tournaments as a narrow card with an icon, a tournament with its link', () => {
+    renderList(at('07:00'))
+    const block = screen.getByText('Cancha 2 · Clase de menores').closest('li')
+    expect(block?.querySelector('[data-icon="cancel"]')).not.toBeNull()
+    const cup = screen.getByRole('link', { name: 'Cancha 2 · Copa de la Casa' })
+    expect(cup).toHaveAttribute('href', '/club/torneos/t1')
+    expect(cup.closest('li')?.querySelector('[data-icon="trophy"]')).not.toBeNull()
+    expect(screen.getByText('14:00 a 15:30')).toBeInTheDocument()
   })
 })

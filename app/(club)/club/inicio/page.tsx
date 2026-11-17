@@ -39,6 +39,7 @@ export default async function ClubHomePage() {
     methods: { cash: club.accepts_cash, transfer: club.accepts_transfer },
     members,
     actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers },
+    now,
   }
 
   return (
@@ -48,7 +49,7 @@ export default async function ClubHomePage() {
 
       <HomeSection id="en-cancha" title="En cancha ahora">
         {playing.length > 0 ? (
-          <CourtList items={playing} now={now} {...list} />
+          <CourtList items={playing} {...list} />
         ) : (
           <p className="text-fg-muted">
             No hay canchas en juego ahora.

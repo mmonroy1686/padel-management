@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
-import { timeLeft, type CourtItem, type CourtTurn } from '@/lib/domain/club-home'
+import { Icon, type IconName } from '@/components/ui/icon'
+import { timeLeft, turnLabel, type CourtEvent, type CourtItem, type CourtTurn } from '@/lib/domain/club-home'
 import { timeIn } from '@/lib/domain/format'
 import type { MemberOption } from '@/lib/domain/members'
 import { BookingPlayers, type PlayersActions } from './booking-players'
@@ -12,13 +13,24 @@ export type CourtListProps = {
   methods: PayMethods
   members: MemberOption[]
   actions: PlayersActions
-  // En cancha ahora: each card shows how much is left.
-  now?: Date
+  // Each card says, from it, how much is left, when it starts or how long ago it ended.
+  now: Date
 }
 
-// The courts of one Inicio block: a card per booking or match, a line per block, tournament or day use.
+const EVENT_ICONS: Partial<Record<CourtEvent['occupancyKind'], IconName>> = {
+  tournament: 'trophy',
+  championship: 'trophy',
+  day_use: 'ticket',
+  block: 'cancel',
+}
+
+export function courtHours(item: Pick<CourtItem, 'startsAt' | 'endsAt'>, timezone: string): string {
+  return `${timeIn(item.startsAt, timezone)} a ${timeIn(item.endsAt, timezone)}`
+}
+
+// The courts of one Inicio block: a court with its players per booking or match, a narrow card per block,
+// tournament or day use.
 export function CourtList({ items, timezone, methods, members, actions, now }: CourtListProps) {
-  const hours = (item: CourtItem) => `${timeIn(item.startsAt, timezone)} a ${timeIn(item.endsAt, timezone)}`
   return (
     <ul className="grid gap-3 md:grid-cols-2">
       {items.map((item) =>
@@ -26,28 +38,16 @@ export function CourtList({ items, timezone, methods, members, actions, now }: C
           <li key={item.id}>
             <CourtTurnCard
               turn={item}
-              hours={hours(item)}
-              progress={now ? timeLeft(item, now) : undefined}
+              now={now}
+              timezone={timezone}
               methods={methods}
               members={members}
               actions={actions}
             />
           </li>
         ) : (
-          <li
-            key={item.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-surface px-4 py-3 md:col-span-2"
-          >
-            {item.href ? (
-              <Link href={item.href} className="font-semibold text-accent-ink underline">
-                {item.courtName} · {item.label}
-              </Link>
-            ) : (
-              <span className="font-semibold">
-                {item.courtName} · {item.label}
-              </span>
-            )}
-            <span className="text-sm text-fg-muted">{hours(item)}</span>
+          <li key={item.id} className="md:col-span-2">
+            <EventCard event={item} hours={courtHours(item, timezone)} />
           </li>
         ),
       )}
@@ -55,21 +55,44 @@ export function CourtList({ items, timezone, methods, members, actions, now }: C
   )
 }
 
+function EventCard({ event, hours }: { event: CourtEvent; hours: string }) {
+  const name = `${event.courtName} · ${event.label}`
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-2">
+      <Icon name={EVENT_ICONS[event.occupancyKind] ?? 'clock'} className="text-accent-ink" />
+      {event.href ? (
+        <Link href={event.href} className="inline-flex min-h-11 items-center font-semibold text-accent-ink underline">
+          {name}
+        </Link>
+      ) : (
+        <span className="font-semibold">{name}</span>
+      )}
+      <span className="ml-auto text-sm text-fg-muted">{hours}</span>
+    </div>
+  )
+}
+
 export function CourtTurnCard({
   turn,
-  hours,
-  progress,
+  now,
+  timezone,
   methods,
   members,
   actions,
 }: {
   turn: CourtTurn
-  hours: string
-  progress?: { percentDone: number; text: string }
+  now: Date
+  timezone: string
   methods: PayMethods
   members: MemberOption[]
   actions: PlayersActions
 }) {
+  const hours = courtHours(turn, timezone)
+  const time = now.getTime()
+  const playing = turn.startsAt.getTime() <= time && time < turn.endsAt.getTime()
+  const ended = turn.endsAt.getTime() <= time
+  const label = turnLabel(turn, now, timezone)
+  const progress = playing ? timeLeft(turn, now) : null
   return (
     <Card role="article" aria-label={`${turn.courtName}, ${hours}`} className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -94,8 +117,21 @@ export function CourtTurnCard({
           </div>
           <p className="text-sm text-fg-muted">{progress.text}</p>
         </div>
-      ) : null}
-      <BookingPlayers bookingId={turn.bookingId} turn={turn} methods={methods} members={members} actions={actions} />
+      ) : ended ? (
+        <p className="self-start rounded-full border border-accent px-3 py-1 text-sm font-semibold text-accent-ink">
+          {label}
+        </p>
+      ) : (
+        <p className="text-sm text-fg-muted">{label}</p>
+      )}
+      <BookingPlayers
+        bookingId={turn.bookingId}
+        turn={turn}
+        methods={methods}
+        members={members}
+        actions={actions}
+        layout="court"
+      />
     </Card>
   )
 }
