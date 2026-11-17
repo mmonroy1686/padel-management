@@ -709,9 +709,12 @@ async function payEntries(tournamentId, { cash = [], transfer = [] }) {
 // never take a slot in the past.
 async function pastBookings() {
   let count = 0
-  const todayPlayed = SLOTS.filter((time) => !futureSlot(0, time) && at(0, time) < now)
+  // Today up to the next half hour: the bookings below start later, so these fill the Inicio's
+  // "En cancha ahora" and the first of "Próximos".
+  const todayPlayed = SLOTS.filter((time) => !futureSlot(0, time))
     .flatMap((time, row) => courts.map((_, courtIndex) => [0, time, courtIndex, holders[(row + courtIndex) % holders.length]]))
-    .filter((_, index) => index % 4 !== 3)
+    // Some earlier courts stay free; the turns still in play take every court.
+    .filter(([, time], index) => index % 4 !== 3 || at(0, time).getTime() + club.slot_minutes * 60_000 > now.getTime())
   for (const [days, time, courtIndex, key] of [
     ...todayPlayed,
     [-1, '20:00', 0, 'federico'],
@@ -742,6 +745,29 @@ async function pastBookings() {
       .select('id')
       .single()
     if (booking.error) continue
+    const endsAt = new Date(startsAt.getTime() + club.slot_minutes * 60_000)
+    if (days === 0 && endsAt > now) {
+      // In play or about to start: the players of the turn, and in play some shares already paid.
+      await todayPlayers(booking.data.id, key, courtIndex)
+      if (startsAt <= now) {
+        const share = Math.floor(price / 4)
+        const paid = courtIndex % 3 === 0 ? [1, 2] : courtIndex % 3 === 1 ? [3] : []
+        for (const position of paid) {
+          await admin.from('payments').insert({
+            club_id: club.id,
+            booking_id: booking.data.id,
+            payer_position: position,
+            method: position === 3 ? 'transfer' : 'cash',
+            amount: position === 1 ? price - share * 3 : share,
+            status: 'confirmed',
+            reported_by: staffId,
+            confirmed_by: staffId,
+            confirmed_at: startsAt.toISOString(),
+          })
+        }
+      }
+      continue
+    }
     // Today's played slots were mostly paid at the desk; the older ones stay owed for Cobros.
     if (days === 0 && (courtIndex + Number(time.slice(0, 2))) % 4 !== 0) {
       await admin.from('payments').insert({
@@ -757,6 +783,21 @@ async function pastBookings() {
     } else count++
   }
   return count
+}
+
+// Players 2 to 4 of a turn of today: two members and a name, or only some of them (so "Completar
+// jugadores" shows up too).
+async function todayPlayers(bookingId, holderKey, courtIndex) {
+  const mates = PLAYERS.map((player) => player.key).filter((key) => key !== holderKey)
+  const pick = (offset) => people[mates[(courtIndex * 3 + offset) % mates.length]].id
+  const rows = [
+    { position: 2, player_id: pick(0) },
+    { position: 3, player_id: pick(1) },
+    { position: 4, name: ['Pablo', 'Rodrigo', 'Inés', 'Germán'][courtIndex % 4] },
+  ].slice(0, courtIndex % 4 === 2 ? 1 : 3)
+  await admin
+    .from('booking_players')
+    .insert(rows.map((row) => ({ club_id: club.id, booking_id: bookingId, created_by: staffId, ...row })))
 }
 
 // Played earlier this month (before yesterday): evenings on every court, mostly paid at the desk or by
@@ -929,8 +970,9 @@ async function dayUsePasses() {
 // and 17:00, so there are always matches played, one being played and the rest to come. In each match the first
 // pair named wins 6-3 6-4.
 async function championshipToday() {
-  if (courts.length < 2) {
-    console.warn('  (se saltea el campeonato de hoy: necesita 2 canchas)')
+  // It takes two courts all afternoon: with fewer than 3 the Inicio and the grid would have no bookings today.
+  if (courts.length < 3) {
+    console.warn('  (se saltea el campeonato de hoy: necesita 3 canchas, 2 para el campeonato y una para reservas)')
     return null
   }
   const used = courts.slice(0, 2)
