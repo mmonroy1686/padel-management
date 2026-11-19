@@ -132,6 +132,14 @@ const PATHS = {
       <path d="m9 9 6 6M15 9l-6 6" />
     </>
   ),
+  move: (
+    <>
+      <path d="M12 3v18M3 12h18" />
+      <path d="m9 6 3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3" />
+    </>
+  ),
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
+  check: <path d="m5 12 5 5 9-10" />,
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof PATHS

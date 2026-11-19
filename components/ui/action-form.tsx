@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, type ReactNode } from 'react'
-import type { ButtonVariant } from '@/components/ui/button'
+import type { ButtonSize, ButtonVariant } from '@/components/ui/button'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { IDLE, type ActionState } from '@/lib/actions/result'
 import { cn } from '@/lib/cn'
@@ -13,6 +13,10 @@ export type ActionFormProps = {
   submitLabel: string
   pendingLabel?: string
   variant?: ButtonVariant
+  // sm and not full width: an action inside a row (Cobrar, Fijar).
+  size?: ButtonSize
+  icon?: ReactNode
+  accessibleLabel?: string
   onDone?: (message: string) => void
   className?: string
   children?: ReactNode
@@ -25,6 +29,9 @@ export function ActionForm({
   submitLabel,
   pendingLabel = 'Guardando…',
   variant = 'primary',
+  size = 'md',
+  icon,
+  accessibleLabel,
   onDone,
   className,
   children,
@@ -49,7 +56,16 @@ export function ActionForm({
           {state.message}
         </p>
       ) : null}
-      <SubmitButton label={submitLabel} pendingLabel={pendingLabel} variant={variant} pending={pending} />
+      <SubmitButton
+        label={submitLabel}
+        pendingLabel={pendingLabel}
+        variant={variant}
+        size={size}
+        fullWidth={size === 'md'}
+        icon={icon}
+        accessibleLabel={accessibleLabel}
+        pending={pending}
+      />
     </form>
   )
 }

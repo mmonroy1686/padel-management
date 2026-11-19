@@ -21,7 +21,7 @@ describe('FixtureSteps', () => {
 
   it('schedules a drawn one, and does not publish while matches are left without a place', () => {
     render(<FixtureSteps championshipId="ch1" status="drawn" scheduled={20} unplaced={3} finishable={false} actions={actions()} />)
-    expect(screen.getByText('3 partidos quedaron sin lugar: ubicalos a mano o volvé a programar.')).toBeInTheDocument()
+    expect(screen.getByText('3 partidos quedaron sin lugar: ubicalos a mano (Mover, en la tabla) o volvé a programar.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Volver a programar' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Volver a sortear' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Publicar fixture' })).not.toBeInTheDocument()
@@ -34,6 +34,16 @@ describe('FixtureSteps', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Publicar fixture' }))
     await waitFor(() => expect(steps.publish).toHaveBeenCalled())
     expect(vi.mocked(steps.publish).mock.calls[0][1].get('releaseFree')).toBe('on')
+  })
+
+  it('shows where the organizer is: Sortear and Programar done, Publicar next, with its title', () => {
+    render(<FixtureSteps championshipId="ch1" status="drawn" scheduled={23} unplaced={0} finishable={false} actions={actions()} />)
+    const progress = screen.getByRole('list', { name: 'Pasos del fixture' })
+    expect(progress).toHaveTextContent('SortearHecho')
+    expect(progress).toHaveTextContent('ProgramarHecho')
+    expect(screen.getByText('Publicar', { selector: '[aria-current="step"] *' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Siguiente paso: publicar el fixture' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Otras acciones' })).toHaveTextContent('Volver a programar')
   })
 
   it('finishes a championship when everything is played', () => {
