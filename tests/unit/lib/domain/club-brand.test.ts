@@ -82,7 +82,7 @@ describe('adjustmentNotice', () => {
     expect(
       adjustmentNotice([{ mode: 'dark', token: 'bg' }, { mode: 'dark', token: 'accent-ink' }], 'dark'),
     ).toBe(
-      'Tu fondo es claro: en modo oscuro se usa una versión más oscura. Tu color principal, como texto sobre fondo oscuro, se aclara un poco para que se lea.',
+      'Tu fondo es claro: en modo oscuro se usa una versión más oscura. Para verlo tal cual, elegí «Siempre claro». Tu color principal, como texto sobre fondo oscuro, se aclara un poco para que se lea.',
     )
   })
 })
