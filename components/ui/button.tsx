@@ -10,7 +10,10 @@ const BASE =
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-accent text-on-accent hover:brightness-95',
-  secondary: 'border border-border bg-surface text-fg hover:border-accent',
+  // The club's primary as its border and a tint behind the text: clearly the club's, a step under primary. The text
+  // is fg, not accent-ink: accent-ink sits near 4.5:1 and a tint would push it under; fg stays above 5.8:1 on a
+  // 20% tint for every palette.
+  secondary: 'border-2 border-accent bg-accent/12 text-fg hover:bg-accent/20',
   ghost: 'text-accent-ink hover:bg-surface',
   danger: 'border border-danger text-danger hover:bg-surface',
 }
