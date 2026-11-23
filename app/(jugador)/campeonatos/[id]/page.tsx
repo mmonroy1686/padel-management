@@ -5,7 +5,7 @@ import { MyMatches } from '@/components/championships/my-matches'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { buttonClasses } from '@/components/ui/button'
 import { ShareButton } from '@/components/ui/share-button'
-import { getSiteUrl } from '@/lib/auth/redirect'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { loadFixture } from '@/lib/data/championship-fixture'
 import { loadActiveCourts } from '@/lib/data/tournaments'
 import { EMPTY_FIXTURE, type Fixture } from '@/lib/domain/championship-fixture'
@@ -142,7 +142,7 @@ export default async function ChampionshipPage({ params, searchParams }: { param
               </Link>
               <ShareButton
                 title={championship.name}
-                text={championshipShareText(championship.name, `${getSiteUrl()}${publicPath}`)}
+                text={championshipShareText(championship.name, `${(await requestOrigin())}${publicPath}`)}
               />
             </div>
           ) : null}

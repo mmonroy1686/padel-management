@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { SuggestionsList } from '@/components/matches/suggestions-list'
-import { getSiteUrl } from '@/lib/auth/redirect'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { loadFreeCourts, loadMatch, loadPlayerContext, loadSuggestions } from '@/lib/data/matches'
 import { matchPreviewMetadata } from '@/lib/data/share-preview'
@@ -46,7 +46,7 @@ export default async function MatchPage({ params, searchParams }: { params: Para
   const requested = Number(sumarme)
   const dayText = dayLongLabel(localDateOf(match.startsAt, club.timezone))
   const time = timeIn(match.startsAt, club.timezone)
-  const share = shareText({ match, clubName: club.name, dayText, time, url: `${getSiteUrl()}/partidos/${match.id}` })
+  const share = shareText({ match, clubName: club.name, dayText, time, url: `${(await requestOrigin())}/partidos/${match.id}` })
   const suggestions =
     match.status === 'forming' && (isInMatch(match, viewer.userId) || isStaffRole(viewer.membership.role))
       ? await loadSuggestions(club, match)

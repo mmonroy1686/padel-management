@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next'
-import { getClub } from '@/lib/auth/viewer'
-import { brandOf, webManifest } from '@/lib/domain/club-brand'
+import { findClub } from '@/lib/auth/viewer'
+import { brandOf, DEFAULT_BRAND, webManifest } from '@/lib/domain/club-brand'
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  const club = await getClub()
-  return webManifest(club.name, brandOf(club))
+  // Each subdomain is its own installable app, with its club's name and colors.
+  const club = await findClub()
+  return club ? webManifest(club.name, brandOf(club)) : webManifest('Club no encontrado', DEFAULT_BRAND)
 }

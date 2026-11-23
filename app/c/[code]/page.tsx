@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { AutoRefresh } from '@/components/live/auto-refresh'
-import { getSiteUrl } from '@/lib/auth/redirect'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { loadPublicChampionship } from '@/lib/data/championship-fixture'
 import { isPublicCode } from '@/lib/domain/championship-public'
 import { pairCards } from '@/lib/domain/championship-search'
@@ -36,7 +36,7 @@ export default async function PublicChampionshipPage({ params }: { params: Param
     today: localDateOf(new Date(), data.timezone),
     courtName: new Map(data.courts.map((court) => [court.id, court.name])),
   }
-  const shareUrl = `${getSiteUrl()}/c/${data.code}`
+  const shareUrl = `${(await requestOrigin())}/c/${data.code}`
   const views = matchViews(championship, fixture, ctx)
   const zones = zoneViews(championship, fixture)
   const allBrackets = brackets(championship, views)

@@ -13,7 +13,7 @@ import { ZonesView } from '@/components/championships/zones-view'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { buttonClasses } from '@/components/ui/button'
 import { ShareButton } from '@/components/ui/share-button'
-import { getSiteUrl } from '@/lib/auth/redirect'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { loadFixture } from '@/lib/data/championship-fixture'
 import { EMPTY_FIXTURE } from '@/lib/domain/championship-fixture'
 import { scheduleInput, slotOptions, unplacedReasons } from '@/lib/domain/championship-schedule'
@@ -170,7 +170,7 @@ export default async function ManageChampionshipPage({
   const rules = Object.fromEntries(
     championship.categories.map((category) => [category.id, { thirdSet: category.thirdSet, timeLimit: category.timeLimit }]),
   )
-  const shareUrl = championship.publicCode ? `${getSiteUrl()}/c/${championship.publicCode}` : null
+  const shareUrl = championship.publicCode ? `${(await requestOrigin())}/c/${championship.publicCode}` : null
   const tab = pickTab(championship.status, partido ? 'fixture' : ver)
   const zones = zoneViews(championship, fixture)
   const allBrackets = brackets(championship, views)
