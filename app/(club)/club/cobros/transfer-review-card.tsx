@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Field, inputClasses } from '@/components/ui/field'
 import { Icon } from '@/components/ui/icon'
-import { PaymentItemHead } from './payments-section'
+import { formatPrice } from '@/lib/domain/format'
 
 export type TransferView = {
   id: string
@@ -80,5 +80,36 @@ export function TransferReviewCard({
         </Button>
       )}
     </Card>
+  )
+}
+
+// Who, when, where and how much, at the top of the review.
+function PaymentItemHead({ holder, when, courtName, amount, amountLabel }: {
+  holder: string
+  when: string
+  courtName: string
+  amount: number
+  amountLabel: string
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="font-semibold">{holder}</p>
+        <p className="flex items-center gap-1.5 text-sm text-fg-muted">
+          <Icon name="calendar" className="size-4" />
+          {when}
+        </p>
+        {courtName ? (
+          <p className="flex items-center gap-1.5 text-sm text-fg-muted">
+            <Icon name="pin" className="size-4" />
+            {courtName}
+          </p>
+        ) : null}
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-xs text-fg-muted">{amountLabel}</p>
+        <p className="font-display text-2xl font-bold tabular-nums">{formatPrice(amount)}</p>
+      </div>
+    </div>
   )
 }
