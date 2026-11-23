@@ -2,8 +2,6 @@
 // is none, it is WebP, too big, or Storage does not answer: the image goes on without it.
 const DRAWABLE = ['image/png', 'image/jpeg', 'image/svg+xml']
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
-// The same limit as the posters' bucket.
-const MAX_POSTER_BYTES = 5 * 1024 * 1024
 
 // The club's logo; without it the image shows the initials.
 export function logoDataUrl(url: string | null, fetcher: typeof fetch = fetch): Promise<string | null> {
@@ -13,11 +11,6 @@ export function logoDataUrl(url: string | null, fetcher: typeof fetch = fetch): 
 // The free-slots flyer's blurred background (a JPG the browser made, well under the bucket's 2 MB).
 export function flyerBackgroundDataUrl(url: string | null, fetcher: typeof fetch = fetch): Promise<string | null> {
   return drawableDataUrl(url, MAX_LOGO_BYTES, fetcher)
-}
-
-// A championship's poster, for the preview of its link.
-export function posterDataUrl(url: string | null, fetcher: typeof fetch = fetch): Promise<string | null> {
-  return drawableDataUrl(url, MAX_POSTER_BYTES, fetcher)
 }
 
 async function drawableDataUrl(url: string | null, maxBytes: number, fetcher: typeof fetch): Promise<string | null> {

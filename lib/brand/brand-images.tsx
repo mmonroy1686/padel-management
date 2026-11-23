@@ -45,19 +45,14 @@ export function iconImage(brand: LoadedBrand, size: number): ImageResponse {
   )
 }
 
-// The opengraph-image of every page: the mark, the title and a line under it, on the club's background. A championship
-// with a poster (a data: URL, lib/brand/logo-data-url) shows the poster instead of the mark.
-export function previewImage(brand: LoadedBrand, preview: SharePreview, poster: string | null = null): ImageResponse {
+// The opengraph-image of every page: the mark, the title and a line under it, on the club's background. A shared
+// championship has its own (championshipShareImage).
+export function previewImage(brand: LoadedBrand, preview: SharePreview): ImageResponse {
   const { colors } = brand
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', gap: 64, padding: poster ? 48 : 80, background: colors.bg, borderBottom: `24px solid ${colors.accent}` }}>
-        {poster ? (
-          // eslint-disable-next-line @next/next/no-img-element -- ImageResponse draws plain img only
-          <img src={poster} alt={preview.title} width={400} height={510} style={{ objectFit: 'contain', borderRadius: 24 }} />
-        ) : (
-          <Mark brand={brand} size={240} />
-        )}
+      <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', gap: 64, padding: 80, background: colors.bg, borderBottom: `24px solid ${colors.accent}` }}>
+        <Mark brand={brand} size={240} />
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 24 }}>
           <div style={{ fontSize: 72, fontWeight: 700, lineHeight: 1.1, color: colors.fg }}>{preview.title}</div>
           <div style={{ fontSize: 36, color: colors['fg-muted'] }}>{preview.description}</div>
@@ -66,4 +61,38 @@ export function previewImage(brand: LoadedBrand, preview: SharePreview, poster: 
     ),
     { ...PREVIEW_SIZE, headers: HEADERS },
   )
+}
+
+// A preview with nothing but the title, large, on the club's background.
+export function titleImage(brand: LoadedBrand, title: string): ImageResponse {
+  const { colors } = brand
+  return new ImageResponse(
+    (
+      <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', padding: 96, background: colors.bg, borderBottom: `24px solid ${colors.accent}` }}>
+        <div style={{ fontSize: 104, fontWeight: 700, lineHeight: 1.05, textAlign: 'center', color: colors.fg }}>{title}</div>
+      </div>
+    ),
+    { ...PREVIEW_SIZE, headers: HEADERS },
+  )
+}
+
+// A shared championship: its poster as it was uploaded (any format WhatsApp reads, WebP included, which ImageResponse
+// cannot draw); without one, or if Storage does not answer, just its title.
+export async function championshipShareImage(
+  brand: LoadedBrand,
+  championship: { name: string; posterUrl: string | null },
+  fetcher: (url: string) => Promise<Response> = fetch,
+): Promise<Response> {
+  if (championship.posterUrl) {
+    try {
+      const poster = await fetcher(championship.posterUrl)
+      const type = poster.headers.get('content-type') ?? ''
+      if (poster.ok && type.startsWith('image/')) {
+        return new Response(await poster.arrayBuffer(), { headers: { 'content-type': type, ...HEADERS } })
+      }
+    } catch {
+      // Storage down: the title still says what is shared.
+    }
+  }
+  return titleImage(brand, championship.name)
 }
