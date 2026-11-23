@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { AssistantBoard, BoardCell, BoardSlot } from '@/lib/domain/assistant-board'
 import { demandText } from '@/lib/domain/slot-planner'
 
-const CHIP = 'flex min-h-11 w-full items-center rounded-xl px-3 py-2'
+const CHIP = 'flex min-h-11 w-full items-center rounded-xl px-2.5 py-2 sm:px-3'
 
 function Cell({ cell, courtName, label, onPick }: { cell: BoardCell; courtName: string; label: string; onPick: (slot: BoardSlot) => void }) {
   if (cell.state === 'taken') {
@@ -58,7 +58,7 @@ export function FreeBoard({ board, onPick }: { board: AssistantBoard; onPick: (s
       {anyFree ? null : <p className="rounded-xl border border-border p-4 text-fg-muted">No quedan turnos libres este día.</p>}
       {board.rows.length > 0 ? (
         <div className="-mx-4 overflow-x-auto px-4">
-          <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${board.courts.length}, minmax(8.5rem, 1fr))` }}>
+          <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${board.courts.length}, minmax(6rem, 1fr))` }}>
             {board.courts.map((court, index) => (
               <section key={court.id} aria-label={court.name} className="flex flex-col gap-2">
                 <h3 className="font-semibold">{court.name}</h3>

@@ -1,6 +1,6 @@
 import { getSiteUrl } from '@/lib/auth/redirect'
 import { getViewer } from '@/lib/auth/viewer'
-import { freeSlotsImage } from '@/lib/brand/free-slots-image'
+import { freeSlotsImage, loadFlyerFont } from '@/lib/brand/free-slots-image'
 import { loadBrand } from '@/lib/brand/load-brand'
 import { loadDayGrid } from '@/lib/data/day'
 import { flyerContact, flyerDayText, flyerLayout } from '@/lib/domain/free-slots-flyer'
@@ -19,12 +19,13 @@ export async function GET(request: Request) {
   const now = new Date()
   const requested = new URL(request.url).searchParams.get('date')
   const date = isLocalDate(requested) ? requested : localDateOf(now, club.timezone)
-  const [brand, grid] = await Promise.all([
+  const [brand, grid, font] = await Promise.all([
     loadBrand(),
     loadDayGrid(club, date, { userId: viewer.userId, audience: 'staff' }, now),
+    loadFlyerFont(),
   ])
   return freeSlotsImage(brand, flyerLayout(grid), {
     day: flyerDayText(date).toUpperCase(),
     contact: flyerContact(club.phone, getSiteUrl()),
-  })
+  }, font)
 }

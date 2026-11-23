@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
-import { FLYER_SIZE, freeSlotsImage } from '@/lib/brand/free-slots-image'
+import { FLYER_SIZE, freeSlotsImage, loadFlyerFont } from '@/lib/brand/free-slots-image'
 import { clubTheme } from '@/lib/domain/club-theme'
 import { flyerLayout } from '@/lib/domain/free-slots-flyer'
 import { at, makeGrid, occupancy } from '../../fixtures/grid'
@@ -20,6 +20,12 @@ describe('freeSlotsImage', () => {
 
   it('still draws a day with nothing free', async () => {
     const image = freeSlotsImage(BRAND, flyerLayout(makeGrid({ now: at('22:00') })), TEXT)
+    expect((await image.arrayBuffer()).byteLength).toBeGreaterThan(0)
+  })
+
+  it("draws with the panel's display font when it is loaded", async () => {
+    const font = await loadFlyerFont()
+    const image = freeSlotsImage(BRAND, flyerLayout(makeGrid({ now: at('12:00') })), TEXT, font)
     expect((await image.arrayBuffer()).byteLength).toBeGreaterThan(0)
   })
 })
