@@ -10,10 +10,14 @@ const PREVIEW_SIZE = { width: 1200, height: 630 }
 export const IMAGE_CACHE_CONTROL = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400'
 const HEADERS = { 'cache-control': IMAGE_CACHE_CONTROL }
 
-// The logo on the club's background, or the initials on its primary color. ImageResponse only knows flexbox and
-// inline styles.
-export function Mark({ brand, size }: { brand: LoadedBrand; size: number }) {
+// The logo on the club's background, or the initials on its primary color. `bare` draws the logo alone, filling the
+// box with no background (the flyer, where it sits over a photo). ImageResponse only knows flexbox and inline styles.
+export function Mark({ brand, size, bare = false }: { brand: LoadedBrand; size: number; bare?: boolean }) {
   const { colors, logo, name } = brand
+  if (logo && bare) {
+    // eslint-disable-next-line @next/next/no-img-element -- ImageResponse draws plain img only
+    return <img src={logo} alt={name} width={size} height={size} style={{ objectFit: 'contain' }} />
+  }
   if (logo) {
     return (
       <div style={{ display: 'flex', width: size, height: size, alignItems: 'center', justifyContent: 'center', background: colors.bg, borderRadius: size * 0.2 }}>

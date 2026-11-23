@@ -34,4 +34,10 @@ describe('freeSlotsImage', () => {
     const image = freeSlotsImage(BRAND, flyerLayout(makeGrid({ now: at('12:00') })), { day: 'JUEVES 1/10', contact: null }, undefined, photo)
     expect((await image.arrayBuffer()).byteLength).toBeGreaterThan(0)
   })
+
+  it('draws the club logo alone, with no background behind it', async () => {
+    const logo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    const image = freeSlotsImage({ ...BRAND, logo }, flyerLayout(makeGrid({ now: at('12:00') })), TEXT)
+    expect((await image.arrayBuffer()).byteLength).toBeGreaterThan(0)
+  })
 })

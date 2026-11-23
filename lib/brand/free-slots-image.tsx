@@ -101,7 +101,7 @@ export function freeSlotsImage(
           </div>
         )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
-          <Mark brand={brand} size={140} />
+          <Mark brand={brand} size={160} bare />
           <div style={{ display: 'flex', fontSize: 52, ...display }}>{text.contact ?? brand.name}</div>
         </div>
       </div>
