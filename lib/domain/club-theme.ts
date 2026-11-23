@@ -37,6 +37,8 @@ const HEX6 = /^#[0-9a-f]{6}$/i
 const DARK_BG_MAX_L = 0.3
 // Surfaces step up from at least this lightness, so cards still show on a black background.
 const DARK_STEP_FROM_L = 0.15
+// A background at least this light is the club's light mode as it is: light mode uses it exactly.
+const LIGHT_BG_MIN_L = 0.6
 
 const lch = hexToOklch
 const DEFAULT_BG = lch(DEFAULT_BACKGROUND)
@@ -111,8 +113,14 @@ function lightTokens(primary: string, background: string): { tokens: Tokens; adj
   const adjusted: Adjustment[] = []
   const base = lch(background)
   const L = RUSTIC.light
-  const bg = derive(base, DEFAULT_BG, lch(L.bg), 'absolute')
-  const surface = derive(base, DEFAULT_BG, lch(L.surface), 'absolute')
+  // A light background is used as picked; cards and borders take Rustic's steps down from white, in its color.
+  // A dark one only gives its hue to a near-white page.
+  const asIs = base.l >= LIGHT_BG_MIN_L
+  const step = (token: 'surface' | 'border') =>
+    oklchToHex({ ...base, l: Math.max(0, base.l - (lch(L.bg).l - lch(L[token]).l)) })
+  const bg = asIs ? background : derive(base, DEFAULT_BG, lch(L.bg), 'absolute')
+  const surface = asIs ? step('surface') : derive(base, DEFAULT_BG, lch(L.surface), 'absolute')
+  const border = asIs ? step('border') : derive(base, DEFAULT_BG, lch(L.border), 'absolute')
   const on = [bg, surface]
   let accentInk = primary
   if (!readable(primary, on)) {
@@ -128,7 +136,7 @@ function lightTokens(primary: string, background: string): { tokens: Tokens; adj
     tokens: {
       bg,
       surface,
-      border: derive(base, DEFAULT_BG, lch(L.border), 'absolute'),
+      border,
       fg: ensureReadable(derive(base, DEFAULT_BG, lch(L.fg), 'absolute'), on, 'darker'),
       'fg-muted': ensureReadable(derive(base, DEFAULT_BG, lch(L['fg-muted']), 'absolute'), on, 'darker'),
       accent: primary,

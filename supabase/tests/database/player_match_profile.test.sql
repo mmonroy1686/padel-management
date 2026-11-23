@@ -4,7 +4,7 @@ create extension if not exists pgtap with schema extensions;
 \ir helpers/club.psql
 select plan(16);
 
-select is((select match_close_hours::int from public.clubs where slug = 'test-club'), 3,
+select is((select match_close_minutes::int from public.clubs where slug = 'test-club'), 180,
   'incomplete matches close 3 hours before by default');
 select is(
   (select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace

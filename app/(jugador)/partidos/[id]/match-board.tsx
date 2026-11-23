@@ -32,7 +32,7 @@ export type MatchBoardProps = {
   risk: Risk | null
   howItWorks: string
   paymentNote: string
-  closeHours: number
+  closeMinutes: number
   leave: LeaveStatus
   shareText: string
   joinAction: FormAction
@@ -131,7 +131,7 @@ export function MatchBoard(props: MatchBoardProps) {
           position={joinPosition}
           whenText={props.whenText}
           paymentNote={props.paymentNote}
-          closeHours={props.closeHours}
+          closeMinutes={props.closeMinutes}
           action={props.joinAction}
           onClose={() => setJoinPosition(null)}
           onDone={done}

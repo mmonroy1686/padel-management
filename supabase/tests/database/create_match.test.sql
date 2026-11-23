@@ -53,7 +53,7 @@ select throws_ok(
 reset role;
 call test_helpers.make_booking('b0000000-0000-0000-0000-000000000010', 'c0000000-0000-0000-0000-000000000002',
   test_helpers.slot(4, '11:00', 90), '00000000-0000-0000-0000-0000000000d1');
-update public.clubs set match_close_hours = 48 where id = 'a0000000-0000-0000-0000-000000000001';
+update public.clubs set match_close_minutes = 2880 where id = 'a0000000-0000-0000-0000-000000000001';
 set local role authenticated;
 
 select throws_ok(
@@ -61,7 +61,7 @@ select throws_ok(
   'P0001', 'match_closed', 'no new matches after the closing time');
 
 reset role;
-update public.clubs set match_close_hours = 3 where id = 'a0000000-0000-0000-0000-000000000001';
+update public.clubs set match_close_minutes = 180 where id = 'a0000000-0000-0000-0000-000000000001';
 set local role authenticated;
 
 select throws_ok(

@@ -28,3 +28,37 @@ export function checkLogoFile(file: { type: string; size: number }): string | nu
 export function clubLogoUrl(supabaseUrl: string, path: string | null): string | null {
   return path ? `${supabaseUrl}/storage/v1/object/public/${LOGO_BUCKET}/${path}` : null
 }
+
+// The free-slots flyer's background: a photo the admin picks in Ajustes. The browser blurs it and shrinks it to a
+// 1080×1920 JPG before uploading (lib/storage/flyer-background.ts), so it goes in the same bucket as the logo, in the
+// club's folder: <club_id>/flyer-<timestamp>.jpg.
+export const FLYER_SOURCE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+export const MAX_FLYER_SOURCE_BYTES = 15 * 1024 * 1024
+const FLYER_FILE = /^flyer-\d{1,15}\.jpg$/
+
+export function flyerBackgroundPath(clubId: string, now = Date.now()): string {
+  return `${clubId}/flyer-${now}.jpg`
+}
+
+export function isClubFlyerBackgroundPath(clubId: string, path: string): boolean {
+  const [folder, file, ...rest] = path.split('/')
+  return folder === clubId && rest.length === 0 && FLYER_FILE.test(file ?? '')
+}
+
+// The photo as the admin picks it, before the browser shrinks it.
+export function checkFlyerSource(file: { type: string; size: number }): string | null {
+  if (!(FLYER_SOURCE_TYPES as readonly string[]).includes(file.type)) return 'Subí una foto JPG, PNG o WebP.'
+  if (file.size > MAX_FLYER_SOURCE_BYTES) return 'La foto pesa más de 15 MB. Probá con una más liviana.'
+  return null
+}
+
+type Size = { width: number; height: number }
+
+// Where to draw a picture so it covers the whole box, centered, cropping what is left over (CSS object-fit: cover).
+export function coverRect(image: Size, box: Size): { x: number; y: number; width: number; height: number } {
+  const scale = Math.max(box.width / image.width, box.height / image.height)
+  const width = image.width * scale
+  const height = image.height * scale
+  const round = (value: number) => Math.round(value * 100) / 100
+  return { x: round((box.width - width) / 2), y: round((box.height - height) / 2), width: round(width), height: round(height) }
+}

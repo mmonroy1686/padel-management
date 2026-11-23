@@ -5,6 +5,7 @@ export function clubTabs(role: Role): TabItem[] {
   const tabs: TabItem[] = [
     { href: '/club/inicio', label: 'Inicio', icon: 'home' },
     { href: '/club/grilla', label: 'Grilla', icon: 'grid' },
+    { href: '/club/asistente', label: 'Asistente', icon: 'racket' },
     { href: '/club/calendario', label: 'Calendario', icon: 'calendar' },
     { href: '/club/torneos', label: 'Torneos', icon: 'trophy' },
     { href: '/club/day-use', label: 'Day use', icon: 'ticket' },

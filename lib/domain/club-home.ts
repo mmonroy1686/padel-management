@@ -393,3 +393,9 @@ export function transfersCard(rows: ReportedTransfer[], now: Date): TransfersSum
     age: rows.length === 1 ? `hace ${since}` : `la más vieja hace ${since}`,
   }
 }
+
+// "Completar jugadores": only while someone is missing and the booking has not ended (set_booking_players refuses
+// it after the end, in_the_past). A match's players join from the app.
+export function canAddPlayers(turn: TurnPlayers, endsAt: Date, now: Date): boolean {
+  return !turn.isMatch && turn.missingNames && now.getTime() < endsAt.getTime()
+}

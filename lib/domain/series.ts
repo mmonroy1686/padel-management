@@ -1,5 +1,5 @@
-import { WEEKDAYS_SHORT } from './format'
-import { addDays, parseLocalDate, weekdayOf, type LocalDate } from './time'
+import { shortDate as dayMonth, WEEKDAYS_SHORT } from './format'
+import { addDays, weekdayOf, type LocalDate } from './time'
 
 export type SkipReason = 'slot_taken' | 'no_price' | 'not_aligned' | 'court_inactive'
 
@@ -11,8 +11,7 @@ export const SKIP_REASON_LABELS: Record<SkipReason, string> = {
 }
 
 export function shortDate(date: LocalDate): string {
-  const { day, month } = parseLocalDate(date)
-  return `${WEEKDAYS_SHORT[weekdayOf(date)]} ${day}/${month}`
+  return `${WEEKDAYS_SHORT[weekdayOf(date)]} ${dayMonth(date)}`
 }
 
 function reasonLabel(reason: string): string {

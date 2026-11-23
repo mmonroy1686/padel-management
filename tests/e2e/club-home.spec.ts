@@ -51,7 +51,7 @@ test('reception charges each player of the court in play from the Inicio', async
     { method: 'transfer', amount: 900, status: 'confirmed', payer_position: null, receipt_path: null },
   ])
   await page.getByRole('link', { name: 'Cobros' }).click()
-  await expect(page.getByRole('region', { name: 'Transferencias para confirmar' })).not.toContainText(holder.name)
+  await expect(page.getByRole('region', { name: 'Por confirmar', exact: true })).not.toContainText(holder.name)
 
   // The Grilla shows the same booking paid, with the same players.
   await page.getByRole('link', { name: 'Grilla' }).click()

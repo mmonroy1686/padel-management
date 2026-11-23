@@ -76,7 +76,8 @@ describe('PairsBoard', () => {
   it('moves a pair to another category', async () => {
     const steps = renderBoard()
     const ana = within(screen.getByRole('region', { name: '6ta Libre' })).getByRole('row', { name: /Ana y Pedro/ })
-    await userEvent.click(within(ana).getByRole('button', { name: 'Mover' }))
+    await userEvent.click(within(ana).getByRole('button', { name: 'Acciones de Ana y Pedro' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Mover de categoría' }))
     const sheet = screen.getByRole('dialog', { name: 'Mover a otra categoría' })
     expect(within(sheet).getAllByRole('option').map((option) => option.textContent)).toEqual(['5ta Damas'])
     await userEvent.click(within(sheet).getByRole('button', { name: 'Mover' }))
@@ -87,7 +88,8 @@ describe('PairsBoard', () => {
   it('asks before taking a pair out', async () => {
     const steps = renderBoard()
     const bruno = within(screen.getByRole('region', { name: '6ta Libre' })).getByRole('row', { name: /Bruno y Lucía/ })
-    await userEvent.click(within(bruno).getByRole('button', { name: 'Quitar' }))
+    await userEvent.click(within(bruno).getByRole('button', { name: 'Acciones de Bruno y Lucía' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Quitar' }))
     const sheet = screen.getByRole('dialog', { name: 'Quitar pareja' })
     await userEvent.click(within(sheet).getByRole('button', { name: 'Sí, quitar la pareja' }))
     await waitFor(() => expect(steps.remove).toHaveBeenCalled())
@@ -98,7 +100,8 @@ describe('PairsBoard', () => {
   it('opens the hours of a pair with no limit, and loads a whole pair', async () => {
     const steps = renderBoard()
     const ana = within(screen.getByRole('region', { name: '6ta Libre' })).getByRole('row', { name: /Ana y Pedro/ })
-    await userEvent.click(within(ana).getByRole('button', { name: 'Horarios' }))
+    await userEvent.click(within(ana).getByRole('button', { name: 'Acciones de Ana y Pedro' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Horarios' }))
     expect(screen.getByRole('dialog', { name: 'Horarios imposibles' })).toHaveTextContent('Son 6 franjas')
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
 

@@ -81,13 +81,13 @@ select results_eq(
   $$ values ('Gabi') $$,
   'before its closing time the match gets suggestions');
 reset role;
-update public.clubs set match_close_hours = 48 where id = 'a0000000-0000-0000-0000-000000000001';
+update public.clubs set match_close_minutes = 2880 where id = 'a0000000-0000-0000-0000-000000000001';
 set local role authenticated;
 select is_empty(
   $$ select * from public.match_suggestions('e1000000-0000-0000-0000-000000000003') $$,
   'past its closing time the match has no suggestions');
 reset role;
-update public.clubs set match_close_hours = 3 where id = 'a0000000-0000-0000-0000-000000000001';
+update public.clubs set match_close_minutes = 180 where id = 'a0000000-0000-0000-0000-000000000001';
 
 -- Hugo, now reception: staff outside the match never get themselves as a suggestion.
 update public.club_members set role = 'reception' where user_id = '00000000-0000-0000-0000-0000000000a3';

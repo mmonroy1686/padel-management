@@ -39,7 +39,7 @@ export default async function MatchPage({ params, searchParams }: { params: Para
   const now = new Date()
   const { sumarme } = await searchParams
   const [context, freeCourts] = await Promise.all([loadPlayerContext(viewer, now), loadFreeCourts(club, [match])])
-  const joinContext = { now, closeHours: club.match_close_hours, busy: context.busy }
+  const joinContext = { now, closeMinutes: club.match_close_minutes, busy: context.busy }
   const joinable = openSlots(match)
     .filter((slot) => canJoin(match, slot.position, context.player, joinContext).ok)
     .map((slot) => slot.position)
@@ -63,9 +63,9 @@ export default async function MatchPage({ params, searchParams }: { params: Para
         joinable={joinable}
         initialJoin={joinable.includes(requested) ? requested : null}
         risk={riskOf(match, freeCourts.get(match.id) ?? [])}
-        howItWorks={howItWorks(club.match_close_hours, club.cancellation_notice_hours)}
+        howItWorks={howItWorks(club.match_close_minutes, club.cancellation_notice_hours)}
         paymentNote={paymentMethodsNote(club)}
-        closeHours={club.match_close_hours}
+        closeMinutes={club.match_close_minutes}
         leave={leaveStatus(match, viewer.userId, club.cancellation_notice_hours, now)}
         shareText={share}
         joinAction={joinMatch}

@@ -14,5 +14,21 @@ describe('ChampionshipCard', () => {
     expect(screen.getByText('Inscripción abierta')).toBeInTheDocument()
     expect(screen.getByText('6ta Libre · 5ta Damas')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ver categorías y anotarme' })).toHaveAttribute('href', '/campeonatos/ch1')
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  it('shows its poster on top when it has one', () => {
+    render(
+      <ChampionshipCard
+        championship={makeChampionship()}
+        posterUrl="https://db.test/poster.png"
+        href="/campeonatos/ch1"
+        actionLabel="Ver campeonato"
+      />,
+    )
+    expect(screen.getByRole('img', { name: 'Afiche de Campeonato de Primavera' })).toHaveAttribute(
+      'src',
+      'https://db.test/poster.png',
+    )
   })
 })
