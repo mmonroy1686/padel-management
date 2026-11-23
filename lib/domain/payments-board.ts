@@ -67,7 +67,8 @@ export type ColumnKey = 'unpaid' | 'transfers' | 'collected' | 'refunds' | 'refu
 export type LaneKey = 'collect' | 'giveBack'
 
 type ColumnHead = { key: ColumnKey; lane: LaneKey; title: string; emptyText: string; done: boolean }
-export type BoardColumn = ColumnHead & { items: BoardItem[]; count: number; total: number }
+// `cash`: done columns only, the part of the total that moved in cash (what the till should hold).
+export type BoardColumn = ColumnHead & { items: BoardItem[]; count: number; total: number; cash?: number }
 
 export const KIND_LABELS: Record<MoneyKind, string> = {
   booking: 'Reserva',
@@ -104,7 +105,9 @@ const oldestFirst = (a: BoardItem, b: BoardItem) => a.at - b.at
 const latestFirst = (a: BoardItem, b: BoardItem) => b.at - a.at
 
 function withItems(head: ColumnHead, items: BoardItem[]): BoardColumn {
-  return { ...head, items, ...totalsOf(items, (item) => item.amount) }
+  const column: BoardColumn = { ...head, items, ...totalsOf(items, (item) => item.amount) }
+  if (head.done) column.cash = totalsOf(items, (item) => (item.done?.method === 'cash' ? item.amount : 0)).total
+  return column
 }
 
 export function paymentsBoard(input: BoardInput, format: BoardFormat): BoardColumn[] {

@@ -51,6 +51,13 @@ describe('clubDayRange', () => {
       to: at('2026-11-23T03:00:00Z'),
     })
   })
+
+  it('lasts 25 hours on the day the clocks go back', () => {
+    expect(clubDayRange(at('2026-11-01T15:00:00Z'), 'America/New_York')).toEqual({
+      from: at('2026-11-01T04:00:00Z'),
+      to: at('2026-11-02T05:00:00Z'),
+    })
+  })
 })
 
 describe('paymentsBoard', () => {
@@ -109,7 +116,8 @@ describe('paymentsBoard', () => {
       ['Inés', { method: 'transfer', time: '15:30' }, undefined, ''],
       ['Hugo', { method: 'cash', time: '14:10' }, undefined, 'día 2026-11-23'],
     ])
-    expect([collected.count, collected.total]).toEqual([2, 750])
+    expect([collected.count, collected.total, collected.cash]).toEqual([2, 750, 300])
+    expect(column(columns, 'unpaid').cash).toBeUndefined()
     expect(column(columns, 'refunded').items.map((item) => item.holder)).toEqual(['Juan'])
   })
 })

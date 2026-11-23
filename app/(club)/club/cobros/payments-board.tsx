@@ -63,13 +63,13 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
         </select>
       </div>
 
-      <div role="tablist" aria-label="Carriles de cobros" className="grid grid-cols-2 gap-2 md:hidden">
+      {/* On a phone, one lane at a time: plain toggle buttons (the full tabs pattern would add arrow keys for two). */}
+      <div role="group" aria-label="Carril" className="grid grid-cols-2 gap-2 md:hidden">
         {LANES.map((item) => (
           <button
             key={item.key}
             type="button"
-            role="tab"
-            aria-selected={lane === item.key}
+            aria-pressed={lane === item.key}
             aria-controls={`lane-${item.key}`}
             onClick={() => setLane(item.key)}
             className={cn(
@@ -134,6 +134,9 @@ function ColumnView({
           {column.count} · {formatPrice(column.total)}
         </span>
       </header>
+      {column.cash !== undefined && column.count > 0 ? (
+        <p className="text-sm text-fg-muted tabular-nums">En efectivo: {formatPrice(column.cash)}</p>
+      ) : null}
       {column.items.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {column.items.map((item) => (

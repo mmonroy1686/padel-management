@@ -50,6 +50,7 @@ describe('PaymentsBoard', () => {
     expect(within(column('Sin cobrar')).getByText('2 · $1.650')).toBeInTheDocument()
     expect(within(column('Por confirmar')).getByRole('article', { name: 'Ana López' })).toBeInTheDocument()
     expect(within(column('Cobrado hoy')).getByRole('article', { name: 'Hugo' })).toHaveTextContent('Efectivo · 14:10')
+    expect(column('Cobrado hoy')).toHaveTextContent('En efectivo: $300')
     expect(within(column('A devolver')).getByRole('article', { name: 'Gabi' })).toBeInTheDocument()
     expect(column('Devuelto hoy')).toHaveTextContent('Nada devuelto hoy.')
   })
@@ -79,14 +80,14 @@ describe('PaymentsBoard', () => {
     expect(await within(sheet).findByRole('status')).toHaveTextContent('Pago confirmado.')
   })
 
-  it('switches lanes with the tabs on a phone, each with what is left to do', async () => {
+  it('switches lanes with the toggles on a phone, each with what is left to do', async () => {
     renderBoard()
-    const collect = screen.getByRole('tab', { name: 'Cobrar 3' })
-    const giveBack = screen.getByRole('tab', { name: 'Devolver 1' })
-    expect(collect).toHaveAttribute('aria-selected', 'true')
+    const collect = screen.getByRole('button', { name: 'Cobrar 3' })
+    const giveBack = screen.getByRole('button', { name: 'Devolver 1' })
+    expect(collect).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('region', { name: 'Devolver' })).toHaveClass('hidden')
     await userEvent.click(giveBack)
-    expect(giveBack).toHaveAttribute('aria-selected', 'true')
+    expect(giveBack).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('region', { name: 'Cobrar' })).toHaveClass('hidden')
     expect(screen.getByRole('region', { name: 'Devolver' })).not.toHaveClass('hidden')
   })

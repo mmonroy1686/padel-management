@@ -40,6 +40,7 @@ visible at a glance, and "Cobrado hoy" doubles as the cash closure.
 - A rejected transfer simply leaves `Por confirmar`; the debt it was for is still in `Sin cobrar` (as today).
 - "Cobrado hoy" counts every payment confirmed today, wherever it was taken (Cobros, the grid, a tournament screen):
   that is the till for the day. `confirmed_at` is set by every confirming RPC, so no migration is needed.
+- **Known limit (review):** a refund overwrites `confirmed_at` and the status becomes `refunded`, so a payment taken and given back the same day leaves `Cobrado hoy` and only shows in `Devuelto hoy` (Cobrado − Devuelto undercounts the till by that amount). Fixing it needs a `refunded_at` column; left for later. The done columns show their cash part (`En efectivo`) apart from transfers. A `(club_id, confirmed_at)` index can come when payment history grows.
 - "Today" is the club's local day (`club.timezone`), from local midnight to the next.
 
 ## Card
