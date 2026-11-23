@@ -89,7 +89,8 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
           aria-labelledby={`lane-title-${item.key}`}
           className={cn('flex-col gap-3 md:flex', lane === item.key ? 'flex' : 'hidden')}
         >
-          <h2 id={`lane-title-${item.key}`} className="font-display text-2xl font-bold uppercase">
+          {/* On a phone the tab already names the lane. */}
+          <h2 id={`lane-title-${item.key}`} className="sr-only font-display text-2xl font-bold uppercase md:not-sr-only">
             {item.title}
           </h2>
           <div className="grid gap-3 md:auto-cols-fr md:grid-flow-col">
