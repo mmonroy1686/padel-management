@@ -21,7 +21,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
-    "next": "16.3.6",
+    "next": "16.4.6",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -41,7 +41,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.1",
     "eslint": "^9",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "16.4.6",
     "jsdom": "^29.1.1",
     "supabase": "^2.118.0",
     "tailwindcss": "^4",
