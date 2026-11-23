@@ -7,5 +7,6 @@ export function register() {
   if (options) Sentry.init(options)
 }
 
-// Errors in Server Components, Server Actions, Route Handlers and the proxy. A no-op while Sentry is not initialized.
+// Errors in Server Components, Server Actions, Route Handlers and the proxy. Without init there is no client, so it
+// sends nothing.
 export const onRequestError = Sentry.captureRequestError

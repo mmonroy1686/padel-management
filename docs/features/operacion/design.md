@@ -67,8 +67,10 @@ Uptime monitoring, alert rules in Sentry (Miguel sets them in its panel), automa
 
 ## Testing
 
-- Sentry: unit test that `init` is not called without the DSN and is called with the right options with it; the app
-  builds and the e2e pass without the variable.
-- Restore script: refuses a non-local database (unit); the end-to-end test is the manual run in `notes.md`.
+- Sentry: unit tests of the options (none without the DSN; the right ones with it, scrubbing emails and phones); the
+  instrumentation files are two lines that only call `init` with those options. The app builds and the e2e pass
+  without the variable.
+- Restore script: unit tests of the SQL it builds; it only reaches the local stack's container (`docker exec`) after
+  `localSupabase()` checks the stack is local. The end-to-end test is the manual run in `notes.md`.
 - Legal pages: render, show the draft banner while there are gaps, links present on sign-in and welcome (unit + one e2e
   step).

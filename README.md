@@ -65,7 +65,9 @@ Sin variables, no se envía nada. Para prenderlo, crear un proyecto Next.js en S
 | `NEXT_PUBLIC_SENTRY_DSN` | El DSN del proyecto. Con esto ya se reportan los errores del servidor y del navegador |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Opcionales: suben los source maps en el build, para ver en qué línea del código falló |
 
-Solo se mandan errores: sin datos personales, sin grabación de sesiones y sin medición de rendimiento. Los deploys de preview quedan separados de producción. Las alertas (mail cuando aparece un error nuevo) se configuran en el panel de Sentry.
+Solo se mandan errores, sin grabación de sesiones ni medición de rendimiento. Antes de enviar cada error se borran los emails y teléfonos que aparezcan en él (`lib/observability/scrub.ts`), y no van las líneas de la consola del navegador. Los deploys de preview quedan separados de producción por `VERCEL_ENV`. Las alertas (mail cuando aparece un error nuevo) se configuran en el panel de Sentry.
+
+`NEXT_PUBLIC_SENTRY_DSN` queda fija en el código del navegador al hacer el build: después de cargarla o cambiarla en Vercel, hay que volver a desplegar.
 
 #### Backups
 
@@ -74,13 +76,17 @@ Solo se mandan errores: sin datos personales, sin grabación de sesiones y sin m
 Para restaurar uno en el Supabase local (para revisarlo o recuperar datos):
 
 ```bash
-# 1. Bajar el artifact supabase-backup-<id> desde GitHub → Actions → Backup production, y descomprimir el .zip
-mkdir backup && gpg --decrypt backup.tar.gz.gpg | tar xz -C backup   # pide la BACKUP_PASSPHRASE
-# 2. Cargarlo en la base local (borra lo que haya en ella)
+# 1. Bajar el artifact supabase-backup-<id> desde GitHub → Actions → Backup production y descomprimir el .zip
+#    FUERA del repo (son datos personales reales), por ejemplo en ~/backups/2026-11-23
+cd ~/backups/2026-11-23
+gpg --decrypt backup.tar.gz.gpg | tar xz   # pide la BACKUP_PASSPHRASE
+# 2. Cargarlo en la base local (borra lo que haya en ella), desde el repo
 npx supabase start
-npm run db:restore -- backup
+npm run db:restore -- ~/backups/2026-11-23
 npm run dev:local
 ```
+
+Si igual lo descomprimís en una carpeta `backup/` dentro del repo, `.gitignore` la deja afuera. Borrá los archivos descifrados cuando termines.
 
 `db:restore` recrea la base local con las migraciones, sin seed, y carga `data.sql`. Supabase en la nube usa versiones de Auth y Storage más nuevas que el CLI: las tablas y columnas que el local no tiene se saltean y el script las lista (son internas, no datos de la app). Nunca toca una base remota.
 

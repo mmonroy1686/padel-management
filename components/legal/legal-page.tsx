@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { GAP, gapsIn, type LegalDocument } from '@/lib/legal/documents'
 
 // A legal page: plain reading text. Every "[COMPLETAR: …]" is highlighted, and while any is left a banner on top says
-// the text is a draft, so it can't go out unfinished by mistake.
+// the text is a draft.
 export function LegalPage({ document }: { document: LegalDocument }) {
   const gaps = gapsIn(document)
   return (

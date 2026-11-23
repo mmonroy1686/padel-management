@@ -48,3 +48,8 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Decrypted production backups (real personal data): never in the repo
+/backup/
+*.sql.gz
+/backup*.tar.gz*

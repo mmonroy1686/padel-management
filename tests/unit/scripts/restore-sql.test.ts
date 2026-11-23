@@ -45,6 +45,11 @@ c1	rustic
 `)
   })
 
+  it('reads a dump with Windows line endings the same way', () => {
+    const windows = restoreScript(DUMP.replace(/\n/g, '\r\n'), LOCAL)
+    expect(windows).toEqual(restoreScript(DUMP, LOCAL))
+  })
+
   it('refuses a file without data', () => {
     expect(() => restoreScript('-- schema only\n')).toThrow('no hay ningún COPY')
   })

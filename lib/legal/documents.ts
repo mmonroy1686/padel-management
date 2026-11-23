@@ -49,7 +49,7 @@ export function termsOfService(product = productName()): LegalDocument {
       {
         title: 'Pagos',
         paragraphs: [
-          `${product} no cobra pagos en línea. Pagás en el club, en efectivo, por transferencia o con tarjeta en recepción, según lo que acepte cada club. Cuando pagás por transferencia, el club confirma el pago al ver el comprobante.`,
+          `${product} no cobra pagos en línea. Pagás en el club, en efectivo o por transferencia, según lo que acepte cada club. Cuando pagás por transferencia, el club confirma el pago al ver el comprobante.`,
           'Las devoluciones, cuando correspondan, las hace el club por el mismo medio o el que acuerden.',
         ],
       },
@@ -92,7 +92,7 @@ export function privacyPolicy(product = productName()): LegalDocument {
         paragraphs: ['Los que nos das y los que se generan al usar la aplicación:'],
         items: [
           'Tu nombre y tu email.',
-          'Si te anotás en un campeonato, el teléfono que nos des. Si anotás a una pareja que no usa la aplicación, su nombre y teléfono: avisale que los compartís.',
+          'Si te anotás en un campeonato, tu email y el teléfono que nos des. Si anotás a una pareja que no usa la aplicación, su nombre y teléfono: avisale que los compartís.',
           'Tu perfil de juego: categoría, lado, mano, género y horarios en los que preferís jugar.',
           'Tus reservas, partidos, inscripciones a torneos y campeonatos, pases de day use y la lista de espera.',
           'Tus pagos: monto, medio, estado y el comprobante de transferencia que subas.',
@@ -117,14 +117,16 @@ export function privacyPolicy(product = productName()): LegalDocument {
       {
         title: 'Quién los ve',
         paragraphs: [
-          'El personal del club (administración y recepción) ve los datos necesarios para atenderte. Otros jugadores ven tu nombre en los partidos, torneos y campeonatos en los que participás.',
+          'El personal del club (administración y recepción) ve los datos necesarios para atenderte. Otros jugadores ven tu nombre en los partidos, torneos y campeonatos en los que participás; el fixture de un campeonato es una página pública que puede ver cualquiera con el enlace.',
+          'Si tu perfil es visible (viene activado y lo podés apagar en Tu perfil, en «Otros jugadores pueden ver mi perfil»), los jugadores del club ven tu nombre, categoría, lado, mano y género. Además, cuando alguien arma un partido, la aplicación le sugiere jugadores de su nivel y le muestra cuántas veces jugaste en ese horario y si solés estar libre, según tus reservas anteriores. Con el perfil oculto no aparecés en esas sugerencias.',
+          'Si registrás tu ingreso de day use, los otros jugadores ven tu nombre en «Ya están en el club», salvo que lo apagues en Tu perfil.',
           'Para funcionar usamos proveedores que guardan o procesan datos por nuestra cuenta, con sus propias medidas de seguridad, algunos fuera de Uruguay:',
         ],
         items: [
           'Supabase (base de datos, archivos e inicio de sesión).',
           'Vercel (servidores de la aplicación).',
           'Resend (envío de emails).',
-          'Sentry (registro de errores; no le mandamos tu nombre, email ni teléfono).',
+          'Sentry (registro de errores: le mandamos el error y la pantalla en la que pasó; los emails y teléfonos se borran antes de enviarlo).',
           'Google, solo si elegís ingresar con tu cuenta de Google.',
         ],
       },
