@@ -26,7 +26,7 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
 
   // Confirm the payment in Cobros.
   await page.getByRole('link', { name: 'Cobros' }).click()
-  const transfers = page.getByRole('region', { name: 'Transferencias para confirmar' })
+  const transfers = page.getByRole('region', { name: 'Por confirmar', exact: true })
   await expect(transfers.getByRole('link', { name: `Ver comprobante de ${player.name}` })).toBeVisible()
   await transfers.getByRole('button', { name: `Revisar la transferencia de ${player.name}` }).click()
   const review = page.getByRole('dialog', { name: `Transferencia de ${player.name}` })
