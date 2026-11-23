@@ -19,3 +19,10 @@ export const INVALID_INPUT: ActionState = failed(errorMessage('invalid_input'))
 export function fromRpc(error: { message: string } | null, okMessage: string): ActionState {
   return error ? failed(errorMessage(error.message)) : ok(okMessage)
 }
+
+// The assistant's "Crear partido": the state also carries the new match, so the sheet moves on to inviting.
+export type CreatedState = ActionState & { matchId?: string }
+export type CreateMatchAction = (previous: CreatedState, form: FormData) => Promise<CreatedState>
+// The assistant's "Invitar": called with arguments, not a form, from the invite list.
+export type InviteResult = { ok: true; invited: number } | { ok: false; message: string }
+export type InviteAction = (matchId: string, playerIds: string[]) => Promise<InviteResult>
