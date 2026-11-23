@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { AutoRefresh } from '@/components/live/auto-refresh'
-import { getClub } from '@/lib/auth/viewer'
+import { requireStaff } from '@/lib/auth/viewer'
+import { ownsPublicCode } from '@/lib/data/championships'
 import { loadPublicChampionship } from '@/lib/data/championship-fixture'
 import { isPublicCode } from '@/lib/domain/championship-public'
 import { brackets, dayBoard, matchViews } from '@/lib/domain/championship-views'
@@ -12,11 +13,15 @@ export const metadata: Metadata = { title: 'Modo TV' }
 
 type Params = Promise<{ code: string }>
 
-// For the club's screen: no session, renders again every 15 seconds (the board keeps its turn).
+// For the club's screen: only its staff (admin or reception) opens it, signed in on that screen; anyone else with the
+// link is sent to sign in, or home. Renders again every 15 seconds (the board keeps its turn).
 export default async function ChampionshipTvPage({ params }: { params: Params }) {
   const { code } = await params
   if (!isPublicCode(code)) notFound()
-  const [data, club] = await Promise.all([loadPublicChampionship(code), getClub()])
+  const { club } = await requireStaff(`/c/${code}/tv`)
+  // Only a championship of the staff's own club.
+  if (!(await ownsPublicCode(club, code))) notFound()
+  const data = await loadPublicChampionship(code)
   if (!data) notFound()
 
   const views = matchViews(data.championship, data.fixture, {

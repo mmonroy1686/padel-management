@@ -132,6 +132,14 @@ const PATHS = {
       <path d="m9 9 6 6M15 9l-6 6" />
     </>
   ),
+  share: (
+    <>
+      <circle cx="18" cy="5" r="2.5" />
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="19" r="2.5" />
+      <path d="m8.2 10.8 7.6-4.6M8.2 13.2l7.6 4.6" />
+    </>
+  ),
   image: (
     <>
       <rect x="3" y="4" width="18" height="16" rx="2" />

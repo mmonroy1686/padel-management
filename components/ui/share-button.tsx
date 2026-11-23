@@ -3,19 +3,8 @@
 import { useState } from 'react'
 import { Button, type ButtonSize } from '@/components/ui/button'
 
-// Design: "Compartir": the phone's share sheet when there is one; on a computer it copies the message (with the
-// link) and says so.
-export function ShareButton({
-  title,
-  text,
-  label = 'Compartir',
-  size,
-}: {
-  title: string
-  text: string
-  label?: string
-  size?: ButtonSize
-}) {
+// The phone's share sheet when there is one; on a computer it copies the message (with the link) and says so.
+export function useShare(title: string, text: string) {
   const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
 
   async function share() {
@@ -35,21 +24,47 @@ export function ShareButton({
     }
   }
 
+  return { share, status }
+}
+
+// What happened when there was no share sheet.
+export function ShareStatus({ status, text }: { status: 'idle' | 'copied' | 'failed'; text: string }) {
+  if (status === 'copied') {
+    return (
+      <p role="status" className="text-sm">
+        Link copiado. Pegalo donde quieras.
+      </p>
+    )
+  }
+  if (status === 'failed') {
+    return (
+      <p role="alert" className="text-sm">
+        No pudimos copiarlo. Copiá este mensaje: {text}
+      </p>
+    )
+  }
+  return null
+}
+
+// Design: "Compartir".
+export function ShareButton({
+  title,
+  text,
+  label = 'Compartir',
+  size,
+}: {
+  title: string
+  text: string
+  label?: string
+  size?: ButtonSize
+}) {
+  const { share, status } = useShare(title, text)
   return (
     <div className="flex flex-col gap-2">
       <Button variant="secondary" size={size} onClick={share}>
         {label}
       </Button>
-      {status === 'copied' ? (
-        <p role="status" className="text-sm">
-          Link copiado. Pegalo donde quieras.
-        </p>
-      ) : null}
-      {status === 'failed' ? (
-        <p role="alert" className="text-sm">
-          No pudimos copiarlo. Copiá este mensaje: {text}
-        </p>
-      ) : null}
+      <ShareStatus status={status} text={text} />
     </div>
   )
 }

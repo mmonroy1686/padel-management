@@ -53,3 +53,11 @@ export async function loadChampionshipPhones(championshipId: string): Promise<Ma
   if (error) throw error
   return new Map(data.flatMap((row) => (row.phone ? [[row.player_id, row.phone] as const] : [])))
 }
+
+// Whether the public code is one of the club's championships (the TV mode only opens its own).
+export async function ownsPublicCode(club: Club, code: string): Promise<boolean> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('championships').select('id').eq('club_id', club.id).eq('public_code', code).maybeSingle()
+  if (error) throw error
+  return data !== null
+}
