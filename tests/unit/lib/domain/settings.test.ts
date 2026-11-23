@@ -14,7 +14,7 @@ const PROTOTYPE: [string, string][] = [
   ['booking_window_days', '14'],
   ['cancellation_notice_hours', '24'],
   ['max_active_bookings', '2'],
-  ['match_close_hours', '3'],
+  ['match_close_minutes', '180'],
   ['accepts_cash', 'on'],
   ['accepts_transfer', 'on'],
   ['transfer_receipt_required', 'on'],
@@ -34,7 +34,7 @@ describe('parseClubSettings', () => {
         booking_window_days: 14,
         cancellation_notice_hours: 24,
         max_active_bookings: 2,
-        match_close_hours: 3,
+        match_close_minutes: 180,
         accepts_cash: true,
         accepts_transfer: true,
         transfer_receipt_required: true,
@@ -55,10 +55,11 @@ describe('parseClubSettings', () => {
     expect(parseClubSettings(form(settings))).toEqual({ ok: false, message: 'En ese horario no entra ni un turno.' })
   })
 
-  it('keeps the closing time of incomplete matches between 0 and 48 hours', () => {
-    expect(parseClubSettings(form(replacing('match_close_hours', '49')))).toEqual({
+  it('takes the closing time of incomplete matches in minutes, up to 48 hours', () => {
+    expect(parseClubSettings(form(replacing('match_close_minutes', '30')))).toMatchObject({ ok: true, value: { match_close_minutes: 30 } })
+    expect(parseClubSettings(form(replacing('match_close_minutes', '2881')))).toEqual({
       ok: false,
-      message: 'Las horas para cerrar partidos van de 0 a 48.',
+      message: 'Los minutos para cerrar partidos van de 0 a 2880 (48 h).',
     })
   })
 

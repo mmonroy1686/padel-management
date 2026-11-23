@@ -15,7 +15,7 @@ import { makeMatch } from '../../fixtures/matches'
 describe('buildableSlots', () => {
   it('takes the free slots that still accept a match, without the taken and the forming ones', () => {
     const grid = makeGrid({ occupancies: [occupancy('o1', 'court-1', '11:00', '12:30')], matches: [makeMatch()] })
-    const slots = buildableSlots(grid, at('07:00'), 3)
+    const slots = buildableSlots(grid, at('07:00'), 180)
     // 11:00 onwards closes after 07:00: 8 times on 2 courts, minus the taken one and the forming one.
     expect(slots).toHaveLength(14)
     expect(slots[0]).toEqual({ courtId: 'court-2', startsAt: at('11:00') })
@@ -65,7 +65,7 @@ describe('recommendedSlots', () => {
   const g = boardSlot('court-2', '14:00', strongRows(3, 'g'))
 
   it('takes up to three by demand, never two at the same time, never a closed or a quiet one', () => {
-    expect(recommendedSlots(board([a, b, c, d, e, f, g]), at('07:00'), 3).map((slot) => slot.key)).toEqual([
+    expect(recommendedSlots(board([a, b, c, d, e, f, g]), at('07:00'), 180).map((slot) => slot.key)).toEqual([
       a.key,
       d.key,
       c.key,
@@ -73,7 +73,7 @@ describe('recommendedSlots', () => {
   })
 
   it('says the day, the time, the court, the proposal and how many could play', () => {
-    const [first] = recommendedSlots(board([a]), at('07:00'), 3)
+    const [first] = recommendedSlots(board([a]), at('07:00'), 180)
     expect(recommendationText(first, TIMEZONE)).toBe('Jueves 20:00 · Cancha 1 · 5ª masculino · 8 posibles')
   })
 })

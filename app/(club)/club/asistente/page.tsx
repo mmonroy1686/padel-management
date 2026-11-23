@@ -29,7 +29,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Se
 
   const { grid, board } = await loadAssistantDay(club, date, viewer, now)
   const siteUrl = getSiteUrl()
-  const recommended = recommendedSlots(board, now, club.match_close_hours).map((slot) => ({
+  const recommended = recommendedSlots(board, now, club.match_close_minutes).map((slot) => ({
     slot,
     text: recommendationText(slot, club.timezone),
   }))
@@ -47,6 +47,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Se
             board={board}
             recommended={recommended}
             timezone={club.timezone}
+            closeMinutes={club.match_close_minutes}
             siteUrl={siteUrl}
             createAction={createStaffMatch}
             inviteAction={inviteToMatch}

@@ -18,7 +18,7 @@ const no = (reason: string): JoinCheck => ({ ok: false, reason })
 
 // Same rules and order as join_match: open, not in it, free spot, category, type, side, busy.
 export function canJoin(match: Match, position: number, player: MatchPlayer, context: JoinContext): JoinCheck {
-  if (match.status !== 'forming' || context.now >= closesAt(match, context.closeHours)) {
+  if (match.status !== 'forming' || context.now >= closesAt(match, context.closeMinutes)) {
     return no('El partido ya no está abierto.')
   }
   if (isInMatch(match, player.id)) return no('Ya estás en este partido.')

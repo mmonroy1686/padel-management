@@ -2,11 +2,24 @@
 
 import Link from 'next/link'
 import type { AssistantBoard, BoardCell, BoardSlot } from '@/lib/domain/assistant-board'
+import { durationText } from '@/lib/domain/format'
 import { demandText } from '@/lib/domain/slot-planner'
 
 const CHIP = 'flex min-h-11 w-full items-center rounded-xl px-2.5 py-2 sm:px-3'
 
-function Cell({ cell, courtName, label, onPick }: { cell: BoardCell; courtName: string; label: string; onPick: (slot: BoardSlot) => void }) {
+function Cell({
+  cell,
+  courtName,
+  label,
+  closeMinutes,
+  onPick,
+}: {
+  cell: BoardCell
+  courtName: string
+  label: string
+  closeMinutes: number
+  onPick: (slot: BoardSlot) => void
+}) {
   if (cell.state === 'taken') {
     return (
       <span className={`${CHIP} text-fg-muted`}>
@@ -28,7 +41,7 @@ function Cell({ cell, courtName, label, onPick }: { cell: BoardCell; courtName: 
     return (
       <span className={`${CHIP} border border-border`}>
         <span>{label}</span>
-        <span className="ml-auto text-xs text-fg-muted">Ya no se arma</span>
+        <span className="ml-auto text-xs text-fg-muted">Cierra {durationText(closeMinutes)} antes</span>
         <span className="sr-only">, libre para reservar; ya cerró para armar partido</span>
       </span>
     )
@@ -49,7 +62,16 @@ function Cell({ cell, courtName, label, onPick }: { cell: BoardCell; courtName: 
 
 // Courts in columns, the times still to come in chips: a free one opens "Armar partido", a taken one is struck out
 // and says so, a forming match leads to it.
-export function FreeBoard({ board, onPick }: { board: AssistantBoard; onPick: (slot: BoardSlot) => void }) {
+export function FreeBoard({
+  board,
+  closeMinutes,
+  onPick,
+}: {
+  board: AssistantBoard
+  // A free slot this close to starting can still be booked, but a match there would take nobody (Ajustes).
+  closeMinutes: number
+  onPick: (slot: BoardSlot) => void
+}) {
   const anyFree = board.rows.some((row) => row.cells.some((cell) => cell.state === 'free'))
   return (
     <section aria-labelledby="libres" className="flex flex-col gap-3">
@@ -69,7 +91,7 @@ export function FreeBoard({ board, onPick }: { board: AssistantBoard; onPick: (s
                     if (!cell || cell.state === 'none') return null
                     return (
                       <li key={row.label}>
-                        <Cell cell={cell} courtName={court.name} label={row.label} onPick={onPick} />
+                        <Cell cell={cell} courtName={court.name} label={row.label} closeMinutes={closeMinutes} onPick={onPick} />
                       </li>
                     )
                   })}

@@ -451,8 +451,8 @@ for (const [days, time, courtIndex, creator, joiners] of [
   [10, '18:30', 1, 'matias', []],
   [12, '21:30', 0, 'camila', ['valentina', 'florencia']],
 ]) {
-  // A match stops taking players match_close_hours before it starts.
-  if (at(days, time) <= new Date(now.getTime() + (club.match_close_hours * 60 + 30) * 60_000)) continue
+  // A match stops taking players match_close_minutes before it starts.
+  if (at(days, time) <= new Date(now.getTime() + (club.match_close_minutes + 30) * 60_000)) continue
   const creatorPerson = people[creator]
   const match = await tryRpc(creatorPerson.client, 'create_match', {
     p_court_id: court(courtIndex).id,

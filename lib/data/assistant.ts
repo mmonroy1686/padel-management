@@ -21,7 +21,7 @@ export async function loadAssistantDay(
   const grid = await loadDayGrid(club, date, { userId: viewer.userId, audience: 'staff' }, now)
   const supabase = await createClient()
   const answers = await Promise.all(
-    buildableSlots(grid, now, club.match_close_hours).map(async (slot): Promise<[string, CandidateRow[]]> => {
+    buildableSlots(grid, now, club.match_close_minutes).map(async (slot): Promise<[string, CandidateRow[]]> => {
       const { data, error } = await supabase.rpc('slot_candidates', {
         p_court_id: slot.courtId,
         p_starts_at: slot.startsAt.toISOString(),

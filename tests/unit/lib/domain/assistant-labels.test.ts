@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { capitalize, formatPhone, shortDate } from '@/lib/domain/format'
+import { capitalize, durationText, formatPhone, shortDate } from '@/lib/domain/format'
 import { categorySlashLabel } from '@/lib/domain/matches'
 
 describe('assistant labels', () => {
@@ -23,5 +23,13 @@ describe('assistant labels', () => {
   it('writes a range of categories in short', () => {
     expect(categorySlashLabel(5, 6)).toBe('5ª/6ª')
     expect(categorySlashLabel(5, 5)).toBe('5ª')
+  })
+
+  it('says a span of minutes the short way', () => {
+    expect(durationText(30)).toBe('30 min')
+    expect(durationText(60)).toBe('1 h')
+    expect(durationText(90)).toBe('1 h 30 min')
+    expect(durationText(180)).toBe('3 h')
+    expect(durationText(0)).toBe('0 min')
   })
 })

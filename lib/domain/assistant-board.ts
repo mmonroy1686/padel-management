@@ -33,15 +33,15 @@ export function slotKey(courtId: string, startsAt: Date): string {
 }
 
 // Same as private.match_closes_at: a match takes players until close_hours before it starts.
-export function acceptsMatch(startsAt: Date, now: Date, closeHours: number): boolean {
-  return now.getTime() < startsAt.getTime() - closeHours * 3_600_000
+export function acceptsMatch(startsAt: Date, now: Date, closeMinutes: number): boolean {
+  return now.getTime() < startsAt.getTime() - closeMinutes * 60_000
 }
 
 // The slots lib/data/assistant.ts asks slot_candidates about: free, no match forming there, not closed yet.
-export function buildableSlots(grid: DayGrid, now: Date, closeHours: number): { courtId: string; startsAt: Date }[] {
+export function buildableSlots(grid: DayGrid, now: Date, closeMinutes: number): { courtId: string; startsAt: Date }[] {
   return grid.rows.flatMap((row) =>
     row.cells.flatMap((cell) =>
-      cell.state === 'free' && !cell.formingMatch && acceptsMatch(cell.slot.startsAt, now, closeHours)
+      cell.state === 'free' && !cell.formingMatch && acceptsMatch(cell.slot.startsAt, now, closeMinutes)
         ? [{ courtId: cell.court.id, startsAt: cell.slot.startsAt }]
         : [],
     ),
@@ -82,12 +82,12 @@ export function boardOf(grid: DayGrid, candidates: Map<string, CandidateRow[]>):
 
 // Up to three free slots with medium or high demand that still take a match: by demand, strong candidates and
 // time, and never two at the same time.
-export function recommendedSlots(board: AssistantBoard, now: Date, closeHours: number): RecommendedSlot[] {
+export function recommendedSlots(board: AssistantBoard, now: Date, closeMinutes: number): RecommendedSlot[] {
   const open = board.rows.flatMap((row) =>
     row.cells.flatMap((cell): RecommendedSlot[] => {
       if (cell.state !== 'free' || !cell.slot) return []
       const { proposal } = cell.slot
-      if (!proposal || proposal.demand === 'low' || !acceptsMatch(cell.slot.startsAt, now, closeHours)) return []
+      if (!proposal || proposal.demand === 'low' || !acceptsMatch(cell.slot.startsAt, now, closeMinutes)) return []
       return [{ ...cell.slot, proposal }]
     }),
   )

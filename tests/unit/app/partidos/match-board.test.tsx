@@ -16,7 +16,7 @@ function renderBoard(overrides: Partial<MatchBoardProps> = {}) {
     risk: null,
     howItWorks: 'La cancha se reserva recién cuando están los 4.',
     paymentNote: 'Se paga en el club o por transferencia.',
-    closeHours: 3,
+    closeMinutes: 180,
     leave: null,
     shareText: 'Falta 3',
     joinAction: vi.fn<FormAction>(),

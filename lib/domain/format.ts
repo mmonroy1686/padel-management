@@ -52,3 +52,11 @@ export function formatPhone(digits: string): string {
 export function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
+
+// "30 min", "1 h", "1 h 30 min": how long before something happens, the short way.
+export function durationText(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  if (hours === 0) return `${rest} min`
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`
+}

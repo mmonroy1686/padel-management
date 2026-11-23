@@ -50,14 +50,14 @@ select is(
   4, 'with its four spots free');
 
 -- Past its closing time a match cannot be created.
-update public.clubs set match_close_hours = 48 where id = 'a0000000-0000-0000-0000-000000000001';
+update public.clubs set match_close_minutes = 2880 where id = 'a0000000-0000-0000-0000-000000000001';
 set local role authenticated;
 select throws_ok(
   $$ select public.staff_create_match('c0000000-0000-0000-0000-000000000001', test_helpers.at(1, '20:00'), true,
        5, 6, 'mixed') $$,
   'P0001', 'match_closed', 'not past its closing time');
 reset role;
-update public.clubs set match_close_hours = 3 where id = 'a0000000-0000-0000-0000-000000000001';
+update public.clubs set match_close_minutes = 180 where id = 'a0000000-0000-0000-0000-000000000001';
 
 -- Without a price the slot cannot be played.
 delete from public.pricing_rules where club_id = 'a0000000-0000-0000-0000-000000000001';

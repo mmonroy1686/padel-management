@@ -1,3 +1,4 @@
+import { durationText } from './format'
 import type { Gender, Side } from './profile'
 import { priceFor, type PricingRule } from './slots'
 import { localDateOf, minutesOfDay, toDate, type LocalDate } from './time'
@@ -44,7 +45,7 @@ export type Match = Period & {
 }
 
 export type MatchPlayer = { id: string; category: number | null; gender: Gender | null; side: Side | null }
-export type JoinContext = { now: Date; closeHours: number; busy: Period[] }
+export type JoinContext = { now: Date; closeMinutes: number; busy: Period[] }
 // Keys: habitKey(weekday, minutes) for past games; availabilityKey(weekday, band) for bands.
 export type Habits = { playedAt: Map<string, number>; availability: Set<string>; preferredCourtIds: Set<string> }
 export type PlayerContext = { player: MatchPlayer; busy: Period[]; habits: Habits }
@@ -127,8 +128,8 @@ export function overlaps(a: Period, b: Period): boolean {
 }
 
 // Same as private.match_closes_at.
-export function closesAt(match: Pick<Match, 'startsAt'>, closeHours: number): Date {
-  return new Date(match.startsAt.getTime() - closeHours * 3_600_000)
+export function closesAt(match: Pick<Match, 'startsAt'>, closeMinutes: number): Date {
+  return new Date(match.startsAt.getTime() - closeMinutes * 60_000)
 }
 
 export function categoryRangeLabel(min: number, max: number): string {
@@ -191,9 +192,9 @@ export type MatchFormOptions = {
   defaults: ReturnType<typeof matchFormDefaults>
 }
 
-export function howItWorks(closeHours: number, noticeHours: number): string {
+export function howItWorks(closeMinutes: number, noticeHours: number): string {
   return (
-    `La cancha se reserva recién cuando están los 4. Si ${closeHours} h antes no se completó, el partido se cancela ` +
+    `La cancha se reserva recién cuando están los 4. Si ${durationText(closeMinutes)} antes no se completó, el partido se cancela ` +
     `solo y no pagás nada. Cada jugador paga su parte. Para bajarte de un partido confirmado, avisá con ` +
     `${noticeHours} h de anticipación.`
   )

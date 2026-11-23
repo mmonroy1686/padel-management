@@ -107,7 +107,7 @@ describe('labels', () => {
   })
 
   it('explains how open matches work with the club numbers', () => {
-    expect(howItWorks(3, 24)).toBe(
+    expect(howItWorks(180, 24)).toBe(
       'La cancha se reserva recién cuando están los 4. Si 3 h antes no se completó, el partido se cancela solo y no pagás nada. Cada jugador paga su parte. Para bajarte de un partido confirmado, avisá con 24 h de anticipación.',
     )
   })

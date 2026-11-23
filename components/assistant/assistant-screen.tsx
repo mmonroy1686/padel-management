@@ -13,6 +13,7 @@ export function AssistantScreen({
   board,
   recommended,
   timezone,
+  closeMinutes,
   siteUrl,
   createAction,
   inviteAction,
@@ -20,6 +21,7 @@ export function AssistantScreen({
   board: AssistantBoard
   recommended: { slot: BoardSlot; text: string }[]
   timezone: string
+  closeMinutes: number
   siteUrl: string
   createAction: CreateMatchAction
   inviteAction: InviteAction
@@ -28,7 +30,7 @@ export function AssistantScreen({
   return (
     <>
       <RecommendedSlots items={recommended} onPick={setPicked} />
-      <FreeBoard board={board} onPick={setPicked} />
+      <FreeBoard board={board} closeMinutes={closeMinutes} onPick={setPicked} />
       {picked ? (
         <BuildMatchSheet
           key={picked.key}

@@ -15,7 +15,7 @@ export type ClubSettings = {
   booking_window_days: number
   cancellation_notice_hours: number
   max_active_bookings: number
-  match_close_hours: number
+  match_close_minutes: number
   accepts_cash: boolean
   accepts_transfer: boolean
   transfer_receipt_required: boolean
@@ -47,8 +47,8 @@ export function parseClubSettings(form: FormData): ParseResult<ClubSettings> {
   if (noticeHours === null) return fail('Las horas de aviso van de 0 a 72.')
   const maxActive = readInt(form, 'max_active_bookings', { min: 1, max: 10 })
   if (maxActive === null) return fail('Las reservas activas por jugador van de 1 a 10.')
-  const matchCloseHours = readInt(form, 'match_close_hours', { min: 0, max: 48 })
-  if (matchCloseHours === null) return fail('Las horas para cerrar partidos van de 0 a 48.')
+  const matchCloseMinutes = readInt(form, 'match_close_minutes', { min: 0, max: 2880 })
+  if (matchCloseMinutes === null) return fail('Los minutos para cerrar partidos van de 0 a 2880 (48 h).')
 
   const acceptsCash = readBoolean(form, 'accepts_cash')
   const acceptsTransfer = readBoolean(form, 'accepts_transfer')
@@ -67,7 +67,7 @@ export function parseClubSettings(form: FormData): ParseResult<ClubSettings> {
       booking_window_days: windowDays,
       cancellation_notice_hours: noticeHours,
       max_active_bookings: maxActive,
-      match_close_hours: matchCloseHours,
+      match_close_minutes: matchCloseMinutes,
       accepts_cash: acceptsCash,
       accepts_transfer: acceptsTransfer,
       transfer_receipt_required: readBoolean(form, 'transfer_receipt_required'),
