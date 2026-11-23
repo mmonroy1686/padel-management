@@ -18,6 +18,7 @@ export function dumpedTables(dataSql) {
 // buckets), then the dump. Hosted Supabase runs newer Storage and Auth than the CLI, so `local` (table → its columns in
 // the local database) lets us leave out the tables and columns the local one does not have; they are named in
 // `skipped`. Without `local`, everything is loaded as is.
+/** @param {string} dataSql @param {Map<string, Set<string>> | null} [local] */
 export function restoreScript(dataSql, local = null) {
   const tables = dumpedTables(dataSql)
   if (tables.length === 0) throw new Error('El archivo no tiene datos para restaurar (no hay ningún COPY).')

@@ -7,6 +7,7 @@ import { getClub } from '@/lib/auth/viewer'
 import { matchPreviewMetadata } from '@/lib/data/share-preview'
 import { signInWithGoogle } from './actions'
 import { MagicLinkForm } from './magic-link-form'
+import { LegalLinks } from '@/components/legal/legal-links'
 
 type SearchParams = Promise<{ next?: string; error?: string }>
 
@@ -52,6 +53,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
           <SubmitButton label="Seguir con Google" pendingLabel="Abriendo Google…" variant="secondary" />
         </form>
       </Card>
+      <LegalLinks />
     </main>
   )
 }

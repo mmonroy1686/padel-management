@@ -4,6 +4,7 @@ import { TabNav, type TabItem } from '@/components/nav/tab-nav'
 import { NotificationBell } from '@/components/waitlist/notification-bell'
 import { getClub, getViewer } from '@/lib/auth/viewer'
 import { countUnreadNotifications } from '@/lib/data/waitlist'
+import { LegalLinks } from '@/components/legal/legal-links'
 
 const PLAYER_TABS: TabItem[] = [
   { href: '/', label: 'Inicio', icon: 'home' },
@@ -21,7 +22,9 @@ export default async function PlayerLayout({ children }: { children: React.React
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col md:max-w-3xl lg:max-w-5xl">
       <ClubHeader club={club}>{viewer ? <NotificationBell unread={unread} /> : null}</ClubHeader>
       {viewer ? <LiveNotifications userId={viewer.userId} /> : null}
-      <main className="flex flex-1 flex-col gap-6 px-4 pb-28 pt-5 md:px-6">{children}</main>
+      <main className="flex flex-1 flex-col gap-6 px-4 pt-5 md:px-6">{children}</main>
+      {/* Above the bottom tabs, which cover the last 7rem. */}
+      <LegalLinks footer className="px-4 pb-28 pt-8" />
       {viewer ? <TabNav label="Secciones" items={PLAYER_TABS} variant="bottom" /> : null}
     </div>
   )
