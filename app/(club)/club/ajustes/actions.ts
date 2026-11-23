@@ -8,7 +8,7 @@ import { isClubFlyerBackgroundPath, isClubLogoPath } from '@/lib/domain/club-log
 import { errorMessage } from '@/lib/domain/errors'
 import { readBoolean, readInt, readText, readUuid } from '@/lib/domain/input'
 import { parseLoyaltyForm } from '@/lib/domain/loyalty'
-import { parseClubName, parseClubPhone, parseClubSettings, parsePricingRule } from '@/lib/domain/settings'
+import { type BookingSettings, parseBookingSettings, type PaymentSettings, parseClubName, parseClubPhone, parsePaymentSettings, parsePricingRule } from '@/lib/domain/settings'
 import { createClient } from '@/lib/supabase/server'
 
 const FORBIDDEN = failed(errorMessage('forbidden'))
@@ -19,18 +19,35 @@ async function adminClubId(): Promise<string | null> {
   return viewer?.membership?.role === 'admin' ? viewer.club.id : null
 }
 
-export async function updateClubSettings(_previous: ActionState, form: FormData): Promise<ActionState> {
+// Ajustes → "Reservas y partidos". The clubs check constraints have the last word.
+export async function updateBookingSettings(_previous: ActionState, form: FormData): Promise<ActionState> {
   const clubId = await adminClubId()
   if (!clubId) return FORBIDDEN
-  const parsed = parseClubSettings(form)
+  const parsed = parseBookingSettings(form)
   if (!parsed.ok) return failed(parsed.message)
+  return saveClubColumns(clubId, parsed.value, 'Reglas guardadas. Las reservas ya hechas no cambian.')
+}
 
+// Ajustes → "Pagos".
+export async function updatePaymentSettings(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  const parsed = parsePaymentSettings(form)
+  if (!parsed.ok) return failed(parsed.message)
+  return saveClubColumns(clubId, parsed.value, 'Medios de pago guardados.')
+}
+
+async function saveClubColumns(
+  clubId: string,
+  columns: BookingSettings | PaymentSettings,
+  message: string,
+): Promise<ActionState> {
   const supabase = await createClient()
-  const { data, error } = await supabase.from('clubs').update(parsed.value).eq('id', clubId).select('id')
+  const { data, error } = await supabase.from('clubs').update(columns).eq('id', clubId).select('id')
   if (error) return failed('No pudimos guardar los ajustes. Revisá los datos.')
   if (data.length === 0) return FORBIDDEN
   revalidateBookings()
-  return ok('Ajustes guardados. Las reservas ya hechas no cambian.')
+  return ok(message)
 }
 
 // Ajustes → "Nombre del club". The clubs check constraint has the last word.

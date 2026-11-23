@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeDays, parseClubName, parseClubPhone, parseClubSettings, parsePricingRule, TIME_OPTIONS } from '@/lib/domain/settings'
+import { describeDays, parseClubName, parseBookingSettings, parseClubPhone, parsePaymentSettings, parsePricingRule, TIME_OPTIONS } from '@/lib/domain/settings'
 
 function form(entries: [string, string][]): FormData {
   const data = new FormData()
@@ -7,7 +7,7 @@ function form(entries: [string, string][]): FormData {
   return data
 }
 
-const PROTOTYPE: [string, string][] = [
+const BOOKING: [string, string][] = [
   ['opens_at', '08:00'],
   ['closes_at', '23:00'],
   ['slot_minutes', '90'],
@@ -15,17 +15,21 @@ const PROTOTYPE: [string, string][] = [
   ['cancellation_notice_hours', '24'],
   ['max_active_bookings', '2'],
   ['match_close_minutes', '180'],
+]
+const PAYMENTS: [string, string][] = [
   ['accepts_cash', 'on'],
   ['accepts_transfer', 'on'],
   ['transfer_receipt_required', 'on'],
   ['transfer_details', '  Banco Ejemplo, cuenta 123  '],
 ]
-const without = (key: string) => PROTOTYPE.filter(([name]) => name !== key)
-const replacing = (key: string, value: string) => [...without(key), [key, value] as [string, string]]
+const replacing = (entries: [string, string][], key: string, value: string) => [
+  ...entries.filter(([name]) => name !== key),
+  [key, value] as [string, string],
+]
 
-describe('parseClubSettings', () => {
-  it('reads the prototype settings', () => {
-    expect(parseClubSettings(form(PROTOTYPE))).toEqual({
+describe('parseBookingSettings', () => {
+  it('reads the hours and the booking rules', () => {
+    expect(parseBookingSettings(form(BOOKING))).toEqual({
       ok: true,
       value: {
         opens_at: '08:00',
@@ -35,6 +39,41 @@ describe('parseClubSettings', () => {
         cancellation_notice_hours: 24,
         max_active_bookings: 2,
         match_close_minutes: 180,
+      },
+    })
+  })
+
+  it('rejects closing before opening', () => {
+    expect(parseBookingSettings(form(replacing(BOOKING, 'closes_at', '07:00')))).toEqual({
+      ok: false,
+      message: 'El club tiene que cerrar después de abrir.',
+    })
+  })
+
+  it('rejects hours where not even one slot fits', () => {
+    expect(parseBookingSettings(form(replacing(BOOKING, 'opens_at', '22:00')))).toEqual({
+      ok: false,
+      message: 'En ese horario no entra ni un turno.',
+    })
+  })
+
+  it('takes the closing time of incomplete matches in minutes, up to 48 hours', () => {
+    expect(parseBookingSettings(form(replacing(BOOKING, 'match_close_minutes', '30')))).toMatchObject({
+      ok: true,
+      value: { match_close_minutes: 30 },
+    })
+    expect(parseBookingSettings(form(replacing(BOOKING, 'match_close_minutes', '2881')))).toEqual({
+      ok: false,
+      message: 'Los minutos para cerrar partidos van de 0 a 2880 (48 h).',
+    })
+  })
+})
+
+describe('parsePaymentSettings', () => {
+  it('reads the payment methods and the transfer details, trimmed', () => {
+    expect(parsePaymentSettings(form(PAYMENTS))).toEqual({
+      ok: true,
+      value: {
         accepts_cash: true,
         accepts_transfer: true,
         transfer_receipt_required: true,
@@ -43,29 +82,16 @@ describe('parseClubSettings', () => {
     })
   })
 
-  it('rejects closing before opening', () => {
-    expect(parseClubSettings(form(replacing('closes_at', '07:00')))).toEqual({
-      ok: false,
-      message: 'El club tiene que cerrar después de abrir.',
-    })
-  })
-
-  it('rejects hours where not even one slot fits', () => {
-    const settings = [...replacing('opens_at', '22:00')]
-    expect(parseClubSettings(form(settings))).toEqual({ ok: false, message: 'En ese horario no entra ni un turno.' })
-  })
-
-  it('takes the closing time of incomplete matches in minutes, up to 48 hours', () => {
-    expect(parseClubSettings(form(replacing('match_close_minutes', '30')))).toMatchObject({ ok: true, value: { match_close_minutes: 30 } })
-    expect(parseClubSettings(form(replacing('match_close_minutes', '2881')))).toEqual({
-      ok: false,
-      message: 'Los minutos para cerrar partidos van de 0 a 2880 (48 h).',
-    })
-  })
-
   it('needs at least one payment method', () => {
-    const settings = without('accepts_cash').filter(([name]) => name !== 'accepts_transfer')
-    expect(parseClubSettings(form(settings))).toEqual({ ok: false, message: 'Elegí al menos un medio de pago.' })
+    const settings = PAYMENTS.filter(([name]) => name !== 'accepts_cash' && name !== 'accepts_transfer')
+    expect(parsePaymentSettings(form(settings))).toEqual({ ok: false, message: 'Elegí al menos un medio de pago.' })
+  })
+
+  it('leaves the details empty when there are none', () => {
+    expect(parsePaymentSettings(form(replacing(PAYMENTS, 'transfer_details', '   ')))).toMatchObject({
+      ok: true,
+      value: { transfer_details: null },
+    })
   })
 })
 

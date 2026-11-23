@@ -1,277 +1,37 @@
 import type { Metadata } from 'next'
 import { BrandForm } from '@/components/club/brand-form'
-import { FlyerBackgroundForm } from '@/components/club/flyer-background-form'
 import { LogoForm } from '@/components/club/logo-form'
+import { SettingsBlock, SettingsHeader } from '@/components/settings/settings-block'
 import { ActionForm } from '@/components/ui/action-form'
-import { Card } from '@/components/ui/card'
 import { Field, inputClasses } from '@/components/ui/field'
 import { requireAdmin } from '@/lib/auth/viewer'
-import { WEEKDAYS_SHORT } from '@/lib/domain/format'
-import { LOYALTY_EXPIRY_OPTIONS, loyaltyRuleOf, loyaltyRuleText } from '@/lib/domain/loyalty'
-import { SLOT_LENGTHS, TIME_OPTIONS } from '@/lib/domain/settings'
-import { formatMinutes, parseTime } from '@/lib/domain/time'
-import { createClient } from '@/lib/supabase/server'
-import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubName, updateClubPhone, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, removeFlyerBackground, saveClubBrand, saveClubLogo, saveFlyerBackground } from './actions'
-import { CourtsTable, PricesTable } from './settings-tables'
+import { removeClubLogo, saveClubBrand, saveClubLogo, updateClubName } from './actions'
 
-export const metadata: Metadata = { title: 'Ajustes' }
+export const metadata: Metadata = { title: 'Ajustes · Club' }
 
-const MONDAY_FIRST = [1, 2, 3, 4, 5, 6, 0]
-const hhmm = (value: string) => formatMinutes(parseTime(value))
-
-function TimeSelect({ id, name, value }: { id: string; name: string; value: string }) {
-  return (
-    <select id={id} name={name} defaultValue={value} className={inputClasses}>
-      {TIME_OPTIONS.map((time) => (
-        <option key={time} value={time}>
-          {time}
-        </option>
-      ))}
-    </select>
-  )
-}
-
-export default async function SettingsPage() {
-  const viewer = await requireAdmin('/club/ajustes')
-  const { club } = viewer
-  const supabase = await createClient()
-  const [courts, rules] = await Promise.all([
-    supabase.from('courts').select('id, name, is_covered, is_active').eq('club_id', club.id).order('sort_order'),
-    supabase.from('pricing_rules').select('id, weekdays, from_time, to_time, price').eq('club_id', club.id).order('from_time'),
-  ])
-  if (courts.error) throw courts.error
-  if (rules.error) throw rules.error
-
+// Ajustes → Club: who the club is, everywhere in the app.
+export default async function ClubSettingsPage() {
+  const { club } = await requireAdmin('/club/ajustes')
   return (
     <>
-      <section aria-labelledby="nombre" className="flex flex-col gap-3">
-        <h2 id="nombre" className="font-display text-2xl font-bold uppercase">
-          Nombre del club
-        </h2>
-        <Card>
-          <ActionForm action={updateClubName} submitLabel="Guardar nombre">
-            <Field label="Nombre" htmlFor="club-name">
-              <input
-                id="club-name"
-                name="name"
-                required
-                minLength={2}
-                maxLength={40}
-                defaultValue={club.name}
-                className={inputClasses}
-              />
-            </Field>
-            <p className="text-sm text-fg-muted">Se ve arriba en todas las pantallas, en la pestaña y al compartir links.</p>
-          </ActionForm>
-        </Card>
-      </section>
-
-      <section aria-labelledby="whatsapp" className="flex flex-col gap-3">
-        <h2 id="whatsapp" className="font-display text-2xl font-bold uppercase">
-          Flyer de turnos libres
-        </h2>
-        <p className="text-sm text-fg-muted">Lo arma el Asistente para compartir los horarios libres de un día.</p>
-        <Card>
-          <ActionForm action={updateClubPhone} submitLabel="Guardar WhatsApp">
-            <Field label="WhatsApp" htmlFor="club-phone">
-              <input
-                id="club-phone"
-                name="phone"
-                type="tel"
-                inputMode="tel"
-                maxLength={30}
-                defaultValue={club.phone ?? ''}
-                placeholder="092 369 558"
-                className={inputClasses}
-              />
-            </Field>
-            <p className="text-sm text-fg-muted">
-              Sale al pie del flyer. Si lo dejás vacío, el pie muestra solo el logo y el nombre del club.
-            </p>
-          </ActionForm>
-        </Card>
-        <Card>
-          <FlyerBackgroundForm club={club} saveAction={saveFlyerBackground} removeAction={removeFlyerBackground} />
-        </Card>
-      </section>
-
-      <section aria-labelledby="logo" className="flex flex-col gap-3">
-        <h2 id="logo" className="font-display text-2xl font-bold uppercase">
-          Logo
-        </h2>
-        <Card>
-          <LogoForm club={club} saveAction={saveClubLogo} removeAction={removeClubLogo} />
-        </Card>
-      </section>
-
-      <section aria-labelledby="marca" className="flex flex-col gap-3">
-        <h2 id="marca" className="font-display text-2xl font-bold uppercase">
-          Marca del club
-        </h2>
-        <p className="text-sm text-fg-muted">
-          El color principal va en los botones y lo que se destaca; el fondo, detrás de todo. La app arma el resto y
-          corrige lo que haga falta para que todo se lea.
-        </p>
-        <Card>
-          <BrandForm club={club} action={saveClubBrand} />
-        </Card>
-      </section>
-
-      <section aria-labelledby="club" className="flex flex-col gap-3">
-        <h2 id="club" className="font-display text-2xl font-bold uppercase">
-          Horario y reglas
-        </h2>
-        <Card>
-          <ActionForm action={updateClubSettings} submitLabel="Guardar ajustes">
-            <div className="grid gap-3 md:grid-cols-2">
-              <Field label="Abre" htmlFor="opens_at">
-                <TimeSelect id="opens_at" name="opens_at" value={hhmm(club.opens_at)} />
-              </Field>
-              <Field label="Cierra" htmlFor="closes_at">
-                <TimeSelect id="closes_at" name="closes_at" value={hhmm(club.closes_at)} />
-              </Field>
-              <Field label="Duración del turno" htmlFor="slot_minutes">
-                <select id="slot_minutes" name="slot_minutes" defaultValue={club.slot_minutes} className={inputClasses}>
-                  {SLOT_LENGTHS.map((minutes) => (
-                    <option key={minutes} value={minutes}>
-                      {minutes} minutos
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Días para reservar por adelantado" htmlFor="booking_window_days">
-                <input id="booking_window_days" name="booking_window_days" type="number" min={1} max={60}
-                  defaultValue={club.booking_window_days} className={inputClasses} />
-              </Field>
-              <Field label="Horas de aviso para cancelar" htmlFor="cancellation_notice_hours">
-                <input id="cancellation_notice_hours" name="cancellation_notice_hours" type="number" min={0} max={72}
-                  defaultValue={club.cancellation_notice_hours} className={inputClasses} />
-              </Field>
-              <Field label="Reservas activas por jugador" htmlFor="max_active_bookings">
-                <input id="max_active_bookings" name="max_active_bookings" type="number" min={1} max={10}
-                  defaultValue={club.max_active_bookings} className={inputClasses} />
-              </Field>
-              <Field label="Minutos antes para cerrar partidos incompletos" htmlFor="match_close_minutes">
-                <input id="match_close_minutes" name="match_close_minutes" type="number" min={0} max={2880} step={5}
-                  defaultValue={club.match_close_minutes} className={inputClasses} />
-              </Field>
-            </div>
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-sm font-semibold">Medios de pago</legend>
-              <label className="flex min-h-11 items-center gap-3">
-                <input type="checkbox" name="accepts_cash" defaultChecked={club.accepts_cash} className="size-5 accent-accent" />
-                Efectivo en el club
-              </label>
-              <label className="flex min-h-11 items-center gap-3">
-                <input type="checkbox" name="accepts_transfer" defaultChecked={club.accepts_transfer} className="size-5 accent-accent" />
-                Transferencia
-              </label>
-              <label className="flex min-h-11 items-center gap-3">
-                <input type="checkbox" name="transfer_receipt_required" defaultChecked={club.transfer_receipt_required}
-                  className="size-5 accent-accent" />
-                Pedir comprobante de la transferencia
-              </label>
-            </fieldset>
-            <Field label="Datos para transferir" htmlFor="transfer_details">
-              <textarea id="transfer_details" name="transfer_details" rows={3} maxLength={500}
-                defaultValue={club.transfer_details ?? ''} className={`${inputClasses} py-2`} />
-            </Field>
-            <p className="text-sm text-fg-muted">Los cambios no tocan las reservas ya hechas.</p>
-          </ActionForm>
-        </Card>
-      </section>
-
-      <section aria-labelledby="sellos" className="flex flex-col gap-3">
-        <h2 id="sellos" className="font-display text-2xl font-bold uppercase">
-          Sellos
-        </h2>
-        <p className="text-sm text-fg-muted">
-          Cada ingreso de day use suma un sello. Con los sellos completos, el jugador tiene un descuento en su próximo day use.
-        </p>
-        <Card>
-          <ActionForm action={updateLoyalty} submitLabel="Guardar sellos">
-            <label className="flex min-h-11 items-center gap-3">
-              <input type="checkbox" name="loyalty_enabled" defaultChecked={club.loyalty_enabled} className="size-5 accent-accent" />
-              Dar sellos por cada day use
-            </label>
-            <div className="grid gap-3 md:grid-cols-3">
-              <Field label="Day use para la recompensa" htmlFor="loyalty_every">
-                <input id="loyalty_every" name="loyalty_every" type="number" min={1} max={50}
-                  defaultValue={club.loyalty_every} className={inputClasses} />
-              </Field>
-              <Field label="Descuento de la recompensa (%)" htmlFor="loyalty_discount_percent">
-                <input id="loyalty_discount_percent" name="loyalty_discount_percent" type="number" min={1} max={100}
-                  defaultValue={club.loyalty_discount_percent} className={inputClasses} />
-              </Field>
-              <Field label="Los sellos vencen" htmlFor="loyalty_expiry_months">
-                <select id="loyalty_expiry_months" name="loyalty_expiry_months"
-                  defaultValue={club.loyalty_expiry_months ?? 'never'} className={inputClasses}>
-                  <option value="never">No vencen</option>
-                  {LOYALTY_EXPIRY_OPTIONS.map((months) => (
-                    <option key={months} value={months}>
-                      A los {months} meses
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            {club.loyalty_enabled ? <p className="text-sm text-fg-muted">{loyaltyRuleText(loyaltyRuleOf(club))}</p> : null}
-          </ActionForm>
-        </Card>
-      </section>
-
-      <section aria-labelledby="canchas" className="flex flex-col gap-3">
-        <h2 id="canchas" className="font-display text-2xl font-bold uppercase">
-          Canchas
-        </h2>
-        <CourtsTable courts={courts.data} updateAction={updateCourt} deleteAction={deleteCourt} />
-        <Card>
-          <ActionForm action={addCourt} submitLabel="Agregar cancha" variant="secondary">
-            <input type="hidden" name="sortOrder" value={courts.data.length + 1} />
-            <Field label="Nombre de la cancha nueva" htmlFor="new-court">
-              <input id="new-court" name="name" required maxLength={40} className={inputClasses} />
-            </Field>
-            <label className="flex min-h-11 items-center gap-3">
-              <input type="checkbox" name="is_covered" className="size-5 accent-accent" />
-              Techada
-            </label>
-          </ActionForm>
-        </Card>
-      </section>
-
-      <section aria-labelledby="precios" className="flex flex-col gap-3">
-        <h2 id="precios" className="font-display text-2xl font-bold uppercase">
-          Precios por franja
-        </h2>
-        <p className="text-sm text-fg-muted">
-          El precio de un turno sale de la franja que cubre su hora de inicio. Un turno sin franja no se ofrece.
-        </p>
-        <PricesTable rules={rules.data} deleteAction={deletePricingRule} />
-        <Card>
-          <ActionForm action={addPricingRule} submitLabel="Agregar precio" variant="secondary">
-            <fieldset className="flex flex-wrap gap-3">
-              <legend className="mb-1 text-sm font-semibold">Días</legend>
-              {MONDAY_FIRST.map((day) => (
-                <label key={day} className="flex min-h-11 items-center gap-2">
-                  <input type="checkbox" name="weekdays" value={day} className="size-5 accent-accent" />
-                  {WEEKDAYS_SHORT[day]}
-                </label>
-              ))}
-            </fieldset>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Desde" htmlFor="from_time">
-                <TimeSelect id="from_time" name="from_time" value="18:30" />
-              </Field>
-              <Field label="Hasta" htmlFor="to_time">
-                <TimeSelect id="to_time" name="to_time" value="24:00" />
-              </Field>
-            </div>
-            <Field label="Precio en pesos" htmlFor="price">
-              <input id="price" name="price" type="number" inputMode="numeric" min={0} required className={inputClasses} />
-            </Field>
-          </ActionForm>
-        </Card>
-      </section>
+      <SettingsHeader href="/club/ajustes" />
+      <SettingsBlock id="nombre" title="Nombre del club" description="Se ve arriba en todas las pantallas, en la pestaña y al compartir links.">
+        <ActionForm action={updateClubName} submitLabel="Guardar nombre">
+          <Field label="Nombre" htmlFor="club-name">
+            <input id="club-name" name="name" required minLength={2} maxLength={40} defaultValue={club.name} className={inputClasses} />
+          </Field>
+        </ActionForm>
+      </SettingsBlock>
+      <SettingsBlock id="logo" title="Logo">
+        <LogoForm club={club} saveAction={saveClubLogo} removeAction={removeClubLogo} />
+      </SettingsBlock>
+      <SettingsBlock
+        id="marca"
+        title="Marca del club"
+        description="El color principal va en los botones y lo que se destaca; el fondo, detrás de todo. La app arma el resto y corrige lo que haga falta para que todo se lea."
+      >
+        <BrandForm club={club} action={saveClubBrand} />
+      </SettingsBlock>
     </>
   )
 }

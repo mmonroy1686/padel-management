@@ -15,7 +15,7 @@ test('day use: the club offers a pass, a player buys it, reception checks her in
   const player = await createMember({ name: 'Ana Day Use', prefix: 'dayuse-ana', gender: 'female' })
 
   // Admin: a stamp per visit, every 2 visits a free one.
-  await signInWithMagicLink(page, admin.email, '/club/ajustes')
+  await signInWithMagicLink(page, admin.email, '/club/ajustes/sellos')
   const stamps = page.getByRole('region', { name: 'Sellos' })
   await stamps.getByLabel('Dar sellos por cada day use').check()
   await stamps.getByLabel('Day use para la recompensa').fill('2')

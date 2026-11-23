@@ -8,7 +8,8 @@ export const TIME_OPTIONS: string[] = Array.from({ length: 49 }, (_, index) => f
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; message: string }
 
-export type ClubSettings = {
+// Ajustes → "Reservas y partidos": when the club opens, how long a slot is and the booking rules.
+export type BookingSettings = {
   opens_at: string
   closes_at: string
   slot_minutes: number
@@ -16,6 +17,10 @@ export type ClubSettings = {
   cancellation_notice_hours: number
   max_active_bookings: number
   match_close_minutes: number
+}
+
+// Ajustes → "Pagos": how players pay.
+export type PaymentSettings = {
   accepts_cash: boolean
   accepts_transfer: boolean
   transfer_receipt_required: boolean
@@ -29,7 +34,7 @@ function fail(message: string): { ok: false; message: string } {
 }
 
 // Same limits as the clubs check constraints, with a Spanish message for each.
-export function parseClubSettings(form: FormData): ParseResult<ClubSettings> {
+export function parseBookingSettings(form: FormData): ParseResult<BookingSettings> {
   const opensAt = readTime(form, 'opens_at')
   const closesAt = readTime(form, 'closes_at')
   if (!opensAt || !closesAt) return fail('Elegí el horario de apertura y de cierre.')
@@ -50,6 +55,21 @@ export function parseClubSettings(form: FormData): ParseResult<ClubSettings> {
   const matchCloseMinutes = readInt(form, 'match_close_minutes', { min: 0, max: 2880 })
   if (matchCloseMinutes === null) return fail('Los minutos para cerrar partidos van de 0 a 2880 (48 h).')
 
+  return {
+    ok: true,
+    value: {
+      opens_at: opensAt,
+      closes_at: closesAt,
+      slot_minutes: slotMinutes,
+      booking_window_days: windowDays,
+      cancellation_notice_hours: noticeHours,
+      max_active_bookings: maxActive,
+      match_close_minutes: matchCloseMinutes,
+    },
+  }
+}
+
+export function parsePaymentSettings(form: FormData): ParseResult<PaymentSettings> {
   const acceptsCash = readBoolean(form, 'accepts_cash')
   const acceptsTransfer = readBoolean(form, 'accepts_transfer')
   if (!acceptsCash && !acceptsTransfer) return fail('Elegí al menos un medio de pago.')
@@ -61,13 +81,6 @@ export function parseClubSettings(form: FormData): ParseResult<ClubSettings> {
   return {
     ok: true,
     value: {
-      opens_at: opensAt,
-      closes_at: closesAt,
-      slot_minutes: slotMinutes,
-      booking_window_days: windowDays,
-      cancellation_notice_hours: noticeHours,
-      max_active_bookings: maxActive,
-      match_close_minutes: matchCloseMinutes,
       accepts_cash: acceptsCash,
       accepts_transfer: acceptsTransfer,
       transfer_receipt_required: readBoolean(form, 'transfer_receipt_required'),
