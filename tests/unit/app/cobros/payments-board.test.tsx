@@ -7,6 +7,9 @@ import { paymentsBoard, type BoardInput } from '@/lib/domain/payments-board'
 
 const at = (iso: string) => new Date(iso)
 
+// jsdom draws nothing, so it has no scrollIntoView; a tile calls it to bring its column into view.
+Element.prototype.scrollIntoView = vi.fn()
+
 const INPUT: BoardInput = {
   transfers: [
     { id: 't1', kind: 'booking', amount: 1600, holder: 'Ana López', startsAt: at('2026-11-19T23:00:00Z'), courtName: 'Cancha 1', receiptUrl: 'https://x/r1.png' },
@@ -21,6 +24,9 @@ const INPUT: BoardInput = {
       { id: 'd1', kind: 'booking', amount: 300, holder: 'Hugo', startsAt: null, courtName: 'Cancha 1', method: 'cash', confirmedAt: at('2026-11-23T14:10:00Z') },
     ],
     refunded: [],
+    rejected: [
+      { id: 'd2', kind: 'booking', amount: 1200, holder: 'Kevin', startsAt: null, courtName: 'Cancha 2', method: 'transfer', confirmedAt: at('2026-11-23T16:00:00Z'), reason: 'No llegó la plata' },
+    ],
   },
 }
 
@@ -45,14 +51,23 @@ function renderBoard() {
 const column = (name: string) => screen.getByRole('region', { name })
 
 describe('PaymentsBoard', () => {
-  it('shows the five columns with their count and total, an empty one with its line', () => {
+  it('sums up what is owed, waiting, in and to give back on top', () => {
+    renderBoard()
+    const summary = screen.getByRole('navigation', { name: 'Resumen de cobros' })
+    expect(within(summary).getByRole('button', { name: /Sin cobrar/ })).toHaveTextContent('$1.650')
+    expect(within(summary).getByRole('button', { name: /Sin cobrar/ })).toHaveTextContent('2 deudas')
+    expect(within(summary).getByRole('button', { name: /Cobrado hoy/ })).toHaveTextContent('$300 en efectivo')
+    expect(within(summary).getByRole('button', { name: /A devolver/ })).toHaveTextContent('$800')
+  })
+
+  it('shows the Cobrar lane with its columns, the rejected transfer with its reason', () => {
     renderBoard()
     expect(within(column('Sin cobrar')).getByText('2 · $1.650')).toBeInTheDocument()
     expect(within(column('Por confirmar')).getByRole('article', { name: 'Ana López' })).toBeInTheDocument()
     expect(within(column('Cobrado hoy')).getByRole('article', { name: 'Hugo' })).toHaveTextContent('Efectivo · 14:10')
     expect(column('Cobrado hoy')).toHaveTextContent('En efectivo: $300')
-    expect(within(column('A devolver')).getByRole('article', { name: 'Gabi' })).toBeInTheDocument()
-    expect(column('Devuelto hoy')).toHaveTextContent('Nada devuelto hoy.')
+    expect(within(column('Rechazado hoy')).getByRole('article', { name: 'Kevin' })).toHaveTextContent('Rechazada · 16:00 · No llegó la plata')
+    expect(screen.queryByRole('region', { name: 'A devolver' })).not.toBeInTheDocument()
   })
 
   it('takes cash with the action of the item’s kind, and marks a refund', async () => {
@@ -63,6 +78,7 @@ describe('PaymentsBoard', () => {
     expect(Object.fromEntries(actions.cash.day_use.mock.calls[0][1].entries())).toEqual({ passId: 'p1', amount: '450' })
     expect(actions.cash.booking).not.toHaveBeenCalled()
 
+    await userEvent.click(screen.getByRole('button', { name: 'Devolver 1' }))
     await userEvent.click(within(column('A devolver')).getByRole('button', { name: 'Marcar devuelto' }))
     await waitFor(() => expect(actions.refund).toHaveBeenCalledTimes(1))
     expect(actions.refund.mock.calls[0][1].get('paymentId')).toBe('r1')
@@ -80,26 +96,28 @@ describe('PaymentsBoard', () => {
     expect(await within(sheet).findByRole('status')).toHaveTextContent('Pago confirmado.')
   })
 
-  it('switches lanes with the toggles on a phone, each with what is left to do', async () => {
+  it('switches lanes with the toggles, each with what is left to do, and a tile opens its lane', async () => {
     renderBoard()
     const collect = screen.getByRole('button', { name: 'Cobrar 3' })
     const giveBack = screen.getByRole('button', { name: 'Devolver 1' })
     expect(collect).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('region', { name: 'Devolver' })).toHaveClass('hidden')
     await userEvent.click(giveBack)
     expect(giveBack).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('region', { name: 'Cobrar' })).toHaveClass('hidden')
-    expect(screen.getByRole('region', { name: 'Devolver' })).not.toHaveClass('hidden')
+    expect(screen.queryByRole('region', { name: 'Sin cobrar' })).not.toBeInTheDocument()
+    expect(column('Devuelto hoy')).toHaveTextContent('Nada devuelto hoy.')
+    await userEvent.click(within(screen.getByRole('navigation', { name: 'Resumen de cobros' })).getByRole('button', { name: /Sin cobrar/ }))
+    expect(collect).toHaveAttribute('aria-pressed', 'true')
+    expect(column('Sin cobrar')).toBeInTheDocument()
   })
 
   it('searches and filters every column at once', async () => {
     renderBoard()
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar por nombre' }), 'cancha 1')
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar por nombre o cancha' }), 'cancha 1')
     expect(within(column('Por confirmar')).getByRole('article', { name: 'Ana López' })).toBeInTheDocument()
     expect(within(column('Cobrado hoy')).getByRole('article', { name: 'Hugo' })).toBeInTheDocument()
     expect(column('Sin cobrar')).toHaveTextContent('Nada coincide con la búsqueda.')
 
-    await userEvent.clear(screen.getByRole('searchbox', { name: 'Buscar por nombre' }))
+    await userEvent.clear(screen.getByRole('searchbox', { name: 'Buscar por nombre o cancha' }))
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Tipo' }), 'day_use')
     expect(within(column('Sin cobrar')).getAllByRole('article')).toHaveLength(1)
     expect(within(column('Sin cobrar')).getByText('1 · $450')).toBeInTheDocument()

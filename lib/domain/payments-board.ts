@@ -20,7 +20,7 @@ export type ReportedTransfer = {
   receiptUrl: string | null
 }
 
-// A payment confirmed or refunded within the club's today.
+// A payment confirmed, refunded or rejected within the club's today.
 export type DonePayment = {
   id: string
   kind: MoneyKind
@@ -30,6 +30,8 @@ export type DonePayment = {
   courtName: string
   method: PaymentMethod
   confirmedAt: Date
+  // Rejected ones: why.
+  reason?: string | null
 }
 
 export type BoardInput = {
@@ -39,7 +41,7 @@ export type BoardInput = {
   unpaidPasses: UnpaidPassItem[]
   unpaidChampionships: UnpaidChampionshipItem[]
   refunds: (RefundItem & { kind: MoneyKind })[]
-  doneToday: { confirmed: DonePayment[]; refunded: DonePayment[] }
+  doneToday: { confirmed: DonePayment[]; refunded: DonePayment[]; rejected: DonePayment[] }
 }
 
 // What the card's button does: take cash, give money back, or open the transfer's review.
@@ -59,11 +61,11 @@ export type BoardItem = {
   at: number
   amount: number
   action?: ItemAction
-  // Done columns only: how the money moved and at what time.
-  done?: { method: PaymentMethod; time: string }
+  // Done columns only: how the money moved and at what time; `rejection` (the reason) when it was turned down.
+  done?: { method: PaymentMethod; time: string; rejection?: string }
 }
 
-export type ColumnKey = 'unpaid' | 'transfers' | 'collected' | 'refunds' | 'refunded'
+export type ColumnKey = 'unpaid' | 'transfers' | 'collected' | 'rejected' | 'refunds' | 'refunded'
 export type LaneKey = 'collect' | 'giveBack'
 
 type ColumnHead = { key: ColumnKey; lane: LaneKey; title: string; emptyText: string; done: boolean }
@@ -88,6 +90,7 @@ const COLUMNS: ColumnHead[] = [
   { key: 'unpaid', lane: 'collect', title: 'Sin cobrar', emptyText: 'Nada pendiente en los últimos 30 días.', done: false },
   { key: 'transfers', lane: 'collect', title: 'Por confirmar', emptyText: 'No hay transferencias para confirmar.', done: false },
   { key: 'collected', lane: 'collect', title: 'Cobrado hoy', emptyText: 'Todavía no se cobró nada hoy.', done: true },
+  { key: 'rejected', lane: 'collect', title: 'Rechazado hoy', emptyText: 'No se rechazó nada hoy.', done: true },
   { key: 'refunds', lane: 'giveBack', title: 'A devolver', emptyText: 'No hay devoluciones pendientes.', done: false },
   { key: 'refunded', lane: 'giveBack', title: 'Devuelto hoy', emptyText: 'Nada devuelto hoy.', done: true },
 ]
@@ -106,7 +109,8 @@ const latestFirst = (a: BoardItem, b: BoardItem) => b.at - a.at
 
 function withItems(head: ColumnHead, items: BoardItem[]): BoardColumn {
   const column: BoardColumn = { ...head, items, ...totalsOf(items, (item) => item.amount) }
-  if (head.done) column.cash = totalsOf(items, (item) => (item.done?.method === 'cash' ? item.amount : 0)).total
+  // The till: what came in and what went back; a rejected transfer never moved money.
+  if (head.key === 'collected' || head.key === 'refunded') column.cash = totalsOf(items, (item) => (item.done?.method === 'cash' ? item.amount : 0)).total
   return column
 }
 
@@ -114,7 +118,7 @@ export function paymentsBoard(input: BoardInput, format: BoardFormat): BoardColu
   const cash = (fields: Record<string, string>): Pick<BoardItem, 'action'> =>
     format.acceptsCash ? { action: { type: 'cash', fields } } : {}
   const played = (startsAt: Date) => ({ when: format.when(startsAt), at: startsAt.getTime() })
-  const done = (payment: DonePayment): BoardItem => ({
+  const done = (payment: DonePayment, rejection?: string): BoardItem => ({
     id: payment.id,
     kind: payment.kind,
     holder: payment.holder,
@@ -122,7 +126,7 @@ export function paymentsBoard(input: BoardInput, format: BoardFormat): BoardColu
     when: payment.startsAt ? format.when(payment.startsAt) : '',
     at: payment.confirmedAt.getTime(),
     amount: payment.amount,
-    done: { method: payment.method, time: format.time(payment.confirmedAt) },
+    done: { method: payment.method, time: format.time(payment.confirmedAt), ...(rejection ? { rejection } : {}) },
   })
 
   const items: Record<ColumnKey, BoardItem[]> = {
@@ -176,7 +180,8 @@ export function paymentsBoard(input: BoardInput, format: BoardFormat): BoardColu
         action: { type: 'review', receiptUrl: transfer.receiptUrl },
       }))
       .sort(oldestFirst),
-    collected: input.doneToday.confirmed.map(done).sort(latestFirst),
+    collected: input.doneToday.confirmed.map((payment) => done(payment)).sort(latestFirst),
+    rejected: input.doneToday.rejected.map((payment) => done(payment, payment.reason?.trim() || 'Sin motivo')).sort(latestFirst),
     refunds: input.refunds
       .map((item): BoardItem => ({
         id: item.paymentId,
@@ -188,7 +193,7 @@ export function paymentsBoard(input: BoardInput, format: BoardFormat): BoardColu
         action: { type: 'refund', fields: { paymentId: item.paymentId } },
       }))
       .sort(oldestFirst),
-    refunded: input.doneToday.refunded.map(done).sort(latestFirst),
+    refunded: input.doneToday.refunded.map((payment) => done(payment)).sort(latestFirst),
   }
 
   return COLUMNS.map((head) => withItems(head, items[head.key]))

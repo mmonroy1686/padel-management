@@ -27,7 +27,7 @@ const CHAMPIONSHIP_SELECT =
 // A payment with what it was for (a booking, a tournament entry, a day use pass or a championship pair): the
 // transfers to confirm and the payments done today.
 const PAYMENT_SELECT =
-  'id, amount, method, status, confirmed_at, receipt_path, payer:profiles!payments_payer_id_fkey(display_name), booking:bookings(starts_at, guest_name, court:courts(name), player:profiles!bookings_player_id_fkey(display_name)), entry:tournament_entries!payments_entry_in_club(tournament:tournaments!tournament_entries_tournament_in_club(name, starts_at)), pass:day_use_passes!payments_pass_in_club(on_date, product:day_use_products!day_use_passes_product_in_club(name, from_time)), pair:championship_entries!payments_championship_entry_in_club(category:championship_categories!championship_entries_category_in_club(name, championship:championships!championship_categories_championship_in_club(name, windows:championship_windows!championship_windows_championship_in_club(on_date, from_time))))'
+  'id, amount, method, status, confirmed_at, rejection_reason, receipt_path, payer:profiles!payments_payer_id_fkey(display_name), booking:bookings(starts_at, guest_name, court:courts(name), player:profiles!bookings_player_id_fkey(display_name)), entry:tournament_entries!payments_entry_in_club(tournament:tournaments!tournament_entries_tournament_in_club(name, starts_at)), pass:day_use_passes!payments_pass_in_club(on_date, product:day_use_products!day_use_passes_product_in_club(name, from_time)), pair:championship_entries!payments_championship_entry_in_club(category:championship_categories!championship_entries_category_in_club(name, championship:championships!championship_categories_championship_in_club(name, windows:championship_windows!championship_windows_championship_in_club(on_date, from_time))))'
 
 // Everything the Cobros screen needs, read with the staff session.
 export async function loadPaymentsOverview(club: Club, now = new Date()): Promise<PaymentsOverview> {
@@ -37,12 +37,12 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
 
   const [reported, paidToday, played, cancelled, matchBookings, tournaments, passes, championships] = await Promise.all([
     supabase.from('payments').select(PAYMENT_SELECT).eq('club_id', club.id).eq('status', 'reported').order('created_at'),
-    // Confirmed or given back today, wherever it was done: the day's till.
+    // Confirmed, given back or rejected today, wherever it was done: the day's till and what got turned down.
     supabase
       .from('payments')
       .select(PAYMENT_SELECT)
       .eq('club_id', club.id)
-      .in('status', ['confirmed', 'refunded'])
+      .in('status', ['confirmed', 'refunded', 'rejected'])
       .gte('confirmed_at', today.from.toISOString())
       .lt('confirmed_at', today.to.toISOString()),
     supabase
@@ -150,6 +150,7 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
     ...paymentFor(payment),
     method: payment.method,
     confirmedAt: toDate(payment.confirmed_at),
+    reason: payment.rejection_reason,
   })
 
   return {
@@ -160,6 +161,7 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
     doneToday: {
       confirmed: paidToday.data.filter((payment) => payment.status === 'confirmed').map(done),
       refunded: paidToday.data.filter((payment) => payment.status === 'refunded').map(done),
+      rejected: paidToday.data.filter((payment) => payment.status === 'rejected').map(done),
     },
     unpaid: unpaidBookings(played.data),
     unpaidEntries: unpaidEntries(tournaments.data, entries.data, now),

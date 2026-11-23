@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
-import { ActionForm, type FormAction } from '@/components/ui/action-form'
+import { useActionState, useState, type ReactNode } from 'react'
+import type { FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
+import { buttonClasses } from '@/components/ui/button'
 import { inputClasses } from '@/components/ui/field'
+import { IDLE, type ActionState } from '@/lib/actions/result'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/domain/format'
 import {
@@ -13,10 +15,11 @@ import {
   pendingCount,
   type BoardColumn,
   type BoardItem,
+  type ColumnKey,
   type LaneKey,
 } from '@/lib/domain/payments-board'
 import type { MoneyKind } from '@/lib/domain/payments-overview'
-import { BoardCard } from './board-card'
+import { BoardRow } from './board-row'
 import { TransferReviewCard, type TransferView } from './transfer-review-card'
 
 export type BoardActions = {
@@ -26,8 +29,18 @@ export type BoardActions = {
   reject: FormAction
 }
 
-// Cobros as a board: each payment sits in the column of its state and moves right when someone acts on it. On a
-// phone the two lanes are tabs; from md up both show, their columns side by side.
+// The tiles on top: what is owed, waiting, in and to give back, always in sight.
+const SUMMARY: { key: ColumnKey; label: string; unit: [string, string]; tone: string }[] = [
+  { key: 'unpaid', label: 'Sin cobrar', unit: ['deuda', 'deudas'], tone: 'text-accent-ink' },
+  { key: 'transfers', label: 'Por confirmar', unit: ['transferencia', 'transferencias'], tone: 'text-accent-ink' },
+  { key: 'collected', label: 'Cobrado hoy', unit: ['pago', 'pagos'], tone: 'text-court-ink' },
+  { key: 'refunds', label: 'A devolver', unit: ['pago', 'pagos'], tone: 'text-danger' },
+]
+
+const plural = (count: number, [one, many]: [string, string]) => `${count} ${count === 1 ? one : many}`
+
+// Cobros as a board: a summary on top, then one lane at a time (Cobrar or Devolver) with its columns side by side on
+// wide screens. Each payment sits in the column of its state and moves right when someone acts on it.
 export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; actions: BoardActions }) {
   const [lane, setLane] = useState<LaneKey>('collect')
   const [query, setQuery] = useState('')
@@ -37,13 +50,48 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
   const shown = filterBoard(columns, { query, kind })
   const filtering = query.trim() !== '' || kind !== ''
 
+  // A tile opens its lane and brings its column into view (a click commits before the next frame).
+  const goTo = (column: BoardColumn) => {
+    setLane(column.lane)
+    requestAnimationFrame(() => document.getElementById(`column-${column.key}`)?.scrollIntoView({ block: 'start' }))
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      <nav aria-label="Resumen de cobros" className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+        {SUMMARY.map((tile) => {
+          const column = columns.find((item) => item.key === tile.key)
+          if (!column) return null
+          return (
+            <button
+              key={tile.key}
+              type="button"
+              onClick={() => goTo(column)}
+              className="flex min-h-11 flex-col items-start gap-0.5 rounded-2xl border border-border bg-surface p-3 text-left transition-colors hover:border-accent focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <span className="text-xs font-semibold uppercase tracking-wide text-fg-muted">{tile.label}</span>
+              <span className={cn('font-display text-2xl font-bold tabular-nums sm:text-3xl', column.count > 0 ? tile.tone : 'text-fg-muted')}>
+                {formatPrice(column.total)}
+              </span>
+              <span className="text-sm text-fg-muted tabular-nums">
+                {column.cash !== undefined && column.count > 0
+                  ? `${formatPrice(column.cash)} en efectivo`
+                  : column.count > 0
+                    ? plural(column.count, tile.unit)
+                    : column.done
+                      ? 'Nada todavía'
+                      : 'Al día'}
+              </span>
+            </button>
+          )
+        })}
+      </nav>
+
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           type="search"
-          aria-label="Buscar por nombre"
-          placeholder="Buscar por nombre"
+          aria-label="Buscar por nombre o cancha"
+          placeholder="Buscar por nombre o cancha"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           className={inputClasses}
@@ -63,18 +111,18 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
         </select>
       </div>
 
-      {/* On a phone, one lane at a time: plain toggle buttons (the full tabs pattern would add arrow keys for two). */}
-      <div role="group" aria-label="Carril" className="grid grid-cols-2 gap-2 md:hidden">
+      {/* One lane at a time, so Devolver is one tap away however long Sin cobrar is. */}
+      <div role="group" aria-label="Carril" className="grid grid-cols-2 gap-2 sm:flex">
         {LANES.map((item) => (
           <button
             key={item.key}
             type="button"
             aria-pressed={lane === item.key}
-            aria-controls={`lane-${item.key}`}
+            aria-controls="cobros-lane"
             onClick={() => setLane(item.key)}
             className={cn(
-              'min-h-11 rounded-full border px-4 font-semibold focus-visible:outline-2 focus-visible:outline-accent',
-              lane === item.key ? 'border-accent bg-accent text-on-accent' : 'border-border',
+              'min-h-11 rounded-full border px-5 font-semibold focus-visible:outline-2 focus-visible:outline-accent',
+              lane === item.key ? 'border-accent bg-accent text-on-accent' : 'border-border hover:border-accent',
             )}
           >
             {item.title} <span className="tabular-nums">{pendingCount(shown, item.key)}</span>
@@ -82,28 +130,19 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
         ))}
       </div>
 
-      {LANES.map((item) => (
-        <section
-          key={item.key}
-          id={`lane-${item.key}`}
-          aria-labelledby={`lane-title-${item.key}`}
-          className={cn('flex-col gap-3 md:flex', lane === item.key ? 'flex' : 'hidden')}
-        >
-          {/* On a phone the tab already names the lane. */}
-          <h2 id={`lane-title-${item.key}`} className="sr-only font-display text-2xl font-bold uppercase md:not-sr-only">
-            {item.title}
-          </h2>
-          <div className="grid gap-3 md:auto-cols-fr md:grid-flow-col">
-            {shown
-              .filter((column) => column.lane === item.key)
-              .map((column) => (
-                <ColumnView key={column.key} column={column} filtering={filtering}>
-                  {(card) => <ItemAction item={card} actions={actions} onReview={setReviewing} />}
-                </ColumnView>
-              ))}
-          </div>
-        </section>
-      ))}
+      <section
+        id="cobros-lane"
+        aria-label={LANES.find((item) => item.key === lane)?.title}
+        className="grid items-start gap-4 lg:auto-cols-fr lg:grid-flow-col"
+      >
+        {shown
+          .filter((column) => column.lane === lane)
+          .map((column) => (
+            <ColumnView key={column.key} column={column} filtering={filtering}>
+              {(row) => <RowAction item={row} actions={actions} onReview={setReviewing} />}
+            </ColumnView>
+          ))}
+      </section>
 
       <BottomSheet open={reviewing !== null} onClose={() => setReviewing(null)} title={reviewing ? `Transferencia de ${reviewing.holder}` : ''}>
         {reviewing ? (
@@ -114,88 +153,88 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
   )
 }
 
-function ColumnView({
-  column,
-  filtering,
-  children,
-}: {
-  column: BoardColumn
-  filtering: boolean
-  children: (item: BoardItem) => ReactNode
-}) {
+function ColumnView({ column, filtering, children }: { column: BoardColumn; filtering: boolean; children: (item: BoardItem) => ReactNode }) {
   const titleId = `column-${column.key}`
   return (
-    <section aria-labelledby={titleId} className="flex min-w-0 flex-col gap-2">
-      <header className="flex items-baseline justify-between gap-2">
-        <h3 id={titleId} className="font-display text-lg font-bold uppercase">
+    <section
+      aria-labelledby={titleId}
+      className={cn('flex min-w-0 scroll-mt-4 flex-col rounded-2xl border px-4 py-3', column.done ? 'border-transparent bg-surface/60' : 'border-border bg-surface')}
+    >
+      <header className="flex items-baseline justify-between gap-2 border-b border-border pb-2">
+        <h2 id={titleId} className="font-display text-lg font-bold uppercase">
           {column.title}
-        </h3>
+        </h2>
         <span className="text-sm font-semibold text-fg-muted tabular-nums">
           {column.count} · {formatPrice(column.total)}
         </span>
       </header>
       {column.cash !== undefined && column.count > 0 ? (
-        <p className="text-sm text-fg-muted tabular-nums">En efectivo: {formatPrice(column.cash)}</p>
+        <p className="pt-2 text-sm text-fg-muted tabular-nums">En efectivo: {formatPrice(column.cash)}</p>
       ) : null}
       {column.items.length > 0 ? (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col divide-y divide-border">
           {column.items.map((item) => (
             <li key={item.id}>
-              <BoardCard item={item}>{children(item)}</BoardCard>
+              <BoardRow item={item}>{children(item)}</BoardRow>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="rounded-2xl border border-dashed border-border p-3 text-sm text-fg-muted">
-          {filtering ? 'Nada coincide con la búsqueda.' : column.emptyText}
-        </p>
+        <p className="py-3 text-sm text-fg-muted">{filtering ? 'Nada coincide con la búsqueda.' : column.emptyText}</p>
       )}
     </section>
   )
 }
 
-function ItemAction({ item, actions, onReview }: { item: BoardItem; actions: BoardActions; onReview: (transfer: TransferView) => void }) {
+const ROW_BUTTON = 'shrink-0 px-3 text-base'
+
+function RowAction({ item, actions, onReview }: { item: BoardItem; actions: BoardActions; onReview: (transfer: TransferView) => void }) {
   const action = item.action
   if (!action) return null
   if (action.type === 'review') {
     return (
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          aria-label={`Revisar la transferencia de ${item.holder}`}
-          onClick={() =>
-            onReview({ id: item.id, amount: item.amount, holder: item.holder, when: item.when, courtName: item.what, receiptUrl: action.receiptUrl })
-          }
-          className="inline-flex min-h-11 items-center rounded-xl bg-accent px-4 text-sm font-bold text-on-accent hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          Revisar
-        </button>
-        {action.receiptUrl ? (
-          <a
-            href={action.receiptUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Ver comprobante de ${item.holder}`}
-            className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink underline"
-          >
-            Ver comprobante
-          </a>
-        ) : (
-          <span className="text-sm text-fg-muted">Sin comprobante</span>
-        )}
-      </div>
+      <button
+        type="button"
+        aria-label={`Revisar la transferencia de ${item.holder}`}
+        onClick={() =>
+          onReview({ id: item.id, amount: item.amount, holder: item.holder, when: item.when, courtName: item.what, receiptUrl: action.receiptUrl })
+        }
+        className={buttonClasses({ className: ROW_BUTTON })}
+      >
+        Revisar
+      </button>
     )
   }
+  return action.type === 'cash' ? (
+    <RowForm action={actions.cash[item.kind]} fields={action.fields} label="Cobrar" accessibleLabel="Cobrar en efectivo" />
+  ) : (
+    <RowForm action={actions.refund} fields={action.fields} label="Devuelto" accessibleLabel="Marcar devuelto" />
+  )
+}
+
+// A short button that runs the action in place; an error shows right under it. On success the page refreshes and the
+// row moves to its done column.
+function RowForm({ action, fields, label, accessibleLabel }: { action: FormAction; fields: Record<string, string>; label: string; accessibleLabel: string }) {
+  const [state, formAction, pending] = useActionState(async (previous: ActionState, formData: FormData): Promise<ActionState> => (await action(previous, formData)) ?? previous, IDLE)
   return (
-    <ActionForm
-      action={action.type === 'cash' ? actions.cash[item.kind] : actions.refund}
-      submitLabel={action.type === 'cash' ? 'Cobrar en efectivo' : 'Marcar devuelto'}
-      pendingLabel="Guardando…"
-      variant="secondary"
-    >
-      {Object.entries(action.fields).map(([name, value]) => (
+    <form action={formAction} className="flex shrink-0 flex-col items-end gap-1">
+      {Object.entries(fields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-    </ActionForm>
+      <button
+        type="submit"
+        aria-label={accessibleLabel}
+        disabled={pending}
+        aria-busy={pending || undefined}
+        className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+      >
+        {pending ? 'Guardando…' : label}
+      </button>
+      {state.status === 'error' ? (
+        <p role="alert" className="max-w-48 text-right text-sm text-danger">
+          {state.message}
+        </p>
+      ) : null}
+    </form>
   )
 }

@@ -36,6 +36,10 @@ function input(overrides: Partial<BoardInput> = {}): BoardInput {
       refunded: [
         { id: 'd3', kind: 'booking', amount: 800, holder: 'Juan', startsAt: at('2026-11-25T23:00:00Z'), courtName: 'Cancha 2', method: 'cash', confirmedAt: at('2026-11-23T12:00:00Z') },
       ],
+      rejected: [
+        { id: 'd4', kind: 'booking', amount: 1200, holder: 'Kevin', startsAt: at('2026-11-27T11:00:00Z'), courtName: 'Cancha 1', method: 'transfer', confirmedAt: at('2026-11-23T16:00:00Z'), reason: 'No llegó la plata' },
+        { id: 'd5', kind: 'tournament', amount: 400, holder: 'Lola', startsAt: null, courtName: 'Torneo Americano', method: 'transfer', confirmedAt: at('2026-11-23T17:00:00Z'), reason: null },
+      ],
     },
     ...overrides,
   }
@@ -61,12 +65,13 @@ describe('clubDayRange', () => {
 })
 
 describe('paymentsBoard', () => {
-  it('lays out the five columns in their lanes, the done ones marked', () => {
+  it('lays out the six columns in their lanes, the done ones marked', () => {
     const columns = paymentsBoard(input(), FORMAT)
     expect(columns.map((item) => [item.lane, item.title, item.done])).toEqual([
       ['collect', 'Sin cobrar', false],
       ['collect', 'Por confirmar', false],
       ['collect', 'Cobrado hoy', true],
+      ['collect', 'Rechazado hoy', true],
       ['giveBack', 'A devolver', false],
       ['giveBack', 'Devuelto hoy', true],
     ])
@@ -120,6 +125,15 @@ describe('paymentsBoard', () => {
     expect(column(columns, 'unpaid').cash).toBeUndefined()
     expect(column(columns, 'refunded').items.map((item) => item.holder)).toEqual(['Juan'])
   })
+
+  it('shows the transfers rejected today with their reason, and no cash part', () => {
+    const rejected = column(paymentsBoard(input(), FORMAT), 'rejected')
+    expect(rejected.items.map((item) => [item.holder, item.done])).toEqual([
+      ['Lola', { method: 'transfer', time: '17:00', rejection: 'Sin motivo' }],
+      ['Kevin', { method: 'transfer', time: '16:00', rejection: 'No llegó la plata' }],
+    ])
+    expect([rejected.total, rejected.cash]).toEqual([1600, undefined])
+  })
 })
 
 describe('filterBoard', () => {
@@ -131,14 +145,14 @@ describe('filterBoard', () => {
 
   it('searches who or what in every column, accents aside, and recounts', () => {
     const shown = filterBoard(columns, { query: 'cancha 1', kind: '' })
-    expect(shown.map((item) => item.items.map((card) => card.holder))).toEqual([[], ['Ana López'], ['Hugo'], [], []])
+    expect(shown.map((item) => item.items.map((card) => card.holder))).toEqual([[], ['Ana López'], ['Hugo'], ['Kevin'], [], []])
     expect(column(shown, 'collected').total).toBe(300)
     expect(column(filterBoard(columns, { query: 'ines', kind: '' }), 'collected').items.map((item) => item.holder)).toEqual(['Inés'])
   })
 
   it('keeps one kind', () => {
     const shown = filterBoard(columns, { query: '', kind: 'day_use' })
-    expect(shown.map((item) => item.count)).toEqual([1, 0, 1, 0, 0])
+    expect(shown.map((item) => item.count)).toEqual([1, 0, 1, 0, 0, 0])
   })
 })
 

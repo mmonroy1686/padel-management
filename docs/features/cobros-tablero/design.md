@@ -75,3 +75,17 @@ every column.
 
 - Drag and drop, optimistic moves, live updates (Realtime) on the board.
 - Choosing a range other than today for the done columns.
+
+## v2 — after trying it (2026-11-23)
+
+Feedback: the pending values read poorly, `Devolver` is lost under a long `Sin cobrar`, and a rejected transfer
+vanishes. Agreed changes:
+
+- **Summary strip on top, every screen size:** Sin cobrar, Por confirmar, Cobrado hoy (with its cash part), A devolver:
+  big total + count. A tile switches to its lane and scrolls to its column.
+- **Lanes are toggles on every screen size** (`Cobrar` / `Devolver`, with what is left to do), so `Devolver` is one tap
+  away however long `Sin cobrar` is. Inside a lane, columns side by side from `lg`.
+- **Compact rows instead of cards:** line 1 name, amount and a short button (`Cobrar`, `Revisar`, `Devolver`); line 2
+  kind · what · when, small. Amounts right-aligned, tabular.
+- **New column `Rechazado hoy`** (lane Cobrar, after Cobrado hoy): payments `rejected` with `confirmed_at` today, with
+  the reason and the time. Every reject path (staff or automatic, e.g. "Reserva cancelada") sets both; no migration.

@@ -5,15 +5,18 @@ import { signInWithMagicLink } from './support/auth'
 import { bookFirstFreeSlot, reportTransferAs } from './support/booking'
 import { insertRecentBooking } from './support/club-home'
 
-test('reception charges cash and confirms a transfer on the board, and both land in Cobrado hoy', async ({ page }) => {
+test('reception charges cash, confirms a transfer and rejects another on the board', async ({ page }) => {
   const club = await clubRow()
   const debtor = await createMember({ name: 'Paula Tablero E2E', prefix: 'tablero-deudora' })
   const payer = await createMember({ name: 'Tomás Tablero E2E', prefix: 'tablero-transfiere' })
+  const rejected = await createMember({ name: 'Rita Tablero E2E', prefix: 'tablero-rechazada' })
   const reception = await createMember({ name: 'Recepción Tablero E2E', prefix: 'tablero-recepcion', role: 'reception' })
   const recent = await insertRecentBooking(debtor)
   test.skip(recent === null, 'El turno de hace un rato habría empezado ayer')
   const booked = await bookFirstFreeSlot(payer, addDays(localDateOf(new Date(), club.timezone), 4))
   await reportTransferAs(payer, booked.bookingId)
+  const unfunded = await bookFirstFreeSlot(rejected, addDays(localDateOf(new Date(), club.timezone), 5))
+  await reportTransferAs(rejected, unfunded.bookingId)
 
   await signInWithMagicLink(page, reception.email, '/club/cobros')
   const column = (name: string) => page.getByRole('region', { name, exact: true })
@@ -31,4 +34,18 @@ test('reception charges cash and confirms a transfer on the board, and both land
   await review.getByRole('button', { name: 'Cerrar' }).click()
   await expect(column('Por confirmar').getByRole('article', { name: payer.name })).toHaveCount(0)
   await expect(column('Cobrado hoy').getByRole('article', { name: payer.name })).toContainText('Transferencia')
+
+  // Another one rejected with a reason: it leaves Por confirmar for Rechazado hoy, with the reason.
+  await column('Por confirmar').getByRole('button', { name: `Revisar la transferencia de ${rejected.name}` }).click()
+  const rejection = page.getByRole('dialog', { name: `Transferencia de ${rejected.name}` })
+  await rejection.getByRole('button', { name: 'Rechazar', exact: true }).click()
+  await rejection.getByLabel('Motivo').fill('No llegó a la cuenta')
+  await rejection.getByRole('button', { name: 'Rechazar transferencia' }).click()
+  await expect(rejection.getByRole('status')).toBeVisible()
+  await rejection.getByRole('button', { name: 'Cerrar' }).click()
+  await expect(column('Rechazado hoy').getByRole('article', { name: rejected.name })).toContainText('No llegó a la cuenta')
+
+  // The summary stays on top; its tile opens the Devolver lane.
+  await page.getByRole('navigation', { name: 'Resumen de cobros' }).getByRole('button', { name: /A devolver/ }).click()
+  await expect(column('A devolver')).toBeVisible()
 })
