@@ -7,6 +7,7 @@ import { saveProfile } from '@/lib/actions/profile'
 import { safeNextPath } from '@/lib/auth/redirect'
 import { requireViewer } from '@/lib/auth/viewer'
 import { isProfileComplete } from '@/lib/domain/profile'
+import { LegalLinks } from '@/components/legal/legal-links'
 
 export const metadata: Metadata = { title: 'Bienvenida' }
 
@@ -40,6 +41,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Sear
           }}
         />
       </Card>
+      <LegalLinks />
     </main>
   )
 }

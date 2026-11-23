@@ -40,7 +40,61 @@ update public.club_members m set role = 'admin'
 from auth.users u where u.id = m.user_id and u.email = 'vos@ejemplo.com';
 ```
 
-Antes del piloto hace falta un SMTP propio en Supabase (Authentication → Emails): el que viene por defecto solo envía a miembros del equipo y muy pocos emails por hora.
+#### Email de inicio de sesión (SMTP propio)
+
+El SMTP que trae Supabase solo envía a miembros del equipo y muy pocos emails por hora: antes del piloto hay que usar Resend, el mismo que ya manda los avisos. En Supabase → Authentication → Emails → SMTP Settings:
+
+| Campo | Valor |
+| --- | --- |
+| Enable custom SMTP | activado |
+| Sender email | una dirección del dominio verificado en Resend (la misma de `EMAIL_FROM`) |
+| Sender name | el nombre del club o del producto |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | una API key de Resend (puede ser la de `RESEND_API_KEY` o una solo para Auth) |
+
+Después, en Authentication → Rate Limits, subir "Rate limit for sending emails" (por defecto es muy bajo para un club entero). Probarlo pidiendo un enlace de ingreso con un email que no sea del equipo.
+
+#### Monitoreo de errores (Sentry)
+
+Sin variables, no se envía nada. Para prenderlo, crear un proyecto Next.js en Sentry y cargar en Vercel (Production y Preview):
+
+| Variable | Para qué |
+| --- | --- |
+| `NEXT_PUBLIC_SENTRY_DSN` | El DSN del proyecto. Con esto ya se reportan los errores del servidor y del navegador |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Opcionales: suben los source maps en el build, para ver en qué línea del código falló |
+
+Solo se mandan errores, sin grabación de sesiones ni medición de rendimiento. Antes de enviar cada error se borran los emails y teléfonos que aparezcan en él (`lib/observability/scrub.ts`), y no van las líneas de la consola del navegador. Los deploys de preview quedan separados de producción por `VERCEL_ENV`. Las alertas (mail cuando aparece un error nuevo) se configuran en el panel de Sentry.
+
+`NEXT_PUBLIC_SENTRY_DSN` queda fija en el código del navegador al hacer el build: después de cargarla o cambiarla en Vercel, hay que volver a desplegar.
+
+#### Backups
+
+`backup.yml` corre los lunes a las 03:00 (Montevideo): hace un dump de producción (roles, esquema y datos), lo cifra con `BACKUP_PASSPHRASE` y lo guarda 90 días como artifact del workflow. **Los archivos subidos (logos, comprobantes, afiches) no están en el backup**: solo sus registros en la base.
+
+Para restaurar uno en el Supabase local (para revisarlo o recuperar datos):
+
+```bash
+# 1. Bajar el artifact supabase-backup-<id> desde GitHub → Actions → Backup production y descomprimir el .zip
+#    FUERA del repo (son datos personales reales), por ejemplo en ~/backups/2026-11-23
+cd ~/backups/2026-11-23
+gpg --decrypt backup.tar.gz.gpg | tar xz   # pide la BACKUP_PASSPHRASE
+# 2. Cargarlo en la base local (borra lo que haya en ella), desde el repo
+npx supabase start
+npm run db:restore -- ~/backups/2026-11-23
+npm run dev:local
+```
+
+Si igual lo descomprimís en una carpeta `backup/` dentro del repo, `.gitignore` la deja afuera. Borrá los archivos descifrados cuando termines.
+
+`db:restore` recrea la base local con las migraciones, sin seed, y carga `data.sql`. Supabase en la nube usa versiones de Auth y Storage más nuevas que el CLI: las tablas y columnas que el local no tiene se saltean y el script las lista (son internas, no datos de la app). Nunca toca una base remota.
+
+Para recuperar producción entera en un proyecto nuevo de Supabase, se usan los tres archivos en orden, como indica la guía de Supabase de backup y restore con el CLI: `roles.sql`, `schema.sql` y `data.sql` con `SET session_replication_role = replica`. Eso lo corre Miguel.
+
+#### Términos y privacidad
+
+`/terminos` y `/privacidad` son un **borrador** para Uruguay (Ley 18.331), no asesoramiento legal. Cada dato que falta aparece como `[COMPLETAR: …]` y la página avisa que es un borrador hasta que no quede ninguno. El texto está en `lib/legal/documents.ts`; el nombre del producto sale de `NEXT_PUBLIC_PRODUCT_NAME`.
 
 ## Scripts
 
@@ -55,6 +109,7 @@ Antes del piloto hace falta un SMTP propio en Supabase (Authentication → Email
 | `npm run test:e2e` | Playwright (`tests/e2e`), necesita Supabase local |
 | `npm run db:reset` | Recrea la base local con migraciones y `seed.sql` |
 | `npm run db:types` | Regenera `lib/supabase/database.types.ts` |
+| `npm run db:restore -- <carpeta>` | Carga un backup de producción descifrado en el Supabase local |
 
 ## Cómo trabajamos
 
