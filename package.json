@@ -16,7 +16,8 @@
     "db:types": "supabase gen types typescript --local --schema public > lib/supabase/database.types.ts",
     "dev:local": "node scripts/dev-local.mjs",
     "demo:users": "node scripts/demo-users.mjs",
-    "demo:data": "node scripts/demo-data.mjs"
+    "demo:data": "node scripts/demo-data.mjs",
+    "db:restore": "node scripts/db-restore.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "11.14.0",
