@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeDays, parseClubName, parseClubSettings, parsePricingRule, TIME_OPTIONS } from '@/lib/domain/settings'
+import { describeDays, parseClubName, parseClubPhone, parseClubSettings, parsePricingRule, TIME_OPTIONS } from '@/lib/domain/settings'
 
 function form(entries: [string, string][]): FormData {
   const data = new FormData()
@@ -117,5 +117,26 @@ describe('parseClubName', () => {
     expect(parseClubName(form(''))).toEqual({ ok: false, message: 'Escribí el nombre del club, de 2 a 40 letras.' })
     expect(parseClubName(form('A'))).toEqual({ ok: false, message: 'Escribí el nombre del club, de 2 a 40 letras.' })
     expect(parseClubName(form('x'.repeat(41)))).toEqual({ ok: false, message: 'Escribí el nombre del club, de 2 a 40 letras.' })
+  })
+})
+
+describe('parseClubPhone', () => {
+  const form = (phone: string) => {
+    const data = new FormData()
+    data.set('phone', phone)
+    return data
+  }
+
+  it('keeps only the digits, the way the flyer reads them', () => {
+    expect(parseClubPhone(form(' 092 369 558 '))).toEqual({ ok: true, value: { phone: '092369558' } })
+    expect(parseClubPhone(form('+598 92 369 558'))).toEqual({ ok: true, value: { phone: '092369558' } })
+  })
+
+  it('clears it when left empty', () => {
+    expect(parseClubPhone(form('  '))).toEqual({ ok: true, value: { phone: null } })
+  })
+
+  it('asks for 8 to 15 digits', () => {
+    expect(parseClubPhone(form('123'))).toEqual({ ok: false, message: 'Revisá el teléfono: tiene que tener entre 8 y 15 números.' })
   })
 })

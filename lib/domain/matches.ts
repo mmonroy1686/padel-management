@@ -135,6 +135,11 @@ export function categoryRangeLabel(min: number, max: number): string {
   return min === max ? `${min}ª` : `${min}ª a ${max}ª`
 }
 
+// "5ª/6ª": a range of categories in short, for the assistant and its invitations.
+export function categorySlashLabel(min: number, max: number): string {
+  return min === max ? `${min}ª` : `${min}ª/${max}ª`
+}
+
 export function missingText(match: Pick<Match, 'slots'>): string {
   const open = openSlots(match)
   if (open.length === 0) return 'Completo'
