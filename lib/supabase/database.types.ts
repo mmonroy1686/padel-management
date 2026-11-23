@@ -1605,7 +1605,7 @@ isOneToOne: false
       } },
 "claim_notification_emails":
 { Args: { "p_limit"?: number }; Returns: {
-              "club_brand_background": string,"club_brand_primary": string,"club_logo_path": string,"club_name": string,"club_timezone": string,"data": Json,"email": string,"kind": Database["public"]['Enums']["notification_kind"],"link": string,"notification_id": string,"player_name": string
+              "club_brand_background": string,"club_brand_primary": string,"club_logo_path": string,"club_name": string,"club_slug": string,"club_timezone": string,"data": Json,"email": string,"kind": Database["public"]['Enums']["notification_kind"],"link": string,"notification_id": string,"player_name": string
             }[]
                            },
 "claim_slot_hold":
@@ -2032,6 +2032,8 @@ isOneToOne: false
       } },
 "mark_notifications_read":
 { Args: Record<PropertyKey, never>; Returns: number
+                           } |
+{ Args: { "p_club_id": string }; Returns: number
                            },
 "match_preview":
 { Args: { "p_match_id": string }; Returns: Json
