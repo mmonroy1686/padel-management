@@ -40,7 +40,7 @@ export default async function MatchesPage({ searchParams }: { searchParams: Sear
     loadFreeCourts(club, matches),
     loadMatchFormOptions(viewer, context, today),
   ])
-  const joinContext = { now, closeHours: club.match_close_hours, busy: context.busy }
+  const joinContext = { now, closeMinutes: club.match_close_minutes, busy: context.busy }
   const cards = matches.map((match) => ({ match, status: joinStatus(match, context.player, joinContext) }))
   const shown = showAll ? cards : cards.filter(({ match, status }) => status.ok || isInMatch(match, viewer.userId))
   const whenText = (match: Match) =>

@@ -6,7 +6,7 @@ import { MatchCard } from '@/components/matches/match-card'
 import { buttonClasses } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Icon } from '@/components/ui/icon'
-import { getViewer } from '@/lib/auth/viewer'
+import { getClub, getViewer } from '@/lib/auth/viewer'
 import { loadDayGrid } from '@/lib/data/day'
 import { loadFreeCourts, loadMatches, loadPlayerContext } from '@/lib/data/matches'
 import { loadMyBookings } from '@/lib/data/my-bookings'
@@ -33,7 +33,7 @@ import { holdText, waitItems } from '@/lib/domain/waitlist'
 
 export default async function HomePage() {
   const viewer = await getViewer()
-  if (!viewer) return <Landing />
+  if (!viewer) return <Landing name={(await getClub()).name} />
   const { club, profile, membership } = viewer
   if (!membership || !isProfileComplete(profile, membership)) redirect('/bienvenida')
 
@@ -54,7 +54,7 @@ export default async function HomePage() {
   const forMe = matchesForMe(
     matches.filter((match) => match.status === 'forming'),
     context.player,
-    { now, closeHours: club.match_close_hours, busy: context.busy, timezone: club.timezone, habits: context.habits },
+    { now, closeMinutes: club.match_close_minutes, busy: context.busy, timezone: club.timezone, habits: context.habits },
   )
   const myMatches = matches.filter((match) => isInMatch(match, viewer.userId)).slice(0, 3)
   const freeCourts = await loadFreeCourts(club, forMe.map((item) => item.match))
@@ -166,7 +166,7 @@ export default async function HomePage() {
                     match={match}
                     viewerId={viewer.userId}
                     whenText={whenText(match.startsAt)}
-                    status={joinStatus(match, context.player, { now, closeHours: club.match_close_hours, busy: context.busy })}
+                    status={joinStatus(match, context.player, { now, closeMinutes: club.match_close_minutes, busy: context.busy })}
                     risk={riskOf(match, freeCourts.get(match.id) ?? [])}
                     reasons={reasons}
                   />
@@ -199,10 +199,10 @@ export default async function HomePage() {
   )
 }
 
-function Landing() {
+function Landing({ name }: { name: string }) {
   return (
     <>
-      <h1 className="font-display text-4xl font-bold uppercase">Rustic Pádel</h1>
+      <h1 className="font-display text-4xl font-bold uppercase">{name}</h1>
       <Card>
         <p className="mb-4 text-fg-muted">Reservá cancha, armá partido y anotate en los torneos desde el celular.</p>
         <Link href="/auth/ingreso" className={buttonClasses({ fullWidth: true })}>

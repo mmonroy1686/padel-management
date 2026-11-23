@@ -12,4 +12,11 @@ describe('brand images', () => {
     expect(iconImage(BRAND, 64).headers.get('cache-control')).toBe(IMAGE_CACHE_CONTROL)
     expect(previewImage(BRAND, clubPreview(BRAND.name)).headers.get('cache-control')).toBe(IMAGE_CACHE_CONTROL)
   })
+
+  it('a championship with a poster shows it in its preview', async () => {
+    const poster = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+    const image = previewImage(BRAND, clubPreview(BRAND.name), poster)
+    expect(image.headers.get('content-type')).toBe('image/png')
+    expect((await image.arrayBuffer()).byteLength).toBeGreaterThan(0)
+  })
 })

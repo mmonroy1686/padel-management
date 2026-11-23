@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Icon, type IconName } from '@/components/ui/icon'
-import { timeLeft, turnLabel, type CourtEvent, type CourtItem, type CourtTurn } from '@/lib/domain/club-home'
+import { canAddPlayers, timeLeft, turnLabel, type CourtEvent, type CourtItem, type CourtTurn } from '@/lib/domain/club-home'
 import { timeIn } from '@/lib/domain/format'
 import type { MemberOption } from '@/lib/domain/members'
 import { BookingPlayers, type PlayersActions } from './booking-players'
@@ -131,6 +131,7 @@ export function CourtTurnCard({
         members={members}
         actions={actions}
         layout="court"
+        canAddPlayers={canAddPlayers(turn, turn.endsAt, now)}
       />
     </Card>
   )

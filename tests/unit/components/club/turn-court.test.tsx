@@ -38,6 +38,7 @@ function renderCourt(turn = turnOf()) {
       members={[]}
       actions={actions}
       layout="court"
+      canAddPlayers
     />,
   )
   return actions

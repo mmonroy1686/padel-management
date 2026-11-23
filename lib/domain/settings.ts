@@ -1,5 +1,6 @@
+import { normalizePhone } from './championships'
 import { WEEKDAYS_SHORT } from './format'
-import { readBoolean, readInt, readTime } from './input'
+import { readBoolean, readInt, readText, readTime } from './input'
 import { formatMinutes, parseTime } from './time'
 
 export const SLOT_LENGTHS = [60, 90, 120] as const
@@ -7,14 +8,19 @@ export const TIME_OPTIONS: string[] = Array.from({ length: 49 }, (_, index) => f
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; message: string }
 
-export type ClubSettings = {
+// Ajustes → "Reservas y partidos": when the club opens, how long a slot is and the booking rules.
+export type BookingSettings = {
   opens_at: string
   closes_at: string
   slot_minutes: number
   booking_window_days: number
   cancellation_notice_hours: number
   max_active_bookings: number
-  match_close_hours: number
+  match_close_minutes: number
+}
+
+// Ajustes → "Pagos": how players pay.
+export type PaymentSettings = {
   accepts_cash: boolean
   accepts_transfer: boolean
   transfer_receipt_required: boolean
@@ -28,7 +34,7 @@ function fail(message: string): { ok: false; message: string } {
 }
 
 // Same limits as the clubs check constraints, with a Spanish message for each.
-export function parseClubSettings(form: FormData): ParseResult<ClubSettings> {
+export function parseBookingSettings(form: FormData): ParseResult<BookingSettings> {
   const opensAt = readTime(form, 'opens_at')
   const closesAt = readTime(form, 'closes_at')
   if (!opensAt || !closesAt) return fail('Elegí el horario de apertura y de cierre.')
@@ -46,9 +52,24 @@ export function parseClubSettings(form: FormData): ParseResult<ClubSettings> {
   if (noticeHours === null) return fail('Las horas de aviso van de 0 a 72.')
   const maxActive = readInt(form, 'max_active_bookings', { min: 1, max: 10 })
   if (maxActive === null) return fail('Las reservas activas por jugador van de 1 a 10.')
-  const matchCloseHours = readInt(form, 'match_close_hours', { min: 0, max: 48 })
-  if (matchCloseHours === null) return fail('Las horas para cerrar partidos van de 0 a 48.')
+  const matchCloseMinutes = readInt(form, 'match_close_minutes', { min: 0, max: 2880 })
+  if (matchCloseMinutes === null) return fail('Los minutos para cerrar partidos van de 0 a 2880 (48 h).')
 
+  return {
+    ok: true,
+    value: {
+      opens_at: opensAt,
+      closes_at: closesAt,
+      slot_minutes: slotMinutes,
+      booking_window_days: windowDays,
+      cancellation_notice_hours: noticeHours,
+      max_active_bookings: maxActive,
+      match_close_minutes: matchCloseMinutes,
+    },
+  }
+}
+
+export function parsePaymentSettings(form: FormData): ParseResult<PaymentSettings> {
   const acceptsCash = readBoolean(form, 'accepts_cash')
   const acceptsTransfer = readBoolean(form, 'accepts_transfer')
   if (!acceptsCash && !acceptsTransfer) return fail('Elegí al menos un medio de pago.')
@@ -60,13 +81,6 @@ export function parseClubSettings(form: FormData): ParseResult<ClubSettings> {
   return {
     ok: true,
     value: {
-      opens_at: opensAt,
-      closes_at: closesAt,
-      slot_minutes: slotMinutes,
-      booking_window_days: windowDays,
-      cancellation_notice_hours: noticeHours,
-      max_active_bookings: maxActive,
-      match_close_hours: matchCloseHours,
       accepts_cash: acceptsCash,
       accepts_transfer: acceptsTransfer,
       transfer_receipt_required: readBoolean(form, 'transfer_receipt_required'),
@@ -101,4 +115,21 @@ export function describeDays(weekdays: number[]): string {
   return MONDAY_FIRST.filter((day) => days.has(day))
     .map((day) => WEEKDAYS_SHORT[day])
     .join(', ')
+}
+
+// Ajustes → "Nombre del club": what every screen, the tab title and the shared links show.
+export function parseClubName(form: FormData): ParseResult<{ name: string }> {
+  const name = readText(form, 'name', { maxLength: 40 })
+  if (!name || name.length < 2) return fail('Escribí el nombre del club, de 2 a 40 letras.')
+  return { ok: true, value: { name } }
+}
+
+// Ajustes → "WhatsApp del club": what the free-slots flyer and its text show. Empty clears it. Digits only, like
+// private.normalize_phone; the clubs check constraint has the last word.
+export function parseClubPhone(form: FormData): ParseResult<{ phone: string | null }> {
+  const raw = form.get('phone')
+  const text = typeof raw === 'string' ? raw.trim() : ''
+  if (text === '') return { ok: true, value: { phone: null } }
+  const phone = text.length <= 30 ? normalizePhone(text) : null
+  return phone ? { ok: true, value: { phone } } : fail('Revisá el teléfono: tiene que tener entre 8 y 15 números.')
 }

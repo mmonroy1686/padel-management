@@ -19,8 +19,9 @@ const COLUMNS: DataColumn[] = [
   { key: 'actions', label: 'Acciones', hideLabel: true },
 ]
 
-// Design: "el fixture en tabla (día, hora, cancha, categoría, partido)", with "Editar" (another court and time)
-// and, before publishing, "Fijar". The matches without a place are listed apart (UnplacedList).
+// Design: "el fixture en tabla (día, hora, cancha, categoría, partido)", with "Mover" (another court and time)
+// and, before publishing, "Fijar" / "Soltar", side by side and the same size; each names its match for screen
+// readers. The matches without a place are listed apart (UnplacedList).
 export function FixtureTable({
   matches,
   basePath,
@@ -58,18 +59,27 @@ export function FixtureTable({
       ),
       status: <FixtureStatus match={match} />,
       actions: (
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex items-center justify-end gap-2">
           {editable && match.status === 'scheduled' ? (
             <Link
               href={`${basePath}?partido=${match.id}`}
-              aria-label={`Editar ${match.name}: ${match.sideA} vs ${match.sideB}`}
-              className={buttonClasses({ variant: 'secondary' })}
+              aria-label={`Mover ${match.name}: ${match.sideA} vs ${match.sideB}`}
+              className={buttonClasses({ variant: 'secondary', size: 'sm' })}
             >
-              Editar
+              <Icon name="move" className="size-4" />
+              Mover
             </Link>
           ) : null}
           {canPin ? (
-            <ActionForm action={pinAction} submitLabel={match.pinned ? 'Soltar' : 'Fijar'} pendingLabel="Guardando…" variant="ghost">
+            <ActionForm
+              action={pinAction}
+              submitLabel={match.pinned ? 'Soltar' : 'Fijar'}
+              accessibleLabel={`${match.pinned ? 'Soltar' : 'Fijar'} ${match.name}: ${match.sideA} vs ${match.sideB}`}
+              pendingLabel="Guardando…"
+              variant="secondary"
+              size="sm"
+              icon={<Icon name="pin" className="size-4" />}
+            >
               <input type="hidden" name="matchId" value={match.id} />
               <input type="hidden" name="pinned" value={match.pinned ? 'false' : 'true'} />
             </ActionForm>
@@ -82,7 +92,14 @@ export function FixtureTable({
   const days = [...new Map(placed.map((match) => [match.date ?? '', match.day ?? ''])).entries()]
 
   return (
-    <DataTable
+    <>
+      {canPin ? (
+        <p className="flex items-start gap-2 text-sm text-fg-muted">
+          <Icon name="pin" className="mt-0.5 size-4 shrink-0" />
+          Fijá los partidos que ya acordaste: si volvés a programar, quedan en su cancha y horario.
+        </p>
+      ) : null}
+      <DataTable
       caption="Fixture"
       columns={COLUMNS}
       rows={rows}
@@ -95,7 +112,8 @@ export function FixtureTable({
       initialSort={{ key: 'day', dir: 'asc' }}
       pageSize={50}
       emptyText="Todavía no hay partidos programados."
-    />
+      />
+    </>
   )
 }
 

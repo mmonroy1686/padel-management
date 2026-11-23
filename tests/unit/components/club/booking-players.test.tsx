@@ -25,7 +25,12 @@ const ok = (message: string) => async (): Promise<ActionState> => ({ status: 'ok
 
 function renderBlock(
   turn = turnOf(),
-  options: { onDone?: (message: string) => void; chargeShare?: FormAction; methods?: { cash: boolean; transfer: boolean } } = {},
+  options: {
+    onDone?: (message: string) => void
+    chargeShare?: FormAction
+    methods?: { cash: boolean; transfer: boolean }
+    canAddPlayers?: boolean
+  } = {},
 ) {
   const actions: PlayersActions = {
     chargeShare: options.chargeShare ?? vi.fn<FormAction>(ok('Cobramos $300 en efectivo.')),
@@ -40,6 +45,7 @@ function renderBlock(
       members={[{ userId: 'gabi', name: 'Gabi Ruiz' }]}
       actions={actions}
       onDone={options.onDone}
+      canAddPlayers={options.canAddPlayers ?? true}
     />,
   )
   return actions
@@ -138,12 +144,13 @@ describe('BookingPlayers', () => {
     expect(within(sheet).queryByRole('combobox', { name: 'Jugador 2' })).not.toBeInTheDocument()
   })
 
-  it('a match has no Completar jugadores', () => {
+  it('no Completar jugadores when the turn takes no more players (ended, full or a match)', () => {
     renderBlock(
       turnOf({
         match_id: 'm1',
         match: { slots: [{ position: 1, player_id: 'ana', player: { display_name: 'Ana' } }] },
       }),
+      { canAddPlayers: false },
     )
     expect(screen.queryByRole('button', { name: /jugadores$/ })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cobrar $300 a Ana' })).toBeInTheDocument()

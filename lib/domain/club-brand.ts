@@ -48,7 +48,7 @@ export function parseBrandForm(form: FormData): ParseResult<Brand> {
 }
 
 const NOTICES: { [A in Adjustment as `${A['mode']}:${A['token']}`]: string } = {
-  'dark:bg': 'Tu fondo es claro: en modo oscuro se usa una versión más oscura.',
+  'dark:bg': 'Tu fondo es claro: en modo oscuro se usa una versión más oscura. Para verlo tal cual, elegí «Siempre claro».',
   'dark:accent-ink': 'Tu color principal, como texto sobre fondo oscuro, se aclara un poco para que se lea.',
   'light:accent-ink': 'Tu color principal, como texto sobre fondo claro, se oscurece un poco para que se lea.',
 }

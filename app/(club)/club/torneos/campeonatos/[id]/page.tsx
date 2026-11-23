@@ -215,24 +215,6 @@ export default async function ManageChampionshipPage({
           actions={controls}
           part="steps"
         />
-        {shareUrl ? (
-          <div className="flex flex-wrap items-start gap-3">
-            <ShareButton title={championship.name} text={championshipShareText(championship.name, shareUrl)} />
-            <Link
-              href={`/c/${championship.publicCode}/tv`}
-              target="_blank"
-              className={buttonClasses({ variant: 'secondary' })}
-            >
-              Abrir modo TV
-            </Link>
-          </div>
-        ) : null}
-        {cards.length > 0 ? (
-          <PlayerSearch
-            pairs={cards}
-            cash={{ action: recordChampionshipCash, acceptsCash: club.accepts_cash && championship.status !== 'cancelled' }}
-          />
-        ) : null}
         <TabLinks
           label="Secciones del campeonato"
           current={tab}
@@ -242,6 +224,31 @@ export default async function ManageChampionshipPage({
             href: `${pagePath}?ver=${key}`,
           }))}
         />
+        {/* The tools of every tab, in one bar under the tabs: find a player, share the link, the TV. */}
+        {cards.length > 0 || shareUrl ? (
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            {cards.length > 0 ? (
+              <div className="md:max-w-md md:flex-1">
+                <PlayerSearch
+                  pairs={cards}
+                  cash={{ action: recordChampionshipCash, acceptsCash: club.accepts_cash && championship.status !== 'cancelled' }}
+                />
+              </div>
+            ) : null}
+            {shareUrl ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <ShareButton title={championship.name} text={championshipShareText(championship.name, shareUrl)} size="sm" />
+                <Link
+                  href={`/c/${championship.publicCode}/tv`}
+                  target="_blank"
+                  className={buttonClasses({ variant: 'secondary', size: 'sm' })}
+                >
+                  Abrir modo TV
+                </Link>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </header>
 
       {tab === 'hoy' ? (

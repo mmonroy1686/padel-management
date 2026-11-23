@@ -19,7 +19,7 @@ const READABLE: Array<[keyof Tokens, keyof Tokens]> = [
   ['danger', 'bg'], ['danger', 'surface'], ['on-accent', 'accent'], ['on-court', 'court'],
 ]
 const PRIMARIES = { amber: '#FCB021', yellow: '#FFE600', white: '#FFFFFF', black: '#000000', blue: '#1D4ED8' }
-const BACKGROUNDS = { dark: '#021716', light: '#F5F0E6', medium: '#3A6B5A', black: '#000000', red: '#B91C1C' }
+const BACKGROUNDS = { dark: '#021716', light: '#F5F0E6', medium: '#3A6B5A', black: '#000000', red: '#B91C1C', orange: '#F7B55D', white: '#FFFFFF' }
 
 describe('clubTheme', () => {
   it("gives Rustic's colors exactly today's palette of globals.css", () => {
@@ -60,6 +60,15 @@ describe('clubTheme', () => {
     const theme = clubTheme({ primary: '#FCB021', background: '#F5F0E6' })
     expect(theme.adjusted).toContainEqual({ mode: 'dark', token: 'bg' })
     expect(contrastRatio('#FFFFFF', theme.dark.bg)).toBeGreaterThan(10)
+  })
+
+  it('uses a light background as is in light mode, with cards and borders a step darker', () => {
+    const theme = clubTheme({ primary: '#193958', background: '#F7B55D' })
+    expect(theme.light.bg).toBe('#F7B55D')
+    expect(theme.light.surface).not.toBe('#F7B55D')
+    expect(contrastRatio(theme.light.surface, theme.light.bg)).toBeGreaterThan(1.05)
+    expect(contrastRatio(theme.light.border, theme.light.bg)).toBeGreaterThan(contrastRatio(theme.light.surface, theme.light.bg))
+    expect(theme.adjusted).not.toContainEqual({ mode: 'light', token: 'bg' })
   })
 
   it('keeps cards visible on a black background', () => {

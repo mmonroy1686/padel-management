@@ -31,7 +31,7 @@ vi.mock('@/lib/auth/viewer', () => ({
 const { bookSlot } = await import('@/app/(jugador)/reservar/actions')
 const { cancelMyBooking, reportTransfer } = await import('@/app/(jugador)/reservas/actions')
 const { cancelMatch, endSeries, loadSlot, recordCash, removeFromMatch } = await import('@/app/(club)/club/grilla/actions')
-const { addPricingRule, deleteCourt, updateClubSettings } = await import('@/app/(club)/club/ajustes/actions')
+const { addPricingRule, deleteCourt, updateBookingSettings, updatePaymentSettings } = await import('@/app/(club)/club/ajustes/actions')
 const { saveAvailability, savePreferredCourts, saveProfile } = await import('@/lib/actions/profile')
 const { createMatch, joinMatch, leaveMatch } = await import('@/app/(jugador)/partidos/actions')
 const { errorMessage } = await import('@/lib/domain/errors')
@@ -82,7 +82,11 @@ describe('settings actions', () => {
 
   it('refuses anyone who is not an admin before touching the database', async () => {
     state.role = 'reception'
-    expect(await updateClubSettings(IDLE, form({ opens_at: '08:00' }))).toEqual({
+    expect(await updateBookingSettings(IDLE, form({ opens_at: '08:00' }))).toEqual({
+      status: 'error',
+      message: errorMessage('forbidden'),
+    })
+    expect(await updatePaymentSettings(IDLE, form({ accepts_cash: 'on' }))).toEqual({
       status: 'error',
       message: errorMessage('forbidden'),
     })

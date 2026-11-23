@@ -3,19 +3,22 @@
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { Field, inputClasses } from '@/components/ui/field'
 
+// "Sacar a Ana": with the name, each button says who it takes out.
 export function RemovePlayerForm({
   matchId,
   playerId,
+  playerName,
   action,
   onDone,
 }: {
   matchId: string
   playerId: string
+  playerName: string
   action: FormAction
   onDone?: (message: string) => void
 }) {
   return (
-    <ActionForm action={action} submitLabel="Sacar del partido" pendingLabel="Sacando…" variant="ghost" onDone={onDone}>
+    <ActionForm action={action} submitLabel={`Sacar a ${playerName}`} pendingLabel="Sacando…" variant="ghost" onDone={onDone}>
       <input type="hidden" name="matchId" value={matchId} />
       <input type="hidden" name="playerId" value={playerId} />
     </ActionForm>
@@ -32,7 +35,7 @@ export function CancelMatchForm({
   onDone?: (message: string) => void
 }) {
   return (
-    <ActionForm action={action} submitLabel="Cancelar partido" pendingLabel="Cancelando…" variant="secondary" onDone={onDone}>
+    <ActionForm action={action} submitLabel="Cancelar partido" pendingLabel="Cancelando…" variant="danger" onDone={onDone}>
       <input type="hidden" name="matchId" value={matchId} />
       <Field label="Motivo (opcional)" htmlFor={`note-${matchId}`}>
         <input id={`note-${matchId}`} name="note" maxLength={120} className={inputClasses} />

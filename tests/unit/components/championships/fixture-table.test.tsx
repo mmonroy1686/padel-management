@@ -9,7 +9,7 @@ import { makeView } from '../../fixtures/championship-views'
 const ok = async () => ({ status: 'ok' as const, message: 'Partido fijado.' })
 
 describe('FixtureTable', () => {
-  it('lists the matches with day, time, court, category and match, to edit or pin', async () => {
+  it('lists the matches with day, time, court, category and match, to move or pin, each action naming its match', async () => {
     const pin = vi.fn<FormAction>(ok)
     render(
       <FixtureTable
@@ -22,11 +22,12 @@ describe('FixtureTable', () => {
     )
     const table = screen.getByRole('table', { name: 'Fixture' })
     expect(within(table).getAllByRole('row')).toHaveLength(2)
-    expect(within(table).getByRole('link', { name: 'Editar Zona A: Ana y Pedro vs Bruno y Lucía' })).toHaveAttribute(
+    expect(within(table).getByRole('link', { name: 'Mover Zona A: Ana y Pedro vs Bruno y Lucía' })).toHaveAttribute(
       'href',
       '/club/torneos/campeonatos/ch1?partido=m1',
     )
-    await userEvent.click(within(table).getByRole('button', { name: 'Fijar' }))
+    expect(screen.getByText(/Fijá los partidos/)).toBeInTheDocument()
+    await userEvent.click(within(table).getByRole('button', { name: 'Fijar Zona A: Ana y Pedro vs Bruno y Lucía' }))
     await waitFor(() => expect(pin).toHaveBeenCalled())
     const form = vi.mocked(pin).mock.calls[0][1]
     expect(form.get('matchId')).toBe('m1')

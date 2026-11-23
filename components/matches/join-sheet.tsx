@@ -2,7 +2,7 @@
 
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
-import { formatPrice } from '@/lib/domain/format'
+import { durationText, formatPrice } from '@/lib/domain/format'
 import { openSlots, perPlayerPrice, SLOT_SIDE_WORDS, type Match } from '@/lib/domain/matches'
 
 // Prototype: sheet "join". Every rule that affects the player is said before confirming.
@@ -11,7 +11,7 @@ export function JoinSheet({
   position,
   whenText,
   paymentNote,
-  closeHours,
+  closeMinutes,
   action,
   onClose,
   onDone,
@@ -20,7 +20,7 @@ export function JoinSheet({
   position: number
   whenText: string
   paymentNote: string
-  closeHours: number
+  closeMinutes: number
   action: FormAction
   onClose: () => void
   onDone: (message: string) => void
@@ -50,7 +50,7 @@ export function JoinSheet({
             Sos el cuarto: al confirmar se reserva la cancha y el partido queda confirmado.
           </p>
         ) : (
-          <p className="text-sm text-fg-muted">Si {closeHours} h antes no se completa, se cancela solo y no pagás nada.</p>
+          <p className="text-sm text-fg-muted">Si {durationText(closeMinutes)} antes no se completa, se cancela solo y no pagás nada.</p>
         )}
         <ActionForm action={action} submitLabel="Confirmar lugar" pendingLabel="Sumándote…" onDone={onDone}>
           <input type="hidden" name="matchId" value={match.id} />

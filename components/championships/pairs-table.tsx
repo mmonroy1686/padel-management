@@ -2,7 +2,7 @@
 
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
-import { Button } from '@/components/ui/button'
+import { ActionsMenu } from '@/components/ui/actions-menu'
 import { DataTable, type DataColumn, type DataRow } from '@/components/ui/data-table'
 import type { PairRow, PairsCategory } from '@/lib/domain/championship-pairs'
 import { formatPrice } from '@/lib/domain/format'
@@ -19,7 +19,8 @@ const COLUMNS: DataColumn[] = [
 ]
 
 // Design: "por categoría, una tabla de parejas con estado de pago, Cobrar, Quitar, Mover, filtros (estado,
-// pago) y búsqueda por nombre". Cash while it has a place and owes; the rest until the draw.
+// pago) y búsqueda por nombre". Cash while it has a place and owes, small next to the payment state; the rest
+// until the draw, behind one "Acciones" menu per pair (Quitar last, in the danger color).
 export function PairsTable({
   category,
   editable,
@@ -50,12 +51,18 @@ export function PairsTable({
         </span>
       ),
       state: row.stateText,
-      // The badge, and cash right under it while it has a place and owes.
+      // The badge, and cash next to it while it has a place and owes.
       payment: (
-        <span className="flex flex-col items-start gap-2">
+        <span className="flex flex-wrap items-center gap-2">
           <PaymentBadge state={row.paymentState} />
           {acceptsCash && row.status === 'active' && row.paymentState === 'pending' && row.due > 0 ? (
-            <ActionForm action={cashAction} submitLabel={`Cobrar ${formatPrice(row.due)}`} pendingLabel="Registrando…" variant="secondary">
+            <ActionForm
+              action={cashAction}
+              submitLabel={`Cobrar ${formatPrice(row.due)}`}
+              pendingLabel="Registrando…"
+              variant="secondary"
+              size="sm"
+            >
               <input type="hidden" name="entryId" value={row.entryId} />
               <input type="hidden" name="amount" value={row.due} />
             </ActionForm>
@@ -69,19 +76,16 @@ export function PairsTable({
         </span>
       ),
       actions: (
-        <span className="flex justify-end gap-1">
+        <span className="flex justify-end">
           {editable ? (
-            <>
-              <Button variant="ghost" onClick={() => onAction('hours', row)}>
-                Horarios
-              </Button>
-              <Button variant="ghost" onClick={() => onAction('move', row)}>
-                Mover
-              </Button>
-              <Button variant="ghost" onClick={() => onAction('remove', row)}>
-                Quitar
-              </Button>
-            </>
+            <ActionsMenu
+              label={`Acciones de ${row.pair}`}
+              items={[
+                { label: 'Horarios', onSelect: () => onAction('hours', row) },
+                { label: 'Mover de categoría', onSelect: () => onAction('move', row) },
+                { label: 'Quitar', onSelect: () => onAction('remove', row), danger: true },
+              ]}
+            />
           ) : null}
         </span>
       ),

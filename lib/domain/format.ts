@@ -35,3 +35,28 @@ export function monthLabel(month: string): string {
 export function timeIn(instant: Date, timeZone: string): string {
   return formatMinutes(minutesOfDay(instant, timeZone))
 }
+
+// '24/11', '1/10': the day and the month as people write them, for the flyer, the invitations and the series.
+export function shortDate(date: LocalDate): string {
+  const { day, month } = parseLocalDate(date)
+  return `${day}/${month}`
+}
+
+// The club's phone as people write it: 092 369 558 (9 digits) or 2900 1234 (8). Other lengths go as they are.
+export function formatPhone(digits: string): string {
+  if (/^\d{9}$/.test(digits)) return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`
+  if (/^\d{8}$/.test(digits)) return `${digits.slice(0, 4)} ${digits.slice(4)}`
+  return digits
+}
+
+export function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+// "30 min", "1 h", "1 h 30 min": how long before something happens, the short way.
+export function durationText(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  if (hours === 0) return `${rest} min`
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`
+}

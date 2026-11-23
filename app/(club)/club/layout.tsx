@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ClubLogo } from '@/components/brand/club-logo'
+import { BackButton } from '@/components/nav/back-button'
 import { SectionTitle } from '@/components/nav/section-title'
 import { TabNav } from '@/components/nav/tab-nav'
 import { requireStaff } from '@/lib/auth/viewer'
@@ -20,9 +21,12 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
             <SectionTitle items={tabs} fallback="Panel del club" />
           </div>
         </div>
-        <Link href="/" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink">
-          Ir a la app
-        </Link>
+        <div className="flex items-center gap-2">
+          <BackButton />
+          <Link href="/" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink">
+            Ir a la app
+          </Link>
+        </div>
       </header>
       <TabNav label="Panel" items={tabs} variant="top" />
       <main className="mx-auto flex max-w-6xl 2xl:max-w-7xl flex-col gap-6 px-4 py-6">{children}</main>
