@@ -3,7 +3,7 @@ create extension if not exists pgtap with schema extensions;
 \ir helpers/slot.psql
 \ir helpers/club.psql
 \ir helpers/match.psql
-select plan(9);
+select plan(12);
 
 -- M1: a week from today at 20:00, court 1, Ana on spot 1. M2: confirmed, nobody else gets in.
 call test_helpers.make_match('e2000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
@@ -39,6 +39,21 @@ select throws_ok(
   $$ select public.invite_to_match('e2000000-0000-0000-0000-00000000dead',
        array['00000000-0000-0000-0000-0000000000a2']::uuid[]) $$,
   'P0001', 'not_found', 'the match has to exist');
+
+select throws_ok(
+  $$ select public.invite_to_match('e2000000-0000-0000-0000-000000000001', array[]::uuid[]) $$,
+  'P0001', 'invalid_input', 'someone to invite');
+select throws_ok(
+  $$ select public.invite_to_match('e2000000-0000-0000-0000-000000000001',
+       array(select gen_random_uuid() from generate_series(1, 51))) $$,
+  'P0001', 'invalid_input', 'at most 50 at a time');
+
+-- Eva, admin of club B
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000e1", "role": "authenticated"}';
+select throws_ok(
+  $$ select public.invite_to_match('e2000000-0000-0000-0000-000000000001',
+       array['00000000-0000-0000-0000-0000000000a5']::uuid[]) $$,
+  'P0001', 'forbidden', 'nor the staff of another club');
 
 -- Bruno, a player
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000b1", "role": "authenticated"}';

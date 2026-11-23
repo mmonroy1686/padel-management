@@ -3,7 +3,7 @@ create extension if not exists pgtap with schema extensions;
 \ir helpers/slot.psql
 \ir helpers/club.psql
 \ir helpers/match.psql
-select plan(6);
+select plan(7);
 
 -- The slot: a week from today at 20:00 (same weekday as today), court 1.
 -- Bruno is usually free that weekday at night.
@@ -49,6 +49,12 @@ select throws_ok(
 select throws_ok(
   $$ select * from public.slot_candidates('c0000000-0000-0000-0000-00000000dead', test_helpers.at(7, '20:00')) $$,
   'P0001', 'not_found', 'only an active court');
+
+-- Eva, admin of club B
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000e1", "role": "authenticated"}';
+select throws_ok(
+  $$ select * from public.slot_candidates('c0000000-0000-0000-0000-000000000001', test_helpers.at(7, '20:00')) $$,
+  'P0001', 'forbidden', 'nor the staff of another club');
 
 -- Ana, a player
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1", "role": "authenticated"}';

@@ -1,7 +1,8 @@
 -- Asistente del club, part 2: who could play a free slot that has no match yet. Staff only. Like
 -- match_suggestions, without a spot: members with a category and a public profile, free at that time, who played
 -- that weekday within 30 minutes of that time (bookings and confirmed matches already played) or said they are
--- usually free in that band. Same weights as match_suggestions minus the side (there is no spot yet).
+-- usually free in that band. Only the last 26 weeks count (habits change, and it keeps the ~40 calls of a day
+-- light); the 30 minutes are within the same local day (clubs close before midnight). Same weights as match_suggestions minus the side (there is no spot yet).
 -- lib/domain/slot-planner.ts turns the rows into a proposal; lib/data/assistant.ts calls it once per free slot.
 create function public.slot_candidates(p_court_id uuid, p_starts_at timestamptz)
 returns table (
@@ -49,12 +50,14 @@ begin
   played as (
     select b.player_id as id, b.starts_at
     from public.bookings b
-    where b.club_id = v_club_id and b.status = 'confirmed' and b.starts_at < now() and b.player_id is not null
+    where b.club_id = v_club_id and b.status = 'confirmed' and b.player_id is not null
+      and b.starts_at < now() and b.starts_at >= now() - interval '26 weeks'
     union all
     select s.player_id, om.starts_at
     from public.match_slots s
     join public.open_matches om on om.id = s.match_id
-    where om.club_id = v_club_id and om.status = 'confirmed' and om.starts_at < now() and s.player_id is not null
+    where om.club_id = v_club_id and om.status = 'confirmed' and s.player_id is not null
+      and om.starts_at < now() and om.starts_at >= now() - interval '26 weeks'
   ),
   scored as (
     select mb.id, mb.display_name, mb.category, mb.side, mb.gender,

@@ -2,6 +2,9 @@
 -- invite players to it (invite_to_match). Same rules as create_match except the ones about the creator playing
 -- (fit, busy): the staff member does not take a spot. created_by is the staff member. Nothing else reads
 -- created_by as "a player of the match": leaving, the avisos and "Mis partidos" all go by match_slots.
+-- A lock per court and slot keeps a double submit (or two receptionists at once) from opening two forming
+-- matches on the same court and time: a forming match does not hold the court, so court_occupancy alone
+-- would not see it.
 create function public.staff_create_match(
   p_court_id uuid,
   p_starts_at timestamptz,
@@ -52,6 +55,13 @@ begin
   end if;
   if private.slot_price(v_club_id, lower(v_match.period)) is null then
     perform private.fail('no_price');
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('staff_match:' || p_court_id::text || ':' || lower(v_match.period)::text, 0));
+  if exists (
+    select 1 from public.open_matches om
+    where om.preferred_court_id = p_court_id and om.status = 'forming' and om.period && v_match.period
+  ) then
+    perform private.fail('slot_taken');
   end if;
   if not p_allow_other_court and exists (
     select 1 from public.court_occupancy o where o.court_id = p_court_id and o.period && v_match.period

@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { InviteList } from '@/components/assistant/invite-list'
+import { InviteList, inviteResultText } from '@/components/assistant/invite-list'
 import type { InviteAction } from '@/lib/actions/result'
 import type { CandidateView } from '@/lib/domain/slot-planner'
 
@@ -20,7 +20,7 @@ describe('InviteList', () => {
     expect(inviteAction).toHaveBeenCalledWith('m9', ['b'])
     expect(await screen.findByText('Invitado ✓')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Invitar a Bruno Díaz' })).not.toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('Le avisamos en la app y por mail.')
+    expect(screen.getByRole('status')).toHaveTextContent('Le avisamos a 1 en la app y por mail.')
   })
 
   it('invites the best ones at once', async () => {
@@ -44,5 +44,11 @@ describe('InviteList', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Invitar a Hugo Paz' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('El partido ya no está abierto.')
     expect(screen.queryByText('Invitado ✓')).not.toBeInTheDocument()
+  })
+
+  it('counts only the avisos that went out', () => {
+    expect(inviteResultText(2, 2)).toBe('Les avisamos a 2 en la app y por mail.')
+    expect(inviteResultText(1, 3)).toBe('Le avisamos a 1 en la app y por mail. 2 ya estaban invitados.')
+    expect(inviteResultText(0, 1)).toBe('No mandamos avisos nuevos. 1 ya estaba invitado.')
   })
 })

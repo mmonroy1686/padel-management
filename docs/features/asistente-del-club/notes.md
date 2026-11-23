@@ -24,3 +24,12 @@ branch: feat/asistente-del-club
 - El flyer usa Barlow Condensed ExtraBold (`assets/fonts`, licencia OFL), la fuente de títulos del panel; `next.config.ts` la incluye en el trace de la ruta del flyer.
 - El tablero usa columnas de mínimo 6rem para que 3 canchas entren en un celular sin scroll horizontal; con muchas canchas el contenedor hace scroll.
 - `championship-day.spec.ts` se actualizó al nuevo texto del paso ("Siguiente paso: publicar el fixture") de la reorganización de campeonatos.
+
+## Revisión (discipline-check, 2026-11-23)
+
+- `staff_create_match` toma un lock por cancha y horario y rechaza (`slot_taken`) si ya hay un partido armándose ahí: un doble click o dos recepcionistas no abren dos partidos.
+- La lista de invitados cuenta los avisos que salieron de verdad (`invited` del RPC) y dice cuántos ya estaban invitados.
+- `slot_candidates` mira las últimas 26 semanas; los ±30 minutos son del mismo día local (los clubes cierran antes de medianoche).
+- Los motivos fuertes llevan ★ y "(motivo fuerte)" para el lector; un libre pasado el cierre dice "Ya no se arma".
+- Aceptado: el mail de una invitación puede salir hasta que empieza el partido aunque ya haya cerrado; el link muestra el estado real.
+- Pendiente fuera de alcance: las copias locales de `capitalize` en otros módulos.

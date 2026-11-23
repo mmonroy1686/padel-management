@@ -38,7 +38,7 @@ export async function createStaffMatch(_previous: CreatedState, form: FormData):
 
 // Asistente → "Invitar": an aviso and a mail to each player (the outbox mails it after the response).
 export async function inviteToMatch(matchId: string, playerIds: string[]): Promise<InviteResult> {
-  if (!isUuid(matchId) || playerIds.length === 0 || playerIds.length > MAX_INVITES || !playerIds.every(isUuid)) {
+  if (!isUuid(matchId) || !Array.isArray(playerIds) || playerIds.length === 0 || playerIds.length > MAX_INVITES || !playerIds.every(isUuid)) {
     return { ok: false, message: errorMessage('invalid_input') }
   }
   const supabase = await createClient()

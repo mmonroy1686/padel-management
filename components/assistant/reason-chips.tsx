@@ -11,10 +11,12 @@ export function ReasonChips({ name, chips }: { name: string; chips: Chip[] }) {
           key={chip.text}
           className={cn(
             'rounded-full border px-2 py-0.5 text-xs',
-            chip.hit ? 'border-court-ink text-court-ink' : 'border-border text-fg-muted',
+            chip.hit ? 'border-court-ink font-semibold text-court-ink' : 'border-border text-fg-muted',
           )}
         >
+          {chip.hit ? <span aria-hidden="true">★ </span> : null}
           {chip.text}
+          {chip.hit ? <span className="sr-only"> (motivo fuerte)</span> : null}
         </li>
       ))}
     </ul>

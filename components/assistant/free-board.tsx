@@ -28,7 +28,8 @@ function Cell({ cell, courtName, label, onPick }: { cell: BoardCell; courtName: 
     return (
       <span className={`${CHIP} border border-border`}>
         <span>{label}</span>
-        <span className="sr-only">, libre</span>
+        <span className="ml-auto text-xs text-fg-muted">Ya no se arma</span>
+        <span className="sr-only">, libre para reservar; ya cerró para armar partido</span>
       </span>
     )
   }

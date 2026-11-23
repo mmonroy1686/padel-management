@@ -36,10 +36,10 @@ export function timeIn(instant: Date, timeZone: string): string {
   return formatMinutes(minutesOfDay(instant, timeZone))
 }
 
-// '24/11': the day and the month, for the flyer and the invitations.
+// '24/11', '1/10': the day and the month as people write them, for the flyer, the invitations and the series.
 export function shortDate(date: LocalDate): string {
   const { day, month } = parseLocalDate(date)
-  return `${day}/${String(month).padStart(2, '0')}`
+  return `${day}/${month}`
 }
 
 // The club's phone as people write it: 092 369 558 (9 digits) or 2900 1234 (8). Other lengths go as they are.

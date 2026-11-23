@@ -12,6 +12,14 @@ const BEST = 8
 
 // The match is out: invite each candidate (an aviso in the app and a mail), or send her the message by WhatsApp.
 // Whoever was invited is marked and cannot be invited again to this match.
+// What the desk sees after inviting: the avisos that went out, and the ones that were already invited.
+export function inviteResultText(invited: number, asked: number): string {
+  const sent = invited === 0 ? 'No mandamos avisos nuevos.' : invited === 1 ? 'Le avisamos a 1 en la app y por mail.' : `Les avisamos a ${invited} en la app y por mail.`
+  const before = asked - invited
+  if (before <= 0) return sent
+  return `${sent} ${before === 1 ? '1 ya estaba invitado' : `${before} ya estaban invitados`}.`
+}
+
 export function InviteList({
   matchId,
   candidates,
@@ -35,11 +43,9 @@ export function InviteList({
         setResult({ ok: false, text: answer.message })
         return
       }
+      // Everyone asked for is invited now: the ones the database skipped already were (another tab, another person).
       setInvited((previous) => new Set([...previous, ...ids]))
-      setResult({
-        ok: true,
-        text: ids.length === 1 ? 'Le avisamos en la app y por mail.' : `Les avisamos a ${ids.length} en la app y por mail.`,
-      })
+      setResult({ ok: true, text: inviteResultText(answer.invited, ids.length) })
     })
   }
 

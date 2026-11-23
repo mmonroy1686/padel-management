@@ -6,6 +6,7 @@ describe('assistant labels', () => {
   it('writes a day as day/month', () => {
     expect(shortDate('2026-11-24')).toBe('24/11')
     expect(shortDate('2026-10-01')).toBe('1/10')
+    expect(shortDate('2026-03-04')).toBe('4/3')
   })
 
   it('groups the phone digits the way people write them', () => {
