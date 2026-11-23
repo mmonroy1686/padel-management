@@ -138,14 +138,20 @@ test('campeonato: the organizer draws, schedules and publishes, loads the group 
   await page.context().clearCookies()
   await page.goto(`/c/${code}`)
   await expect(page.getByRole('heading', { name: 'Fixture E2E', level: 1 })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Zona A' })).toBeVisible()
-  const publicBracket = page.getByRole('region', { name: 'Llave de 6ta Fixture' })
+  await expect(page.getByRole('heading', { name: 'Zona A' }).first()).toBeVisible()
+  const publicBracket = page.getByRole('region', { name: 'Cuadro de 6ta Fixture' })
   await expect(publicBracket).toContainText(pair(1))
   await expect(publicBracket).toContainText(pair(2))
   // The result recorded on the screen: the winner's row, marked, with the games of each set.
   const winnerRow = page.locator('[role="row"][data-winner="true"]').filter({ hasText: winner }).first()
-  await expect(winnerRow).toContainText('Ganó')
+  await expect(winnerRow).toContainText('(ganó)')
   await expect(winnerRow.getByRole('cell')).toHaveText(['6', '6'])
+
+  // The TV mode is the club's screen: no Modo TV here, and without a staff session it asks to sign in.
+  await expect(page.getByRole('link', { name: 'Modo TV' })).toHaveCount(0)
+  await page.goto(`/c/${code}/tv`)
+  await expect(page).toHaveURL(/\/auth\/ingreso\?next=/)
+  await page.goto(`/c/${code}`)
 
   // "Buscar jugador": the champion's card, without payments or phones.
   await page.getByLabel('Buscar jugador').fill('socio 1')

@@ -1,16 +1,15 @@
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
-import { BracketView } from '@/components/championships/bracket-view'
-import { MatchLine } from '@/components/championships/match-line'
+import { BracketTree } from '@/components/championships/bracket-tree'
+import { MatchCard } from '@/components/championships/match-card'
 import { PlayerSearch } from '@/components/championships/player-search'
 import { ZonesView } from '@/components/championships/zones-view'
-import { buttonClasses } from '@/components/ui/button'
 import { ShareButton } from '@/components/ui/share-button'
 import { cn } from '@/lib/cn'
+import { matchShareText, type PhaseGroup } from '@/lib/domain/championship-cards'
 import type { PairCard } from '@/lib/domain/championship-search'
-import type { Bracket, DayGroup, ZoneView } from '@/lib/domain/championship-views'
+import type { Bracket, MatchView, ZoneView } from '@/lib/domain/championship-views'
 
 export type PublicCategory = {
   id: string
@@ -18,31 +17,36 @@ export type PublicCategory = {
   rules: string
   zones: ZoneView[]
   bracket: Bracket | null
-  days: DayGroup[]
+  // The matches by phase: the zones, then the knockout rounds.
+  phases: PhaseGroup[]
 }
 
-// Design: "Público /c/<código>": a tab per category with its groups and tables, its bracket and the matches by
-// day with their results; "Compartir" and the TV mode.
+// Design: "Público /c/<código>": a tab per category with what is being played, its zones, its draw and the matches
+// by phase as cards, each one shareable. The TV mode is the club's: it is not linked from here.
 export function PublicBoard({
   name,
   subtitle,
   categories,
   shareText,
-  tvHref,
+  shareUrl,
   pairs = [],
 }: {
   name: string
   subtitle: string
   categories: PublicCategory[]
   shareText: string
-  tvHref: string
+  // The page's address, at the end of each match's share text.
+  shareUrl: string
   // "Buscar jugador": the cards of the pairs, without payments, hours or phones.
   pairs?: PairCard[]
 }) {
   const [selected, setSelected] = useState(categories[0]?.id ?? '')
   const category = categories.find((item) => item.id === selected) ?? categories[0]
   const tabs = categories.length > 1
-  const live = category ? category.days.flatMap((day) => day.matches).filter((match) => match.status === 'playing') : []
+  const live = category ? category.phases.flatMap((phase) => phase.matches).filter((match) => match.status === 'playing') : []
+  const card = (match: MatchView) => (
+    <MatchCard match={match} share={{ title: name, text: matchShareText(match, { championshipName: name, url: shareUrl }) }} />
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -52,9 +56,6 @@ export function PublicBoard({
       </header>
       <div className="flex flex-wrap items-start gap-3">
         <ShareButton title={name} text={shareText} />
-        <Link href={tvHref} className={buttonClasses({ variant: 'secondary' })}>
-          Modo TV
-        </Link>
       </div>
       {pairs.length > 0 ? <PlayerSearch pairs={pairs} /> : null}
       {categories.length === 0 ? <p className="text-fg-muted">El fixture todavía no está publicado.</p> : null}
@@ -96,30 +97,30 @@ export function PublicBoard({
               </h2>
               <ul className="grid gap-3 md:grid-cols-2">
                 {live.map((match) => (
-                  <li key={match.id} className="rounded-2xl border-2 border-accent bg-surface p-4">
-                    <MatchLine match={match} />
-                  </li>
+                  <li key={match.id}>{card(match)}</li>
                 ))}
               </ul>
             </section>
           ) : null}
           <ZonesView zones={category.zones} />
-          {category.bracket ? <BracketView bracket={category.bracket} /> : null}
-          <section aria-labelledby={`partidos-${category.id}`} className="flex flex-col gap-3">
+          {category.bracket ? (
+            <section aria-labelledby={`cuadro-${category.id}`} className="flex flex-col gap-3">
+              <h2 id={`cuadro-${category.id}`} className="font-display text-2xl font-bold uppercase">
+                Cuadro
+              </h2>
+              <BracketTree bracket={category.bracket} />
+            </section>
+          ) : null}
+          <section aria-labelledby={`partidos-${category.id}`} className="flex flex-col gap-5">
             <h2 id={`partidos-${category.id}`} className="font-display text-2xl font-bold uppercase">
               Partidos
             </h2>
-            {category.days.map((day) => (
-              <div key={day.key} className="flex flex-col gap-3">
-                <h3 className="flex items-center gap-3 text-sm font-bold uppercase tracking-wide text-fg-muted">
-                  {day.label}
-                  <span aria-hidden="true" className="h-px flex-1 bg-border" />
-                </h3>
+            {category.phases.map((phase) => (
+              <div key={phase.key} className="flex flex-col gap-3">
+                <h3 className="border-l-4 border-accent pl-3 font-bold">{phase.title}</h3>
                 <ul className="grid gap-3 md:grid-cols-2">
-                  {day.matches.map((match) => (
-                    <li key={match.id} className="rounded-2xl border border-border bg-surface p-4">
-                      <MatchLine match={match} />
-                    </li>
+                  {phase.matches.map((match) => (
+                    <li key={match.id}>{card(match)}</li>
                   ))}
                 </ul>
               </div>

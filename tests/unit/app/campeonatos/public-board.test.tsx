@@ -11,33 +11,36 @@ const LIBRE: PublicCategory = {
   rules: 'Al mejor de 3 sets, sin límite de tiempo · Tercer set: súper tie-break a 10',
   zones: [makeZone()],
   bracket: null,
-  days: [{ key: '2026-10-17', label: 'Sábado 17 de octubre', matches: [makeView()] }],
+  phases: [{ key: 'g-Zona A', title: 'Zona A', matches: [makeView()] }],
 }
 const DAMAS: PublicCategory = { ...LIBRE, id: 'k2', name: '5ta Damas', zones: [makeZone({ id: 'g2', name: 'Zona B' })] }
 
 describe('PublicBoard', () => {
-  it('shows each category in its tab: groups, bracket and matches by day', async () => {
+  it('shows each category in its tab: zones and matches by phase as shareable cards, without the TV mode', async () => {
     render(
       <PublicBoard
         name="Campeonato de Primavera"
         subtitle="Del sábado 17 de octubre al domingo 18 de octubre · En juego"
         categories={[LIBRE, DAMAS]}
         shareText="Seguí el Campeonato de Primavera en vivo: https://rustic.uy/c/primavera-7k2f"
-        tvHref="/c/primavera-7k2f/tv"
+        shareUrl="https://rustic.uy/c/primavera-7k2f"
       />,
     )
     expect(screen.getByRole('heading', { name: 'Campeonato de Primavera', level: 1 })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: '6ta Libre' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Zona A')
-    expect(screen.getByRole('tabpanel')).toHaveTextContent('Sábado 17 de octubre')
+    expect(within(screen.getByRole('region', { name: 'Partidos' })).getByRole('heading', { name: 'Zona A', level: 3 })).toBeInTheDocument()
+    expect(within(screen.getByRole('tabpanel')).getByRole('article', { name: 'Ana y Pedro contra Bruno y Lucía' })).toHaveTextContent('Hoy 08:00')
+    expect(screen.getByRole('button', { name: 'Compartir Ana y Pedro contra Bruno y Lucía' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('tab', { name: '5ta Damas' }))
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Zona B')
-    expect(screen.getByRole('link', { name: 'Modo TV' })).toHaveAttribute('href', '/c/primavera-7k2f/tv')
+    // The TV mode is the club's screen: not linked from the public page.
+    expect(screen.queryByRole('link', { name: 'Modo TV' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Compartir' })).toBeInTheDocument()
   })
 
   it('says when the fixture is not out yet', () => {
-    render(<PublicBoard name="Copa" subtitle="" categories={[]} shareText="" tvHref="/c/copa-1a2b/tv" />)
+    render(<PublicBoard name="Copa" subtitle="" categories={[]} shareText="" shareUrl="https://rustic.uy/c/copa-1a2b" />)
     expect(screen.getByText('El fixture todavía no está publicado.')).toBeInTheDocument()
   })
 })
@@ -60,7 +63,7 @@ const CARD: PairCard = {
 
 describe('PublicBoard search', () => {
   it('finds a pair and opens its card, without the club data', async () => {
-    render(<PublicBoard name="Copa" subtitle="" categories={[LIBRE]} shareText="" tvHref="/c/copa-1a2b/tv" pairs={[CARD]} />)
+    render(<PublicBoard name="Copa" subtitle="" categories={[LIBRE]} shareText="" shareUrl="https://rustic.uy/c/copa-1a2b" pairs={[CARD]} />)
     await userEvent.type(screen.getByLabelText('Buscar jugador'), 'pedro')
     await userEvent.click(screen.getByRole('button', { name: 'Ana y Pedro · 6ta Libre' }))
     const card = screen.getByRole('dialog', { name: 'Ana y Pedro' })
