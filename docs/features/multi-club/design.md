@@ -72,7 +72,7 @@ must also filter by the host's club:
 | Where | Today | Change |
 |---|---|---|
 | `lib/data/my-bookings.ts` (Mis reservas) | bookings and match slots by player | `club_id` = host's club |
-| `lib/data/matches.ts` (busy times, history) | bookings, match slots, tournament entries by player | `club_id` = host's club |
+| `lib/data/matches.ts` (busy times, habits) | bookings, match slots, tournament entries by player | **stays across clubs**: nobody plays in two clubs at once, so another club's booking makes the player busy too. Only the times are used, never shown |
 | `lib/data/waitlist.ts` (bell count and list) | notifications by user | `club_id` = host's club |
 | `mark_notifications_read()` | marks every club's avisos | new overload `mark_notifications_read(p_club_id)`; the app uses it; the old one stays for the deploy window |
 

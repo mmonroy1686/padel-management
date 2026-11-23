@@ -6,7 +6,7 @@ import { sendPending, type OutboxStore } from '@/lib/notify/send-pending'
 
 // 20:30 UTC: the hold (until 20:42 UTC) is still on; the slot starts at 22:00 UTC.
 const NOW = new Date('2026-10-03T20:30:00Z')
-const OPTIONS = { siteUrl: 'https://rustic.test', supabaseUrl: 'https://db.test', now: NOW }
+const OPTIONS = { clubUrl: (slug: string) => `https://${slug}.test`, supabaseUrl: 'https://db.test', now: NOW }
 
 function pending(id: string, overrides: Partial<PendingEmail> = {}): PendingEmail {
   return {
@@ -21,6 +21,7 @@ function pending(id: string, overrides: Partial<PendingEmail> = {}): PendingEmai
     clubLogoPath: null,
     clubPrimary: '#FCB021',
     clubBackground: '#021716',
+    clubSlug: 'rustic',
     ...overrides,
   }
 }

@@ -11,6 +11,7 @@ import { CHAMPIONSHIP_STATUS_LABELS, datesText, matchRulesText } from '@/lib/dom
 import { championshipPreview } from '@/lib/domain/share-preview'
 import { localDateOf } from '@/lib/domain/time'
 import { PublicBoard } from './public-board'
+import { redirectToOwnerClub } from '@/lib/club/owner-redirect'
 
 type Params = Promise<{ code: string }>
 
@@ -29,6 +30,7 @@ export default async function PublicChampionshipPage({ params }: { params: Param
   if (!isPublicCode(code)) notFound()
   const data = await loadPublicChampionship(code)
   if (!data) notFound()
+  await redirectToOwnerClub(data.clubSlug, `/c/${data.code}`)
 
   const { championship, fixture } = data
   const ctx = {

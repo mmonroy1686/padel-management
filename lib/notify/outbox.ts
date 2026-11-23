@@ -1,5 +1,5 @@
 import 'server-only'
-import { getSiteUrl } from '@/lib/auth/redirect'
+import { clubUrl } from '@/lib/club/host'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getSupabaseEnv } from '@/lib/supabase/env'
 import { emailSenderFromEnv } from './email'
@@ -27,6 +27,7 @@ function databaseStore(): OutboxStore | null {
         clubLogoPath: row.club_logo_path,
         clubPrimary: row.club_brand_primary,
         clubBackground: row.club_brand_background,
+        clubSlug: row.club_slug,
       }))
     },
     async finish(id, outcome) {
@@ -41,5 +42,6 @@ function databaseStore(): OutboxStore | null {
 export async function flushOutbox(): Promise<OutboxReport> {
   const store = databaseStore()
   if (!store) return NOTHING
-  return sendPending(store, emailSenderFromEnv(), { siteUrl: getSiteUrl(), supabaseUrl: getSupabaseEnv().url })
+  // One job mails every club's avisos: each link opens its own club's subdomain.
+  return sendPending(store, emailSenderFromEnv(), { clubUrl: (slug) => clubUrl(slug), supabaseUrl: getSupabaseEnv().url })
 }

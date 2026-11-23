@@ -3,8 +3,9 @@ import type { Club } from '@/lib/auth/viewer'
 import { splitMyBookings, toMyBookingView, toMyMatchBookingView, type MyBookingView } from '@/lib/domain/my-bookings'
 import { createClient } from '@/lib/supabase/server'
 
-// The player's bookings and his share of each match booking, what Inicio lists (fase 3a moved
-// "Mis reservas" there). Upcoming ones in start order; past and cancelled, newest first.
+// The player's bookings and his share of each match booking in this club, what Inicio lists (fase 3a moved
+// "Mis reservas" there). Upcoming ones in start order; past and cancelled, newest first. Only the host's club: a
+// player of two clubs sees each one's in its own app.
 export async function loadMyBookings(
   viewer: { userId: string; club: Club },
   now = new Date(),
@@ -15,9 +16,14 @@ export async function loadMyBookings(
     supabase
       .from('bookings')
       .select('id, starts_at, ends_at, price, status, court:courts(name), payments(status, amount, rejection_reason, created_at)')
+      .eq('club_id', club.id)
       .eq('player_id', viewer.userId)
       .order('starts_at', { ascending: true }),
-    supabase.from('match_slots').select('position, match:open_matches(booking_id)').eq('player_id', viewer.userId),
+    supabase
+      .from('match_slots')
+      .select('position, match:open_matches(booking_id)')
+      .eq('club_id', club.id)
+      .eq('player_id', viewer.userId),
   ])
   if (own.error) throw own.error
   if (spots.error) throw spots.error

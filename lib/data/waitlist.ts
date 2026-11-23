@@ -86,24 +86,26 @@ export async function loadDayWaits(club: Club, date: LocalDate): Promise<DayWait
   }))
 }
 
-// The bell: avisos not read yet.
-export async function countUnreadNotifications(userId: string): Promise<number> {
+// The bell: this club's avisos not read yet.
+export async function countUnreadNotifications(userId: string, clubId: string): Promise<number> {
   const supabase = await createClient()
   const { count, error } = await supabase
     .from('notifications')
     .select('id', { count: 'exact', head: true })
+    .eq('club_id', clubId)
     .eq('user_id', userId)
     .is('read_at', null)
   if (error) throw error
   return count ?? 0
 }
 
-// /avisos: the latest 50, newest first.
+// /avisos: this club's latest 50, newest first.
 export async function loadNotifications(viewer: { userId: string; club: Club }): Promise<NotificationView[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('notifications')
     .select('id, kind, data, link, created_at, read_at')
+    .eq('club_id', viewer.club.id)
     .eq('user_id', viewer.userId)
     .order('created_at', { ascending: false })
     .limit(50)
