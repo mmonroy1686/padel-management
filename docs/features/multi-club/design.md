@@ -1,7 +1,7 @@
 ---
 feature: multi-club
 type: design
-status: design
+status: approved
 date: 2026-11-23
 branch: feat/multi-club
 references: ../../handoff/2026-11-23-validacion-y-multi-club.md
