@@ -4,11 +4,11 @@ import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/acti
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { getViewer } from '@/lib/auth/viewer'
 import { parseBrandForm } from '@/lib/domain/club-brand'
-import { isClubLogoPath } from '@/lib/domain/club-logo'
+import { isClubFlyerBackgroundPath, isClubLogoPath } from '@/lib/domain/club-logo'
 import { errorMessage } from '@/lib/domain/errors'
 import { readBoolean, readInt, readText, readUuid } from '@/lib/domain/input'
 import { parseLoyaltyForm } from '@/lib/domain/loyalty'
-import { parseClubSettings, parsePricingRule } from '@/lib/domain/settings'
+import { type BookingSettings, parseBookingSettings, type PaymentSettings, parseClubName, parseClubPhone, parsePaymentSettings, parsePricingRule } from '@/lib/domain/settings'
 import { createClient } from '@/lib/supabase/server'
 
 const FORBIDDEN = failed(errorMessage('forbidden'))
@@ -19,18 +19,69 @@ async function adminClubId(): Promise<string | null> {
   return viewer?.membership?.role === 'admin' ? viewer.club.id : null
 }
 
-export async function updateClubSettings(_previous: ActionState, form: FormData): Promise<ActionState> {
+// Ajustes → "Reservas y partidos". The clubs check constraints have the last word.
+export async function updateBookingSettings(_previous: ActionState, form: FormData): Promise<ActionState> {
   const clubId = await adminClubId()
   if (!clubId) return FORBIDDEN
-  const parsed = parseClubSettings(form)
+  const parsed = parseBookingSettings(form)
+  if (!parsed.ok) return failed(parsed.message)
+  return saveClubColumns(clubId, parsed.value, 'Reglas guardadas. Las reservas ya hechas no cambian.')
+}
+
+// Ajustes → "Pagos".
+export async function updatePaymentSettings(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  const parsed = parsePaymentSettings(form)
+  if (!parsed.ok) return failed(parsed.message)
+  return saveClubColumns(clubId, parsed.value, 'Medios de pago guardados.')
+}
+
+async function saveClubColumns(
+  clubId: string,
+  columns: BookingSettings | PaymentSettings,
+  message: string,
+): Promise<ActionState> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('clubs').update(columns).eq('id', clubId).select('id')
+  if (error) return failed('No pudimos guardar los ajustes. Revisá los datos.')
+  if (data.length === 0) return FORBIDDEN
+  revalidateBookings()
+  return ok(message)
+}
+
+// Ajustes → "Nombre del club". The clubs check constraint has the last word.
+export async function updateClubName(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  const parsed = parseClubName(form)
   if (!parsed.ok) return failed(parsed.message)
 
   const supabase = await createClient()
   const { data, error } = await supabase.from('clubs').update(parsed.value).eq('id', clubId).select('id')
-  if (error) return failed('No pudimos guardar los ajustes. Revisá los datos.')
+  if (error) return failed('No pudimos guardar el nombre. Revisá los datos.')
   if (data.length === 0) return FORBIDDEN
   revalidateBookings()
-  return ok('Ajustes guardados. Las reservas ya hechas no cambian.')
+  return ok('Nombre guardado. Se ve en toda la app al recargar.')
+}
+
+// Ajustes → "WhatsApp del club": the free-slots flyer shows it. The clubs check constraint has the last word.
+export async function updateClubPhone(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  const parsed = parseClubPhone(form)
+  if (!parsed.ok) return failed(parsed.message)
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('clubs').update(parsed.value).eq('id', clubId).select('id')
+  if (error) return failed('No pudimos guardar el WhatsApp. Revisá el número.')
+  if (data.length === 0) return FORBIDDEN
+  revalidateBookings()
+  return ok(
+    parsed.value.phone
+      ? 'WhatsApp guardado. Sale en el flyer de turnos libres.'
+      : 'Sacamos el WhatsApp. El pie del flyer muestra el logo y el nombre del club.',
+  )
 }
 
 // Stamps rule (Ajustes → Sellos). The clubs check constraints have the last word.
@@ -152,6 +203,30 @@ async function setClubLogo(clubId: string, path: string | null, message: string)
   const supabase = await createClient()
   const { data, error } = await supabase.from('clubs').update({ logo_path: path }).eq('id', clubId).select('id')
   if (error) return failed('No pudimos guardar el logo.')
+  if (data.length === 0) return FORBIDDEN
+  revalidateBookings()
+  return ok(message)
+}
+
+// Ajustes → the flyer's background. The browser already blurred and uploaded the photo (only admins can); this points
+// the club at it.
+export async function saveFlyerBackground(path: string): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  if (typeof path !== 'string' || !isClubFlyerBackgroundPath(clubId, path)) return INVALID_INPUT
+  return setFlyerBackground(clubId, path, 'Fondo guardado. Ya sale en el flyer de turnos libres.')
+}
+
+export async function removeFlyerBackground(): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  return setFlyerBackground(clubId, null, 'Fondo quitado. El flyer queda con el color del club.')
+}
+
+async function setFlyerBackground(clubId: string, path: string | null, message: string): Promise<ActionState> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('clubs').update({ flyer_background_path: path }).eq('id', clubId).select('id')
+  if (error) return failed('No pudimos guardar el fondo.')
   if (data.length === 0) return FORBIDDEN
   revalidateBookings()
   return ok(message)

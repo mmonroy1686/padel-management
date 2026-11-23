@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest'
-import { logoDataUrl } from '@/lib/brand/logo-data-url'
+import { logoDataUrl, posterDataUrl } from '@/lib/brand/logo-data-url'
 
 function answer(body: string, type: string, status = 200) {
   return vi.fn<typeof fetch>(async () => new Response(body, { status, headers: { 'content-type': type } }))
@@ -34,5 +34,20 @@ describe('logoDataUrl', () => {
     const read = vi.spyOn(response, 'arrayBuffer')
     expect(await logoDataUrl('https://db.test/logo.png', vi.fn<typeof fetch>(async () => response))).toBeNull()
     expect(read).not.toHaveBeenCalled()
+  })
+})
+
+describe('posterDataUrl', () => {
+  it('draws a PNG or JPEG poster up to 5 MB', async () => {
+    expect(await posterDataUrl('https://db.test/poster.jpg', answer('jpg', 'image/jpeg'))).toBe('data:image/jpeg;base64,anBn')
+    const big = new Response('png', { headers: { 'content-type': 'image/png', 'content-length': String(4 * 1024 * 1024) } })
+    expect(await posterDataUrl('https://db.test/poster.png', vi.fn<typeof fetch>(async () => big))).toBe('data:image/png;base64,cG5n')
+  })
+
+  it('gives null without a poster, for WebP or over 5 MB', async () => {
+    expect(await posterDataUrl(null, answer('png', 'image/png'))).toBeNull()
+    expect(await posterDataUrl('https://db.test/poster.webp', answer('webp', 'image/webp'))).toBeNull()
+    const huge = new Response('png', { headers: { 'content-type': 'image/png', 'content-length': String(6 * 1024 * 1024) } })
+    expect(await posterDataUrl('https://db.test/poster.png', vi.fn<typeof fetch>(async () => huge))).toBeNull()
   })
 })

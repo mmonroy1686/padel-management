@@ -140,6 +140,29 @@ const PATHS = {
       <path d="m8.2 10.8 7.6-4.6M8.2 13.2l7.6 4.6" />
     </>
   ),
+  image: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="9" cy="10" r="2" />
+      <path d="m21 16-5-5-9 9" />
+    </>
+  ),
+  palette: (
+    <>
+      <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.5-2l-.3-.9c-.3-1 .4-2.1 1.5-2.1H17a4 4 0 0 0 4-4c0-5-4-9-9-9z" />
+      <circle cx="7.5" cy="11" r="1" />
+      <circle cx="10.5" cy="7" r="1" />
+      <circle cx="15" cy="7.5" r="1" />
+    </>
+  ),
+  move: (
+    <>
+      <path d="M12 3v18M3 12h18" />
+      <path d="m9 6 3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3" />
+    </>
+  ),
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
+  check: <path d="m5 12 5 5 9-10" />,
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof PATHS

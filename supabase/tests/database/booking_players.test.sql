@@ -4,7 +4,7 @@ create extension if not exists pgtap with schema extensions;
 \ir helpers/club.psql
 \ir helpers/match.psql
 \ir helpers/day_use.psql
-select plan(26);
+select plan(27);
 
 select has_table('public', 'booking_players', 'booking_players exists');
 
@@ -15,6 +15,9 @@ call test_helpers.make_booking('b0000000-0000-0000-0000-000000000002', 'c0000000
   test_helpers.slot(1, '11:00', 90), '00000000-0000-0000-0000-0000000000a1', 1200);
 update public.bookings set status = 'cancelled', occupancy_id = null, cancelled_at = now()
  where id = 'b0000000-0000-0000-0000-000000000002';
+-- Ana also played court 1 yesterday at 11:00: that booking already ended.
+call test_helpers.make_booking('b0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000001',
+  test_helpers.slot(-1, '11:00', 90), '00000000-0000-0000-0000-0000000000a1', 1200);
 
 -- A confirmed open match on court 2 the day after: its players live in match_slots.
 call test_helpers.make_match('e1000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000002',
@@ -118,6 +121,9 @@ select results_eq(
 select throws_ok(
   $$ select public.set_booking_players('b0000000-0000-0000-0000-000000000002', '[{"position": 2, "name": "Pepe"}]') $$,
   'P0001', 'invalid_state', 'not on a cancelled booking');
+select throws_ok(
+  $$ select public.set_booking_players('b0000000-0000-0000-0000-000000000003', '[{"position": 2, "name": "Pepe"}]') $$,
+  'P0001', 'in_the_past', 'not on a booking that already ended');
 select throws_ok(
   $$ select public.set_booking_players(
        (select booking_id from public.open_matches where id = 'e1000000-0000-0000-0000-000000000001'),

@@ -67,7 +67,7 @@ test('campeonato: the organizer draws, schedules and publishes, loads the group 
   // Drawn: the page stays on Fixture (the groups are on "Zonas y llaves").
   await expect(page.getByRole('button', { name: 'Programar' })).toBeVisible()
   await page.getByRole('button', { name: 'Programar' }).click()
-  await expect(page.getByText('Todos los partidos tienen cancha y horario. Revisalos y publicá el fixture.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Siguiente paso: publicar el fixture' })).toBeVisible()
   await expect(page.getByRole('table', { name: 'Fixture', exact: true }).getByRole('row')).toHaveCount(8)
   await page.getByRole('button', { name: 'Publicar fixture' }).click()
   await expect(page.getByRole('heading', { name: 'Día del torneo' })).toBeVisible()

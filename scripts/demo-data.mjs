@@ -151,8 +151,9 @@ for (const [key, product] of Object.entries({
     p_price: 300,
     p_includes: ['Vestuarios y duchas', 'Cancha libre en horario valle'],
     p_weekdays: [1, 2, 3, 4, 5],
-    p_from_time: '14:00',
-    p_to_time: '17:00',
+    // Weekday mornings: the afternoon keeps its courts for the turns the Inicio shows.
+    p_from_time: '09:00',
+    p_to_time: '12:00',
     p_capacity: 20,
     p_court_ids: [court(2).id],
     p_sort_order: 2,
@@ -450,8 +451,8 @@ for (const [days, time, courtIndex, creator, joiners] of [
   [10, '18:30', 1, 'matias', []],
   [12, '21:30', 0, 'camila', ['valentina', 'florencia']],
 ]) {
-  // A match stops taking players match_close_hours before it starts.
-  if (at(days, time) <= new Date(now.getTime() + (club.match_close_hours * 60 + 30) * 60_000)) continue
+  // A match stops taking players match_close_minutes before it starts.
+  if (at(days, time) <= new Date(now.getTime() + (club.match_close_minutes + 30) * 60_000)) continue
   const creatorPerson = people[creator]
   const match = await tryRpc(creatorPerson.client, 'create_match', {
     p_court_id: court(courtIndex).id,
@@ -709,6 +710,7 @@ async function payEntries(tournamentId, { cash = [], transfer = [] }) {
 // never take a slot in the past.
 async function pastBookings() {
   let count = 0
+  await justEnded()
   // Today up to the next half hour: the bookings below start later, so these fill the Inicio's
   // "En cancha ahora" and the first of "Próximos".
   const todayPlayed = SLOTS.filter((time) => !futureSlot(0, time))
@@ -783,6 +785,53 @@ async function pastBookings() {
     } else count++
   }
   return count
+}
+
+// A turn that ended 10 minutes ago and still owes 3 of its 4 shares: the Inicio keeps it in "En cancha ahora"
+// ("Terminó hace 10 min") until it is charged. Off the grid, on the first court free for that hour; it goes before
+// the rest of today's turns, which skip whatever it overlaps.
+async function justEnded() {
+  const endsAt = new Date(now.getTime() - 10 * 60_000)
+  const startsAt = new Date(endsAt.getTime() - 60 * 60_000)
+  const period = `[${startsAt.toISOString()},${endsAt.toISOString()})`
+  const price = 1200
+  for (let courtIndex = 0; courtIndex < courts.length; courtIndex++) {
+    const occupancy = await admin
+      .from('court_occupancy')
+      .insert({ club_id: club.id, court_id: court(courtIndex).id, kind: 'booking', period, created_by: staffId })
+      .select('id')
+      .single()
+    if (occupancy.error) continue
+    const booking = await admin
+      .from('bookings')
+      .insert({
+        club_id: club.id,
+        court_id: court(courtIndex).id,
+        period,
+        player_id: people.diego.id,
+        source: 'reception',
+        price,
+        occupancy_id: occupancy.data.id,
+        created_by: staffId,
+      })
+      .select('id')
+      .single()
+    if (booking.error) return
+    await todayPlayers(booking.data.id, 'diego', courtIndex)
+    await admin.from('payments').insert({
+      club_id: club.id,
+      booking_id: booking.data.id,
+      payer_position: 1,
+      method: 'cash',
+      amount: price / 4,
+      status: 'confirmed',
+      reported_by: staffId,
+      confirmed_by: staffId,
+      confirmed_at: endsAt.toISOString(),
+    })
+    return
+  }
+  console.warn('  (se saltea el turno recién terminado: no hay cancha libre en esa hora)')
 }
 
 // Players 2 to 4 of a turn of today: two members and a name, or only some of them (so "Completar

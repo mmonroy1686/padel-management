@@ -8,7 +8,7 @@ import { makeMatch, withPlayers } from '../../fixtures/matches'
 const props = {
   whenText: 'jueves 1 de octubre, 20:00',
   paymentNote: 'Se paga en el club o por transferencia.',
-  closeHours: 3,
+  closeMinutes: 180,
   onClose: vi.fn(),
   onDone: vi.fn(),
 }

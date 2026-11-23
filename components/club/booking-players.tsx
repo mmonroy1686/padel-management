@@ -29,6 +29,7 @@ export function BookingPlayers({
   onDone,
   playerExtra,
   layout = 'list',
+  canAddPlayers,
 }: {
   bookingId: string
   turn: TurnPlayers
@@ -38,6 +39,8 @@ export function BookingPlayers({
   onDone?: (message: string) => void
   playerExtra?: (player: PlayerShare) => ReactNode
   layout?: PlayersLayout
+  // "Completar jugadores" (canAddPlayers in lib/domain/club-home): someone missing and not ended yet.
+  canAddPlayers: boolean
 }) {
   const [charging, setCharging] = useState<number | 'rest' | null>(null)
   const [editing, setEditing] = useState(false)
@@ -101,7 +104,7 @@ export function BookingPlayers({
           ))}
         </ul>
       )}
-      {turn.isMatch ? null : (
+      {canAddPlayers ? (
         <Button
           variant="ghost"
           onClick={() => {
@@ -109,9 +112,9 @@ export function BookingPlayers({
             setEditing(true)
           }}
         >
-          {turn.missingNames ? 'Completar jugadores' : 'Cambiar jugadores'}
+          Completar jugadores
         </Button>
-      )}
+      ) : null}
       {canCharge && turn.restDue > 0 ? (
         charging === 'rest' ? (
           <ChargeChoice

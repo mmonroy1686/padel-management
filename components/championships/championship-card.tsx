@@ -9,8 +9,11 @@ export function ChampionshipCard({
   href,
   actionLabel,
   primary = false,
+  posterUrl = null,
 }: {
   championship: Championship
+  // championshipPosterUrl: the banner on top of the card when the club uploaded one.
+  posterUrl?: string | null
   href: string
   actionLabel: string
   primary?: boolean
@@ -18,6 +21,16 @@ export function ChampionshipCard({
   const categories = openCategories(championship)
   return (
     <Card className="flex h-full flex-col gap-3">
+      {posterUrl ? (
+        // A plain img, as on the championship's page: the poster comes from Storage at its own size.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={posterUrl}
+          alt={`Afiche de ${championship.name}`}
+          loading="lazy"
+          className="max-h-64 w-full rounded-xl bg-bg object-contain"
+        />
+      ) : null}
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-display text-xl font-bold uppercase">{championship.name}</p>

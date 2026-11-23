@@ -99,3 +99,30 @@ describe('the fixture aviso', () => {
     })
   })
 })
+
+describe('the club inviting a player to a match', () => {
+  // Tuesday 2026-11-24: 22:00 UTC is 19:00 in Montevideo.
+  const INVITE = {
+    court_name: 'Cancha 2',
+    starts_at: '2026-11-24T22:00:00Z',
+    category_min: 5,
+    category_max: 6,
+    match_type: 'mixed',
+  }
+
+  it('says the day, the time, the court and who it is for', () => {
+    expect(notificationContent('match_invite', INVITE, TIMEZONE)).toEqual({
+      title: 'Te invitan a un partido',
+      body: 'Martes 24/11 19:00 · Cancha 2 · 5ª/6ª mixto',
+      button: 'Ver el partido',
+      reason: 'te escribimos porque el club te invitó a un partido.',
+    })
+  })
+
+  it('is not mailed once the match started, nor when its data cannot be read', () => {
+    expect(isNotificationStale('match_invite', INVITE, new Date('2026-11-24T21:00:00Z'))).toBe(false)
+    expect(isNotificationStale('match_invite', INVITE, new Date('2026-11-24T22:00:00Z'))).toBe(true)
+    expect(isNotificationStale('match_invite', { court_name: 'Cancha 2' }, new Date('2026-11-24T21:00:00Z'))).toBe(true)
+    expect(notificationContent('match_invite', { ...INVITE, match_type: 'doubles' }, TIMEZONE)).toBeNull()
+  })
+})

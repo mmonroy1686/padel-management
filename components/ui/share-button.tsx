@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button, type ButtonSize } from '@/components/ui/button'
 
 // The phone's share sheet when there is one; on a computer it copies the message (with the link) and says so.
 export function useShare(title: string, text: string) {
@@ -47,11 +47,21 @@ export function ShareStatus({ status, text }: { status: 'idle' | 'copied' | 'fai
 }
 
 // Design: "Compartir".
-export function ShareButton({ title, text, label = 'Compartir' }: { title: string; text: string; label?: string }) {
+export function ShareButton({
+  title,
+  text,
+  label = 'Compartir',
+  size,
+}: {
+  title: string
+  text: string
+  label?: string
+  size?: ButtonSize
+}) {
   const { share, status } = useShare(title, text)
   return (
     <div className="flex flex-col gap-2">
-      <Button variant="secondary" onClick={share}>
+      <Button variant="secondary" size={size} onClick={share}>
         {label}
       </Button>
       <ShareStatus status={status} text={text} />

@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { EventsTable } from '@/components/club/events-table'
+import { EventsBoard } from '@/components/club/events-board'
 import { buttonClasses } from '@/components/ui/button'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadChampionships } from '@/lib/data/championships'
 import { loadTournaments } from '@/lib/data/tournaments'
 import { dayLabel, timeIn } from '@/lib/domain/format'
 import { CHAMPIONSHIP_STATUS_LABELS, championshipPeopleText, datesText } from '@/lib/domain/championships'
+import { CHAMPIONSHIP_GROUPS, championshipNextStep, TOURNAMENT_GROUPS } from '@/lib/domain/event-groups'
 import { localDateOf } from '@/lib/domain/time'
 import { courtsText, TOURNAMENT_STATUS_LABELS } from '@/lib/domain/tournaments'
 
@@ -37,9 +38,9 @@ export default async function ClubTournamentsPage() {
             Nuevo campeonato
           </Link>
         </div>
-        <EventsTable
-          caption="Campeonatos"
-          peopleLabel="Parejas"
+        <EventsBoard
+          label="Campeonatos"
+          groups={CHAMPIONSHIP_GROUPS}
           rows={shown.map((championship) => ({
             id: championship.id,
             name: championship.name,
@@ -49,6 +50,7 @@ export default async function ClubTournamentsPage() {
             statusLabel: CHAMPIONSHIP_STATUS_LABELS[championship.status],
             people: championshipPeopleText(championship),
             href: `/club/torneos/campeonatos/${championship.id}`,
+            nextStep: championshipNextStep(championship.status),
           }))}
           emptyText='Todavía no hay campeonatos. Armá el primero con "Nuevo campeonato".'
         />
@@ -63,9 +65,9 @@ export default async function ClubTournamentsPage() {
             Nuevo americano
           </Link>
         </div>
-        <EventsTable
-          caption="Americanos"
-          peopleLabel="Anotados"
+        <EventsBoard
+          label="Americanos"
+          groups={TOURNAMENT_GROUPS}
           rows={tournaments.map((tournament) => ({
             id: tournament.id,
             name: tournament.name,

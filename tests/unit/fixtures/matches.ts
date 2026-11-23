@@ -43,4 +43,4 @@ export function withPlayers(match: Match, players: (string | null)[]): Match {
 }
 
 export const BRUNO: MatchPlayer = { id: 'bruno', category: 5, gender: 'male', side: 'backhand' }
-export const CONTEXT: JoinContext = { now: at('08:00'), closeHours: 3, busy: [] }
+export const CONTEXT: JoinContext = { now: at('08:00'), closeMinutes: 180, busy: [] }
