@@ -1,10 +1,11 @@
 // Demo data to show the app to Rustic: players, bookings and payments from the first day of this
 // month to the end of the next one, recurring slots, a block, open matches, americanos (open, in
-// play, finished, next month), waits on the waitlist and day use with stamps, all relative to today. Every row hangs from accounts @demo.rustic.test, so each run first removes the previous
+// play, finished, next month), waits on the waitlist and day use with stamps, all relative to today. Every row hangs from accounts @demo.<club>.test, so each run first removes the previous
 // demo and `--clean` removes it for good. Real members and their data are never touched.
 //
 //   npm run demo:data                      local Supabase (supabase start)
 //   npm run demo:data -- --clean           remove the demo, local
+//   npm run demo:data -- --club=norte      fill another club (Rustic by default)
 //   npm run demo:data -- --player=<email>  also give an existing account a demo history
 //   npm run demo:data -- --prod            production: needs SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 //                                          and SUPABASE_PUBLISHABLE_KEY in the environment
@@ -13,8 +14,10 @@ import { randomBytes, randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { localSupabase } from './local-supabase.mjs'
 
-const DEMO_DOMAIN = 'demo.rustic.test'
 const args = process.argv.slice(2)
+// --club=<slug>: the club to fill (Rustic by default); each club's demo accounts have their own domain.
+const SLUG = args.find((arg) => arg.startsWith('--club='))?.slice('--club='.length) ?? 'rustic'
+const DEMO_DOMAIN = `demo.${SLUG}.test`
 const PROD = args.includes('--prod')
 const CLEAN_ONLY = args.includes('--clean')
 const FEATURED_EMAIL = args.find((arg) => arg.startsWith('--player='))?.slice('--player='.length) ?? null
@@ -65,8 +68,8 @@ const RECEIPT = Buffer.from(
   'base64',
 )
 
-const { data: club, error: clubError } = await admin.from('clubs').select('*').eq('slug', 'rustic').single()
-if (clubError) fail('No está el club "rustic". Local: npm run db:reset.')
+const { data: club, error: clubError } = await admin.from('clubs').select('*').eq('slug', SLUG).single()
+if (clubError) fail(`No está el club "${SLUG}". Local: npm run db:reset.`)
 console.log(`${PROD ? 'PRODUCCIÓN' : 'Local'}: ${env.apiUrl}, club ${club.name}`)
 
 const demoIds = await demoUserIds()

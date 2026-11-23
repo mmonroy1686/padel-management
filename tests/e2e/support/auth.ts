@@ -5,9 +5,10 @@ type MailpitSearch = { messages: { ID: string }[] }
 type MailpitMessage = { HTML: string; Text: string }
 
 // Signs in through the real UI: asks for a magic link and follows it from Mailpit, in the same
-// browser that asked for it (the PKCE verifier lives in its cookies).
-export async function signInWithMagicLink(page: Page, email: string, next = '/'): Promise<void> {
-  await page.goto(`/auth/ingreso?next=${encodeURIComponent(next)}`)
+// browser that asked for it (the PKCE verifier lives in its cookies). `origin` signs in on another club's subdomain
+// (http://norte.localhost:3000): one session per club.
+export async function signInWithMagicLink(page: Page, email: string, next = '/', origin = ''): Promise<void> {
+  await page.goto(`${origin}/auth/ingreso?next=${encodeURIComponent(next)}`)
   await page.getByLabel('Email').fill(email)
   await page.getByRole('button', { name: 'Enviarme el enlace' }).click()
   await expect(page.getByRole('status')).toContainText('Revisá tu email')

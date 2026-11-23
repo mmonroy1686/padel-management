@@ -65,6 +65,7 @@ describe('originFromHeaders', () => {
 
   it('falls back to the host header and to http on localhost', () => {
     expect(originFromHeaders(headers({ host: 'localhost:3000' }), FALLBACK)).toBe('http://localhost:3000')
+    expect(originFromHeaders(headers({ host: 'norte.localhost:3000' }), FALLBACK)).toBe('http://norte.localhost:3000')
     expect(originFromHeaders(headers({ host: 'rustic.example' }), FALLBACK)).toBe('https://rustic.example')
   })
 

@@ -1,20 +1,23 @@
-// Creates (or refreshes) three demo members of Rustic in the LOCAL database: admin, reception and
+// Creates (or refreshes) three demo members of a club in the LOCAL database: admin, reception and
 // player, with complete profiles and a validated category. Sign in with the magic link: local
 // emails arrive in Mailpit. Run after `npm run db:reset`.
+//   npm run demo:users                 Rustic (rustic.localhost:3000 or localhost:3000): admin@rustic.test, …
+//   npm run demo:users -- --club=norte Pádel Norte (norte.localhost:3000): admin@norte.test, …
 import { createClient } from '@supabase/supabase-js'
 import { localSupabase } from './local-supabase.mjs'
 
+const SLUG = process.argv.slice(2).find((arg) => arg.startsWith('--club='))?.slice('--club='.length) ?? 'rustic'
 const DEMO = [
-  { email: 'admin@rustic.test', name: 'Admin Demo', role: 'admin', side: 'both', hand: 'right', gender: 'female', category: 4 },
-  { email: 'recepcion@rustic.test', name: 'Recepción Demo', role: 'reception', side: 'drive', hand: 'right', gender: 'male', category: 6 },
-  { email: 'jugador@rustic.test', name: 'Jugador Demo', role: 'player', side: 'backhand', hand: 'left', gender: 'female', category: 5 },
+  { email: `admin@${SLUG}.test`, name: 'Admin Demo', role: 'admin', side: 'both', hand: 'right', gender: 'female', category: 4 },
+  { email: `recepcion@${SLUG}.test`, name: 'Recepción Demo', role: 'reception', side: 'drive', hand: 'right', gender: 'male', category: 6 },
+  { email: `jugador@${SLUG}.test`, name: 'Jugador Demo', role: 'player', side: 'backhand', hand: 'left', gender: 'female', category: 5 },
 ]
 
 const { apiUrl, serviceRoleKey, mailpitUrl } = localSupabase()
 const admin = createClient(apiUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } })
 
-const { data: club, error: clubError } = await admin.from('clubs').select('id').eq('slug', 'rustic').single()
-if (clubError) throw new Error('No está el club "rustic" en la base local. Corré `npm run db:reset` primero.')
+const { data: club, error: clubError } = await admin.from('clubs').select('id').eq('slug', SLUG).single()
+if (clubError) throw new Error(`No está el club "${SLUG}" en la base local. Corré \`npm run db:reset\` primero.`)
 
 const { data: list, error: listError } = await admin.auth.admin.listUsers({ perPage: 1000 })
 if (listError) throw listError

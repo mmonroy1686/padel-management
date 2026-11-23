@@ -12,7 +12,8 @@ export function safeNextPath(value: unknown, fallback = '/'): string {
 }
 
 const HOST = /^[a-z0-9.-]+(:\d{1,5})?$/i
-const LOCAL_HOST = /^(localhost|127\.0\.0\.1)(:\d+)?$/i
+// localhost, a club on <slug>.localhost, or the loopback address: plain http in local development.
+const LOCAL_HOST = /^((?:[a-z0-9-]+\.)?localhost|127\.0\.0\.1)(:\d+)?$/i
 
 // The origin the visitor is on. Auth callbacks must come back to it: the PKCE verifier cookie lives
 // on that host, and Supabase still checks the URL against its allow list, so this opens no redirect.
