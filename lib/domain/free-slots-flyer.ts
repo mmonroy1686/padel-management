@@ -43,9 +43,10 @@ export function flyerDayText(date: LocalDate): string {
   return `${WEEKDAYS_LONG[weekdayOf(date)]} ${shortDate(date)}`
 }
 
-// The flyer's last line: the club's WhatsApp, or the app's link when it has none.
-export function flyerContact(phone: string | null, url: string): string {
-  return phone ? `Consultanos: ${formatPhone(phone)}` : url
+// The flyer's footer: the club's WhatsApp, or nothing (the mark and the name alone). Never the web link: the text that
+// goes with the image already carries it.
+export function flyerContact(phone: string | null): string | null {
+  return phone ? `Consultanos: ${formatPhone(phone)}` : null
 }
 
 // The same flyer as text, for WhatsApp: only the free times of each court.

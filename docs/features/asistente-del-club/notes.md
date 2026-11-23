@@ -33,3 +33,9 @@ branch: feat/asistente-del-club
 - Los motivos fuertes llevan ★ y "(motivo fuerte)" para el lector; un libre pasado el cierre dice "Ya no se arma".
 - Aceptado: el mail de una invitación puede salir hasta que empieza el partido aunque ya haya cerrado; el link muestra el estado real.
 - Pendiente fuera de alcance: las copias locales de `capitalize` en otros módulos.
+
+## Fondo del flyer (2026-11-23)
+
+- Ajustes → "Flyer de turnos libres" suma una foto de fondo. El navegador la difumina antes de subirla (la achica 24 veces y la estira de vuelta, más `blur(28px)` donde el canvas lo soporta) y guarda un JPG de 1080×1920 en la carpeta del club del bucket `club-logos`. `clubs.flyer_background_path` apunta a él.
+- La imagen va detrás con un velo del color de fondo del club al 60 %, para que los horarios se lean.
+- El flyer ya no muestra el link de la app: sin WhatsApp, el pie es el logo y el nombre del club. El texto para WhatsApp sigue llevando el link.

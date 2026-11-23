@@ -55,7 +55,8 @@ describe('flyerText', () => {
 describe('flyer words', () => {
   it('names the day and the contact', () => {
     expect(flyerDayText(DATE)).toBe('jueves 1/10')
-    expect(flyerContact('092369558', 'https://rustic.app')).toBe('Consultanos: 092 369 558')
-    expect(flyerContact(null, 'https://rustic.app')).toBe('https://rustic.app')
+    expect(flyerContact('092369558')).toBe('Consultanos: 092 369 558')
+    // Without a WhatsApp the flyer shows only the club's mark and name: never the web link.
+    expect(flyerContact(null)).toBeNull()
   })
 })

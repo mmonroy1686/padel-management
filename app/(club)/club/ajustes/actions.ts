@@ -4,7 +4,7 @@ import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/acti
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { getViewer } from '@/lib/auth/viewer'
 import { parseBrandForm } from '@/lib/domain/club-brand'
-import { isClubLogoPath } from '@/lib/domain/club-logo'
+import { isClubFlyerBackgroundPath, isClubLogoPath } from '@/lib/domain/club-logo'
 import { errorMessage } from '@/lib/domain/errors'
 import { readBoolean, readInt, readText, readUuid } from '@/lib/domain/input'
 import { parseLoyaltyForm } from '@/lib/domain/loyalty'
@@ -63,7 +63,7 @@ export async function updateClubPhone(_previous: ActionState, form: FormData): P
   return ok(
     parsed.value.phone
       ? 'WhatsApp guardado. Sale en el flyer de turnos libres.'
-      : 'Sacamos el WhatsApp. El flyer muestra el link de la app.',
+      : 'Sacamos el WhatsApp. El pie del flyer muestra el logo y el nombre del club.',
   )
 }
 
@@ -186,6 +186,30 @@ async function setClubLogo(clubId: string, path: string | null, message: string)
   const supabase = await createClient()
   const { data, error } = await supabase.from('clubs').update({ logo_path: path }).eq('id', clubId).select('id')
   if (error) return failed('No pudimos guardar el logo.')
+  if (data.length === 0) return FORBIDDEN
+  revalidateBookings()
+  return ok(message)
+}
+
+// Ajustes → the flyer's background. The browser already blurred and uploaded the photo (only admins can); this points
+// the club at it.
+export async function saveFlyerBackground(path: string): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  if (typeof path !== 'string' || !isClubFlyerBackgroundPath(clubId, path)) return INVALID_INPUT
+  return setFlyerBackground(clubId, path, 'Fondo guardado. Ya sale en el flyer de turnos libres.')
+}
+
+export async function removeFlyerBackground(): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  return setFlyerBackground(clubId, null, 'Fondo quitado. El flyer queda con el color del club.')
+}
+
+async function setFlyerBackground(clubId: string, path: string | null, message: string): Promise<ActionState> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('clubs').update({ flyer_background_path: path }).eq('id', clubId).select('id')
+  if (error) return failed('No pudimos guardar el fondo.')
   if (data.length === 0) return FORBIDDEN
   revalidateBookings()
   return ok(message)

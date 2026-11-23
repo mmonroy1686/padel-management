@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { BrandForm } from '@/components/club/brand-form'
+import { FlyerBackgroundForm } from '@/components/club/flyer-background-form'
 import { LogoForm } from '@/components/club/logo-form'
 import { ActionForm } from '@/components/ui/action-form'
 import { Card } from '@/components/ui/card'
@@ -10,7 +11,7 @@ import { LOYALTY_EXPIRY_OPTIONS, loyaltyRuleOf, loyaltyRuleText } from '@/lib/do
 import { SLOT_LENGTHS, TIME_OPTIONS } from '@/lib/domain/settings'
 import { formatMinutes, parseTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
-import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubName, updateClubPhone, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, saveClubBrand, saveClubLogo } from './actions'
+import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubName, updateClubPhone, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, removeFlyerBackground, saveClubBrand, saveClubLogo, saveFlyerBackground } from './actions'
 import { CourtsTable, PricesTable } from './settings-tables'
 
 export const metadata: Metadata = { title: 'Ajustes' }
@@ -67,8 +68,9 @@ export default async function SettingsPage() {
 
       <section aria-labelledby="whatsapp" className="flex flex-col gap-3">
         <h2 id="whatsapp" className="font-display text-2xl font-bold uppercase">
-          WhatsApp del club
+          Flyer de turnos libres
         </h2>
+        <p className="text-sm text-fg-muted">Lo arma el Asistente para compartir los horarios libres de un día.</p>
         <Card>
           <ActionForm action={updateClubPhone} submitLabel="Guardar WhatsApp">
             <Field label="WhatsApp" htmlFor="club-phone">
@@ -84,9 +86,12 @@ export default async function SettingsPage() {
               />
             </Field>
             <p className="text-sm text-fg-muted">
-              Sale en el flyer de turnos libres del Asistente. Dejalo vacío para mostrar el link de la app.
+              Sale al pie del flyer. Si lo dejás vacío, el pie muestra solo el logo y el nombre del club.
             </p>
           </ActionForm>
+        </Card>
+        <Card>
+          <FlyerBackgroundForm club={club} saveAction={saveFlyerBackground} removeAction={removeFlyerBackground} />
         </Card>
       </section>
 

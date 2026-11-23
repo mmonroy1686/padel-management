@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 \ir helpers/slot.psql
 \ir helpers/club.psql
-select plan(5);
+select plan(7);
 
 select ok('match_invite' = any (enum_range(null::public.notification_kind)::text[]),
   'an invitation to a match is one more aviso');
@@ -17,6 +17,15 @@ select throws_ok(
 select throws_ok(
   $$ update public.clubs set phone = '1234' where id = 'a0000000-0000-0000-0000-000000000001' $$,
   '23514', null, 'and with 8 to 15 digits');
+
+select lives_ok(
+  $$ update public.clubs set flyer_background_path = 'a0000000-0000-0000-0000-000000000001/flyer-1700000000000.jpg'
+     where id = 'a0000000-0000-0000-0000-000000000001' $$,
+  'the flyer background is a file of the club''s folder');
+select throws_ok(
+  $$ update public.clubs set flyer_background_path = 'b0000000-0000-0000-0000-000000000002/flyer-1700000000000.jpg'
+     where id = 'a0000000-0000-0000-0000-000000000001' $$,
+  '23514', null, 'never another club''s');
 
 select * from finish();
 rollback;

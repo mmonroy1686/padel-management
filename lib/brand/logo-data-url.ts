@@ -10,6 +10,11 @@ export function logoDataUrl(url: string | null, fetcher: typeof fetch = fetch): 
   return drawableDataUrl(url, MAX_LOGO_BYTES, fetcher)
 }
 
+// The free-slots flyer's blurred background (a JPG the browser made, well under the bucket's 2 MB).
+export function flyerBackgroundDataUrl(url: string | null, fetcher: typeof fetch = fetch): Promise<string | null> {
+  return drawableDataUrl(url, MAX_LOGO_BYTES, fetcher)
+}
+
 // A championship's poster, for the preview of its link.
 export function posterDataUrl(url: string | null, fetcher: typeof fetch = fetch): Promise<string | null> {
   return drawableDataUrl(url, MAX_POSTER_BYTES, fetcher)

@@ -33,8 +33,9 @@ function Cross({ color }: { color: string }) {
 export function freeSlotsImage(
   brand: LoadedBrand,
   layout: FlyerLayout,
-  text: { day: string; contact: string },
+  text: { day: string; contact: string | null },
   font?: ArrayBuffer | Buffer,
+  background: string | null = null,
 ): ImageResponse {
   const { colors } = brand
   const display = font ? { fontFamily: FLYER_FONT, fontWeight: 800 as const } : { fontWeight: 700 as const }
@@ -43,7 +44,15 @@ export function freeSlotsImage(
   const columnWidth = layout.narrow ? 150 : 230
   return new ImageResponse(
     (
-      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', padding: 72, gap: 56, background: colors.bg, color: colors.fg }}>
+      <div style={{ display: 'flex', position: 'relative', flexDirection: 'column', width: '100%', height: '100%', padding: 72, gap: 56, background: colors.bg, color: colors.fg }}>
+        {background ? (
+          // The club's photo, already blurred by the browser, under a veil of the background color so the times read.
+          <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse draws <img>, not next/image */}
+            <img src={background} alt="" width={FLYER_SIZE.width} height={FLYER_SIZE.height} style={{ objectFit: 'cover' }} />
+            <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: colors.bg, opacity: 0.6 }} />
+          </div>
+        ) : null}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: 190, lineHeight: 0.95, color: colors.accent, ...display }}>
             <span>TURNOS</span>
@@ -93,7 +102,7 @@ export function freeSlotsImage(
         )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
           <Mark brand={brand} size={140} />
-          <div style={{ display: 'flex', fontSize: 52, ...display }}>{text.contact}</div>
+          <div style={{ display: 'flex', fontSize: 52, ...display }}>{text.contact ?? brand.name}</div>
         </div>
       </div>
     ),

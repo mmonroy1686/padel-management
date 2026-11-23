@@ -28,4 +28,10 @@ describe('freeSlotsImage', () => {
     const image = freeSlotsImage(BRAND, flyerLayout(makeGrid({ now: at('12:00') })), TEXT, font)
     expect((await image.arrayBuffer()).byteLength).toBeGreaterThan(0)
   })
+
+  it('draws the club photo behind the times, and the club name when there is no WhatsApp', async () => {
+    const photo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    const image = freeSlotsImage(BRAND, flyerLayout(makeGrid({ now: at('12:00') })), { day: 'JUEVES 1/10', contact: null }, undefined, photo)
+    expect((await image.arrayBuffer()).byteLength).toBeGreaterThan(0)
+  })
 })
