@@ -10,7 +10,7 @@ import { LOYALTY_EXPIRY_OPTIONS, loyaltyRuleOf, loyaltyRuleText } from '@/lib/do
 import { SLOT_LENGTHS, TIME_OPTIONS } from '@/lib/domain/settings'
 import { formatMinutes, parseTime } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
-import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubName, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, saveClubBrand, saveClubLogo } from './actions'
+import { addCourt, addPricingRule, deleteCourt, deletePricingRule, updateClubName, updateClubPhone, updateClubSettings, updateCourt, updateLoyalty, removeClubLogo, saveClubBrand, saveClubLogo } from './actions'
 import { CourtsTable, PricesTable } from './settings-tables'
 
 export const metadata: Metadata = { title: 'Ajustes' }
@@ -61,6 +61,31 @@ export default async function SettingsPage() {
               />
             </Field>
             <p className="text-sm text-fg-muted">Se ve arriba en todas las pantallas, en la pestaña y al compartir links.</p>
+          </ActionForm>
+        </Card>
+      </section>
+
+      <section aria-labelledby="whatsapp" className="flex flex-col gap-3">
+        <h2 id="whatsapp" className="font-display text-2xl font-bold uppercase">
+          WhatsApp del club
+        </h2>
+        <Card>
+          <ActionForm action={updateClubPhone} submitLabel="Guardar WhatsApp">
+            <Field label="WhatsApp" htmlFor="club-phone">
+              <input
+                id="club-phone"
+                name="phone"
+                type="tel"
+                inputMode="tel"
+                maxLength={30}
+                defaultValue={club.phone ?? ''}
+                placeholder="092 369 558"
+                className={inputClasses}
+              />
+            </Field>
+            <p className="text-sm text-fg-muted">
+              Sale en el flyer de turnos libres del Asistente. Dejalo vacío para mostrar el link de la app.
+            </p>
           </ActionForm>
         </Card>
       </section>

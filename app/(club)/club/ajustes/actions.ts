@@ -8,7 +8,7 @@ import { isClubLogoPath } from '@/lib/domain/club-logo'
 import { errorMessage } from '@/lib/domain/errors'
 import { readBoolean, readInt, readText, readUuid } from '@/lib/domain/input'
 import { parseLoyaltyForm } from '@/lib/domain/loyalty'
-import { parseClubName, parseClubSettings, parsePricingRule } from '@/lib/domain/settings'
+import { parseClubName, parseClubPhone, parseClubSettings, parsePricingRule } from '@/lib/domain/settings'
 import { createClient } from '@/lib/supabase/server'
 
 const FORBIDDEN = failed(errorMessage('forbidden'))
@@ -46,6 +46,25 @@ export async function updateClubName(_previous: ActionState, form: FormData): Pr
   if (data.length === 0) return FORBIDDEN
   revalidateBookings()
   return ok('Nombre guardado. Se ve en toda la app al recargar.')
+}
+
+// Ajustes → "WhatsApp del club": the free-slots flyer shows it. The clubs check constraint has the last word.
+export async function updateClubPhone(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = await adminClubId()
+  if (!clubId) return FORBIDDEN
+  const parsed = parseClubPhone(form)
+  if (!parsed.ok) return failed(parsed.message)
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('clubs').update(parsed.value).eq('id', clubId).select('id')
+  if (error) return failed('No pudimos guardar el WhatsApp. Revisá el número.')
+  if (data.length === 0) return FORBIDDEN
+  revalidateBookings()
+  return ok(
+    parsed.value.phone
+      ? 'WhatsApp guardado. Sale en el flyer de turnos libres.'
+      : 'Sacamos el WhatsApp. El flyer muestra el link de la app.',
+  )
 }
 
 // Stamps rule (Ajustes → Sellos). The clubs check constraints have the last word.

@@ -1,3 +1,4 @@
+import { normalizePhone } from './championships'
 import { WEEKDAYS_SHORT } from './format'
 import { readBoolean, readInt, readText, readTime } from './input'
 import { formatMinutes, parseTime } from './time'
@@ -108,4 +109,14 @@ export function parseClubName(form: FormData): ParseResult<{ name: string }> {
   const name = readText(form, 'name', { maxLength: 40 })
   if (!name || name.length < 2) return fail('Escribí el nombre del club, de 2 a 40 letras.')
   return { ok: true, value: { name } }
+}
+
+// Ajustes → "WhatsApp del club": what the free-slots flyer and its text show. Empty clears it. Digits only, like
+// private.normalize_phone; the clubs check constraint has the last word.
+export function parseClubPhone(form: FormData): ParseResult<{ phone: string | null }> {
+  const raw = form.get('phone')
+  const text = typeof raw === 'string' ? raw.trim() : ''
+  if (text === '') return { ok: true, value: { phone: null } }
+  const phone = text.length <= 30 ? normalizePhone(text) : null
+  return phone ? { ok: true, value: { phone } } : fail('Revisá el teléfono: tiene que tener entre 8 y 15 números.')
 }

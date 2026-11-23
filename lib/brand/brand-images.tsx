@@ -12,7 +12,7 @@ const HEADERS = { 'cache-control': IMAGE_CACHE_CONTROL }
 
 // The logo on the club's background, or the initials on its primary color. ImageResponse only knows flexbox and
 // inline styles.
-function Mark({ brand, size }: { brand: LoadedBrand; size: number }) {
+export function Mark({ brand, size }: { brand: LoadedBrand; size: number }) {
   const { colors, logo, name } = brand
   if (logo) {
     return (
