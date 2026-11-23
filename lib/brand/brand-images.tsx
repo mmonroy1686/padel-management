@@ -57,3 +57,37 @@ export function previewImage(brand: LoadedBrand, preview: SharePreview): ImageRe
     { ...PREVIEW_SIZE, headers: HEADERS },
   )
 }
+
+// A preview with nothing but the title, large, on the club's background.
+export function titleImage(brand: LoadedBrand, title: string): ImageResponse {
+  const { colors } = brand
+  return new ImageResponse(
+    (
+      <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', padding: 96, background: colors.bg, borderBottom: `24px solid ${colors.accent}` }}>
+        <div style={{ fontSize: 104, fontWeight: 700, lineHeight: 1.05, textAlign: 'center', color: colors.fg }}>{title}</div>
+      </div>
+    ),
+    { ...PREVIEW_SIZE, headers: HEADERS },
+  )
+}
+
+// A shared championship: its poster as it was uploaded (any format WhatsApp reads, WebP included, which ImageResponse
+// cannot draw); without one, or if Storage does not answer, just its title.
+export async function championshipShareImage(
+  brand: LoadedBrand,
+  championship: { name: string; posterUrl: string | null },
+  fetcher: (url: string) => Promise<Response> = fetch,
+): Promise<Response> {
+  if (championship.posterUrl) {
+    try {
+      const poster = await fetcher(championship.posterUrl)
+      const type = poster.headers.get('content-type') ?? ''
+      if (poster.ok && type.startsWith('image/')) {
+        return new Response(await poster.arrayBuffer(), { headers: { 'content-type': type, ...HEADERS } })
+      }
+    } catch {
+      // Storage down: the title still says what is shared.
+    }
+  }
+  return titleImage(brand, championship.name)
+}
