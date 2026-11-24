@@ -3,13 +3,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { PassStaffCard } from '@/components/day-use/pass-staff-card'
 import type { FormAction } from '@/components/ui/action-form'
 import type { DayUsePass } from '@/lib/domain/day-use'
+import type { DeskMethod } from '@/lib/domain/payments'
 import { at, DATE, TIMEZONE } from '../../fixtures/grid'
 import { makePass } from '../../fixtures/day-use'
 
 const ACTIONS = { checkIn: vi.fn<FormAction>(), cash: vi.fn<FormAction>(), cancel: vi.fn<FormAction>() }
 
-function renderCard(pass: DayUsePass = makePass(), acceptsCash = true) {
-  render(<PassStaffCard pass={pass} today={DATE} timezone={TIMEZONE} acceptsCash={acceptsCash} actions={ACTIONS} />)
+function renderCard(pass: DayUsePass = makePass(), deskMethods: DeskMethod[] = ['cash']) {
+  render(<PassStaffCard pass={pass} today={DATE} timezone={TIMEZONE} deskMethods={deskMethods} actions={ACTIONS} />)
 }
 
 describe('PassStaffCard', () => {
@@ -46,7 +47,7 @@ describe('PassStaffCard', () => {
   })
 
   it('names someone without an account, and offers no cash when the club takes none', () => {
-    renderCard(makePass({ holder: 'Pepe', isGuest: true, playerId: null }), false)
+    renderCard(makePass({ holder: 'Pepe', isGuest: true, playerId: null }), [])
     expect(screen.getByRole('article', { name: 'Pepe (sin cuenta)' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Cobrar/ })).not.toBeInTheDocument()
   })

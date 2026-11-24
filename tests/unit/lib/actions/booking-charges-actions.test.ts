@@ -40,12 +40,17 @@ describe('chargeShare', () => {
       status: 'ok',
       message: 'Cobramos $300 por transferencia.',
     })
+    expect(await chargeShare(IDLE, form({ bookingId: BOOKING, position: '3', method: 'card' }))).toEqual({
+      status: 'ok',
+      message: 'Cobramos $300 con POS.',
+    })
+    expect(rpc).toHaveBeenCalledWith('charge_booking_share', { p_booking_id: BOOKING, p_position: 3, p_method: 'card' })
   })
 
   it('rejects a bad booking, position or method before the RPC', async () => {
     expect(await chargeShare(IDLE, form({ bookingId: 'b1', position: '2', method: 'cash' }))).toEqual(INVALID_INPUT)
     expect(await chargeShare(IDLE, form({ bookingId: BOOKING, position: '5', method: 'cash' }))).toEqual(INVALID_INPUT)
-    expect(await chargeShare(IDLE, form({ bookingId: BOOKING, position: '2', method: 'card' }))).toEqual(INVALID_INPUT)
+    expect(await chargeShare(IDLE, form({ bookingId: BOOKING, position: '2', method: 'bitcoin' }))).toEqual(INVALID_INPUT)
     expect(rpc).not.toHaveBeenCalled()
   })
 

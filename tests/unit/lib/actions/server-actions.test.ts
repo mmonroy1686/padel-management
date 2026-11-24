@@ -262,9 +262,20 @@ describe('club match actions', () => {
     expect(rpc).not.toHaveBeenCalled()
   })
 
+  it('records a POS charge, and refuses a transfer at the desk', async () => {
+    expect(await recordCash(IDLE, form({ bookingId: BOOKING, amount: '400', payerId: PLAYER, method: 'card' }))).toEqual({
+      status: 'ok',
+      message: 'Pago con POS registrado.',
+    })
+    expect(rpc).toHaveBeenCalledWith('record_cash', { p_booking_id: BOOKING, p_amount: 400, p_payer_id: PLAYER, p_method: 'card' })
+    rpc.mockClear()
+    expect(await recordCash(IDLE, form({ bookingId: BOOKING, amount: '400', method: 'transfer' }))).toEqual(INVALID_INPUT)
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
   it('records cash for one player of a match', async () => {
     await recordCash(IDLE, form({ bookingId: BOOKING, amount: '400', payerId: PLAYER }))
-    expect(rpc).toHaveBeenCalledWith('record_cash', { p_booking_id: BOOKING, p_amount: 400, p_payer_id: PLAYER })
+    expect(rpc).toHaveBeenCalledWith('record_cash', { p_booking_id: BOOKING, p_amount: 400, p_payer_id: PLAYER, p_method: 'cash' })
     await cancelMatch(IDLE, form({ matchId: MATCH, note: ' Lluvia ' }))
     expect(rpc).toHaveBeenCalledWith('cancel_match', { p_match_id: MATCH, p_note: 'Lluvia' })
   })

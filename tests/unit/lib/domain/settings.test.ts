@@ -19,6 +19,7 @@ const BOOKING: [string, string][] = [
 const PAYMENTS: [string, string][] = [
   ['accepts_cash', 'on'],
   ['accepts_transfer', 'on'],
+  ['accepts_card', 'on'],
   ['transfer_receipt_required', 'on'],
   ['transfer_details', '  Banco Ejemplo, cuenta 123  '],
 ]
@@ -76,6 +77,7 @@ describe('parsePaymentSettings', () => {
       value: {
         accepts_cash: true,
         accepts_transfer: true,
+        accepts_card: true,
         transfer_receipt_required: true,
         transfer_details: 'Banco Ejemplo, cuenta 123',
       },
@@ -83,8 +85,16 @@ describe('parsePaymentSettings', () => {
   })
 
   it('needs at least one payment method', () => {
-    const settings = PAYMENTS.filter(([name]) => name !== 'accepts_cash' && name !== 'accepts_transfer')
+    const settings = PAYMENTS.filter(([name]) => !name.startsWith('accepts_'))
     expect(parsePaymentSettings(form(settings))).toEqual({ ok: false, message: 'Elegí al menos un medio de pago.' })
+  })
+
+  it('takes POS alone as a payment method', () => {
+    const settings = PAYMENTS.filter(([name]) => name !== 'accepts_cash' && name !== 'accepts_transfer')
+    expect(parsePaymentSettings(form(settings))).toMatchObject({
+      ok: true,
+      value: { accepts_cash: false, accepts_transfer: false, accepts_card: true },
+    })
   })
 
   it('leaves the details empty when there are none', () => {

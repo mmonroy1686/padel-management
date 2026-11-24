@@ -91,6 +91,10 @@ export function PaymentsForm({ club }: { club: Club }) {
           Efectivo en el club
         </label>
         <label className="flex min-h-11 items-center gap-3">
+          <input type="checkbox" name="accepts_card" defaultChecked={club.accepts_card} className="size-5 accent-accent" />
+          POS (tarjeta en recepción)
+        </label>
+        <label className="flex min-h-11 items-center gap-3">
           <input type="checkbox" name="accepts_transfer" defaultChecked={club.accepts_transfer} className="size-5 accent-accent" />
           Transferencia
         </label>

@@ -1,8 +1,10 @@
 import { PaymentBadge } from '@/components/booking/payment-badge'
+import { DeskCharge } from '@/components/club/desk-charge'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { PASS_STATUS_LABELS, type DayUsePass } from '@/lib/domain/day-use'
 import { formatPrice, timeIn } from '@/lib/domain/format'
 import { rewardLabel } from '@/lib/domain/loyalty'
+import type { DeskMethod } from '@/lib/domain/payments'
 import type { LocalDate } from '@/lib/domain/time'
 import { entryPaymentView } from '@/lib/domain/tournament-payments'
 
@@ -14,14 +16,14 @@ export function PassStaffCard({
   pass,
   today,
   timezone,
-  acceptsCash,
+  deskMethods,
   actions,
   onDone,
 }: {
   pass: DayUsePass
   today: LocalDate
   timezone: string
-  acceptsCash: boolean
+  deskMethods: DeskMethod[]
   actions: PassActions
   onDone?: (message: string) => void
 }) {
@@ -59,17 +61,14 @@ export function PassStaffCard({
         </ActionForm>
       ) : null}
       {bought && pass.date !== today ? <p className="text-sm text-fg-muted">El ingreso se registra el día del pase.</p> : null}
-      {acceptsCash && pass.status !== 'cancelled' && payment.state === 'pending' ? (
-        <ActionForm
+      {pass.status !== 'cancelled' && payment.state === 'pending' ? (
+        <DeskCharge
           action={actions.cash}
-          submitLabel={`Cobrar ${formatPrice(payment.due)}`}
-          pendingLabel="Registrando…"
-          variant="secondary"
+          methods={deskMethods}
+          label={`Cobrar ${formatPrice(payment.due)}`}
+          fields={{ passId: pass.id, amount: payment.due }}
           onDone={onDone}
-        >
-          <input type="hidden" name="passId" value={pass.id} />
-          <input type="hidden" name="amount" value={payment.due} />
-        </ActionForm>
+        />
       ) : null}
       {bought ? (
         <ActionForm action={actions.cancel} submitLabel="Cancelar pase" pendingLabel="Cancelando…" variant="ghost" onDone={onDone}>

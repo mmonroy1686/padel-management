@@ -3,11 +3,13 @@
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import { MatchLine } from '@/components/championships/match-line'
 import { ZonesView } from '@/components/championships/zones-view'
-import { ActionForm, type FormAction } from '@/components/ui/action-form'
+import { DeskCharge } from '@/components/club/desk-charge'
+import type { FormAction } from '@/components/ui/action-form'
 import type { PairCard } from '@/lib/domain/championship-search'
 import { formatPrice } from '@/lib/domain/format'
+import type { DeskMethod } from '@/lib/domain/payments'
 
-export type CashOption = { action: FormAction; acceptsCash: boolean }
+export type CashOption = { action: FormAction; methods: DeskMethod[] }
 
 // Design: "la ficha": the pair, its category and situation; its matches (in play, next with day, time and court,
 // played with their score); its group with its row highlighted; where it is in the bracket. The club's card adds
@@ -49,16 +51,13 @@ export function PairCardView({ card, cash }: { card: PairCard; cash?: CashOption
           <p className="flex items-center gap-2">
             Pago <PaymentBadge state={card.private.paymentState} />
           </p>
-          {cash?.acceptsCash && card.private.charge !== null ? (
-            <ActionForm
+          {cash && card.private.charge !== null ? (
+            <DeskCharge
               action={cash.action}
-              submitLabel={`Cobrar ${formatPrice(card.private.charge)}`}
-              pendingLabel="Registrando…"
-              variant="secondary"
-            >
-              <input type="hidden" name="entryId" value={card.entryId} />
-              <input type="hidden" name="amount" value={card.private.charge} />
-            </ActionForm>
+              methods={cash.methods}
+              label={`Cobrar ${formatPrice(card.private.charge)}`}
+              fields={{ entryId: card.entryId, amount: card.private.charge }}
+            />
           ) : null}
           <p className="text-sm">{card.private.hoursText}</p>
           {card.private.phones ? <p className="text-sm">{`Teléfonos: ${card.private.phones}`}</p> : null}

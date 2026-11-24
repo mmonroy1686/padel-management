@@ -28,7 +28,7 @@ function renderBlock(
   options: {
     onDone?: (message: string) => void
     chargeShare?: FormAction
-    methods?: { cash: boolean; transfer: boolean }
+    methods?: { cash: boolean; transfer: boolean; card: boolean }
     canAddPlayers?: boolean
   } = {},
 ) {
@@ -41,7 +41,7 @@ function renderBlock(
     <BookingPlayers
       bookingId="b1"
       turn={turn}
-      methods={options.methods ?? { cash: true, transfer: true }}
+      methods={options.methods ?? { cash: true, transfer: true, card: false }}
       members={[{ userId: 'gabi', name: 'Gabi Ruiz' }]}
       actions={actions}
       onDone={options.onDone}
@@ -157,7 +157,7 @@ describe('BookingPlayers', () => {
   })
 
   it('no charges when the club takes no method', () => {
-    renderBlock(turnOf(), { methods: { cash: false, transfer: false } })
+    renderBlock(turnOf(), { methods: { cash: false, transfer: false, card: false } })
     expect(screen.queryByRole('button', { name: /^Cobrar/ })).not.toBeInTheDocument()
   })
 })

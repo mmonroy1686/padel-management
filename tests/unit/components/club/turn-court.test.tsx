@@ -34,7 +34,7 @@ function renderCourt(turn = turnOf()) {
     <BookingPlayers
       bookingId="b1"
       turn={turn}
-      methods={{ cash: true, transfer: true }}
+      methods={{ cash: true, transfer: true, card: false }}
       members={[]}
       actions={actions}
       layout="court"

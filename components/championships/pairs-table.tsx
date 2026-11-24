@@ -1,12 +1,13 @@
 'use client'
 
 import { PaymentBadge } from '@/components/booking/payment-badge'
-import { ActionForm, type FormAction } from '@/components/ui/action-form'
+import { DeskCharge } from '@/components/club/desk-charge'
+import type { FormAction } from '@/components/ui/action-form'
 import { ActionsMenu } from '@/components/ui/actions-menu'
 import { DataTable, type DataColumn, type DataRow } from '@/components/ui/data-table'
 import type { PairRow, PairsCategory } from '@/lib/domain/championship-pairs'
 import { formatPrice } from '@/lib/domain/format'
-import { PAYMENT_LABELS } from '@/lib/domain/payments'
+import { PAYMENT_LABELS, type DeskMethod } from '@/lib/domain/payments'
 
 export type PairAction = 'hours' | 'move' | 'remove'
 
@@ -24,13 +25,13 @@ const COLUMNS: DataColumn[] = [
 export function PairsTable({
   category,
   editable,
-  acceptsCash,
+  deskMethods,
   cashAction,
   onAction,
 }: {
   category: PairsCategory
   editable: boolean
-  acceptsCash: boolean
+  deskMethods: DeskMethod[]
   cashAction: FormAction
   onAction: (action: PairAction, row: PairRow) => void
 }) {
@@ -55,17 +56,14 @@ export function PairsTable({
       payment: (
         <span className="flex flex-wrap items-center gap-2">
           <PaymentBadge state={row.paymentState} />
-          {acceptsCash && row.status === 'active' && row.paymentState === 'pending' && row.due > 0 ? (
-            <ActionForm
+          {row.status === 'active' && row.paymentState === 'pending' && row.due > 0 ? (
+            <DeskCharge
               action={cashAction}
-              submitLabel={`Cobrar ${formatPrice(row.due)}`}
-              pendingLabel="Registrando…"
-              variant="secondary"
+              methods={deskMethods}
+              label={`Cobrar ${formatPrice(row.due)}`}
+              fields={{ entryId: row.entryId, amount: row.due }}
               size="sm"
-            >
-              <input type="hidden" name="entryId" value={row.entryId} />
-              <input type="hidden" name="amount" value={row.due} />
-            </ActionForm>
+            />
           ) : null}
         </span>
       ),

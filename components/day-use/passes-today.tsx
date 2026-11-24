@@ -10,6 +10,7 @@ import { PASS_STATUS_LABELS, type DayUsePass, type PassStatus } from '@/lib/doma
 import { timeIn } from '@/lib/domain/format'
 import { entryPaymentView } from '@/lib/domain/tournament-payments'
 import type { MemberOption } from '@/lib/domain/members'
+import type { DeskMethod } from '@/lib/domain/payments'
 import type { LocalDate } from '@/lib/domain/time'
 import { PassStaffCard, type PassActions } from './pass-staff-card'
 import { SellSheet, type SellOffer } from './sell-sheet'
@@ -31,7 +32,7 @@ export function PassesToday({
   today,
   forDay = 'de hoy',
   timezone,
-  acceptsCash,
+  deskMethods,
   actions,
   sell,
 }: {
@@ -40,7 +41,7 @@ export function PassesToday({
   // "de hoy", "del viernes 2": what the title and the empty list say.
   forDay?: string
   timezone: string
-  acceptsCash: boolean
+  deskMethods: DeskMethod[]
   actions: PassActions
   sell: { offers: SellOffer[]; members: MemberOption[]; rewardPercent: number | null; action: FormAction }
 }) {
@@ -123,7 +124,7 @@ export function PassesToday({
       />
       <BottomSheet open={managed !== null} onClose={() => setManaging(null)} title={managed?.holder ?? ''}>
         {managed ? (
-          <PassStaffCard pass={managed} today={today} timezone={timezone} acceptsCash={acceptsCash} actions={actions} onDone={done} />
+          <PassStaffCard pass={managed} today={today} timezone={timezone} deskMethods={deskMethods} actions={actions} onDone={done} />
         ) : null}
       </BottomSheet>
       {selling ? (

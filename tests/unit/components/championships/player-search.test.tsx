@@ -76,7 +76,7 @@ describe('PlayerSearch', () => {
             private: { phones: '099111001', paymentState: 'pending', charge: 2000, hoursText: 'No pueden en 1 franja.' },
           }),
         ]}
-        cash={{ action: cash, acceptsCash: true }}
+        cash={{ action: cash, methods: ['cash'] }}
       />,
     )
     await userEvent.type(screen.getByLabelText('Buscar jugador'), 'ana')

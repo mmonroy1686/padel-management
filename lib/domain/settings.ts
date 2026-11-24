@@ -23,6 +23,7 @@ export type BookingSettings = {
 export type PaymentSettings = {
   accepts_cash: boolean
   accepts_transfer: boolean
+  accepts_card: boolean
   transfer_receipt_required: boolean
   transfer_details: string | null
 }
@@ -72,7 +73,8 @@ export function parseBookingSettings(form: FormData): ParseResult<BookingSetting
 export function parsePaymentSettings(form: FormData): ParseResult<PaymentSettings> {
   const acceptsCash = readBoolean(form, 'accepts_cash')
   const acceptsTransfer = readBoolean(form, 'accepts_transfer')
-  if (!acceptsCash && !acceptsTransfer) return fail('Elegí al menos un medio de pago.')
+  const acceptsCard = readBoolean(form, 'accepts_card')
+  if (!acceptsCash && !acceptsTransfer && !acceptsCard) return fail('Elegí al menos un medio de pago.')
 
   const rawDetails = form.get('transfer_details')
   const details = typeof rawDetails === 'string' ? rawDetails.trim() : ''
@@ -83,6 +85,7 @@ export function parsePaymentSettings(form: FormData): ParseResult<PaymentSetting
     value: {
       accepts_cash: acceptsCash,
       accepts_transfer: acceptsTransfer,
+      accepts_card: acceptsCard,
       transfer_receipt_required: readBoolean(form, 'transfer_receipt_required'),
       transfer_details: details || null,
     },

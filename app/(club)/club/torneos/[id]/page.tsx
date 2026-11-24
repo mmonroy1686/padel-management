@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { deskMethods } from '@/lib/domain/payments'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { EntriesManager } from '@/components/tournaments/entries-manager'
 import { FixtureList } from '@/components/tournaments/fixture-list'
@@ -83,7 +84,7 @@ export default async function ManageTournamentPage({ params }: { params: Params 
       {tournament.status === 'finished' ? <FixtureList tournament={tournament} timezone={club.timezone} /> : null}
       <EntriesManager
         tournament={tournament}
-        acceptsCash={club.accepts_cash}
+        deskMethods={deskMethods(club)}
         actions={{ cash: recordTournamentCash, remove: removeEntry, addGuest }}
       />
     </>

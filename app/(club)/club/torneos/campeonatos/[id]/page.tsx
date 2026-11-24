@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { deskMethods } from '@/lib/domain/payments'
 import { notFound } from 'next/navigation'
 import { BracketView } from '@/components/championships/bracket-view'
 import { FixtureSteps } from '@/components/championships/fixture-steps'
@@ -231,7 +232,7 @@ export default async function ManageChampionshipPage({
               <div className="md:max-w-md md:flex-1">
                 <PlayerSearch
                   pairs={cards}
-                  cash={{ action: recordChampionshipCash, acceptsCash: club.accepts_cash && championship.status !== 'cancelled' }}
+                  cash={{ action: recordChampionshipCash, methods: championship.status !== 'cancelled' ? deskMethods(club) : [] }}
                 />
               </div>
             ) : null}
@@ -375,7 +376,7 @@ export default async function ManageChampionshipPage({
           <PairsBoard
             categories={pairs}
             editable={championship.status === 'registration' || championship.status === 'closed'}
-            acceptsCash={club.accepts_cash && championship.status !== 'cancelled'}
+            deskMethods={championship.status !== 'cancelled' ? deskMethods(club) : []}
             members={members}
             blocks={championshipBlocks(championship.windows)}
             actions={{ cash: recordChampionshipCash, remove: removePair, move: movePair, add: addPair, hours: saveUnavailability }}

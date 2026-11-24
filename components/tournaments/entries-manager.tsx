@@ -1,8 +1,10 @@
 import { PaymentBadge } from '@/components/booking/payment-badge'
+import { DeskCharge } from '@/components/club/desk-charge'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { DataTable, type DataColumn, type DataRow } from '@/components/ui/data-table'
 import { Field, inputClasses } from '@/components/ui/field'
 import { formatPrice } from '@/lib/domain/format'
+import type { DeskMethod } from '@/lib/domain/payments'
 import { entryPaymentView } from '@/lib/domain/tournament-payments'
 import type { Tournament } from '@/lib/domain/tournaments'
 
@@ -16,7 +18,7 @@ const COLUMNS: DataColumn[] = [
 
 // Design: "Gestión". Who is in and whether each one paid, as a table; until it starts, reception takes people
 // out and adds guests. Cash for whoever owes, as long as no transfer is waiting for review.
-export function EntriesManager({ tournament, acceptsCash, actions }: { tournament: Tournament; acceptsCash: boolean; actions: EntryActions }) {
+export function EntriesManager({ tournament, deskMethods, actions }: { tournament: Tournament; deskMethods: DeskMethod[]; actions: EntryActions }) {
   const editable = tournament.status === 'registration' || tournament.status === 'closed'
   const full = tournament.entries.length >= tournament.maxPlayers
   const rows: DataRow[] = tournament.entries.map((entry) => {
@@ -36,11 +38,13 @@ export function EntriesManager({ tournament, acceptsCash, actions }: { tournamen
         payment: (
           <span className="flex flex-col items-start gap-2">
             <PaymentBadge state={payment.state} />
-            {acceptsCash && payment.state === 'pending' && tournament.status !== 'cancelled' ? (
-              <ActionForm action={actions.cash} submitLabel={`Cobrar ${formatPrice(payment.due)}`} pendingLabel="Registrando…" variant="secondary">
-                <input type="hidden" name="entryId" value={entry.id} />
-                <input type="hidden" name="amount" value={payment.due} />
-              </ActionForm>
+            {payment.state === 'pending' && tournament.status !== 'cancelled' ? (
+              <DeskCharge
+                action={actions.cash}
+                methods={deskMethods}
+                label={`Cobrar ${formatPrice(payment.due)}`}
+                fields={{ entryId: entry.id, amount: payment.due }}
+              />
             ) : null}
           </span>
         ),

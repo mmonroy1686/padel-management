@@ -13,7 +13,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     description: 'Horario, turnos, cancelaciones y partidos abiertos.',
   },
   { href: '/club/ajustes/canchas', label: 'Canchas y precios', icon: 'grid', description: 'Las canchas y cuánto sale cada franja.' },
-  { href: '/club/ajustes/pagos', label: 'Pagos', icon: 'cash', description: 'Efectivo, transferencia y sus datos.' },
+  { href: '/club/ajustes/pagos', label: 'Pagos', icon: 'cash', description: 'Efectivo, POS, transferencia y sus datos.' },
   { href: '/club/ajustes/sellos', label: 'Sellos', icon: 'ticket', description: 'La recompensa por venir al day use.' },
   { href: '/club/ajustes/flyer', label: 'Flyer', icon: 'image', description: 'WhatsApp y fondo del flyer de turnos libres.' },
   { href: '/club/ajustes/staff', label: 'Staff', icon: 'users', description: 'Quién maneja el club: invitar, roles y accesos.' },

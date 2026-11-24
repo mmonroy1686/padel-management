@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { IDLE, type ActionState } from '@/lib/actions/result'
 
-export type PayMethods = { cash: boolean; transfer: boolean }
+export type PayMethods = { cash: boolean; transfer: boolean; card: boolean }
 
-// The small confirmation after "Cobrar $400": how the player paid. Only the methods the club takes. The outcome
-// goes to the card (onDone, onError), which outlives this choice.
+// The small confirmation after "Cobrar $400": how the player paid (cash, a transfer he shows, or POS). Only the
+// methods the club takes. The outcome goes to the card (onDone, onError), which outlives this choice.
 export function ChargeChoice({
   title,
   fields,
@@ -40,6 +40,7 @@ export function ChargeChoice({
   const options = [
     ...(methods.cash ? [{ value: 'cash', label: 'Efectivo' }] : []),
     ...(methods.transfer ? [{ value: 'transfer', label: 'Me transfirió' }] : []),
+    ...(methods.card ? [{ value: 'card', label: 'POS' }] : []),
   ]
 
   return (

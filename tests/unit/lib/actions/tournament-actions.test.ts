@@ -128,7 +128,7 @@ describe('tournament actions', () => {
       ['add_tournament_guest', { p_tournament_id: ID, p_name: 'Pepe' }],
       ['remove_tournament_entry', { p_entry_id: ID }],
       ['record_tournament_score', { p_game_id: ID, p_score_a: 14 }],
-      ['record_tournament_cash', { p_entry_id: ID, p_amount: 400 }],
+      ['record_tournament_cash', { p_entry_id: ID, p_amount: 400, p_method: 'cash' }],
       ['join_tournament', { p_tournament_id: ID }],
       ['report_tournament_transfer', { p_entry_id: ID, p_receipt_path: 'u1/recibo.png' }],
     ])

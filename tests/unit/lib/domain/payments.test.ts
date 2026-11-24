@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { amountDue, PAYMENT_LABELS, paymentMethodsNote, paymentState } from '@/lib/domain/payments'
+import {
+  amountDue,
+  deskChargeDone,
+  deskChargeLabel,
+  deskMethods,
+  PAYMENT_LABELS,
+  paymentMethodsNote,
+  paymentState,
+  readDeskMethod,
+} from '@/lib/domain/payments'
 
 const booking = { price: 1200, status: 'confirmed' as const }
 
@@ -54,9 +63,60 @@ describe('amountDue', () => {
 })
 
 describe('paymentMethodsNote', () => {
+  const club = (cash: boolean, transfer: boolean, card = false) => ({ accepts_cash: cash, accepts_transfer: transfer, accepts_card: card })
+
   it('tells the player how to pay', () => {
-    expect(paymentMethodsNote({ accepts_cash: true, accepts_transfer: true })).toBe('Se paga en el club o por transferencia.')
-    expect(paymentMethodsNote({ accepts_cash: true, accepts_transfer: false })).toBe('Se paga en el club.')
-    expect(paymentMethodsNote({ accepts_cash: false, accepts_transfer: true })).toBe('Se paga por transferencia.')
+    expect(paymentMethodsNote(club(true, true))).toBe('Se paga en el club o por transferencia.')
+    expect(paymentMethodsNote(club(true, false))).toBe('Se paga en el club.')
+    expect(paymentMethodsNote(club(false, true))).toBe('Se paga por transferencia.')
+  })
+
+  it('says a card works at the desk when the club has POS', () => {
+    expect(paymentMethodsNote(club(true, true, true))).toBe('Se paga en el club (efectivo o tarjeta) o por transferencia.')
+    expect(paymentMethodsNote(club(true, false, true))).toBe('Se paga en el club (efectivo o tarjeta).')
+    expect(paymentMethodsNote(club(false, true, true))).toBe('Se paga en el club con tarjeta o por transferencia.')
+    expect(paymentMethodsNote(club(false, false, true))).toBe('Se paga en el club con tarjeta.')
+  })
+})
+
+describe('deskMethods', () => {
+  it('lists what reception takes at the desk, cash first', () => {
+    expect(deskMethods({ accepts_cash: true, accepts_card: true })).toEqual(['cash', 'card'])
+    expect(deskMethods({ accepts_cash: true, accepts_card: false })).toEqual(['cash'])
+    expect(deskMethods({ accepts_cash: false, accepts_card: true })).toEqual(['card'])
+    expect(deskMethods({ accepts_cash: false, accepts_card: false })).toEqual([])
+  })
+})
+
+describe('readDeskMethod', () => {
+  const form = (method?: string) => {
+    const data = new FormData()
+    if (method !== undefined) data.set('method', method)
+    return data
+  }
+
+  it('reads cash or card, and cash from a form that sends none', () => {
+    expect(readDeskMethod(form('card'))).toBe('card')
+    expect(readDeskMethod(form('cash'))).toBe('cash')
+    expect(readDeskMethod(form())).toBe('cash')
+  })
+
+  it('refuses a transfer or anything else: those are not desk charges', () => {
+    expect(readDeskMethod(form('transfer'))).toBeNull()
+    expect(readDeskMethod(form('bitcoin'))).toBeNull()
+  })
+})
+
+describe('deskChargeLabel', () => {
+  it('keeps "Cobrar $400" when cash is the only way, and says the method otherwise', () => {
+    expect(deskChargeLabel('Cobrar $400', 'cash', ['cash'])).toBe('Cobrar $400')
+    expect(deskChargeLabel('Cobrar $400', 'card', ['card'])).toBe('Cobrar $400 con POS')
+    expect(deskChargeLabel('Cobrar $400', 'cash', ['cash', 'card'])).toBe('Cobrar $400 en efectivo')
+    expect(deskChargeLabel('Cobrar $400', 'card', ['cash', 'card'])).toBe('Cobrar $400 con POS')
+  })
+
+  it('confirms with the method', () => {
+    expect(deskChargeDone('cash')).toBe('Pago en efectivo registrado.')
+    expect(deskChargeDone('card')).toBe('Pago con POS registrado.')
   })
 })
