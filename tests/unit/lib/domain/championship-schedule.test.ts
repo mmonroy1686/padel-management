@@ -115,6 +115,25 @@ describe('scheduleChampionship', () => {
     expect(final.startsAt.getTime()).toBeGreaterThanOrEqual(lastGroupEnd + 45 * 60_000)
   })
 
+  // The fixture comes from the database in no set order. In 48 of the 720 orders of this group (one seen in e2e:
+  // e1-e4, e1-e3, e1-e2, …) the first free start for each match in turn left the second court empty at 08:00 and
+  // no room for the final before 20:00.
+  it('places every match whatever order the group matches come in', () => {
+    const input = smallInput()
+    const group = input.matches.filter((match) => match.stage === 'group')
+    const knockout = input.matches.filter((match) => match.stage === 'knockout')
+    const orders = (items: ScheduleMatch[]): ScheduleMatch[][] =>
+      items.length <= 1
+        ? [items]
+        : items.flatMap((item, index) => orders(items.filter((_, other) => other !== index)).map((rest) => [item, ...rest]))
+    for (const order of orders(group)) {
+      const reordered = { ...input, matches: [...order, ...knockout] }
+      const result = scheduleChampionship(reordered)
+      expect(result.unplaced).toEqual([])
+      expect(checkSchedule(applySchedule(reordered, result))).toEqual([])
+    }
+  })
+
   it('never puts a player of two categories in two places at once, and rests every pair 45 minutes', () => {
     const input: ScheduleInput = {
       timezone: TIMEZONE,

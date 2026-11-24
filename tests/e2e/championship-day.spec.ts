@@ -13,11 +13,12 @@ import {
 } from './support/championships'
 
 // Next's dev indicator covers the bottom-left tab on mobile (fase 3a notes): navigate with page.goto.
-test('campeonato: the organizer draws, schedules and publishes, loads the group and the final live, and the public page follows it', async ({ page, browser }) => {
+test('campeonato: the organizer draws, schedules and publishes, loads the group and the final live, and the public page follows it', async ({ page, browser }, testInfo) => {
   test.setTimeout(300_000)
   const club = await clubRow()
-  // Day 22: past the booking window and apart from the registration flow (day 20).
-  const day = addDays(localDateOf(new Date(), club.timezone), 22)
+  // Day 22: past the booking window and apart from the registration flow (day 20). A retry (or a repeat) takes the
+  // next day: the courts of the day before are still held by the earlier attempt's day of play.
+  const day = addDays(localDateOf(new Date(), club.timezone), 22 + testInfo.retry + testInfo.repeatEachIndex)
   const admin = await createMember({ name: 'Admin Fixture', prefix: 'fix-admin', role: 'admin' })
   const players = await Promise.all([1, 2, 3, 4].map((n) => createMember({ name: `P${n} Fixture`, prefix: `fix-p${n}` })))
   const pair = (n: number) => `P${n} Fixture y Socio ${n}`
@@ -67,6 +68,8 @@ test('campeonato: the organizer draws, schedules and publishes, loads the group 
   // Drawn: the page stays on Fixture (the groups are on "Zonas y llaves").
   await expect(page.getByRole('button', { name: 'Programar' })).toBeVisible()
   await page.getByRole('button', { name: 'Programar' }).click()
+  // What "Programar" answered, so a match left without a court says so.
+  await expect(page.getByText(/^(Listo: los \d+ partidos|Ubicamos)/)).toHaveText('Listo: los 7 partidos tienen cancha y horario.')
   await expect(page.getByRole('heading', { name: 'Siguiente paso: publicar el fixture' })).toBeVisible()
   await expect(page.getByRole('table', { name: 'Fixture', exact: true }).getByRole('row')).toHaveCount(8)
   await page.getByRole('button', { name: 'Publicar fixture' }).click()
