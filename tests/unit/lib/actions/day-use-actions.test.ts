@@ -119,7 +119,7 @@ describe('pass actions', () => {
     await player.reportPassTransfer(ID, 'u1/recibo.png')
     await club.checkInPass(IDLE, form({ passId: ID }))
     await club.cancelPass(IDLE, form({ passId: ID }))
-    await club.recordPassCash(IDLE, form({ passId: ID, amount: '450' }))
+    await club.recordPassCash(IDLE, form({ passId: ID, amount: '450', method: 'cash' }))
     await club.sellDayUse(IDLE, form({ productId: ID, date: '2026-10-03', holder: 'guest', guestName: 'Pepe', useReward: 'on' }))
     await club.sellDayUse(IDLE, form({ productId: ID, date: '2026-10-03', holder: 'player', playerId: ID, useReward: 'on' }))
     await club.setProductActive(IDLE, form({ productId: ID, active: 'false' }))
@@ -129,7 +129,7 @@ describe('pass actions', () => {
       ['report_day_use_transfer', { p_pass_id: ID, p_receipt_path: 'u1/recibo.png' }],
       ['check_in_day_use', { p_pass_id: ID }],
       ['cancel_day_use', { p_pass_id: ID }],
-      ['record_day_use_cash', { p_pass_id: ID, p_amount: 450 }],
+      ['record_day_use_cash', { p_pass_id: ID, p_amount: 450, p_method: 'cash' }],
       ['sell_day_use', { p_product_id: ID, p_date: '2026-10-03', p_player_id: undefined, p_guest_name: 'Pepe', p_use_reward: false }],
       ['sell_day_use', { p_product_id: ID, p_date: '2026-10-03', p_player_id: ID, p_guest_name: undefined, p_use_reward: true }],
       ['set_day_use_product_active', { p_product_id: ID, p_active: false }],

@@ -14,7 +14,7 @@ const at = (iso: string) => new Date(iso)
 const FORMAT: BoardFormat = {
   when: (instant) => `día ${instant.toISOString().slice(0, 10)}`,
   time: (instant) => instant.toISOString().slice(11, 16),
-  acceptsCash: true,
+  deskMethods: ['cash'],
 }
 
 function input(overrides: Partial<BoardInput> = {}): BoardInput {
@@ -89,15 +89,20 @@ describe('paymentsBoard', () => {
       id: 'b1-u1',
       when: 'día 2026-11-21',
       amount: 1200,
-      action: { type: 'cash', fields: { bookingId: 'b1', amount: '1200', payerId: 'u1' } },
+      action: { type: 'charge', fields: { bookingId: 'b1', amount: '1200', payerId: 'u1' }, methods: ['cash'] },
     })
-    expect(unpaid.items[3].action).toEqual({ type: 'cash', fields: { passId: 'p1', amount: '450' } })
+    expect(unpaid.items[3].action).toEqual({ type: 'charge', fields: { passId: 'p1', amount: '450' }, methods: ['cash'] })
     expect([unpaid.count, unpaid.total]).toEqual([4, 4150])
   })
 
-  it('offers no cash action when the club takes no cash', () => {
-    const unpaid = column(paymentsBoard(input(), { ...FORMAT, acceptsCash: false }), 'unpaid')
+  it('offers no desk charge when the club takes neither cash nor POS', () => {
+    const unpaid = column(paymentsBoard(input(), { ...FORMAT, deskMethods: [] }), 'unpaid')
     expect(unpaid.items.every((item) => item.action === undefined)).toBe(true)
+  })
+
+  it('offers each desk method the club takes', () => {
+    const unpaid = column(paymentsBoard(input(), { ...FORMAT, deskMethods: ['cash', 'card'] }), 'unpaid')
+    expect(unpaid.items[3].action).toMatchObject({ type: 'charge', methods: ['cash', 'card'] })
   })
 
   it('lists the transfers to confirm oldest first, each opening its review with the receipt', () => {
@@ -121,9 +126,20 @@ describe('paymentsBoard', () => {
       ['Inés', { method: 'transfer', time: '15:30' }, undefined, ''],
       ['Hugo', { method: 'cash', time: '14:10' }, undefined, 'día 2026-11-23'],
     ])
-    expect([collected.count, collected.total, collected.cash]).toEqual([2, 750, 300])
+    expect([collected.count, collected.total, collected.cash, collected.card]).toEqual([2, 750, 300, 0])
     expect(column(columns, 'unpaid').cash).toBeUndefined()
     expect(column(columns, 'refunded').items.map((item) => item.holder)).toEqual(['Juan'])
+  })
+
+  it('keeps POS apart from cash: only cash is in the till', () => {
+    const base = input()
+    const pos = { ...base.doneToday.confirmed[0], id: 'd9', amount: 1200, holder: 'Pía', method: 'card' as const }
+    const collected = column(
+      paymentsBoard(input({ doneToday: { ...base.doneToday, confirmed: [...base.doneToday.confirmed, pos] } }), FORMAT),
+      'collected',
+    )
+    expect([collected.total, collected.cash, collected.card]).toEqual([1950, 300, 1200])
+    expect(collected.items.find((item) => item.id === 'd9')?.done?.method).toBe('card')
   })
 
   it('shows the transfers rejected today with their reason, and no cash part', () => {

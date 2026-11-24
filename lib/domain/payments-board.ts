@@ -1,13 +1,12 @@
 import type { UnpaidChampionshipItem } from './championship-payments'
 import type { UnpaidPassItem } from './day-use-payments'
 import { normalizeText } from './members'
+import type { DeskMethod, PaymentMethod } from './payments'
 import { totalsOf, type MoneyKind, type RefundItem, type UnpaidItem } from './payments-overview'
 import { addDays, localDateOf, zonedTime } from './time'
 import type { UnpaidEntryItem } from './tournament-payments'
 
 // Cobros as a board: what is owed, what is waiting and what got done today, in five columns and two lanes.
-
-export type PaymentMethod = 'cash' | 'transfer'
 
 // A transfer a player reported, waiting for reception to check it.
 export type ReportedTransfer = {
@@ -44,9 +43,10 @@ export type BoardInput = {
   doneToday: { confirmed: DonePayment[]; refunded: DonePayment[]; rejected: DonePayment[] }
 }
 
-// What the card's button does: take cash, give money back, or open the transfer's review.
+// What the card's button does: charge at the desk (one button per method the club takes), give money back, or open the
+// transfer's review.
 export type ItemAction =
-  | { type: 'cash'; fields: Record<string, string> }
+  | { type: 'charge'; fields: Record<string, string>; methods: DeskMethod[] }
   | { type: 'refund'; fields: Record<string, string> }
   | { type: 'review'; receiptUrl: string | null }
 
@@ -69,8 +69,8 @@ export type ColumnKey = 'unpaid' | 'transfers' | 'collected' | 'rejected' | 'ref
 export type LaneKey = 'collect' | 'giveBack'
 
 type ColumnHead = { key: ColumnKey; lane: LaneKey; title: string; emptyText: string; done: boolean }
-// `cash`: done columns only, the part of the total that moved in cash (what the till should hold).
-export type BoardColumn = ColumnHead & { items: BoardItem[]; count: number; total: number; cash?: number }
+// `cash` and `card`: done columns only, the part of the total that moved in cash (what the till should hold) and by POS.
+export type BoardColumn = ColumnHead & { items: BoardItem[]; count: number; total: number; cash?: number; card?: number }
 
 export const KIND_LABELS: Record<MoneyKind, string> = {
   booking: 'Reserva',
@@ -79,7 +79,7 @@ export const KIND_LABELS: Record<MoneyKind, string> = {
   championship: 'Campeonato',
 }
 
-export const METHOD_LABELS: Record<PaymentMethod, string> = { cash: 'Efectivo', transfer: 'Transferencia' }
+export { METHOD_LABELS } from './payments'
 
 export const LANES: { key: LaneKey; title: string }[] = [
   { key: 'collect', title: 'Cobrar' },
@@ -101,8 +101,8 @@ export function clubDayRange(now: Date, timeZone: string): { from: Date; to: Dat
   return { from: zonedTime(today, 0, timeZone), to: zonedTime(addDays(today, 1), 0, timeZone) }
 }
 
-// The page owns how dates read and whether the club takes cash.
-export type BoardFormat = { when: (instant: Date) => string; time: (instant: Date) => string; acceptsCash: boolean }
+// The page owns how dates read and what the club takes at the desk.
+export type BoardFormat = { when: (instant: Date) => string; time: (instant: Date) => string; deskMethods: DeskMethod[] }
 
 const oldestFirst = (a: BoardItem, b: BoardItem) => a.at - b.at
 const latestFirst = (a: BoardItem, b: BoardItem) => b.at - a.at
@@ -110,13 +110,17 @@ const latestFirst = (a: BoardItem, b: BoardItem) => b.at - a.at
 function withItems(head: ColumnHead, items: BoardItem[]): BoardColumn {
   const column: BoardColumn = { ...head, items, ...totalsOf(items, (item) => item.amount) }
   // The till: what came in and what went back; a rejected transfer never moved money.
-  if (head.key === 'collected' || head.key === 'refunded') column.cash = totalsOf(items, (item) => (item.done?.method === 'cash' ? item.amount : 0)).total
+  if (head.key === 'collected' || head.key === 'refunded') {
+    const moved = (method: PaymentMethod) => totalsOf(items, (item) => (item.done?.method === method ? item.amount : 0)).total
+    column.cash = moved('cash')
+    column.card = moved('card')
+  }
   return column
 }
 
 export function paymentsBoard(input: BoardInput, format: BoardFormat): BoardColumn[] {
   const cash = (fields: Record<string, string>): Pick<BoardItem, 'action'> =>
-    format.acceptsCash ? { action: { type: 'cash', fields } } : {}
+    format.deskMethods.length > 0 ? { action: { type: 'charge', fields, methods: format.deskMethods } } : {}
   const played = (startsAt: Date) => ({ when: format.when(startsAt), at: startsAt.getTime() })
   const done = (payment: DonePayment, rejection?: string): BoardItem => ({
     id: payment.id,

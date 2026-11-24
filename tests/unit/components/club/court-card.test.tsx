@@ -34,7 +34,7 @@ function renderList(now: Date) {
     <CourtList
       items={items}
       timezone={TIMEZONE}
-      methods={{ cash: true, transfer: true }}
+      methods={{ cash: true, transfer: true, card: false }}
       members={[]}
       actions={{ chargeShare: action, chargeRest: action, savePlayers: action }}
       now={now}

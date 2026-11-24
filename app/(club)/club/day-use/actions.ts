@@ -1,6 +1,7 @@
 'use server'
 
 import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
+import { deskChargeDone, readDeskMethod } from '@/lib/domain/payments'
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { getViewer } from '@/lib/auth/viewer'
 import { skippedNotice } from '@/lib/domain/day-use'
@@ -73,11 +74,12 @@ export async function cancelPass(_previous: ActionState, form: FormData): Promis
 
 export async function recordPassCash(_previous: ActionState, form: FormData): Promise<ActionState> {
   const amount = readInt(form, 'amount', { min: 1, max: 10_000_000 })
-  if (amount === null) return INVALID_INPUT
+  const method = readDeskMethod(form)
+  if (amount === null || !method) return INVALID_INPUT
   return onPass(
     form,
-    (supabase, id) => supabase.rpc('record_day_use_cash', { p_pass_id: id, p_amount: amount }),
-    'Pago en efectivo registrado.',
+    (supabase, id) => supabase.rpc('record_day_use_cash', { p_pass_id: id, p_amount: amount, p_method: method }),
+    deskChargeDone(method),
   )
 }
 

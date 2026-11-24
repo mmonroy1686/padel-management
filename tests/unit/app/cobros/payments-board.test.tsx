@@ -33,7 +33,7 @@ const INPUT: BoardInput = {
 const COLUMNS = paymentsBoard(INPUT, {
   when: (instant) => instant.toISOString().slice(0, 10),
   time: (instant) => instant.toISOString().slice(11, 16),
-  acceptsCash: true,
+  deskMethods: ['cash'],
 })
 
 function renderBoard() {
@@ -75,7 +75,7 @@ describe('PaymentsBoard', () => {
     const carla = within(column('Sin cobrar')).getByRole('article', { name: 'Carla Ruiz' })
     await userEvent.click(within(carla).getByRole('button', { name: 'Cobrar en efectivo' }))
     await waitFor(() => expect(actions.cash.day_use).toHaveBeenCalledTimes(1))
-    expect(Object.fromEntries(actions.cash.day_use.mock.calls[0][1].entries())).toEqual({ passId: 'p1', amount: '450' })
+    expect(Object.fromEntries(actions.cash.day_use.mock.calls[0][1].entries())).toEqual({ passId: 'p1', amount: '450', method: 'cash' })
     expect(actions.cash.booking).not.toHaveBeenCalled()
 
     await userEvent.click(screen.getByRole('button', { name: 'Devolver 1' }))

@@ -32,7 +32,7 @@ function stepActions(): TournamentStepActions {
 describe('EntriesManager', () => {
   it('shows who is in, whether each one paid, and charges cash to whoever owes', async () => {
     const actions = entryActions()
-    render(<EntriesManager tournament={makeTournament({ entries: ENTRIES })} acceptsCash actions={actions} />)
+    render(<EntriesManager tournament={makeTournament({ entries: ENTRIES })} deskMethods={['cash']} actions={actions} />)
     expect(screen.getByRole('heading', { name: 'Anotados (3 de 8)' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Anotados' })).toBeInTheDocument()
     const [ana, pepe, bruno] = within(screen.getByRole('table')).getAllByRole('row').slice(1)
@@ -50,19 +50,19 @@ describe('EntriesManager', () => {
   })
 
   it('lets reception take people out and add guests until it starts', () => {
-    render(<EntriesManager tournament={makeTournament({ entries: ENTRIES, status: 'closed' })} acceptsCash actions={entryActions()} />)
+    render(<EntriesManager tournament={makeTournament({ entries: ENTRIES, status: 'closed' })} deskMethods={['cash']} actions={entryActions()} />)
     expect(screen.getAllByRole('button', { name: 'Sacar del torneo' })).toHaveLength(3)
     expect(screen.getByLabelText('Nombre del invitado')).toBeInTheDocument()
   })
 
   it('stops that once it is on, and asks for no guests when it is full', () => {
     const { unmount } = render(
-      <EntriesManager tournament={makeTournament({ entries: ENTRIES, status: 'in_progress' })} acceptsCash actions={entryActions()} />,
+      <EntriesManager tournament={makeTournament({ entries: ENTRIES, status: 'in_progress' })} deskMethods={['cash']} actions={entryActions()} />,
     )
     expect(screen.queryByRole('button', { name: 'Sacar del torneo' })).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Nombre del invitado')).not.toBeInTheDocument()
     unmount()
-    render(<EntriesManager tournament={makeTournament({ entries: makeEntries(8) })} acceptsCash={false} actions={entryActions()} />)
+    render(<EntriesManager tournament={makeTournament({ entries: makeEntries(8) })} deskMethods={[]} actions={entryActions()} />)
     expect(screen.queryByLabelText('Nombre del invitado')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Cobrar/ })).not.toBeInTheDocument()
   })

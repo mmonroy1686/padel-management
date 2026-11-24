@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { deskMethods } from '@/lib/domain/payments'
 import { DayStrip } from '@/components/booking/day-strip'
 import { PassesToday } from '@/components/day-use/passes-today'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
@@ -76,7 +77,7 @@ export default async function ClubDayUsePage({ searchParams }: { searchParams: S
         today={today}
         forDay={isToday ? 'de hoy' : `del ${dayLabel(date, today)}`}
         timezone={club.timezone}
-        acceptsCash={club.accepts_cash}
+        deskMethods={deskMethods(club)}
         actions={{ checkIn: checkInPass, cash: recordPassCash, cancel: cancelPass }}
         sell={{ offers, members, rewardPercent: rule.enabled ? rule.discountPercent : null, action: sellDayUse }}
       />

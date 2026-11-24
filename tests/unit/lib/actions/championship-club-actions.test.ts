@@ -172,13 +172,13 @@ describe('the pairs', () => {
   it('takes out, moves, charges, merges and cancels', async () => {
     await club.removePair(IDLE, form({ entryId: ID }))
     await club.movePair(IDLE, form({ entryId: ID, categoryId: OTHER }))
-    await club.recordChampionshipCash(IDLE, form({ entryId: ID, amount: '2000' }))
+    await club.recordChampionshipCash(IDLE, form({ entryId: ID, amount: '2000', method: 'cash' }))
     await club.mergeCategory(IDLE, form({ categoryId: ID, intoId: OTHER }))
     await club.cancelCategory(IDLE, form({ categoryId: ID }))
     expect(rpc.mock.calls).toEqual([
       ['remove_championship_entry', { p_entry_id: ID }],
       ['move_championship_entry', { p_entry_id: ID, p_category_id: OTHER }],
-      ['record_championship_cash', { p_entry_id: ID, p_amount: 2000 }],
+      ['record_championship_cash', { p_entry_id: ID, p_amount: 2000, p_method: 'cash' }],
       ['merge_championship_category', { p_category_id: ID, p_into_id: OTHER }],
       ['cancel_championship_category', { p_category_id: ID }],
     ])

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { deskMethods } from '@/lib/domain/payments'
 import { PassStaffCard } from '@/components/day-use/pass-staff-card'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { BackLink } from '@/components/ui/back-link'
@@ -40,7 +41,7 @@ export default async function PassByCodePage({ params }: { params: Params }) {
         pass={pass}
         today={today}
         timezone={club.timezone}
-        acceptsCash={club.accepts_cash}
+        deskMethods={deskMethods(club)}
         actions={{ checkIn: checkInPass, cash: recordPassCash, cancel: cancelPass }}
       />
     </>

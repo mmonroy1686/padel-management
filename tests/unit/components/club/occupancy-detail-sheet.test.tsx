@@ -60,7 +60,7 @@ const held = makeGrid({
   occupancies: [{ ...occupancy('h1', 'court-1', '20:00', '21:30', 'hold', 'Ana'), expiresAt: at('17:42') }],
 }).rows.find((row) => row.slot.label === '20:00')!.cells[0]
 
-function renderDetail(cell: GridCell, methods = { cash: true, transfer: true }) {
+function renderDetail(cell: GridCell, methods = { cash: true, transfer: true, card: false }) {
   const done = async () => ({ status: 'ok' as const, message: 'Listo.' })
   const actions: DetailActions = {
     cancel: vi.fn<FormAction>(done),
@@ -131,7 +131,7 @@ describe('OccupancyDetailSheet', () => {
   })
 
   it('hides charges when the club takes neither method', () => {
-    renderDetail(booked, { cash: false, transfer: false })
+    renderDetail(booked, { cash: false, transfer: false, card: false })
     expect(screen.queryByRole('button', { name: /^Cobrar/ })).not.toBeInTheDocument()
   })
 

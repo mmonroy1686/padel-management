@@ -7,7 +7,7 @@ import type { ActionState } from '@/lib/actions/result'
 
 function renderChoice(
   result: ActionState = { status: 'ok', message: 'Cobramos $300 en efectivo.' },
-  methods = { cash: true, transfer: true },
+  methods = { cash: true, transfer: true, card: false },
 ) {
   const action = vi.fn<FormAction>(async () => result)
   const onDone = vi.fn()
@@ -53,10 +53,19 @@ describe('ChargeChoice', () => {
     expect(action.mock.calls[0][1].get('method')).toBe('transfer')
   })
 
+  it('offers POS when the club has it', async () => {
+    const { action } = renderChoice(undefined, { cash: true, transfer: false, card: true })
+    expect(screen.queryByRole('button', { name: 'Me transfirió' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'POS' }))
+    await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
+    expect(action.mock.calls[0][1].get('method')).toBe('card')
+  })
+
   it('offers only the methods the club takes', () => {
-    renderChoice(undefined, { cash: false, transfer: true })
+    renderChoice(undefined, { cash: false, transfer: true, card: false })
     expect(screen.queryByRole('button', { name: 'Efectivo' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Me transfirió' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'POS' })).not.toBeInTheDocument()
   })
 
   it('passes an error up and can go back', async () => {

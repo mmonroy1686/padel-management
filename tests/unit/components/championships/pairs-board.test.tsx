@@ -32,7 +32,7 @@ function renderBoard(editable = true) {
     <PairsBoard
       categories={CATEGORIES}
       editable={editable}
-      acceptsCash
+      deskMethods={['cash']}
       members={[{ userId: '66666666-6666-6666-6666-666666666666', name: 'Bruno Silva' }]}
       blocks={championshipBlocks(CHAMPIONSHIP.windows)}
       actions={steps}

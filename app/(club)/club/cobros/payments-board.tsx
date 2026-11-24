@@ -8,6 +8,7 @@ import { inputClasses } from '@/components/ui/field'
 import { IDLE, type ActionState } from '@/lib/actions/result'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/domain/format'
+import { METHOD_HOW, METHOD_LABELS } from '@/lib/domain/payments'
 import {
   filterBoard,
   KIND_LABELS,
@@ -38,6 +39,10 @@ const SUMMARY: { key: ColumnKey; label: string; unit: [string, string]; tone: st
 ]
 
 const plural = (count: number, [one, many]: [string, string]) => `${count} ${count === 1 ? one : many}`
+
+// What moved through the till, and by POS when there was any.
+const tillText = (column: BoardColumn) =>
+  `${formatPrice(column.cash ?? 0)} en efectivo${column.card ? ` · ${formatPrice(column.card)} por POS` : ''}`
 
 // Cobros as a board: a summary on top, then one lane at a time (Cobrar or Devolver) with its columns side by side on
 // wide screens. Each payment sits in the column of its state and moves right when someone acts on it.
@@ -75,7 +80,7 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
               </span>
               <span className="text-sm text-fg-muted tabular-nums">
                 {column.cash !== undefined && column.count > 0
-                  ? `${formatPrice(column.cash)} en efectivo`
+                  ? tillText(column)
                   : column.count > 0
                     ? plural(column.count, tile.unit)
                     : column.done
@@ -169,7 +174,10 @@ function ColumnView({ column, filtering, children }: { column: BoardColumn; filt
         </span>
       </header>
       {column.cash !== undefined && column.count > 0 ? (
-        <p className="pt-2 text-sm text-fg-muted tabular-nums">En efectivo: {formatPrice(column.cash)}</p>
+        <p className="pt-2 text-sm text-fg-muted tabular-nums">
+          En efectivo: {formatPrice(column.cash)}
+          {column.card ? ` · Por POS: ${formatPrice(column.card)}` : ''}
+        </p>
       ) : null}
       {column.items.length > 0 ? (
         <ul className="flex flex-col divide-y divide-border">
@@ -205,8 +213,18 @@ function RowAction({ item, actions, onReview }: { item: BoardItem; actions: Boar
       </button>
     )
   }
-  return action.type === 'cash' ? (
-    <RowForm action={actions.cash[item.kind]} fields={action.fields} label="Cobrar" accessibleLabel="Cobrar en efectivo" />
+  return action.type === 'charge' ? (
+    <div className="flex shrink-0 flex-wrap justify-end gap-2">
+      {action.methods.map((method) => (
+        <RowForm
+          key={method}
+          action={actions.cash[item.kind]}
+          fields={{ ...action.fields, method }}
+          label={action.methods.length > 1 ? METHOD_LABELS[method] : 'Cobrar'}
+          accessibleLabel={`Cobrar ${METHOD_HOW[method]}`}
+        />
+      ))}
+    </div>
   ) : (
     <RowForm action={actions.refund} fields={action.fields} label="Devuelto" accessibleLabel="Marcar devuelto" />
   )

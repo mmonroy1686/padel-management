@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadPaymentsOverview } from '@/lib/data/payments'
 import { dayLongLabel, timeIn } from '@/lib/domain/format'
+import { deskMethods } from '@/lib/domain/payments'
 import { paymentsBoard } from '@/lib/domain/payments-board'
 import { localDateOf } from '@/lib/domain/time'
 import { recordCash } from '../grilla/actions'
@@ -19,7 +20,7 @@ export default async function PaymentsPage() {
   const columns = paymentsBoard(await loadPaymentsOverview(club), {
     when: (start) => `${dayLongLabel(localDateOf(start, club.timezone))}, ${timeIn(start, club.timezone)}`,
     time: (instant) => timeIn(instant, club.timezone),
-    acceptsCash: club.accepts_cash,
+    deskMethods: deskMethods(club),
   })
 
   return (

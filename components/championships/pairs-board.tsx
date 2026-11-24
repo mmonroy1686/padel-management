@@ -11,6 +11,7 @@ import { Field, inputClasses } from '@/components/ui/field'
 import type { PairRow, PairsCategory } from '@/lib/domain/championship-pairs'
 import type { Block } from '@/lib/domain/championships'
 import type { MemberOption } from '@/lib/domain/members'
+import type { DeskMethod } from '@/lib/domain/payments'
 
 export type PairsActions = { cash: FormAction; remove: FormAction; move: FormAction; add: FormAction; hours: FormAction }
 
@@ -21,14 +22,14 @@ type Sheet = { kind: 'add' } | { kind: PairAction; row: PairRow; categoryId: str
 export function PairsBoard({
   categories,
   editable,
-  acceptsCash,
+  deskMethods,
   members,
   blocks,
   actions,
 }: {
   categories: PairsCategory[]
   editable: boolean
-  acceptsCash: boolean
+  deskMethods: DeskMethod[]
   members: MemberOption[]
   blocks: Block[]
   actions: PairsActions
@@ -66,7 +67,7 @@ export function PairsBoard({
           <PairsTable
             category={category}
             editable={editable}
-            acceptsCash={acceptsCash}
+            deskMethods={deskMethods}
             cashAction={actions.cash}
             onAction={(kind, row) => setSheet({ kind, row, categoryId: category.id })}
           />

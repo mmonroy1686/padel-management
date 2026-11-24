@@ -74,7 +74,7 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
   const inPlay = [...playing, ...recent]
   const list = {
     timezone: club.timezone,
-    methods: { cash: club.accepts_cash, transfer: club.accepts_transfer },
+    methods: { cash: club.accepts_cash, transfer: club.accepts_transfer, card: club.accepts_card },
     members,
     actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers },
     now,

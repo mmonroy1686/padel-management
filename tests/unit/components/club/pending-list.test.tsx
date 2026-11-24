@@ -31,7 +31,7 @@ function renderList() {
     <PendingList
       turns={turns}
       timezone={TIMEZONE}
-      methods={{ cash: true, transfer: true }}
+      methods={{ cash: true, transfer: true, card: false }}
       members={[]}
       actions={{ chargeShare: action, chargeRest: action, savePlayers: action }}
       now={at('11:00')}

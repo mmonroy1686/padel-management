@@ -69,7 +69,7 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
           timezone={club.timezone}
           grid={grid}
           members={members}
-          methods={{ cash: club.accepts_cash, transfer: club.accepts_transfer }}
+          methods={{ cash: club.accepts_cash, transfer: club.accepts_transfer, card: club.accepts_card }}
           loadAction={loadSlot}
           detailActions={{
             cancel: cancelBooking,

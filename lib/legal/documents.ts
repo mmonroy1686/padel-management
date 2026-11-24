@@ -49,7 +49,7 @@ export function termsOfService(product = productName()): LegalDocument {
       {
         title: 'Pagos',
         paragraphs: [
-          `${product} no cobra pagos en línea. Pagás en el club, en efectivo o por transferencia, según lo que acepte cada club. Cuando pagás por transferencia, el club confirma el pago al ver el comprobante.`,
+          `${product} no cobra pagos en línea. Pagás en el club, en efectivo, con tarjeta o por transferencia, según lo que acepte cada club. Cuando pagás por transferencia, el club confirma el pago al ver el comprobante.`,
           'Las devoluciones, cuando correspondan, las hace el club por el mismo medio o el que acuerden.',
         ],
       },

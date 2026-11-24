@@ -1,6 +1,7 @@
 'use server'
 
 import { fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
+import { deskChargeDone, readDeskMethod } from '@/lib/domain/payments'
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { readEnum, readInstant, readInt, readLocalDate, readText, readTime, readUuid } from '@/lib/domain/input'
 import { seriesCreatedMessage } from '@/lib/domain/series'
@@ -88,15 +89,17 @@ export async function recordCash(_previous: ActionState, form: FormData): Promis
   const amount = readInt(form, 'amount', { min: 1, max: 10_000_000 })
   const hasPayer = form.get('payerId') !== null
   const payerId = hasPayer ? readUuid(form, 'payerId') : null
-  if (!bookingId || amount === null || (hasPayer && !payerId)) return INVALID_INPUT
+  const method = readDeskMethod(form)
+  if (!bookingId || amount === null || (hasPayer && !payerId) || !method) return INVALID_INPUT
   const supabase = await createClient()
   const { error } = await supabase.rpc('record_cash', {
     p_booking_id: bookingId,
     p_amount: amount,
     ...(payerId ? { p_payer_id: payerId } : {}),
+    p_method: method,
   })
   revalidateBookings()
-  return fromRpc(error, 'Pago en efectivo registrado.')
+  return fromRpc(error, deskChargeDone(method))
 }
 
 export async function cancelMatch(_previous: ActionState, form: FormData): Promise<ActionState> {

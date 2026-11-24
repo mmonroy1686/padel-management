@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { deskChargeDone, readDeskMethod } from '@/lib/domain/payments'
 import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { getViewer } from '@/lib/auth/viewer'
@@ -212,10 +213,11 @@ export async function movePair(_previous: ActionState, form: FormData): Promise<
 export async function recordChampionshipCash(_previous: ActionState, form: FormData): Promise<ActionState> {
   const entryId = readUuid(form, 'entryId')
   const amount = readInt(form, 'amount', { min: 1, max: 10_000_000 })
-  if (!entryId || amount === null) return INVALID_INPUT
+  const method = readDeskMethod(form)
+  if (!entryId || amount === null || !method) return INVALID_INPUT
   return run(
-    (supabase) => supabase.rpc('record_championship_cash', { p_entry_id: entryId, p_amount: amount }),
-    'Pago en efectivo registrado.',
+    (supabase) => supabase.rpc('record_championship_cash', { p_entry_id: entryId, p_amount: amount, p_method: method }),
+    deskChargeDone(method),
   )
 }
 

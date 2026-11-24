@@ -29,7 +29,7 @@ function renderToday(passes: DayUsePass[]) {
       passes={passes}
       today={DATE}
       timezone={TIMEZONE}
-      acceptsCash
+      deskMethods={['cash']}
       actions={ACTIONS}
       sell={{ offers: OFFERS, members: MEMBERS, rewardPercent: 100, action: vi.fn<FormAction>() }}
     />,
@@ -118,7 +118,7 @@ describe('PassesToday on another day', () => {
         today={DATE}
         forDay="del viernes 2"
         timezone={TIMEZONE}
-        acceptsCash
+        deskMethods={['cash']}
         actions={{ checkIn: vi.fn(), cash: vi.fn(), cancel: vi.fn() }}
         sell={{ offers: [], members: [], rewardPercent: null, action: vi.fn() }}
       />,
