@@ -1,9 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { safeNextPath } from '@/lib/auth/redirect'
+import { originFromHeaders, safeNextPath } from '@/lib/auth/redirect'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl
+  const { searchParams } = request.nextUrl
+  // Back to the host the person signed in on (each club's subdomain has its own session). nextUrl.origin can be the
+  // server's own hostname in development, not the club's.
+  const origin = originFromHeaders((name) => request.headers.get(name), request.nextUrl.origin)
   const code = searchParams.get('code')
   const next = safeNextPath(searchParams.get('next'))
 

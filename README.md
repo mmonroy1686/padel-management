@@ -29,6 +29,17 @@ npm run dev:local      # la app contra Supabase local, sin tocar .env.local
 
 Ingresá en http://localhost:3000/auth/ingreso con uno de esos emails y abrí el enlace que llega a Mailpit (http://127.0.0.1:54324). Admin y recepción ven el panel en `/club/grilla`.
 
+#### Varios clubes en local
+
+Cada club vive en su subdominio. En local, `<club>.localhost:3000` (los navegadores lo resuelven solos); `localhost:3000` es el club de `DEFAULT_CLUB_SLUG` (Rustic). El seed trae un segundo club, **Pádel Norte**:
+
+```bash
+npm run demo:users -- --club=norte   # admin@norte.test, recepcion@norte.test, jugador@norte.test
+npm run dev:local                    # http://norte.localhost:3000 y http://rustic.localhost:3000
+```
+
+La sesión es una por club: entrar a otro club pide ingresar de nuevo, con la misma cuenta. La primera vez, ese club muestra su propia bienvenida (la categoría es por club). Un subdominio sin club da 404 "Club no encontrado".
+
 El seed local trae a Rustic con los valores del prototipo: 3 canchas, 08:00 a 23:00, turnos de 90 minutos, $1.200 y $1.600 desde las 18:30.
 
 ### Producción
@@ -39,6 +50,17 @@ Un usuario pasa a `club_members` cuando completa la bienvenida. Para dar rol de 
 update public.club_members m set role = 'admin'
 from auth.users u where u.id = m.user_id and u.email = 'vos@ejemplo.com';
 ```
+
+#### Un club por subdominio (dominio y Vercel)
+
+Cada club se abre en `https://<slug>.<dominio>`. Hasta tener el dominio, todo sigue en el club de `DEFAULT_CLUB_SLUG`. Para pasar a subdominios:
+
+1. **Dominio:** en Vercel → Settings → Domains, agregar `<dominio>` y `*.<dominio>`. El comodín necesita que el dominio use los nameservers de Vercel.
+2. **Variables en Vercel:** `NEXT_PUBLIC_ROOT_DOMAIN=<dominio>` **solo en Production** (en Preview haría que los links de las previews apunten a producción) y `DEFAULT_CLUB_SLUG=rustic` en Production y Preview. Volver a desplegar, después de que la migración del corte esté aplicada.
+3. **Supabase → Authentication → URL Configuration:** Site URL `https://rustic.<dominio>`; en Redirect URLs agregar `https://*.<dominio>/**` (dejar las actuales hasta terminar la mudanza).
+4. **Google** (si se usa para ingresar): no cambia, el callback lo maneja Supabase.
+
+Sin subdominio (el dominio pelado, `www`, `*.vercel.app` y las previews) se ve el club de `DEFAULT_CLUB_SLUG`. Los links que la gente comparte y los de los avisos por email apuntan al subdominio de cada club.
 
 #### Email de inicio de sesión (SMTP propio)
 
@@ -102,7 +124,7 @@ Para recuperar producción entera en un proyecto nuevo de Supabase, se usan los 
 | --- | --- |
 | `npm run dev` | Servidor de desarrollo (usa `.env.local`) |
 | `npm run dev:local` | Servidor de desarrollo contra Supabase local |
-| `npm run demo:users` | Crea admin, recepción y jugador demo en la base local |
+| `npm run demo:users` | Crea admin, recepción y jugador demo en la base local (`-- --club=<slug>` para otro club) |
 | `npm run lint` / `npm run typecheck` | ESLint y TypeScript |
 | `npm test` | Vitest (`tests/unit`) |
 | `npm run test:db` | pgTAP (`supabase/tests`) |

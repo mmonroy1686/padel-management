@@ -1,6 +1,6 @@
 import { isNotificationStale } from '@/lib/domain/notifications'
 import type { EmailSender } from './email'
-import { buildEmail, type PendingEmail } from './messages'
+import { buildEmail, type EmailUrls, type PendingEmail } from './messages'
 
 export type EmailOutcome = 'sent' | 'failed' | 'skipped'
 
@@ -24,7 +24,7 @@ function isStale(item: PendingEmail, now: Date): boolean {
 export async function sendPending(
   store: OutboxStore,
   sender: EmailSender | null,
-  options: { siteUrl: string; supabaseUrl: string; now?: Date },
+  options: EmailUrls & { now?: Date },
 ): Promise<OutboxReport> {
   const report: OutboxReport = { sent: 0, failed: 0, skipped: 0 }
   const now = options.now ?? new Date()

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
-import { getSiteUrl } from '@/lib/auth/redirect'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { loadPlayerContext } from '@/lib/data/matches'
 import { loadTournament } from '@/lib/data/tournaments'
@@ -51,7 +51,7 @@ export default async function TournamentPage({ params, searchParams }: { params:
         payment={entry ? entryPaymentView(tournament.price, entry.payments, club.accepts_transfer) : null}
         paymentNote={paymentMethodsNote(club)}
         transfer={{ details: club.transfer_details, receiptRequired: club.transfer_receipt_required }}
-        shareText={tournamentShareText({ tournament, clubName: club.name, dayText, timeText, url: `${getSiteUrl()}/torneos/${tournament.id}` })}
+        shareText={tournamentShareText({ tournament, clubName: club.name, dayText, timeText, url: `${(await requestOrigin())}/torneos/${tournament.id}` })}
         ranking={ranking(tournament.entries, tournament.games, tournament.pointsPerGame)}
         initialJoin={anotarme === '1'}
         joinAction={joinTournament}

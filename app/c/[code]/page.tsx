@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { AutoRefresh } from '@/components/live/auto-refresh'
-import { getSiteUrl } from '@/lib/auth/redirect'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { loadPublicChampionship } from '@/lib/data/championship-fixture'
 import { isPublicCode } from '@/lib/domain/championship-public'
 import { pairCards } from '@/lib/domain/championship-search'
@@ -11,6 +11,7 @@ import { CHAMPIONSHIP_STATUS_LABELS, datesText, matchRulesText } from '@/lib/dom
 import { championshipPreview } from '@/lib/domain/share-preview'
 import { localDateOf } from '@/lib/domain/time'
 import { PublicBoard } from './public-board'
+import { redirectToOwnerClub } from '@/lib/club/owner-redirect'
 
 type Params = Promise<{ code: string }>
 
@@ -29,6 +30,7 @@ export default async function PublicChampionshipPage({ params }: { params: Param
   if (!isPublicCode(code)) notFound()
   const data = await loadPublicChampionship(code)
   if (!data) notFound()
+  await redirectToOwnerClub(data.clubSlug, `/c/${data.code}`)
 
   const { championship, fixture } = data
   const ctx = {
@@ -36,7 +38,7 @@ export default async function PublicChampionshipPage({ params }: { params: Param
     today: localDateOf(new Date(), data.timezone),
     courtName: new Map(data.courts.map((court) => [court.id, court.name])),
   }
-  const shareUrl = `${getSiteUrl()}/c/${data.code}`
+  const shareUrl = `${(await requestOrigin())}/c/${data.code}`
   const views = matchViews(championship, fixture, ctx)
   const zones = zoneViews(championship, fixture)
   const allBrackets = brackets(championship, views)

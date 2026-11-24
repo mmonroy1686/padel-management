@@ -7,6 +7,8 @@ import { toChampionship, type CategoryRow, type Championship, type ChampionshipR
 
 export type PublicChampionship = {
   clubName: string
+  // The owner club's subdomain: the page lives there. null from a database without the multi-club migration yet.
+  clubSlug: string | null
   logoPath: string | null
   timezone: string
   code: string
@@ -21,7 +23,7 @@ type PublicCategory = Pick<
   'id' | 'name' | 'gender' | 'format' | 'group_size' | 'qualifiers_per_group' | 'match_minutes' | 'match_rules' | 'sort_order'
 > & { entries: PublicEntry[] }
 type PublicData = {
-  club: { name: string; logo_path: string | null; timezone: string }
+  club: { name: string; slug?: string; logo_path: string | null; timezone: string }
   championship: {
     id: string
     name: string
@@ -99,6 +101,7 @@ export function readPublicChampionship(value: unknown): PublicChampionship | nul
   }
   return {
     clubName: data.club.name,
+    clubSlug: data.club.slug ?? null,
     logoPath: data.club.logo_path,
     timezone: data.club.timezone,
     code: data.championship.public_code,

@@ -104,8 +104,15 @@ describe('waits and holds', () => {
     expect(await claimSlotHold(IDLE, form({ holdId: ID }))).toEqual({ status: 'error', message: errorMessage('hold_expired') })
   })
 
-  it('marks the avisos read', async () => {
+  it("marks this club's avisos read, not another club's", async () => {
     await markNotificationsRead()
-    expect(rpc).toHaveBeenCalledWith('mark_notifications_read')
+    expect(rpc).toHaveBeenCalledWith('mark_notifications_read', { p_club_id: 'club-1' })
+  })
+
+  it('does nothing without a session', async () => {
+    state.signedIn = false
+    await markNotificationsRead()
+    expect(rpc).not.toHaveBeenCalledWith('mark_notifications_read', expect.anything())
+    state.signedIn = true
   })
 })

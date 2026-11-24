@@ -84,6 +84,12 @@ describe('readPublicChampionship', () => {
     expect(data?.fixture.groups[0].members.map((member) => member.entryId)).toEqual(['e1', 'e2'])
   })
 
+  it("reads the owner club's slug, to send the page to its subdomain", () => {
+    expect(readPublicChampionship({ ...DATA, club: { ...DATA.club, slug: 'norte' } })?.clubSlug).toBe('norte')
+    // A database without the multi-club migration yet.
+    expect(readPublicChampionship(DATA)?.clubSlug).toBeNull()
+  })
+
   it('reads nothing when the link leads nowhere', () => {
     expect(readPublicChampionship(null)).toBeNull()
     expect(readPublicChampionship({ club: {} })).toBeNull()

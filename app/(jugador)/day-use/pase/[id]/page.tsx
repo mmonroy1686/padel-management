@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { BackLink } from '@/components/ui/back-link'
-import { getSiteUrl } from '@/lib/auth/redirect'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { loadPass } from '@/lib/data/day-use'
 import { canCancelPass, passCheckInPath } from '@/lib/domain/day-use'
@@ -27,7 +27,7 @@ export default async function MyPassPage({ params }: { params: Params }) {
   // Staff can read any pass of the club: this screen is only for its owner.
   if (!pass || pass.playerId !== viewer.userId) notFound()
 
-  const qrSvg = await passQrSvg(`${getSiteUrl()}${passCheckInPath(pass.code)}`)
+  const qrSvg = await passQrSvg(`${(await requestOrigin())}${passCheckInPath(pass.code)}`)
 
   return (
     <>

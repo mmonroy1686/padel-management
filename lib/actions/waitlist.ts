@@ -69,9 +69,11 @@ export async function declineSlotHold(_previous: ActionState, form: FormData): P
   return fromRpc(error, 'Listo, se lo pasamos al siguiente de la lista.')
 }
 
-// Called by /avisos once it is open; the bell goes quiet on the next render.
+// Called by /avisos once it is open; the bell goes quiet on the next render. Only this club's avisos.
 export async function markNotificationsRead(): Promise<void> {
+  const viewer = await getViewer()
+  if (!viewer) return
   const supabase = await createClient()
-  const { error } = await supabase.rpc('mark_notifications_read')
+  const { error } = await supabase.rpc('mark_notifications_read', { p_club_id: viewer.club.id })
   if (!error) revalidateBookings()
 }

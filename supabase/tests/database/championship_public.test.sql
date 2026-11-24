@@ -5,7 +5,7 @@ create extension if not exists pgtap with schema extensions;
 \ir helpers/match.psql
 \ir helpers/day_use.psql
 \ir helpers/championship.psql
-select plan(14);
+select plan(15);
 
 -- C1 is published at campeonato-t-ab12: 'Libre' with Ana and Pedro (a desk note on them) and Bruno and Lucía,
 -- their match played; Gabi and Marta wait. C2 is a draft, C3 was cancelled, C4 was drawn but not published.
@@ -50,6 +50,8 @@ set local role anon;
 select ok(public.public_championship('campeonato-t-ab12') is not null,
   'anyone with the link reads a published championship');
 select is(public.public_championship('campeonato-t-ab12') -> 'championship' ->> 'name', 'Campeonato T', 'its name');
+select is(public.public_championship('campeonato-t-ab12') -> 'club' ->> 'slug', 'test-club',
+  'and its club''s slug, to open it on that club''s subdomain');
 select is(jsonb_array_length(public.public_championship('campeonato-t-ab12') -> 'categories' -> 0 -> 'entries'), 2,
   'the pairs with a place, not the ones waiting');
 select is(jsonb_array_length(public.public_championship('campeonato-t-ab12') -> 'matches' -> 0 -> 'sets'), 2,

@@ -3,7 +3,7 @@ import { AssistantScreen } from '@/components/assistant/assistant-screen'
 import { FlyerShare } from '@/components/assistant/flyer-share'
 import { DayStrip } from '@/components/booking/day-strip'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
-import { getSiteUrl } from '@/lib/auth/redirect'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadAssistantDay } from '@/lib/data/assistant'
 import { recommendationText, recommendedSlots } from '@/lib/domain/assistant-board'
@@ -28,7 +28,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Se
   const days = Array.from({ length: 7 }, (_, index) => addDays(today, index))
 
   const { grid, board } = await loadAssistantDay(club, date, viewer, now)
-  const siteUrl = getSiteUrl()
+  const siteUrl = (await requestOrigin())
   const recommended = recommendedSlots(board, now, club.match_close_minutes).map((slot) => ({
     slot,
     text: recommendationText(slot, club.timezone),

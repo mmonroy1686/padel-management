@@ -16,7 +16,7 @@ const PLAYER_TABS: TabItem[] = [
 
 export default async function PlayerLayout({ children }: { children: React.ReactNode }) {
   const [viewer, club] = await Promise.all([getViewer(), getClub()])
-  const unread = viewer ? await countUnreadNotifications(viewer.userId) : 0
+  const unread = viewer ? await countUnreadNotifications(viewer.userId, club.id) : 0
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col md:max-w-3xl lg:max-w-5xl">

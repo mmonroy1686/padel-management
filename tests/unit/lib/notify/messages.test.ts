@@ -15,8 +15,9 @@ const HELD: PendingEmail = {
   clubLogoPath: 'club-1/logo-1.png',
   clubPrimary: '#FCB021',
   clubBackground: '#021716',
+  clubSlug: 'rustic',
 }
-const URLS = { siteUrl: 'https://rustic.test', supabaseUrl: 'https://db.test' }
+const URLS = { clubUrl: (slug: string) => `https://${slug}.test`, supabaseUrl: 'https://db.test' }
 
 describe('buildEmail', () => {
   it('mails a held slot in castellano, with the logo, the colors and the link', () => {
@@ -38,6 +39,12 @@ describe('buildEmail', () => {
     expect(mail.html).toContain('Ver el turno')
     expect(mail.html).not.toContain('<img')
     expect(mail.html).toContain('Rustic Pádel')
+  })
+
+  it("links to the aviso's own club, whichever club sends the batch", () => {
+    const mail = buildEmail({ ...HELD, kind: 'slot_free_now', link: '/reservar', clubSlug: 'norte', clubName: 'Pádel Norte' }, URLS)!
+    expect(mail.html).toContain('href="https://norte.test/reservar"')
+    expect(mail.text).toContain('https://norte.test/reservar')
   })
 
   it("paints the mail with the club's colors, in its dark version", () => {

@@ -5,20 +5,20 @@ import { RECEIPT_PNG } from './files'
 
 export type BookedSlot = { bookingId: string; courtName: string; time: string }
 
-// Books, as the player and through book_slot, the first slot of that day she can take.
-export async function bookFirstFreeSlot(user: TestUser, day: LocalDate): Promise<BookedSlot> {
+// Books, as the player and through book_slot, the first slot of that day she can take, in Rustic or in `club`.
+export async function bookFirstFreeSlot(user: TestUser, day: LocalDate, club?: string): Promise<BookedSlot> {
   const admin = adminClient()
-  const club = await clubRow(admin)
+  const row = await clubRow(admin, club)
   const client = await signedInClient(user)
   const { data: courts, error } = await admin
     .from('courts')
     .select('id, name')
-    .eq('club_id', club.id)
+    .eq('club_id', row.id)
     .eq('is_active', true)
     .order('sort_order')
   if (error) throw error
 
-  const schedule = { timezone: club.timezone, opensAt: club.opens_at, closesAt: club.closes_at, slotMinutes: club.slot_minutes }
+  const schedule = { timezone: row.timezone, opensAt: row.opens_at, closesAt: row.closes_at, slotMinutes: row.slot_minutes }
   for (const slot of daySlots(schedule, day)) {
     for (const court of courts) {
       const booked = await client.rpc('book_slot', { p_court_id: court.id, p_starts_at: slot.startsAt.toISOString() })

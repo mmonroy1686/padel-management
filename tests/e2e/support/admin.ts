@@ -3,7 +3,8 @@ import type { Database } from '../../../lib/supabase/database.types'
 import { localSupabase } from './env'
 
 export const E2E_DOMAIN = 'e2e.test'
-const CLUB_SLUG = 'rustic'
+// The club of localhost:3000 (DEFAULT_CLUB_SLUG); others are reached on <slug>.localhost:3000.
+export const DEFAULT_CLUB = 'rustic'
 const NO_SESSION = { auth: { persistSession: false, autoRefreshToken: false } }
 
 export type Client = SupabaseClient<Database>
@@ -19,13 +20,13 @@ export function uniqueEmail(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10_000)}@${E2E_DOMAIN}`
 }
 
-export async function clubRow(admin: Client = adminClient()) {
-  const { data, error } = await admin.from('clubs').select('*').eq('slug', CLUB_SLUG).single()
+export async function clubRow(admin: Client = adminClient(), slug = DEFAULT_CLUB) {
+  const { data, error } = await admin.from('clubs').select('*').eq('slug', slug).single()
   if (error) throw error
   return data
 }
 
-// A confirmed member of Rustic with a complete profile. It also has a password, so tests can
+// A confirmed member of a club (Rustic unless `club` says another) with a complete profile. It also has a password, so tests can
 // prepare data through the API as that person; the UI still signs in with the magic link.
 export async function createMember(options: {
   name: string
@@ -34,9 +35,10 @@ export async function createMember(options: {
   side?: 'drive' | 'backhand' | 'both'
   gender?: 'male' | 'female'
   category?: number
+  club?: string
 }): Promise<TestUser> {
   const admin = adminClient()
-  const club = await clubRow(admin)
+  const club = await clubRow(admin, options.club)
   const email = uniqueEmail(options.prefix)
   const password = `Clave-${Date.now()}!`
   const { data, error } = await admin.auth.admin.createUser({

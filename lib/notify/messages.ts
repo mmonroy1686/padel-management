@@ -17,6 +17,8 @@ export type PendingEmail = {
   clubLogoPath: string | null
   clubPrimary: string
   clubBackground: string
+  // The club's subdomain: the email's button opens the app there.
+  clubSlug: string
 }
 
 function escapeHtml(value: string): string {
@@ -29,11 +31,13 @@ function escapeHtml(value: string): string {
 
 // The mail for one aviso: the same words as /avisos, the club's logo and a button to the app.
 // null when it cannot be built (no address, data it cannot read).
-export function buildEmail(item: PendingEmail, urls: { siteUrl: string; supabaseUrl: string }): EmailMessage | null {
+export type EmailUrls = { clubUrl: (slug: string) => string; supabaseUrl: string }
+
+export function buildEmail(item: PendingEmail, urls: EmailUrls): EmailMessage | null {
   const content = notificationContent(item.kind, item.data, item.clubTimezone)
   if (!item.email || !content) return null
   const { title, body, button } = content
-  const link = `${urls.siteUrl}${item.link}`
+  const link = `${urls.clubUrl(item.clubSlug)}${item.link}`
   const logo = clubLogoUrl(urls.supabaseUrl, item.clubLogoPath)
   const greeting = `Hola, ${firstName(item.playerName)}:`
   const footer = `${item.clubName}: ${content.reason}`

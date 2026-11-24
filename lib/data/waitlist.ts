@@ -16,7 +16,7 @@ import { createClient } from '@/lib/supabase/server'
 export type MyWaitlist = { waits: Wait[]; hold: Hold | null; courts: CourtName[] }
 
 // The player's waiting waits, her active hold (with the slot's price, the same rule as
-// private.slot_price) and the club's active courts to name them. RLS returns only hers.
+// private.slot_price) and the club's active courts to name them, in this club only: RLS returns hers in every club.
 export async function loadMyWaitlist(viewer: { userId: string; club: Club }, now = new Date()): Promise<MyWaitlist> {
   const { club } = viewer
   const supabase = await createClient()
@@ -24,6 +24,7 @@ export async function loadMyWaitlist(viewer: { userId: string; club: Club }, now
     supabase
       .from('slot_waits')
       .select('id, on_date, from_time, to_time, court_ids')
+      .eq('club_id', club.id)
       .eq('player_id', viewer.userId)
       .eq('status', 'waiting')
       .order('on_date')
@@ -31,6 +32,7 @@ export async function loadMyWaitlist(viewer: { userId: string; club: Club }, now
     supabase
       .from('slot_holds')
       .select('id, starts_at, expires_at, court:courts(name)')
+      .eq('club_id', club.id)
       .eq('player_id', viewer.userId)
       .eq('status', 'active')
       .gt('expires_at', now.toISOString())
@@ -86,24 +88,26 @@ export async function loadDayWaits(club: Club, date: LocalDate): Promise<DayWait
   }))
 }
 
-// The bell: avisos not read yet.
-export async function countUnreadNotifications(userId: string): Promise<number> {
+// The bell: this club's avisos not read yet.
+export async function countUnreadNotifications(userId: string, clubId: string): Promise<number> {
   const supabase = await createClient()
   const { count, error } = await supabase
     .from('notifications')
     .select('id', { count: 'exact', head: true })
+    .eq('club_id', clubId)
     .eq('user_id', userId)
     .is('read_at', null)
   if (error) throw error
   return count ?? 0
 }
 
-// /avisos: the latest 50, newest first.
+// /avisos: this club's latest 50, newest first.
 export async function loadNotifications(viewer: { userId: string; club: Club }): Promise<NotificationView[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('notifications')
     .select('id, kind, data, link, created_at, read_at')
+    .eq('club_id', viewer.club.id)
     .eq('user_id', viewer.userId)
     .order('created_at', { ascending: false })
     .limit(50)

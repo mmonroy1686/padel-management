@@ -32,6 +32,13 @@ export function brandOf(club: BrandRow): Brand {
   return { primary: club.brand_primary, background: club.brand_background, mode: club.color_mode }
 }
 
+// A host without a club (an unknown subdomain): its name and brand everywhere around the 404.
+export const NO_CLUB_NAME = 'Club no encontrado'
+
+export function brandOrDefault(club: BrandRow | null): Brand {
+  return club ? brandOf(club) : DEFAULT_BRAND
+}
+
 // Ajustes → "Marca del club". The RPC checks again; this gives the admin a message per field.
 export function parseBrandForm(form: FormData): ParseResult<Brand> {
   const read = (name: string) => {
