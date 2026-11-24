@@ -1,12 +1,13 @@
 import { errorMessage } from './errors'
 import { shortDate } from './format'
+import type { Role } from './profile'
 import type { ParseResult } from './settings'
 import { localDateOf } from './time'
 
 // Ajustes → Staff: the club's admins and reception, and the invitations still open.
 
-export const STAFF_ROLES = ['admin', 'reception'] as const
-export type StaffRole = (typeof STAFF_ROLES)[number]
+export type StaffRole = Exclude<Role, 'player'>
+export const STAFF_ROLES = ['admin', 'reception'] as const satisfies readonly StaffRole[]
 export const STAFF_ROLE_LABELS: Record<StaffRole, string> = { admin: 'Admin', reception: 'Recepción' }
 
 export type StaffMember = { userId: string; role: StaffRole; displayName: string; email: string }

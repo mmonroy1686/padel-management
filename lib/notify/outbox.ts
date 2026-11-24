@@ -1,5 +1,6 @@
 import 'server-only'
 import { clubUrl } from '@/lib/club/host'
+import { isStaffRole } from '@/lib/domain/profile'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getSupabaseEnv } from '@/lib/supabase/env'
 import { emailSenderFromEnv } from './email'
@@ -45,7 +46,7 @@ function invitationStore(admin: AdminClient): MailQueue<PendingInvitation> {
       const { data, error } = await admin.rpc('claim_invitation_emails', { p_limit: limit })
       if (error) throw error
       return (data ?? []).flatMap((row) =>
-        row.role === 'admin' || row.role === 'reception'
+        isStaffRole(row.role)
           ? [{
               id: row.invitation_id,
               email: row.email,
@@ -77,7 +78,7 @@ export async function flushOutbox(): Promise<OutboxReport> {
   const admin = createAdminClient()
   if (!admin) return NOTHING
   const sender = emailSenderFromEnv()
-  // One job mails every club's: each link opens its own club's subdomain.
+  // One job mails for every club: each link opens its own club's subdomain.
   const urls = { clubUrl: (slug: string) => clubUrl(slug), supabaseUrl: getSupabaseEnv().url }
   const avisos = await sendPending(avisoStore(admin), sender, urls)
   const invitations = await mailQueue(invitationStore(admin), sender, (item) => buildInvitationEmail(item, urls))

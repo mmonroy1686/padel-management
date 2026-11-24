@@ -8,8 +8,9 @@ import { readEnum, readUuid } from '@/lib/domain/input'
 import { parseInviteForm, STAFF_ROLE_LABELS, STAFF_ROLES } from '@/lib/domain/staff'
 import { createClient } from '@/lib/supabase/server'
 
-// Ajustes → Staff. The functions check the admin role and the last admin again; this gives a clear message first.
-// revalidateBookings also mails what was queued (the invitation) once the response is out.
+// Ajustes → Staff, admins only (the functions check it again; this answers before calling them). A change that would
+// leave the club without an admin comes back from the database as last_admin. revalidateBookings also mails what was
+// queued (the invitation) once the response is out.
 
 const FORBIDDEN = failed(errorMessage('forbidden'))
 

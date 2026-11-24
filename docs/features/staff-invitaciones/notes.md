@@ -12,6 +12,18 @@ branch: feat/staff-invitaciones
 `/invitacion` no acepta al cargarse: un prefetch de Next o un previsualizador de links aceptaría solo con abrir la
 página. Acepta la acción **Aceptar invitación** y después lleva a `/club`.
 
+## Solo se acepta con enlace mágico o Google
+
+La revisión de disciplina encontró un agujero. Supabase deja crear cuentas con email y contraseña por la API, y con la
+confirmación de email apagada (como en local) cualquiera podía registrarse con un email invitado que todavía no tenía
+cuenta y aceptar la invitación. Con la del primer admin, se quedaba con el club.
+
+`accept_staff_invitation` ahora mira cómo se inició la sesión (el `amr` del JWT). Acepta solo métodos que prueban que
+la persona es dueña del email: enlace u OTP por mail (`otp`, `magiclink`, `email/signup`, `invite`, `recovery`) y
+Google (`oauth`). Con contraseña falla con `sign_in_with_link`. El e2e confirma que el enlace mágico real de Supabase
+pasa el chequeo. Además, las invitaciones las ve solo el admin (antes también recepción), y el trigger también mira los
+cambios de `club_id` y `user_id`.
+
 ## El trigger del último admin y los borrados en cascada
 
 `club_members_keep_an_admin` frena un cambio de rol o un borrado que deje al club sin admin. Dos borrados tienen que

@@ -23,7 +23,7 @@ export function isProfileComplete(
   return Boolean(profile.side && profile.hand && profile.gender && membership?.category)
 }
 
-export function isStaffRole(role: Role | null | undefined): boolean {
+export function isStaffRole(role: string | null | undefined): role is Exclude<Role, 'player'> {
   return role === 'admin' || role === 'reception'
 }
 

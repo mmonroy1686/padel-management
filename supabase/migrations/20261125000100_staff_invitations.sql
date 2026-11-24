@@ -1,11 +1,13 @@
 -- Staff by invitation (design: docs/features/staff-invitaciones/design.md).
 --
--- An admin invites an email as admin or reception. The person signs in with that email (magic link or Google: the
--- address is verified by Supabase) and accept_staff_invitation gives them the role, without the player's welcome.
--- No token travels in the link: the invitation is found by the session's email.
+-- An admin invites an email as admin or reception. The person signs in with that email and accept_staff_invitation
+-- gives them the role, without the player's welcome. No token travels in the link: the invitation is found by the
+-- session's email, so the session must prove the person owns it: a magic link or Google (the JWT's amr). A password
+-- session does not count: with email confirmations off, anyone could sign up with an invited address that has no
+-- account yet.
 --
 -- A club never loses its last admin: a trigger on club_members refuses it (last_admin), whatever the path.
--- set_member_role stops refusing an admin's own role: the trigger is the rule now, so an admin can hand the club over.
+-- set_member_role lets an admin change their own role (the trigger keeps the last admin), so the club can be handed over.
 
 create table public.club_invitations (
   id uuid primary key default gen_random_uuid(),
@@ -35,9 +37,10 @@ alter table public.club_invitations enable row level security;
 revoke all on public.club_invitations from public, anon, authenticated;
 grant select on public.club_invitations to authenticated;
 
-create policy club_invitations_select_staff on public.club_invitations
+-- Only admins manage the staff, so only they see who is invited.
+create policy club_invitations_select_admin on public.club_invitations
   for select to authenticated
-  using (private.has_club_role(club_id, array['admin', 'reception']::public.club_role[]));
+  using (private.has_club_role(club_id, array['admin']::public.club_role[]));
 
 -- The last admin of a club stays. Deletes only count when a user asks (auth.uid() set) and the club is still there:
 -- deleting an account (service role) or the club itself cascades and must go through.
@@ -51,7 +54,8 @@ begin
   if old.role <> 'admin' then
     return case when tg_op = 'DELETE' then old else new end;
   end if;
-  if tg_op = 'UPDATE' and new.role = 'admin' then
+  -- Still admin of the same club. Moving the row to another club or user leaves this club, like a delete.
+  if tg_op = 'UPDATE' and new.role = 'admin' and new.club_id = old.club_id and new.user_id = old.user_id then
     return new;
   end if;
   if tg_op = 'DELETE' and (select auth.uid()) is null then
@@ -74,7 +78,7 @@ end;
 $$;
 
 create trigger club_members_keep_an_admin
-  before update of role or delete on public.club_members
+  before update of role, club_id, user_id or delete on public.club_members
   for each row execute function private.keep_an_admin();
 
 create or replace function public.set_member_role(p_club_id uuid, p_user_id uuid, p_role public.club_role)
@@ -276,6 +280,14 @@ declare
 begin
   if v_user is null then
     perform private.fail('forbidden');
+  end if;
+  -- The session came from a link or a code mailed to the address, or from Google: it owns the email. A password
+  -- session may not (signing up with someone else's address needs no confirmation when confirmations are off).
+  if not exists (
+    select 1 from jsonb_array_elements(coalesce((select auth.jwt()) -> 'amr', '[]'::jsonb)) as amr(entry)
+    where amr.entry ->> 'method' in ('otp', 'magiclink', 'oauth', 'email/signup', 'invite', 'recovery')
+  ) then
+    perform private.fail('sign_in_with_link');
   end if;
   select * into v_invitation from public.club_invitations
    where club_id = p_club_id and email = v_email and accepted_at is null and cancelled_at is null

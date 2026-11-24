@@ -1,10 +1,7 @@
 import 'server-only'
-import type { StaffInvitation, StaffMember, StaffRole } from '@/lib/domain/staff'
+import { isStaffRole } from '@/lib/domain/profile'
+import type { StaffInvitation, StaffMember } from '@/lib/domain/staff'
 import { createClient } from '@/lib/supabase/server'
-
-function isStaffRole(role: string): role is StaffRole {
-  return role === 'admin' || role === 'reception'
-}
 
 // Ajustes → Staff: the admins and reception (club_staff, admins only) and the invitations not yet accepted or
 // cancelled, expired ones too (they can be resent).

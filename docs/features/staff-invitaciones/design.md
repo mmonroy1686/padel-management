@@ -19,7 +19,8 @@ nunca se le pide el perfil de jugador. Es lo que necesita el corte 3: `create_cl
 
 - **La invitación se acepta con el email, no con un token.** El link del mail lleva a `<club>/invitacion`. Ahí la
   persona inicia sesión como siempre (enlace mágico o Google) y la RPC busca una invitación vigente para el email de la
-  sesión. Ese email ya está comprobado por Supabase. No hay secretos en la URL; un mail reenviado no sirve si no se
+  sesión. La sesión tiene que venir de un enlace por mail o de Google (el `amr` del JWT): una sesión con contraseña no
+  prueba que el email sea de esa persona. No hay secretos en la URL; un mail reenviado no sirve si no se
   entra con ese email.
 - **Todo por RPC** `security definer`, con errores estables en `private.fail` y `lib/domain/errors.ts`.
 - **Que un club se quede sin admin lo impide la base, no la pantalla.** Un trigger en `club_members` frena cualquier

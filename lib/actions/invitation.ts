@@ -7,7 +7,7 @@ import { getViewer } from '@/lib/auth/viewer'
 import { errorMessage } from '@/lib/domain/errors'
 import { createClient } from '@/lib/supabase/server'
 
-// /invitacion → "Aceptar invitación": the session's email takes its invitation to this club and goes to the panel.
+// "Aceptar invitación" on /invitacion: the session's email takes its invitation to this club, then the panel.
 export async function acceptInvitation(): Promise<ActionState> {
   const viewer = await getViewer()
   if (!viewer) return failed('Tu sesión venció. Volvé a entrar con el link del mail.')

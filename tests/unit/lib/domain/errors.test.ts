@@ -18,7 +18,7 @@ const DATABASE_CODES = [
   'invalid_result',
   'invalid_color',
   'player_repeated',
-  'last_admin', 'already_staff', 'invitation_not_found', 'invalid_email',
+  'last_admin', 'already_staff', 'invitation_not_found', 'invalid_email', 'sign_in_with_link',
 ]
 
 describe('errorMessage', () => {

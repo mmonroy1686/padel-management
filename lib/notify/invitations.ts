@@ -1,4 +1,5 @@
 import { ROLE_LABELS } from '@/lib/domain/profile'
+import type { StaffRole } from '@/lib/domain/staff'
 import type { EmailMessage } from './email'
 import { brandedEmail, type EmailUrls } from './messages'
 
@@ -6,7 +7,7 @@ import { brandedEmail, type EmailUrls } from './messages'
 export type PendingInvitation = {
   id: string
   email: string
-  role: 'admin' | 'reception'
+  role: StaffRole
   // Null when the admin who invited no longer has an account.
   inviterName: string | null
   clubName: string
