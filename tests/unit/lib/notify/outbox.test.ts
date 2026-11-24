@@ -23,6 +23,17 @@ const ROW = {
   club_brand_primary: '#FCB021',
   club_brand_background: '#021716',
 }
+const INVITATION_ROW = {
+  invitation_id: 'i1',
+  email: 'recepcion@test.local',
+  role: 'reception',
+  inviter_name: 'Dani',
+  club_name: 'Rustic Pádel',
+  club_logo_path: null,
+  club_brand_primary: '#FCB021',
+  club_brand_background: '#021716',
+  club_slug: 'rustic',
+}
 
 beforeEach(() => {
   mocks.admin = null
@@ -54,5 +65,20 @@ describe('flushOutbox', () => {
       expect.objectContaining({ to: 'ana@test.local', text: expect.stringContaining('https://rustic.test/') }),
     )
     expect(rpc).toHaveBeenCalledWith('finish_notification_email', { p_id: 'n1', p_status: 'sent' })
+  })
+
+  it('mails the staff invitations too, after the avisos', async () => {
+    const claimed: Record<string, unknown[]> = { claim_notification_emails: [ROW], claim_invitation_emails: [INVITATION_ROW] }
+    const rpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: null }>>(
+      async (name) => ({ data: claimed[name] ?? null, error: null }),
+    )
+    const sender = vi.fn<(message: { to: string; text: string }) => Promise<void>>(async () => {})
+    mocks.admin = { rpc }
+    mocks.sender = sender
+    expect(await flushOutbox()).toEqual({ sent: 2, failed: 0, skipped: 0 })
+    expect(sender).toHaveBeenLastCalledWith(
+      expect.objectContaining({ to: 'recepcion@test.local', text: expect.stringContaining('/invitacion') }),
+    )
+    expect(rpc).toHaveBeenCalledWith('finish_invitation_email', { p_id: 'i1', p_status: 'sent' })
   })
 })

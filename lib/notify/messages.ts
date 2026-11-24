@@ -36,16 +36,42 @@ export type EmailUrls = { clubUrl: (slug: string) => string; supabaseUrl: string
 export function buildEmail(item: PendingEmail, urls: EmailUrls): EmailMessage | null {
   const content = notificationContent(item.kind, item.data, item.clubTimezone)
   if (!item.email || !content) return null
-  const { title, body, button } = content
-  const link = `${urls.clubUrl(item.clubSlug)}${item.link}`
-  const logo = clubLogoUrl(urls.supabaseUrl, item.clubLogoPath)
-  const greeting = `Hola, ${firstName(item.playerName)}:`
-  const footer = `${item.clubName}: ${content.reason}`
+  return brandedEmail(
+    {
+      to: item.email,
+      club: { name: item.clubName, logoPath: item.clubLogoPath, primary: item.clubPrimary, background: item.clubBackground },
+      greeting: `Hola, ${firstName(item.playerName)}:`,
+      title: content.title,
+      body: content.body,
+      button: content.button,
+      link: `${urls.clubUrl(item.clubSlug)}${item.link}`,
+      footer: `${item.clubName}: ${content.reason}`,
+    },
+    urls.supabaseUrl,
+  )
+}
+
+export type EmailClub = { name: string; logoPath: string | null; primary: string; background: string }
+export type BrandedEmail = {
+  to: string
+  club: EmailClub
+  greeting: string
+  title: string
+  body: string
+  button: string
+  link: string
+  footer: string
+}
+
+// Every mail the app sends: the club's logo (or its name), a title, a line, one button and why it came.
+export function brandedEmail(mail: BrandedEmail, supabaseUrl: string): EmailMessage {
+  const { club, greeting, title, body, button, link, footer } = mail
+  const logo = clubLogoUrl(supabaseUrl, club.logoPath)
   // The club's dark palette, always: mail apps ignore the device's mode in a mail's own colors.
-  const colors = clubTheme({ primary: item.clubPrimary, background: item.clubBackground }).dark
+  const colors = clubTheme({ primary: club.primary, background: club.background }).dark
   const brand = logo
-    ? `<img src="${escapeHtml(logo)}" alt="${escapeHtml(item.clubName)}" width="56" height="56" style="display:block;border-radius:12px;margin:0 0 16px">`
-    : `<p style="margin:0 0 16px;font-weight:bold;color:${colors['accent-ink']}">${escapeHtml(item.clubName)}</p>`
+    ? `<img src="${escapeHtml(logo)}" alt="${escapeHtml(club.name)}" width="56" height="56" style="display:block;border-radius:12px;margin:0 0 16px">`
+    : `<p style="margin:0 0 16px;font-weight:bold;color:${colors['accent-ink']}">${escapeHtml(club.name)}</p>`
   const html = [
     '<!doctype html>',
     `<html lang="es"><body style="margin:0;background:${colors.bg};font-family:Arial,Helvetica,sans-serif;color:${colors.fg}">`,
@@ -55,12 +81,12 @@ export function buildEmail(item: PendingEmail, urls: EmailUrls): EmailMessage | 
     `<p style="margin:0 0 8px;color:${colors['fg-muted']}">${escapeHtml(greeting)}</p>`,
     `<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${colors.fg}">${escapeHtml(title)}</h1>`,
     `<p style="margin:0 0 20px;line-height:1.5;color:${colors['fg-muted']}">${escapeHtml(body)}</p>`,
-    `<a href="${escapeHtml(link)}" style="display:inline-block;background:${colors.accent};color:${colors['on-accent']};font-weight:bold;text-decoration:none;padding:12px 20px;border-radius:12px">${button}</a>`,
+    `<a href="${escapeHtml(link)}" style="display:inline-block;background:${colors.accent};color:${colors['on-accent']};font-weight:bold;text-decoration:none;padding:12px 20px;border-radius:12px">${escapeHtml(button)}</a>`,
     '</td></tr></table>',
     `<p style="margin:16px 0 0;font-size:12px;color:${colors['fg-muted']}">${escapeHtml(footer)}</p>`,
     '</td></tr></table></body></html>',
   ].join('')
 
   const text = `${greeting}\n\n${title}.\n${body}\n\n${button}: ${link}\n\n${footer}`
-  return { to: item.email, subject: title, html, text }
+  return { to: mail.to, subject: title, html, text }
 }
