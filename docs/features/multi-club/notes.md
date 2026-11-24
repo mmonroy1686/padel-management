@@ -13,11 +13,30 @@ Next 16's `global-not-found` covers URLs with no route, not a `notFound()` throw
 metadata, viewport, manifest and icons use `findClub()` (null-safe, default brand); pages use `getClub()`, which calls
 `notFound()` and renders `app/not-found.tsx` inside the layout ("Club no encontrado").
 
-## The club header can't be forged
+## The club comes from the host, not from a header
 
-`proxy.ts` always sets `x-club-slug` from the host, so a header sent by the browser is overwritten. The header is a
-convenience, not a security boundary: RLS and the functions check membership per club. Choosing another club's host only
-shows that club, as visiting its subdomain would.
+A first version passed `x-club-slug` from `proxy.ts`; the review found that on routes the matcher skips (paths ending in
+`.png`, …) a header sent by the browser would have been read. `clubSlug()` now reads the host itself. Choosing a host only
+shows that club, as visiting its subdomain would; RLS and the functions check membership per club.
+
+## Review fixes
+
+- `loadMyWaitlist` read slot waits and holds by player only: a player of two clubs would have seen the other club's
+  waits and hold on Inicio and Reservar, priced and named with this club's rules. Now per club.
+- `/c/<code>` of a non-default club redirected to itself while there is no root domain (every host is the default club).
+  The redirect is skipped when the owner's URL is the current host.
+
+## Pending
+
+- `match_preview` does not return the match's club: a match id of club B opened on club A's host gets a preview with A's
+  name and timezone (no private data; the page itself 404s). Needs the club in the function, a later migration.
+- The old `mark_notifications_read()` can go once the new app is everywhere.
+
+## Deploy order
+
+`migrate.yml` and Vercel run in parallel on merge. If the app is out before the migration, marking avisos read fails
+quietly (the bell stays lit) until it lands, and emails have no club slug, which only matters once
+`NEXT_PUBLIC_ROOT_DOMAIN` is set. Set the root domain after the migration is in.
 
 ## Two auth bugs the e2e found
 

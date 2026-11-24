@@ -56,7 +56,7 @@ from auth.users u where u.id = m.user_id and u.email = 'vos@ejemplo.com';
 Cada club se abre en `https://<slug>.<dominio>`. Hasta tener el dominio, todo sigue en el club de `DEFAULT_CLUB_SLUG`. Para pasar a subdominios:
 
 1. **Dominio:** en Vercel → Settings → Domains, agregar `<dominio>` y `*.<dominio>`. El comodín necesita que el dominio use los nameservers de Vercel.
-2. **Variables en Vercel** (Production y Preview): `NEXT_PUBLIC_ROOT_DOMAIN=<dominio>` y `DEFAULT_CLUB_SLUG=rustic`. Volver a desplegar.
+2. **Variables en Vercel:** `NEXT_PUBLIC_ROOT_DOMAIN=<dominio>` **solo en Production** (en Preview haría que los links de las previews apunten a producción) y `DEFAULT_CLUB_SLUG=rustic` en Production y Preview. Volver a desplegar, después de que la migración del corte esté aplicada.
 3. **Supabase → Authentication → URL Configuration:** Site URL `https://rustic.<dominio>`; en Redirect URLs agregar `https://*.<dominio>/**` (dejar las actuales hasta terminar la mudanza).
 4. **Google** (si se usa para ingresar): no cambia, el callback lo maneja Supabase.
 

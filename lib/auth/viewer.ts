@@ -2,8 +2,7 @@ import 'server-only'
 import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { cache } from 'react'
-import { CLUB_SLUG_HEADER } from '@/lib/club/header'
-import { defaultClubSlug } from '@/lib/club/host'
+import { clubSlugFromHost } from '@/lib/club/host'
 import { isProfileComplete, isStaffRole } from '@/lib/domain/profile'
 import type { Tables } from '@/lib/supabase/database.types'
 import { createClient } from '@/lib/supabase/server'
@@ -19,8 +18,11 @@ export type Viewer = {
 }
 export type MemberViewer = Viewer & { membership: Membership }
 
-// The host's club, as proxy.ts resolved it (requests the proxy skips get the default club).
-export const clubSlug = cache(async (): Promise<string> => (await headers()).get(CLUB_SLUG_HEADER) ?? defaultClubSlug())
+// The host's club, read from the host itself: no header to forge, the same answer on every route.
+export const clubSlug = cache(async (): Promise<string> => {
+  const incoming = await headers()
+  return clubSlugFromHost(incoming.get('x-forwarded-host') ?? incoming.get('host'))
+})
 
 // The host's club, or null when the subdomain has none. For what renders around every page (the root layout, metadata,
 // manifest, icons), which must not fail: the page itself says "Club no encontrado".

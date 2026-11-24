@@ -16,7 +16,7 @@ import { createClient } from '@/lib/supabase/server'
 export type MyWaitlist = { waits: Wait[]; hold: Hold | null; courts: CourtName[] }
 
 // The player's waiting waits, her active hold (with the slot's price, the same rule as
-// private.slot_price) and the club's active courts to name them. RLS returns only hers.
+// private.slot_price) and the club's active courts to name them, in this club only: RLS returns hers in every club.
 export async function loadMyWaitlist(viewer: { userId: string; club: Club }, now = new Date()): Promise<MyWaitlist> {
   const { club } = viewer
   const supabase = await createClient()
@@ -24,6 +24,7 @@ export async function loadMyWaitlist(viewer: { userId: string; club: Club }, now
     supabase
       .from('slot_waits')
       .select('id, on_date, from_time, to_time, court_ids')
+      .eq('club_id', club.id)
       .eq('player_id', viewer.userId)
       .eq('status', 'waiting')
       .order('on_date')
@@ -31,6 +32,7 @@ export async function loadMyWaitlist(viewer: { userId: string; club: Club }, now
     supabase
       .from('slot_holds')
       .select('id, starts_at, expires_at, court:courts(name)')
+      .eq('club_id', club.id)
       .eq('player_id', viewer.userId)
       .eq('status', 'active')
       .gt('expires_at', now.toISOString())

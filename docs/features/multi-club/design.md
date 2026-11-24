@@ -29,9 +29,8 @@ database is already per club (every table has `club_id`, RLS and functions work 
 
 - `proxy.ts` reads the host: `<slug>.<NEXT_PUBLIC_ROOT_DOMAIN>` → `slug`; `<slug>.localhost` → `slug` (local
   development); anything else (`localhost`, `*.vercel.app`, previews, the bare root domain) → `DEFAULT_CLUB_SLUG`.
-- The slug goes to the request as `x-club-slug`. **The proxy always deletes any incoming `x-club-slug` first**: it is
-  set only by us, never trusted from the browser.
-- `getClub()` reads it with `headers()`. `CLUB_SLUG` and `lib/club/config.ts` go away.
+- `clubSlug()` reads the host with `headers()` on every route (no header passed from the proxy: nothing to forge, and the
+  routes the proxy skips answer the same). `getClub()` builds on it. `CLUB_SLUG` and `lib/club/config.ts` go away.
 - Pure function `clubSlugFromHost(host, env)` in `lib/club/host.ts`, unit tested (ports, case, `www`, nested
   subdomains, previews).
 
@@ -73,7 +72,7 @@ must also filter by the host's club:
 |---|---|---|
 | `lib/data/my-bookings.ts` (Mis reservas) | bookings and match slots by player | `club_id` = host's club |
 | `lib/data/matches.ts` (busy times, habits) | bookings, match slots, tournament entries by player | **stays across clubs**: nobody plays in two clubs at once, so another club's booking makes the player busy too. Only the times are used, never shown |
-| `lib/data/waitlist.ts` (bell count and list) | notifications by user | `club_id` = host's club |
+| `lib/data/waitlist.ts` (bell count and list; my waits and hold) | notifications, slot waits and holds by user | `club_id` = host's club |
 | `mark_notifications_read()` | marks every club's avisos | new overload `mark_notifications_read(p_club_id)`; the app uses it; the old one stays for the deploy window |
 
 `player_availability` stays per person (when you can play does not depend on the club); preferred courts are courts,
@@ -85,8 +84,8 @@ and books there; Mis reservas and the bell in each club show only that club's.
 
 ## 7. Local development and seed
 
-- `rustic.localhost:3000` and `<otro>.localhost:3000` work (browsers resolve `*.localhost` to the machine). Next's
-  `allowedDevOrigins` gets `*.localhost`. Supabase local's `additional_redirect_urls` adds `http://*.localhost:3000/**`.
+- `rustic.localhost:3000` and `<otro>.localhost:3000` work (browsers resolve `*.localhost` to the machine). Next 16's dev
+  server already allows localhost's subdomains: no `allowedDevOrigins` needed. Supabase local's `additional_redirect_urls` adds `http://*.localhost:3000/**`.
 - `seed.sql` adds a second club (`norte`, with courts and prices) and `scripts/demo-*.mjs` take `--club=<slug>`.
 - `DEFAULT_CLUB_SLUG=rustic` keeps `localhost:3000`, CI and every current e2e as today.
 

@@ -11,7 +11,7 @@ const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/
 const NOT_A_CLUB = new Set(['www'])
 const FALLBACK_SLUG = 'rustic'
 
-export function defaultClubSlug(env: Env = process.env): string {
+function defaultClubSlug(env: Env): string {
   return env.DEFAULT_CLUB_SLUG?.trim() || FALLBACK_SLUG
 }
 
