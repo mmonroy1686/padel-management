@@ -1,7 +1,7 @@
 ---
 feature: alta-de-club
 type: plan
-status: in-progress
+status: done
 date: 2026-11-24
 branch: feat/alta-de-club
 references: ./design.md
@@ -21,11 +21,11 @@ references: ./design.md
 
 ## Criterios de aceptación
 
-- [ ] e2e: el super-admin crea «Club Demo» con `demo`; el admin entra por `demo.localhost:3000/invitacion`, completa el asistente y un jugador puede reservar en ese club.
-- [ ] Un usuario que no es super-admin no ve `/plataforma` ni puede ejecutar `create_club` (pgTAP; la página da 404).
-- [ ] Slug repetido o reservado → error estable con mensaje claro.
-- [ ] Ajustes se ve y funciona igual después de sacar los formularios a componentes.
-- [ ] lint, typecheck, Vitest, pgTAP, build y e2e en verde; tipos regenerados.
+- [x] e2e: el super-admin crea «Club Demo» con `demo`; el admin entra por `demo.localhost:3000/invitacion`, completa el asistente y un jugador puede reservar en ese club.
+- [x] Un usuario que no es super-admin no ve `/plataforma` ni puede ejecutar `create_club` (pgTAP; la página da 404).
+- [x] Slug repetido o reservado → error estable con mensaje claro.
+- [x] Ajustes se ve y funciona igual después de sacar los formularios a componentes.
+- [x] lint, typecheck, Vitest, pgTAP, build y e2e en verde; tipos regenerados.
 
 ## Revisiones del plan
 

@@ -1,7 +1,7 @@
 ---
 feature: alta-de-club
 type: design
-status: design
+status: approved
 date: 2026-11-24
 branch: feat/alta-de-club
 references: ../../handoff/2026-11-23-validacion-y-multi-club.md, ../staff-invitaciones/design.md
