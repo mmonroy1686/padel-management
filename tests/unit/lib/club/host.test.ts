@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clubSlugFromHost, clubUrl } from '@/lib/club/host'
+import { clubSlugFromHost, clubUrl, clubDomainSuffix } from '@/lib/club/host'
 
 const ENV = { NEXT_PUBLIC_ROOT_DOMAIN: 'pique.uy', DEFAULT_CLUB_SLUG: 'rustic' }
 
@@ -45,5 +45,13 @@ describe('clubUrl', () => {
   it('is the site URL without a root domain (previews, one club)', () => {
     expect(clubUrl('rustic', { VERCEL_URL: 'padel-git-x.vercel.app' })).toBe('https://padel-git-x.vercel.app')
     expect(clubUrl('rustic', { NEXT_PUBLIC_SITE_URL: 'https://reservas.rustic.uy/' })).toBe('https://reservas.rustic.uy')
+  })
+})
+
+describe('clubDomainSuffix', () => {
+  it('is what follows a slug in a club address, or null while every host is the default club', () => {
+    expect(clubDomainSuffix({ NEXT_PUBLIC_ROOT_DOMAIN: 'pique.uy' })).toBe('.pique.uy')
+    expect(clubDomainSuffix({}, 'http://localhost:3000')).toBe('.localhost:3000')
+    expect(clubDomainSuffix({ NEXT_PUBLIC_SITE_URL: 'https://padel.vercel.app' }, 'https://padel.vercel.app')).toBeNull()
   })
 })

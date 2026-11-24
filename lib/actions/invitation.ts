@@ -15,7 +15,7 @@ export async function acceptInvitation(): Promise<ActionState> {
   const { error } = await supabase.rpc('accept_staff_invitation', { p_club_id: viewer.club.id })
   if (error) return failed(errorMessage(error.message))
   revalidatePath('/', 'layout')
-  redirect('/club')
+  redirect('/club/inicio')
 }
 
 // "Entrar con otro email": the invitation is for the address it was sent to.

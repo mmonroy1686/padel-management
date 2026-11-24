@@ -428,13 +428,13 @@ isOneToOne: false
                   ]
                 },"clubs": {
                   Row: {
-                    "accepts_cash": boolean,"accepts_transfer": boolean,"booking_window_days": number,"brand_background": string,"brand_primary": string,"cancellation_notice_hours": number,"closes_at": string,"color_mode": Database["public"]['Enums']["club_color_mode"],"created_at": string,"flyer_background_path": string | null,"id": string,"logo_path": string | null,"loyalty_discount_percent": number,"loyalty_enabled": boolean,"loyalty_every": number,"loyalty_expiry_months": number | null,"match_close_minutes": number,"max_active_bookings": number,"name": string,"opens_at": string,"phone": string | null,"slot_minutes": number,"slug": string,"timezone": string,"transfer_details": string | null,"transfer_receipt_required": boolean
+                    "accepts_cash": boolean,"accepts_transfer": boolean,"booking_window_days": number,"brand_background": string,"brand_primary": string,"cancellation_notice_hours": number,"closes_at": string,"color_mode": Database["public"]['Enums']["club_color_mode"],"created_at": string,"flyer_background_path": string | null,"id": string,"logo_path": string | null,"loyalty_discount_percent": number,"loyalty_enabled": boolean,"loyalty_every": number,"loyalty_expiry_months": number | null,"match_close_minutes": number,"max_active_bookings": number,"name": string,"opens_at": string,"phone": string | null,"setup_completed_at": string | null,"slot_minutes": number,"slug": string,"timezone": string,"transfer_details": string | null,"transfer_receipt_required": boolean
                   }
                   Insert: {
-                    "accepts_cash"?: boolean,"accepts_transfer"?: boolean,"booking_window_days"?: number,"brand_background"?: string,"brand_primary"?: string,"cancellation_notice_hours"?: number,"closes_at"?: string,"color_mode"?: Database["public"]['Enums']["club_color_mode"],"created_at"?: string,"flyer_background_path"?: string | null,"id"?: string,"logo_path"?: string | null,"loyalty_discount_percent"?: number,"loyalty_enabled"?: boolean,"loyalty_every"?: number,"loyalty_expiry_months"?: number | null,"match_close_minutes"?: number,"max_active_bookings"?: number,"name": string,"opens_at"?: string,"phone"?: string | null,"slot_minutes"?: number,"slug": string,"timezone"?: string,"transfer_details"?: string | null,"transfer_receipt_required"?: boolean
+                    "accepts_cash"?: boolean,"accepts_transfer"?: boolean,"booking_window_days"?: number,"brand_background"?: string,"brand_primary"?: string,"cancellation_notice_hours"?: number,"closes_at"?: string,"color_mode"?: Database["public"]['Enums']["club_color_mode"],"created_at"?: string,"flyer_background_path"?: string | null,"id"?: string,"logo_path"?: string | null,"loyalty_discount_percent"?: number,"loyalty_enabled"?: boolean,"loyalty_every"?: number,"loyalty_expiry_months"?: number | null,"match_close_minutes"?: number,"max_active_bookings"?: number,"name": string,"opens_at"?: string,"phone"?: string | null,"setup_completed_at"?: string | null,"slot_minutes"?: number,"slug": string,"timezone"?: string,"transfer_details"?: string | null,"transfer_receipt_required"?: boolean
                   }
                   Update: {
-                    "accepts_cash"?: boolean,"accepts_transfer"?: boolean,"booking_window_days"?: number,"brand_background"?: string,"brand_primary"?: string,"cancellation_notice_hours"?: number,"closes_at"?: string,"color_mode"?: Database["public"]['Enums']["club_color_mode"],"created_at"?: string,"flyer_background_path"?: string | null,"id"?: string,"logo_path"?: string | null,"loyalty_discount_percent"?: number,"loyalty_enabled"?: boolean,"loyalty_every"?: number,"loyalty_expiry_months"?: number | null,"match_close_minutes"?: number,"max_active_bookings"?: number,"name"?: string,"opens_at"?: string,"phone"?: string | null,"slot_minutes"?: number,"slug"?: string,"timezone"?: string,"transfer_details"?: string | null,"transfer_receipt_required"?: boolean
+                    "accepts_cash"?: boolean,"accepts_transfer"?: boolean,"booking_window_days"?: number,"brand_background"?: string,"brand_primary"?: string,"cancellation_notice_hours"?: number,"closes_at"?: string,"color_mode"?: Database["public"]['Enums']["club_color_mode"],"created_at"?: string,"flyer_background_path"?: string | null,"id"?: string,"logo_path"?: string | null,"loyalty_discount_percent"?: number,"loyalty_enabled"?: boolean,"loyalty_every"?: number,"loyalty_expiry_months"?: number | null,"match_close_minutes"?: number,"max_active_bookings"?: number,"name"?: string,"opens_at"?: string,"phone"?: string | null,"setup_completed_at"?: string | null,"slot_minutes"?: number,"slug"?: string,"timezone"?: string,"transfer_details"?: string | null,"transfer_receipt_required"?: boolean
                   }
                   Relationships: [
                     
@@ -806,6 +806,25 @@ isOneToOne: false
       foreignKeyName: "payments_reported_by_fkey"
       columns: ["reported_by"]
 isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"platform_admins": {
+                  Row: {
+                    "created_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "platform_admins_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
       referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
@@ -1820,6 +1839,42 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_club":
+{ Args: { "p_admin_email": string,"p_name": string,"p_slug": string,"p_timezone": string }; Returns: {
+              "accepts_cash": boolean,
+"accepts_transfer": boolean,
+"booking_window_days": number,
+"brand_background": string,
+"brand_primary": string,
+"cancellation_notice_hours": number,
+"closes_at": string,
+"color_mode": Database["public"]['Enums']["club_color_mode"],
+"created_at": string,
+"flyer_background_path": string | null,
+"id": string,
+"logo_path": string | null,
+"loyalty_discount_percent": number,
+"loyalty_enabled": boolean,
+"loyalty_every": number,
+"loyalty_expiry_months": number | null,
+"match_close_minutes": number,
+"max_active_bookings": number,
+"name": string,
+"opens_at": string,
+"phone": string | null,
+"setup_completed_at": string | null,
+"slot_minutes": number,
+"slug": string,
+"timezone": string,
+"transfer_details": string | null,
+"transfer_receipt_required": boolean
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "clubs"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_match":
 { Args: { "p_allow_other_court": boolean,"p_category_max": number,"p_category_min": number,"p_court_id": string,"p_match_type": Database["public"]['Enums']["match_type"],"p_side": Database["public"]['Enums']["player_side"],"p_starts_at": string }; Returns: {
               "allow_other_court": boolean,
@@ -1973,6 +2028,42 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"finish_club_setup":
+{ Args: { "p_club_id": string }; Returns: {
+              "accepts_cash": boolean,
+"accepts_transfer": boolean,
+"booking_window_days": number,
+"brand_background": string,
+"brand_primary": string,
+"cancellation_notice_hours": number,
+"closes_at": string,
+"color_mode": Database["public"]['Enums']["club_color_mode"],
+"created_at": string,
+"flyer_background_path": string | null,
+"id": string,
+"logo_path": string | null,
+"loyalty_discount_percent": number,
+"loyalty_enabled": boolean,
+"loyalty_every": number,
+"loyalty_expiry_months": number | null,
+"match_close_minutes": number,
+"max_active_bookings": number,
+"name": string,
+"opens_at": string,
+"phone": string | null,
+"setup_completed_at": string | null,
+"slot_minutes": number,
+"slug": string,
+"timezone": string,
+"transfer_details": string | null,
+"transfer_receipt_required": boolean
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "clubs"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "finish_invitation_email":
 { Args: { "p_id": string,"p_status": Database["public"]['Enums']["email_status"] }; Returns: undefined
                            },
@@ -2032,6 +2123,9 @@ isOneToOne: false
       } },
 "invite_to_match":
 { Args: { "p_match_id": string,"p_player_ids": (string)[] }; Returns: number
+                           },
+"is_platform_admin":
+{ Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "join_match":
 { Args: { "p_match_id": string,"p_position": number }; Returns: {
@@ -2223,6 +2317,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"platform_clubs":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "active_courts": number,"admin_invitation_expires_at": string,"bookings_last_week": number,"created_at": string,"id": string,"name": string,"setup_completed_at": string,"slug": string,"staff": number
+            }[]
+                           },
 "public_championship":
 { Args: { "p_code": string }; Returns: Json
                            },
@@ -2749,6 +2848,29 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"resend_admin_invitation":
+{ Args: { "p_club_id": string }; Returns: {
+              "accepted_at": string | null,
+"accepted_by": string | null,
+"cancelled_at": string | null,
+"club_id": string,
+"created_at": string,
+"email": string,
+"email_attempts": number,
+"email_locked_until": string | null,
+"email_status": Database["public"]['Enums']["email_status"],
+"emailed_at": string | null,
+"expires_at": string,
+"id": string,
+"invited_by": string | null,
+"role": Database["public"]['Enums']["club_role"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "club_invitations"
         isOneToOne: true
         isSetofReturn: false
       } },

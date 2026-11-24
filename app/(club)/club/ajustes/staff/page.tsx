@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { SettingsBlock, SettingsHeader } from '@/components/settings/settings-block'
 import { ActionForm } from '@/components/ui/action-form'
-import { Field, inputClasses } from '@/components/ui/field'
 import { ShareButton } from '@/components/ui/share-button'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { requireAdmin } from '@/lib/auth/viewer'
@@ -10,10 +9,10 @@ import {
   invitationShareText,
   invitationStatus,
   STAFF_ROLE_LABELS,
-  STAFF_ROLES,
   staffName,
 } from '@/lib/domain/staff'
-import { cancelInvitation, changeStaffRole, inviteStaff, removeStaff, resendInvitation } from './actions'
+import { InviteStaffForm } from '../forms'
+import { cancelInvitation, changeStaffRole, removeStaff, resendInvitation } from './actions'
 
 export const metadata: Metadata = { title: 'Ajustes · Staff' }
 
@@ -32,22 +31,7 @@ export default async function StaffSettingsPage() {
         title="Invitar"
         description="Le llega un mail con un link. Entra con ese email y queda en el panel, sin completar el perfil de jugador. La invitación vence en 7 días."
       >
-        <ActionForm action={inviteStaff} submitLabel="Invitar" pendingLabel="Invitando…">
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem]">
-            <Field label="Email" htmlFor="invite-email">
-              <input id="invite-email" name="email" type="email" required autoComplete="off" className={inputClasses} />
-            </Field>
-            <Field label="Rol" htmlFor="invite-role">
-              <select id="invite-role" name="role" defaultValue="reception" className={inputClasses}>
-                {STAFF_ROLES.map((role) => (
-                  <option key={role} value={role}>
-                    {STAFF_ROLE_LABELS[role]}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </div>
-        </ActionForm>
+        <InviteStaffForm />
       </SettingsBlock>
 
       {invitations.length > 0 ? (

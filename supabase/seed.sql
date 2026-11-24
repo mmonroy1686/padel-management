@@ -4,10 +4,10 @@
 -- $1.200 and $1.600 from 18:30, cash and transfer.
 insert into public.clubs (id, slug, name, timezone, opens_at, closes_at, slot_minutes, booking_window_days,
                           cancellation_notice_hours, max_active_bookings, accepts_cash, accepts_transfer,
-                          transfer_details, transfer_receipt_required) values
+                          transfer_details, transfer_receipt_required, setup_completed_at) values
   ('11111111-1111-1111-1111-111111111111', 'rustic', 'Rustic Pádel', 'America/Montevideo', '08:00', '23:00', 90, 14,
    24, 2, true, true,
-   'Datos de prueba: Banco Ejemplo, caja de ahorro 000-000000, a nombre de Rustic Pádel.', true)
+   'Datos de prueba: Banco Ejemplo, caja de ahorro 000-000000, a nombre de Rustic Pádel.', true, now())
 on conflict (id) do nothing;
 
 insert into public.courts (id, club_id, name, is_covered, sort_order) values
@@ -25,9 +25,9 @@ on conflict (id) do nothing;
 -- Its own colors so the two are told apart at a glance: 2 courts, 09:00-23:00, 60-minute slots, cash only.
 insert into public.clubs (id, slug, name, timezone, opens_at, closes_at, slot_minutes, booking_window_days,
                           cancellation_notice_hours, max_active_bookings, accepts_cash, accepts_transfer,
-                          brand_primary, brand_background) values
+                          brand_primary, brand_background, setup_completed_at) values
   ('44444444-4444-4444-4444-444444444444', 'norte', 'Pádel Norte', 'America/Montevideo', '09:00', '23:00', 60, 7,
-   12, 3, true, false, '#2563EB', '#0B1220')
+   12, 3, true, false, '#2563EB', '#0B1220', now())
 on conflict (id) do nothing;
 
 insert into public.courts (id, club_id, name, is_covered, sort_order) values

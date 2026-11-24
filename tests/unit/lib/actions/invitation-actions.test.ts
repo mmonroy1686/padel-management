@@ -27,7 +27,7 @@ beforeEach(() => {
 
 describe('acceptInvitation', () => {
   it("accepts this club's invitation and goes to the panel", async () => {
-    await expect(acceptInvitation()).rejects.toThrow('redirect:/club')
+    await expect(acceptInvitation()).rejects.toThrow('redirect:/club/inicio')
     expect(rpc).toHaveBeenCalledWith('accept_staff_invitation', { p_club_id: 'a0000000-0000-0000-0000-000000000001' })
   })
 

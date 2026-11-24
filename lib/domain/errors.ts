@@ -61,6 +61,11 @@ const MESSAGES = {
   already_staff: 'Esa persona ya es parte del staff del club.',
   invitation_not_found: 'No encontramos una invitación vigente para tu email.',
   invalid_email: 'Revisá el email: tiene que ser como nombre@dominio.com.',
+  slug_taken: 'Ese nombre corto ya lo usa otro club.',
+  slug_reserved: 'Ese nombre corto está reservado, elegí otro.',
+  invalid_slug: 'Usá letras minúsculas, números y guiones, de 2 a 40 caracteres.',
+  invalid_timezone: 'Elegí una zona horaria de la lista.',
+  setup_incomplete: 'Para terminar, el club necesita al menos una cancha y un precio.',
   sign_in_with_link: 'Para aceptar la invitación, entrá con el enlace que te llega por email o con Google.',
 } as const
 

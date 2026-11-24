@@ -46,7 +46,23 @@ El seed local trae a Rustic con los valores del prototipo: 3 canchas, 08:00 a 23
 
 El staff (admin y recepción) entra por invitación y no necesita perfil de jugador. Un admin invita desde **Ajustes → Staff**: a la persona le llega un mail con un link a `<club>/invitacion`; entra con ese email (enlace mágico o Google), toca **Aceptar invitación** y queda en el panel. La invitación vence a los 7 días y se puede reenviar, cancelar o compartir por WhatsApp si el mail no llega. Un club no puede quedarse sin admin.
 
-El **primer admin** de un club se invita por SQL (Supabase → SQL Editor), hasta que exista el alta de clubes:
+#### Plataforma: crear clubes
+
+Los clubes nuevos se crean desde **`/plataforma`**, que solo se abre en el host de `PLATFORM_HOST` (hoy la URL de producción de Vercel, por ejemplo `padel-management-one.vercel.app`; cuando haya dominio, el dominio raíz) y solo para un super-admin. En cualquier otro caso da 404. En local, `npm run dev:local` la abre en `http://localhost:3000/plataforma`.
+
+1. **Variables en Vercel:** `PLATFORM_HOST=<host>` en Production y volver a desplegar. Para **crear** clubes además hace falta el dominio (`NEXT_PUBLIC_ROOT_DOMAIN`, ver «Un club por subdominio»): sin él, cada club no tendría dirección propia, y la plataforma solo muestra la lista.
+2. **Super-admin:** entrá una vez a la app con tu email (así existe la cuenta) y corré en Supabase → SQL Editor:
+
+   ```sql
+   insert into public.platform_admins (user_id)
+   select id from auth.users where email = 'vos@ejemplo.com';
+   ```
+
+3. En `/plataforma` → **Nuevo club**: nombre, nombre corto (el subdominio), zona horaria y email del admin. Al admin le llega la invitación. La primera vez que entra al panel, un asistente lo lleva por canchas, horario, precios, cobros, logo y recepción. Con una cancha y un precio, el club ya se puede reservar.
+
+Ser super-admin no da acceso al panel de ningún club: para operar uno, hay que invitarse como admin.
+
+Para casos especiales, el **primer admin** de un club que ya existe también se puede invitar por SQL:
 
 ```sql
 insert into public.club_invitations (club_id, email, role)
