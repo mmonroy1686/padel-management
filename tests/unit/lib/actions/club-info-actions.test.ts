@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const CLUB = 'a0000000-0000-0000-0000-000000000001'
 const PHOTO = 'f0000000-0000-0000-0000-000000000001'
 const state = vi.hoisted(() => ({ role: 'admin' as 'player' | 'reception' | 'admin' }))
-const rpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>>(
+const rpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string; code?: string } | null }>>(
   async () => ({ data: null, error: null }),
 )
 const remove = vi.fn(async () => ({ data: [], error: null }))
@@ -83,6 +83,12 @@ describe('club photos', () => {
     rpc.mockResolvedValueOnce({ data: null, error: { message: 'too_many_photos' } })
     expect(await addClubPhoto(`${CLUB}/photo-9.jpg`)).toEqual({ status: 'error', message: errorMessage('too_many_photos') })
     expect(remove).toHaveBeenCalledWith([`${CLUB}/photo-9.jpg`])
+  })
+
+  it('keeps the file of a photo already added when a retry repeats it', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'duplicate key value', code: '23505' } })
+    expect(await addClubPhoto(`${CLUB}/photo-1.jpg`)).toMatchObject({ status: 'error' })
+    expect(remove).not.toHaveBeenCalled()
   })
 
   it('removes a photo and its file', async () => {
