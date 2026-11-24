@@ -10,11 +10,12 @@ type FileFieldProps = {
   accept: string
   inputRef: RefObject<HTMLInputElement | null>
   ariaRequired?: boolean
+  multiple?: boolean
 }
 
 // A file picker in Spanish: the browser's own one reads "Choose File / No file chosen" in English on
 // many phones. The native input stays (forms and tests read it); the button opens it.
-export function FileField({ id, name, label, accept, inputRef, ariaRequired }: FileFieldProps) {
+export function FileField({ id, name, label, accept, inputRef, ariaRequired, multiple }: FileFieldProps) {
   const [fileName, setFileName] = useState<string | null>(null)
   return (
     <div className="flex flex-col gap-2">
@@ -35,10 +36,14 @@ export function FileField({ id, name, label, accept, inputRef, ariaRequired }: F
         name={name}
         type="file"
         accept={accept}
+        multiple={multiple}
         aria-required={ariaRequired}
         tabIndex={-1}
         className="sr-only"
-        onChange={(event) => setFileName(event.target.files?.[0]?.name ?? null)}
+        onChange={(event) => {
+          const files = event.target.files
+          setFileName(files && files.length > 1 ? `${files.length} archivos` : (files?.[0]?.name ?? null))
+        }}
       />
     </div>
   )

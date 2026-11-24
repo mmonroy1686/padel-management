@@ -62,3 +62,16 @@ export function coverRect(image: Size, box: Size): { x: number; y: number; width
   const round = (value: number) => Math.round(value * 100) / 100
   return { x: round((box.width - width) / 2), y: round((box.height - height) / 2), width: round(width), height: round(height) }
 }
+
+// Photos of the club for Inicio (Datos del club): the browser shrinks each to a JPG of 1600 px on its longest side
+// (lib/storage/club-photo.ts), in the club's folder: <club_id>/photo-<timestamp>.jpg.
+const PHOTO_FILE = /^photo-\d{1,15}\.jpg$/
+
+export function clubPhotoPath(clubId: string, now = Date.now()): string {
+  return `${clubId}/photo-${now}.jpg`
+}
+
+export function isClubPhotoPath(clubId: string, path: string): boolean {
+  const [folder, file, ...rest] = path.split('/')
+  return folder === clubId && rest.length === 0 && PHOTO_FILE.test(file ?? '')
+}
