@@ -6,19 +6,12 @@ import { ActionForm } from '@/components/ui/action-form'
 import { Card } from '@/components/ui/card'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { getViewer } from '@/lib/auth/viewer'
-import { clubUrl } from '@/lib/club/host'
+import { clubDomainSuffix, clubUrl } from '@/lib/club/host'
 import { isPlatformAdmin, loadPlatformClubs } from '@/lib/data/platform'
 import { clubSummary, isPlatformHost } from '@/lib/domain/platform'
 import { createClub, resendAdminInvitation } from './actions'
 
 export const metadata: Metadata = { title: 'Plataforma', robots: { index: false } }
-
-// What follows a slug in a club's address, from where a club "x" lives: ".localhost:3000", ".tudominio.uy". Null while
-// clubs have no subdomains (the site URL for all).
-function clubDomain(origin: string): string | null {
-  const sample = new URL(clubUrl('x', process.env, origin)).host
-  return sample.startsWith('x.') ? sample.slice(1) : null
-}
 
 // The platform: only on PLATFORM_HOST and for platform admins; anything else is a 404, so it never shows it exists.
 export default async function PlatformPage() {
@@ -29,6 +22,7 @@ export default async function PlatformPage() {
 
   const [clubs, origin] = await Promise.all([loadPlatformClubs(), requestOrigin()])
   const now = new Date()
+  const domain = clubDomainSuffix(process.env, origin)
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-3xl flex-col gap-8 px-4 py-10">
@@ -39,7 +33,14 @@ export default async function PlatformPage() {
           Nuevo club
         </h2>
         <Card>
-          <NewClubForm action={createClub} domain={clubDomain(origin)} />
+          {domain ? (
+            <NewClubForm action={createClub} domain={domain} />
+          ) : (
+            <p className="text-fg-muted">
+              Para crear clubes hace falta el dominio: cada club vive en su subdominio. Cargá{' '}
+              <code>NEXT_PUBLIC_ROOT_DOMAIN</code> en Vercel (README, «Un club por subdominio») y volvé a desplegar.
+            </p>
+          )}
         </Card>
       </section>
 

@@ -14,6 +14,13 @@ se abre: hoy la URL de Vercel, después el dominio raíz. Sin la variable, o en 
 no aparece en el subdominio de un club. Ese host hoy es también el del club por defecto: el ingreso se ve con la marca
 de Rustic.
 
+## Sin dominio no se crean clubes
+
+La revisión de disciplina lo encontró. Sin `NEXT_PUBLIC_ROOT_DOMAIN`, fuera de localhost todo host es el club por
+defecto: un club creado no tendría dirección propia, y el mail de invitación mandaría al admin al `/invitacion` de
+Rustic, donde falla. Mientras no haya dominio, `/plataforma` lo explica en lugar del formulario y `createClub` lo
+rechaza. En local funciona con `<slug>.localhost:3000`.
+
 ## Los clubes que ya existían, terminados
 
 `setup_completed_at` se llena en la migración con la fecha de alta de cada club, y la seed marca a Rustic y a Norte.
@@ -37,6 +44,11 @@ redirige directo al paso que falta.
 páginas de Ajustes y los pasos del asistente usan los mismos. Logo y colores ya eran componentes.
 
 ## Fuera de alcance, para después
+
+- «Terminar después» dura una visita (`?alta=despues`): si el club no tiene canchas, volver a Inicio lleva otra vez al
+  asistente. Con una cancha cargada ya no redirige.
+- La regla del slug está en la base (`private.checked_slug`), en `lib/domain/platform.ts` y, más laxa, en
+  `lib/club/host.ts`.
 
 - Dar de baja o editar un club desde la plataforma.
 - El paso de cobros todavía no tiene POS: lo suma el corte 4.

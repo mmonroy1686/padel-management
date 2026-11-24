@@ -6,7 +6,8 @@ import { getSiteUrl } from '@/lib/auth/redirect'
 
 type Env = Record<string, string | undefined>
 
-// The same shape create_club will accept: lowercase letters, digits and inner dashes.
+// A subdomain that can be a club: lowercase letters, digits and inner dashes. At least as loose as create_club's rule
+// (private.checked_slug), so every club it creates resolves.
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/
 const NOT_A_CLUB = new Set(['www'])
 const FALLBACK_SLUG = 'rustic'
@@ -39,4 +40,11 @@ export function clubUrl(slug: string, env: Env = process.env, currentOrigin?: st
     }
   }
   return getSiteUrl(env)
+}
+
+// What follows a slug in a club's address (".tudominio.uy", ".localhost:3000"), or null while every host is the default
+// club (no NEXT_PUBLIC_ROOT_DOMAIN outside localhost): then a new club would have no address of its own.
+export function clubDomainSuffix(env: Env = process.env, currentOrigin?: string): string | null {
+  const sample = new URL(clubUrl('x', env, currentOrigin)).host
+  return sample.startsWith('x.') ? sample.slice(1) : null
 }

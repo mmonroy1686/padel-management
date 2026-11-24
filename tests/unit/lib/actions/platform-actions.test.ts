@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const rpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<{ data: null; error: { message: string } | null }>>(
-  async () => ({ data: null, error: null }),
+const origin = vi.hoisted(() => ({ value: 'http://localhost:3000' }))
+const rpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>>(
+  async (name) => ({ data: name === 'create_club' ? { slug: 'demo', name: 'Club Demo' } : null, error: null }),
 )
 const revalidateBookings = vi.fn()
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/actions/revalidate', () => ({ revalidateBookings }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ rpc }) }))
-vi.mock('@/lib/auth/request-origin', () => ({ requestOrigin: async () => 'http://localhost:3000' }))
+vi.mock('@/lib/auth/request-origin', () => ({ requestOrigin: async () => origin.value }))
 
 const { createClub, resendAdminInvitation } = await import('@/app/plataforma/actions')
 const { errorMessage } = await import('@/lib/domain/errors')
@@ -23,6 +24,7 @@ function form(values: Record<string, string>): FormData {
 const NEW_CLUB = { name: 'Club Demo', slug: 'demo', timezone: 'America/Montevideo', adminEmail: 'admin@demo.uy' }
 
 beforeEach(() => {
+  origin.value = 'http://localhost:3000'
   rpc.mockClear()
   revalidateBookings.mockClear()
   vi.stubEnv('NEXT_PUBLIC_ROOT_DOMAIN', '')
@@ -53,6 +55,18 @@ describe('createClub', () => {
     rpc.mockResolvedValueOnce({ data: null, error: { message: 'slug_taken' } })
     expect(await createClub(IDLE, form(NEW_CLUB))).toEqual({ status: 'error', message: errorMessage('slug_taken') })
     expect(revalidateBookings).not.toHaveBeenCalled()
+  })
+})
+
+describe('createClub without a domain', () => {
+  it('refuses while every host is the default club: the new club would have no address', async () => {
+    origin.value = 'https://padel.vercel.app'
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://padel.vercel.app')
+    expect(await createClub(IDLE, form(NEW_CLUB))).toEqual({
+      status: 'error',
+      message: 'Para crear clubes hace falta el dominio (NEXT_PUBLIC_ROOT_DOMAIN): cada club vive en su subdominio.',
+    })
+    expect(rpc).not.toHaveBeenCalled()
   })
 })
 

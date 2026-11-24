@@ -50,7 +50,7 @@ El staff (admin y recepción) entra por invitación y no necesita perfil de juga
 
 Los clubes nuevos se crean desde **`/plataforma`**, que solo se abre en el host de `PLATFORM_HOST` (hoy la URL de producción de Vercel, por ejemplo `padel-management-one.vercel.app`; cuando haya dominio, el dominio raíz) y solo para un super-admin. En cualquier otro caso da 404. En local, `npm run dev:local` la abre en `http://localhost:3000/plataforma`.
 
-1. **Variable en Vercel:** `PLATFORM_HOST=<host>` en Production y volver a desplegar.
+1. **Variables en Vercel:** `PLATFORM_HOST=<host>` en Production y volver a desplegar. Para **crear** clubes además hace falta el dominio (`NEXT_PUBLIC_ROOT_DOMAIN`, ver «Un club por subdominio»): sin él, cada club no tendría dirección propia, y la plataforma solo muestra la lista.
 2. **Super-admin:** entrá una vez a la app con tu email (así existe la cuenta) y corré en Supabase → SQL Editor:
 
    ```sql

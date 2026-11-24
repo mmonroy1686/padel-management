@@ -6,8 +6,8 @@ import { Field, inputClasses } from '@/components/ui/field'
 import { suggestSlug, TIMEZONES } from '@/lib/domain/platform'
 
 // /plataforma → "Nuevo club". The short name follows the name until it is edited by hand.
-// `domain`: what follows the slug in the club's address (".localhost:3000", ".tudominio.uy"), null without subdomains yet.
-export function NewClubForm({ action, domain }: { action: FormAction; domain: string | null }) {
+// `domain`: what follows the slug in the club's address (".localhost:3000", ".tudominio.uy").
+export function NewClubForm({ action, domain }: { action: FormAction; domain: string }) {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [slugEdited, setSlugEdited] = useState(false)
@@ -31,11 +31,7 @@ export function NewClubForm({ action, domain }: { action: FormAction; domain: st
       <Field
         label="Nombre corto"
         htmlFor="club-slug"
-        hint={
-          domain
-            ? `El club queda en ${slug || 'nombre-corto'}${domain}`
-            : 'Es la dirección del club cuando haya dominio: letras minúsculas, números y guiones.'
-        }
+        hint={`El club queda en ${slug || 'nombre-corto'}${domain}`}
       >
         <input
           id="club-slug"

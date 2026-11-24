@@ -3,30 +3,35 @@
 import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { requestOrigin } from '@/lib/auth/request-origin'
-import { clubUrl } from '@/lib/club/host'
+import { clubDomainSuffix, clubUrl } from '@/lib/club/host'
 import { errorMessage } from '@/lib/domain/errors'
 import { readUuid } from '@/lib/domain/input'
 import { parseNewClubForm } from '@/lib/domain/platform'
 import { createClient } from '@/lib/supabase/server'
 
-// /plataforma. create_club and resend_admin_invitation check the platform admin; revalidateBookings also mails the
-// admin's invitation once the response is out.
+// /plataforma. create_club and resend_admin_invitation check the platform admin. revalidateBookings refreshes the app
+// and, once the response is out, empties the mail queue (lib/notify/outbox): that sends the admin's invitation.
 
 export async function createClub(_previous: ActionState, form: FormData): Promise<ActionState> {
   const parsed = parseNewClubForm(form)
   if (!parsed.ok) return failed(parsed.message)
   const { name, slug, timezone, adminEmail } = parsed.value
+  const origin = await requestOrigin()
+  // Without subdomains every host is the default club: the new one would have no address, nor its invitation.
+  if (!clubDomainSuffix(process.env, origin)) {
+    return failed('Para crear clubes hace falta el dominio (NEXT_PUBLIC_ROOT_DOMAIN): cada club vive en su subdominio.')
+  }
   const supabase = await createClient()
-  const { error } = await supabase.rpc('create_club', {
+  const { data, error } = await supabase.rpc('create_club', {
     p_slug: slug,
     p_name: name,
     p_timezone: timezone,
     p_admin_email: adminEmail,
   })
-  if (error) return failed(errorMessage(error.message))
+  if (error || !data) return failed(errorMessage(error?.message))
   revalidateBookings()
-  const url = clubUrl(slug, process.env, await requestOrigin())
-  return ok(`Listo: ${name} está en ${url}. Le mandamos la invitación a ${adminEmail}; también puede entrar en ${url}/invitacion con ese email.`)
+  const url = clubUrl(data.slug, process.env, origin)
+  return ok(`Listo: ${data.name} está en ${url}. Le mandamos la invitación a ${adminEmail}; también puede entrar en ${url}/invitacion con ese email.`)
 }
 
 export async function resendAdminInvitation(_previous: ActionState, form: FormData): Promise<ActionState> {
