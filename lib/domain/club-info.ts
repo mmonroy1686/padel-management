@@ -28,7 +28,7 @@ export function amenityLabel(key: string): string | null {
 }
 
 // The same hosts save_club_info takes.
-const MAPS_URL = /^https:\/\/((www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+\/|maps\.app\.goo\.gl\/|goo\.gl\/maps\/)/i
+const MAPS_URL = /^https:\/\/((www\.)?google\.(com|[a-z]{2}|com?\.[a-z]{2})\/maps([/?]|$)|maps\.google\.(com|[a-z]{2}|com?\.[a-z]{2})\/|maps\.app\.goo\.gl\/|goo\.gl\/maps\/)/i
 
 export function isGoogleMapsUrl(url: string): boolean {
   return url.length <= 500 && MAPS_URL.test(url)
@@ -136,7 +136,7 @@ function fail(message: string): { ok: false; message: string } {
   return { ok: false, message }
 }
 
-// Ajustes → "Datos del club". save_club_info checks it all again.
+// Ajustes → "Datos del club": the form as save_club_info takes it, with a message for each wrong field.
 export function parseClubInfoForm(form: FormData): ParseResult<ClubInfoInput> {
   const address = text(form, 'address')
   if (address.length > 200) return fail('La dirección es muy larga: hasta 200 caracteres.')

@@ -27,6 +27,7 @@ describe('ClubSection', () => {
     expect(screen.getByRole('img', { name: 'Foto 1 de Rustic' })).toHaveAttribute('src', 'https://x/1.jpg')
     expect(screen.getByRole('region', { name: 'Mapa de Rustic' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'WhatsApp: 092 369 558' })).toHaveAttribute('href', 'https://wa.me/59892369558?text=Hola')
+    expect(screen.getByRole('link', { name: 'Email: hola@rustic.uy' })).toHaveAttribute('href', 'mailto:hola@rustic.uy')
     expect(screen.getByRole('link', { name: 'Email: hola@rustic.uy' })).not.toHaveAttribute('target')
     expect(screen.getByRole('link', { name: 'Cómo llegar' })).toHaveAttribute('href', 'https://maps.app.goo.gl/x')
     expect(within(screen.getByRole('list', { name: 'Servicios' })).getAllByRole('listitem').map((item) => item.textContent)).toEqual(['Bar', 'Wifi'])

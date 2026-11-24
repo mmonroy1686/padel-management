@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/server'
 
 const FORBIDDEN = failed(errorMessage('forbidden'))
 
-// The functions check the role again; this gives a clear message before calling them.
+// The admin's club, or null for anyone else.
 async function adminClubId(): Promise<string | null> {
   const viewer = await getViewer()
   return viewer?.membership?.role === 'admin' ? viewer.club.id : null
@@ -48,8 +48,9 @@ export async function addClubPhoto(path: string): Promise<ActionState> {
   const supabase = await createClient()
   const { error } = await supabase.rpc('add_club_photo', { p_club_id: clubId, p_path: path })
   if (error) {
-    // The file is there but the club does not point at it: take it out.
-    await supabase.storage.from(LOGO_BUCKET).remove([path])
+    // The file is there but the club does not point at it: take it out. A repeated path (23505) is a retry of a
+    // photo already added, whose file stays.
+    if (error.code !== '23505') await supabase.storage.from(LOGO_BUCKET).remove([path])
     return failed(errorMessage(error.message))
   }
   revalidateBookings()

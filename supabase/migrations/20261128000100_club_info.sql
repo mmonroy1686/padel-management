@@ -7,7 +7,7 @@ alter table public.clubs
   add column longitude double precision constraint clubs_longitude_range check (longitude between -180 and 180),
   add column google_maps_url text constraint clubs_google_maps_url_shape check (
     length(google_maps_url) <= 500
-    and google_maps_url ~* '^https://((www\.)?google\.[a-z.]+/maps|maps\.google\.[a-z.]+/|maps\.app\.goo\.gl/|goo\.gl/maps/)'
+    and google_maps_url ~* '^https://((www\.)?google\.(com|[a-z]{2}|com?\.[a-z]{2})/maps([/?]|$)|maps\.google\.(com|[a-z]{2}|com?\.[a-z]{2})/|maps\.app\.goo\.gl/|goo\.gl/maps/)'
   ),
   add column instagram text constraint clubs_instagram_shape check (instagram ~ '^[a-z0-9._]{1,30}$'),
   add column contact_email text constraint clubs_contact_email_shape check (
@@ -91,7 +91,7 @@ begin
   end if;
   if v_maps is not null and (
     length(v_maps) > 500
-    or v_maps !~* '^https://((www\.)?google\.[a-z.]+/maps|maps\.google\.[a-z.]+/|maps\.app\.goo\.gl/|goo\.gl/maps/)'
+    or v_maps !~* '^https://((www\.)?google\.(com|[a-z]{2}|com?\.[a-z]{2})/maps([/?]|$)|maps\.google\.(com|[a-z]{2}|com?\.[a-z]{2})/|maps\.app\.goo\.gl/|goo\.gl/maps/)'
   ) then
     perform private.fail('invalid_maps_url');
   end if;
@@ -161,6 +161,11 @@ begin
   end if;
   perform private.require_club_admin(v_photo.club_id);
   perform 1 from public.clubs where id = v_photo.club_id for update;
+  -- Again under the lock: a move may have changed its place meanwhile.
+  select * into v_photo from public.club_photos where id = p_photo_id;
+  if not found then
+    perform private.fail('not_found');
+  end if;
   delete from public.club_photos where id = p_photo_id;
   update public.club_photos set position = position - 1
    where club_id = v_photo.club_id and position > v_photo.position;

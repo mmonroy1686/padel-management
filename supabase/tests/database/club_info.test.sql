@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 \ir helpers/slot.psql
 \ir helpers/club.psql
-select plan(30);
+select plan(35);
 
 -- A second club, for the "another club" cases.
 insert into public.clubs (id, slug, name, timezone) values ('a0000000-0000-0000-0000-000000000002', 'otro', 'Otro', 'America/Montevideo');
@@ -64,6 +64,8 @@ select throws_ok($$ select test_helpers.save_info(p_maps => 'https://evil.exampl
   'the map link is a Google Maps one');
 select throws_ok($$ select test_helpers.save_info(p_maps => 'http://maps.app.goo.gl/abc') $$, 'P0001', 'invalid_maps_url',
   'over https');
+select throws_ok($$ select test_helpers.save_info(p_maps => 'https://google.evil.com/maps/place/x') $$, 'P0001',
+  'invalid_maps_url', 'on Google itself, not a look-alike host');
 select lives_ok(
   $$ select test_helpers.save_info(p_maps => 'https://www.google.com/maps/place/Rustic/@-34.9,-56.1,17z') $$,
   'a long Google Maps link is fine');
@@ -106,6 +108,17 @@ select lives_ok($$ select public.move_club_photo(id, -1) from public.club_photos
   'the first one stays first');
 select is(test_helpers.photo_order(),
   'photo-1.jpg,photo-4.jpg,photo-2.jpg,photo-5.jpg,photo-6.jpg,photo-7.jpg,photo-8.jpg', 'in the new order');
+select lives_ok($$ select public.move_club_photo(id, 1) from public.club_photos where path like '%/photo-8.jpg' $$,
+  'the last one forward stays last');
+select throws_ok($$ select public.move_club_photo(id, 2) from public.club_photos where path like '%/photo-8.jpg' $$,
+  'P0001', 'invalid_input', 'a photo moves one place at a time');
+select throws_ok(
+  $$ select public.add_club_photo('a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001/photo-1.jpg') $$,
+  '23505', null, 'the same file is not added twice');
+select throws_ok(
+  $$ insert into public.club_photos (club_id, path, position)
+     values ('a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001/photo-99.jpg', 7) $$,
+  '42501', null, 'photos are written only through the functions');
 
 -- Carla, reception: not hers to change.
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000c1", "role": "authenticated"}';

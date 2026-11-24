@@ -44,6 +44,10 @@ describe('isGoogleMapsUrl', () => {
     expect(isGoogleMapsUrl('https://goo.gl/maps/x')).toBe(true)
     expect(isGoogleMapsUrl('http://maps.app.goo.gl/x')).toBe(false)
     expect(isGoogleMapsUrl('https://evil.example/maps.app.goo.gl/')).toBe(false)
+    expect(isGoogleMapsUrl('https://google.evil.com/maps/place/x')).toBe(false)
+    expect(isGoogleMapsUrl('https://www.google.attacker.io/maps')).toBe(false)
+    expect(isGoogleMapsUrl('https://maps.google.evil.com/x')).toBe(false)
+    expect(isGoogleMapsUrl('https://www.google.com/mapsevil')).toBe(false)
   })
 })
 
