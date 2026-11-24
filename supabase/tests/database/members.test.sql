@@ -64,7 +64,7 @@ select is(
   'the new role is stored');
 select throws_ok(
   $$ select public.set_member_role('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000d1', 'player') $$,
-  'P0001', 'forbidden', 'an admin cannot change their own role');
+  'P0001', 'last_admin', 'the only admin cannot change their own role');
 select throws_ok(
   $$ select public.set_member_role('a0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000dead', 'player') $$,
   'P0001', 'not_found', 'the member has to exist');

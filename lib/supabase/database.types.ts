@@ -370,6 +370,37 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"club_invitations": {
+                  Row: {
+                    "accepted_at": string | null,"accepted_by": string | null,"cancelled_at": string | null,"club_id": string,"created_at": string,"email": string,"email_attempts": number,"email_locked_until": string | null,"email_status": Database["public"]['Enums']["email_status"],"emailed_at": string | null,"expires_at": string,"id": string,"invited_by": string | null,"role": Database["public"]['Enums']["club_role"]
+                  }
+                  Insert: {
+                    "accepted_at"?: string | null,"accepted_by"?: string | null,"cancelled_at"?: string | null,"club_id": string,"created_at"?: string,"email": string,"email_attempts"?: number,"email_locked_until"?: string | null,"email_status"?: Database["public"]['Enums']["email_status"],"emailed_at"?: string | null,"expires_at"?: string,"id"?: string,"invited_by"?: string | null,"role": Database["public"]['Enums']["club_role"]
+                  }
+                  Update: {
+                    "accepted_at"?: string | null,"accepted_by"?: string | null,"cancelled_at"?: string | null,"club_id"?: string,"created_at"?: string,"email"?: string,"email_attempts"?: number,"email_locked_until"?: string | null,"email_status"?: Database["public"]['Enums']["email_status"],"emailed_at"?: string | null,"expires_at"?: string,"id"?: string,"invited_by"?: string | null,"role"?: Database["public"]['Enums']["club_role"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "club_invitations_accepted_by_fkey"
+      columns: ["accepted_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "club_invitations_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "club_invitations_invited_by_fkey"
+      columns: ["invited_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"club_members": {
                   Row: {
                     "category": number | null,"category_validated": boolean,"club_id": string,"created_at": string,"role": Database["public"]['Enums']["club_role"],"user_id": string
@@ -1139,7 +1170,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "add_championship_category":
+            "accept_staff_invitation":
+{ Args: { "p_club_id": string }; Returns: Database["public"]['Enums']["club_role"]
+                           },
+"add_championship_category":
 { Args: { "p_championship_id": string,"p_format": Database["public"]['Enums']["championship_format"],"p_gender": Database["public"]['Enums']["championship_gender"],"p_golden_point": boolean,"p_group_size": number,"p_level_max"?: number,"p_level_min"?: number,"p_match_minutes": number,"p_max_pairs": number,"p_min_pairs": number,"p_name": string,"p_price": number,"p_qualifiers": number,"p_seeding": Database["public"]['Enums']["championship_seeding"],"p_third_set": string,"p_time_limit"?: number }; Returns: {
               "championship_id": string,
 "club_id": string,
@@ -1485,6 +1519,29 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"cancel_staff_invitation":
+{ Args: { "p_id": string }; Returns: {
+              "accepted_at": string | null,
+"accepted_by": string | null,
+"cancelled_at": string | null,
+"club_id": string,
+"created_at": string,
+"email": string,
+"email_attempts": number,
+"email_locked_until": string | null,
+"email_status": Database["public"]['Enums']["email_status"],
+"emailed_at": string | null,
+"expires_at": string,
+"id": string,
+"invited_by": string | null,
+"role": Database["public"]['Enums']["club_role"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "club_invitations"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "cancel_tournament":
 { Args: { "p_tournament_id": string }; Returns: {
               "cancelled_at": string | null,
@@ -1603,6 +1660,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"claim_invitation_emails":
+{ Args: { "p_limit"?: number }; Returns: {
+              "club_brand_background": string,"club_brand_primary": string,"club_logo_path": string,"club_name": string,"club_slug": string,"email": string,"invitation_id": string,"inviter_name": string,"role": Database["public"]['Enums']["club_role"]
+            }[]
+                           },
 "claim_notification_emails":
 { Args: { "p_limit"?: number }; Returns: {
               "club_brand_background": string,"club_brand_primary": string,"club_logo_path": string,"club_name": string,"club_slug": string,"club_timezone": string,"data": Json,"email": string,"kind": Database["public"]['Enums']["notification_kind"],"link": string,"notification_id": string,"player_name": string
@@ -1704,6 +1766,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"club_staff":
+{ Args: { "p_club_id": string }; Returns: {
+              "display_name": string,"email": string,"role": Database["public"]['Enums']["club_role"],"user_id": string
+            }[]
+                           },
 "confirm_payment":
 { Args: { "p_payment_id": string }; Returns: {
               "amount": number,
@@ -1906,6 +1973,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"finish_invitation_email":
+{ Args: { "p_id": string,"p_status": Database["public"]['Enums']["email_status"] }; Returns: undefined
+                           },
 "finish_notification_email":
 { Args: { "p_id": string,"p_status": Database["public"]['Enums']["email_status"] }; Returns: undefined
                            },
@@ -1934,6 +2004,29 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "tournaments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"invite_staff":
+{ Args: { "p_club_id": string,"p_email": string,"p_role": Database["public"]['Enums']["club_role"] }; Returns: {
+              "accepted_at": string | null,
+"accepted_by": string | null,
+"cancelled_at": string | null,
+"club_id": string,
+"created_at": string,
+"email": string,
+"email_attempts": number,
+"email_locked_until": string | null,
+"email_status": Database["public"]['Enums']["email_status"],
+"emailed_at": string | null,
+"expires_at": string,
+"id": string,
+"invited_by": string | null,
+"role": Database["public"]['Enums']["club_role"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "club_invitations"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -2494,6 +2587,21 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"remove_staff":
+{ Args: { "p_club_id": string,"p_user_id": string }; Returns: {
+              "category": number | null,
+"category_validated": boolean,
+"club_id": string,
+"created_at": string,
+"role": Database["public"]['Enums']["club_role"],
+"user_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "club_members"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "remove_tournament_entry":
 { Args: { "p_entry_id": string }; Returns: {
               "club_id": string,
@@ -2641,6 +2749,29 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"resend_staff_invitation":
+{ Args: { "p_id": string }; Returns: {
+              "accepted_at": string | null,
+"accepted_by": string | null,
+"cancelled_at": string | null,
+"club_id": string,
+"created_at": string,
+"email": string,
+"email_attempts": number,
+"email_locked_until": string | null,
+"email_status": Database["public"]['Enums']["email_status"],
+"emailed_at": string | null,
+"expires_at": string,
+"id": string,
+"invited_by": string | null,
+"role": Database["public"]['Enums']["club_role"]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "club_invitations"
         isOneToOne: true
         isSetofReturn: false
       } },
