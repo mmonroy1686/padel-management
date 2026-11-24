@@ -91,6 +91,8 @@ Solo se mandan errores, sin grabación de sesiones ni medición de rendimiento. 
 
 `NEXT_PUBLIC_SENTRY_DSN` queda fija en el código del navegador al hacer el build: después de cargarla o cambiarla en Vercel, hay que volver a desplegar.
 
+Para comprobar que funciona: con el usuario admin, **Ajustes → Monitoreo** manda un error de prueba desde el servidor y otro desde el navegador. Cada uno muestra su ID y aparece en Sentry → Issues como «Prueba de monitoreo» (environment `production` o `preview`); después se marca como resuelto. Si dice «Sentry está apagado acá», falta `NEXT_PUBLIC_SENTRY_DSN` en ese entorno o el deploy es anterior a cargarla.
+
 #### Backups
 
 `backup.yml` corre los lunes a las 03:00 (Montevideo): hace un dump de producción (roles, esquema y datos), lo cifra con `BACKUP_PASSPHRASE` y lo guarda 90 días como artifact del workflow. **Los archivos subidos (logos, comprobantes, afiches) no están en el backup**: solo sus registros en la base.

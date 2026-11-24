@@ -1,5 +1,6 @@
 'use server'
 
+import * as Sentry from '@sentry/nextjs'
 import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { getViewer } from '@/lib/auth/viewer'
@@ -9,6 +10,7 @@ import { errorMessage } from '@/lib/domain/errors'
 import { readBoolean, readInt, readText, readUuid } from '@/lib/domain/input'
 import { parseLoyaltyForm } from '@/lib/domain/loyalty'
 import { type BookingSettings, parseBookingSettings, type PaymentSettings, parseClubName, parseClubPhone, parsePaymentSettings, parsePricingRule } from '@/lib/domain/settings'
+import { sendTestError, testErrorMessage } from '@/lib/observability/sentry-check'
 import { createClient } from '@/lib/supabase/server'
 
 const FORBIDDEN = failed(errorMessage('forbidden'))
@@ -249,4 +251,11 @@ export async function saveClubBrand(_previous: ActionState, form: FormData): Pro
   })
   if (!error) revalidateBookings()
   return fromRpc(error, 'Marca guardada. Se ve en toda la app al recargar.')
+}
+
+// Ajustes → Monitoreo: a test error from the server, to check Sentry gets it.
+export async function sendServerTestError(): Promise<ActionState> {
+  if (!(await adminClubId())) return FORBIDDEN
+  const result = await sendTestError(Sentry, 'servidor')
+  return result.ok ? ok(testErrorMessage(result)) : failed(testErrorMessage(result))
 }

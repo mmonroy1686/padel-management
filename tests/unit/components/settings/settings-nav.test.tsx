@@ -9,7 +9,7 @@ describe('SettingsNav', () => {
   it('links every section and marks the current one', () => {
     render(<SettingsNav />)
     const menu = screen.getByRole('navigation', { name: 'Secciones de ajustes' })
-    expect(menu.querySelectorAll('a')).toHaveLength(6)
+    expect(menu.querySelectorAll('a')).toHaveLength(7)
     expect(screen.getByRole('link', { name: 'Pagos' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Club' })).not.toHaveAttribute('aria-current')
     expect(screen.getByRole('link', { name: 'Canchas y precios' })).toHaveAttribute('href', '/club/ajustes/canchas')

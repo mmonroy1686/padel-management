@@ -16,6 +16,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   { href: '/club/ajustes/pagos', label: 'Pagos', icon: 'cash', description: 'Efectivo, transferencia y sus datos.' },
   { href: '/club/ajustes/sellos', label: 'Sellos', icon: 'ticket', description: 'La recompensa por venir al day use.' },
   { href: '/club/ajustes/flyer', label: 'Flyer', icon: 'image', description: 'WhatsApp y fondo del flyer de turnos libres.' },
+  { href: '/club/ajustes/monitoreo', label: 'Monitoreo', icon: 'alert', description: 'Probar que los errores llegan a Sentry.' },
 ]
 
 // The section of a path: exact for the first one (/club/ajustes), so it does not light up on every other section.
