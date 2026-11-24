@@ -57,6 +57,11 @@ const MESSAGES = {
   invalid_result: 'Ese resultado no es posible con las reglas de la categoría.',
   invalid_color: 'Ese color no es válido. Usá el formato #RRGGBB, por ejemplo #FCB021.',
   player_repeated: 'Ese jugador ya está en el turno.',
+  last_admin: 'El club tiene que tener al menos un admin. Nombrá otro admin antes.',
+  already_staff: 'Esa persona ya es parte del staff del club.',
+  invitation_not_found: 'No encontramos una invitación vigente para tu email.',
+  invalid_email: 'Revisá el email: tiene que ser como nombre@dominio.com.',
+  sign_in_with_link: 'Para aceptar la invitación, entrá con el enlace que te llega por email o con Google.',
 } as const
 
 export type ErrorCode = keyof typeof MESSAGES

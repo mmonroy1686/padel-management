@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getSiteUrl, originFromHeaders, safeNextPath, strayAuthCodeRedirect } from '@/lib/auth/redirect'
+import { getSiteUrl, originFromHeaders, safeNextPath, strayAuthCodeRedirect, callbackError } from '@/lib/auth/redirect'
 
 describe('safeNextPath', () => {
   it.each(['/', '/reservar', '/partidos?fecha=2026-10-01'])('keeps the internal path %s', (path) => {
@@ -88,5 +88,13 @@ describe('strayAuthCodeRedirect', () => {
     expect(strayAuthCodeRedirect(new URL('https://rustic.example/'))).toBeNull()
     expect(strayAuthCodeRedirect(new URL('https://rustic.example/reservar?code=abc'))).toBeNull()
     expect(strayAuthCodeRedirect(new URL('https://rustic.example/auth/callback?code=abc'))).toBeNull()
+  })
+})
+
+describe('callbackError', () => {
+  it('tells a link opened in another browser from one used or replaced', () => {
+    expect(callbackError('pkce_code_verifier_not_found')).toBe('otro-navegador')
+    expect(callbackError('otp_expired')).toBe('callback')
+    expect(callbackError(undefined)).toBe('callback')
   })
 })

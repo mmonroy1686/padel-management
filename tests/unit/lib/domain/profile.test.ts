@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { categoryLabel, firstName, GENDER_LABELS, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
+import { categoryLabel, firstName, GENDER_LABELS, incompleteHome, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
 
 describe('isProfileComplete', () => {
   const profile = { side: 'drive', hand: 'right', gender: 'female' }
@@ -13,6 +13,15 @@ describe('isProfileComplete', () => {
     expect(isProfileComplete({ ...profile, gender: null }, { category: 5 })).toBe(false)
     expect(isProfileComplete(profile, { category: null })).toBe(false)
     expect(isProfileComplete(profile, null)).toBe(false)
+  })
+})
+
+describe('incompleteHome', () => {
+  it('sends staff without a player profile to the panel, everyone else to the welcome', () => {
+    expect(incompleteHome({ role: 'reception' })).toBe('/club')
+    expect(incompleteHome({ role: 'admin' })).toBe('/club')
+    expect(incompleteHome({ role: 'player' })).toBe('/bienvenida')
+    expect(incompleteHome(null)).toBe('/bienvenida')
   })
 })
 

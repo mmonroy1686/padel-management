@@ -43,3 +43,12 @@ export function getSiteUrl(env: Env = process.env): string {
   if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`
   return 'http://localhost:3000'
 }
+
+// Why /auth/callback could not sign in, for the message on Ingresar. A link opened in another browser (or outside the
+// private window it was asked from) has no PKCE verifier cookie there; anything else is a link already used or replaced
+// by a newer one.
+export type CallbackError = 'otro-navegador' | 'callback'
+
+export function callbackError(code: string | undefined): CallbackError {
+  return code === 'pkce_code_verifier_not_found' ? 'otro-navegador' : 'callback'
+}

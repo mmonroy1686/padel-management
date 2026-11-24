@@ -22,7 +22,9 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
-  callback: 'El enlace venció o ya se usó. Pedí uno nuevo.',
+  callback: 'El enlace venció o ya se usó: cada enlace sirve una vez y pedir otro anula los anteriores. Pedí uno nuevo.',
+  'otro-navegador':
+    'Abrí el enlace en el mismo navegador donde lo pediste (si lo pediste en una ventana privada, en esa ventana). O pedí uno nuevo acá.',
   google: 'No pudimos conectar con Google. Probá de nuevo o usá tu email.',
 }
 

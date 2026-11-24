@@ -18,6 +18,7 @@ const DATABASE_CODES = [
   'invalid_result',
   'invalid_color',
   'player_repeated',
+  'last_admin', 'already_staff', 'invitation_not_found', 'invalid_email', 'sign_in_with_link',
 ]
 
 describe('errorMessage', () => {
@@ -31,6 +32,11 @@ describe('errorMessage', () => {
     expect(errorMessage('slot_available')).toBe('Hay un turno libre en ese horario: reservalo desde la grilla.')
     expect(errorMessage('too_many_waits')).toBe('Ya estás esperando 3 turnos. Cancelá una espera para anotarte en otra.')
     expect(errorMessage('hold_expired')).toBe('Se terminó el tiempo para reservarlo y el turno pasó al siguiente de la lista.')
+  })
+
+  it('explains the staff rules in words', () => {
+    expect(errorMessage('last_admin')).toBe('El club tiene que tener al menos un admin. Nombrá otro admin antes.')
+    expect(errorMessage('invitation_not_found')).toBe('No encontramos una invitación vigente para tu email.')
   })
 
   it.each(DATABASE_CODES)('translates %s', (code) => {
