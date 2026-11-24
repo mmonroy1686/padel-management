@@ -44,12 +44,16 @@ El seed local trae a Rustic con los valores del prototipo: 3 canchas, 08:00 a 23
 
 ### Producción
 
-Un usuario pasa a `club_members` cuando completa la bienvenida. Para dar rol de admin a una cuenta (Supabase → SQL Editor):
+El staff (admin y recepción) entra por invitación y no necesita perfil de jugador. Un admin invita desde **Ajustes → Staff**: a la persona le llega un mail con un link a `<club>/invitacion`; entra con ese email (enlace mágico o Google), toca **Aceptar invitación** y queda en el panel. La invitación vence a los 7 días y se puede reenviar, cancelar o compartir por WhatsApp si el mail no llega. Un club no puede quedarse sin admin.
+
+El **primer admin** de un club se invita por SQL (Supabase → SQL Editor), hasta que exista el alta de clubes:
 
 ```sql
-update public.club_members m set role = 'admin'
-from auth.users u where u.id = m.user_id and u.email = 'vos@ejemplo.com';
+insert into public.club_invitations (club_id, email, role)
+select id, 'vos@ejemplo.com', 'admin' from public.clubs where slug = 'rustic';
 ```
+
+Después, esa persona abre `https://<club>/invitacion` (o el link del mail, si el envío con Resend está configurado) y entra con ese email.
 
 #### Un club por subdominio (dominio y Vercel)
 

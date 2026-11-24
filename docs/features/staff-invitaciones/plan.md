@@ -1,7 +1,7 @@
 ---
 feature: staff-invitaciones
 type: plan
-status: in-progress
+status: done
 date: 2026-11-24
 branch: feat/staff-invitaciones
 references: ./design.md
@@ -21,12 +21,12 @@ references: ./design.md
 
 ## Criterios de aceptación
 
-- [ ] Un admin invita a recepción; esa persona entra por el link y llega al panel sin que se le pida lado, mano, género ni categoría (e2e).
-- [ ] Recepción no puede invitar ni cambiar roles (pgTAP + e2e).
-- [ ] Una invitación vencida o cancelada no da acceso (pgTAP + e2e para la cancelada).
-- [ ] Quitarle el rol al último admin falla con `last_admin`, por RPC y por SQL directo (pgTAP).
-- [ ] Un jugador existente invitado como recepción conserva su categoría y su historial (pgTAP).
-- [ ] lint, typecheck, Vitest, pgTAP, build y e2e en verde; tipos de la base regenerados.
+- [x] Un admin invita a recepción; esa persona entra por el link y llega al panel sin que se le pida lado, mano, género ni categoría (e2e).
+- [x] Recepción no puede invitar ni cambiar roles (pgTAP + e2e).
+- [x] Una invitación vencida o cancelada no da acceso (pgTAP + e2e para la cancelada).
+- [x] Quitarle el rol al último admin falla con `last_admin`, por RPC y por SQL directo (pgTAP).
+- [x] Un jugador existente invitado como recepción conserva su categoría y su historial (pgTAP).
+- [x] lint, typecheck, Vitest, pgTAP, build y e2e en verde; tipos de la base regenerados.
 
 ## Revisiones del plan
 
