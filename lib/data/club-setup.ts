@@ -12,3 +12,15 @@ export async function loadCourtsAndPrices(clubId: string) {
   if (rules.error) throw rules.error
   return { courts: courts.data, rules: rules.data }
 }
+
+// How far a club that is not set up got: what "Listo" and the Inicio notice need.
+export async function loadSetupState(clubId: string): Promise<{ activeCourts: number; priceRules: number }> {
+  const supabase = await createClient()
+  const [courts, rules] = await Promise.all([
+    supabase.from('courts').select('id', { count: 'exact', head: true }).eq('club_id', clubId).eq('is_active', true),
+    supabase.from('pricing_rules').select('id', { count: 'exact', head: true }).eq('club_id', clubId),
+  ])
+  if (courts.error) throw courts.error
+  if (rules.error) throw rules.error
+  return { activeCourts: courts.count ?? 0, priceRules: rules.count ?? 0 }
+}
