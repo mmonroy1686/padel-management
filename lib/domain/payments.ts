@@ -28,8 +28,10 @@ export function paymentState(booking: BookingLike, payments: PaymentLike[]): Pay
   return 'pending'
 }
 
+type ClubMethods = { accepts_cash: boolean; accepts_transfer: boolean; accepts_card: boolean }
+
 // How a player pays this club, for the screens that tell him. POS is paid at the desk, like cash.
-export function paymentMethodsNote(club: { accepts_cash: boolean; accepts_transfer: boolean; accepts_card: boolean }): string {
+export function paymentMethodsNote(club: ClubMethods): string {
   const atDesk = club.accepts_cash
     ? club.accepts_card
       ? 'en el club (efectivo o tarjeta)'
@@ -52,27 +54,24 @@ export const METHOD_LABELS: Record<PaymentMethod, string> = { cash: 'Efectivo', 
 // After "Cobramos $400 …".
 export const METHOD_HOW: Record<PaymentMethod, string> = { cash: 'en efectivo', transfer: 'por transferencia', card: 'con POS' }
 
-type ClubMethods = { accepts_cash: boolean; accepts_transfer: boolean; accepts_card: boolean }
-
 // The desk buttons a club shows, in this order: Efectivo, POS.
 export function deskMethods(club: Pick<ClubMethods, 'accepts_cash' | 'accepts_card'>): DeskMethod[] {
   return DESK_METHODS.filter((method) => (method === 'cash' ? club.accepts_cash : club.accepts_card))
 }
 
-// The desk method a form sends: cash when it sends none (the forms before POS), null when it is not a desk method.
+// The desk method a form sends, or null when it sends none or another one: a form that forgot it must not record
+// POS money as cash.
 export function readDeskMethod(form: FormData): DeskMethod | null {
   const raw = form.get('method')
-  if (raw === null) return 'cash'
   return (DESK_METHODS as readonly unknown[]).includes(raw) ? (raw as DeskMethod) : null
 }
 
 // What the desk button says: just "Cobrar $400" when there is one way to pay, "… en efectivo" / "… con POS" when
 // reception has to pick.
 export function deskChargeLabel(base: string, method: DeskMethod, methods: readonly DeskMethod[]): string {
-  if (methods.length > 1) return `${base} ${METHOD_HOW[method]}`
-  return method === 'cash' ? base : `${base} ${METHOD_HOW[method]}`
+  return methods.length === 1 && method === 'cash' ? base : `${base} ${METHOD_HOW[method]}`
 }
 
 export function deskChargeDone(method: DeskMethod): string {
-  return method === 'cash' ? 'Pago en efectivo registrado.' : 'Pago con POS registrado.'
+  return `Pago ${METHOD_HOW[method]} registrado.`
 }

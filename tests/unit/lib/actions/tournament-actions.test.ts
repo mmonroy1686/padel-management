@@ -119,7 +119,7 @@ describe('tournament actions', () => {
     await club.addGuest(IDLE, form({ tournamentId: ID, guestName: 'Pepe' }))
     await club.removeEntry(IDLE, form({ entryId: ID }))
     await club.recordScore(IDLE, form({ gameId: ID, scoreA: '14' }))
-    await club.recordTournamentCash(IDLE, form({ entryId: ID, amount: '400' }))
+    await club.recordTournamentCash(IDLE, form({ entryId: ID, amount: '400', method: 'cash' }))
     await player.joinTournament(IDLE, form({ tournamentId: ID }))
     await player.reportTournamentTransfer(ID, 'u1/recibo.png')
     expect(rpc.mock.calls).toEqual([

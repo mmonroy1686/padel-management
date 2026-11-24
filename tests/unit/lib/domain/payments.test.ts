@@ -95,13 +95,13 @@ describe('readDeskMethod', () => {
     return data
   }
 
-  it('reads cash or card, and cash from a form that sends none', () => {
+  it('reads cash or card', () => {
     expect(readDeskMethod(form('card'))).toBe('card')
     expect(readDeskMethod(form('cash'))).toBe('cash')
-    expect(readDeskMethod(form())).toBe('cash')
   })
 
-  it('refuses a transfer or anything else: those are not desk charges', () => {
+  it('refuses no method, a transfer or anything else: those are not desk charges', () => {
+    expect(readDeskMethod(form())).toBeNull()
     expect(readDeskMethod(form('transfer'))).toBeNull()
     expect(readDeskMethod(form('bitcoin'))).toBeNull()
   })

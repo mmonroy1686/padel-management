@@ -119,7 +119,7 @@ describe('pass actions', () => {
     await player.reportPassTransfer(ID, 'u1/recibo.png')
     await club.checkInPass(IDLE, form({ passId: ID }))
     await club.cancelPass(IDLE, form({ passId: ID }))
-    await club.recordPassCash(IDLE, form({ passId: ID, amount: '450' }))
+    await club.recordPassCash(IDLE, form({ passId: ID, amount: '450', method: 'cash' }))
     await club.sellDayUse(IDLE, form({ productId: ID, date: '2026-10-03', holder: 'guest', guestName: 'Pepe', useReward: 'on' }))
     await club.sellDayUse(IDLE, form({ productId: ID, date: '2026-10-03', holder: 'player', playerId: ID, useReward: 'on' }))
     await club.setProductActive(IDLE, form({ productId: ID, active: 'false' }))
