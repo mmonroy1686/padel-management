@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { currentSection, sectionOf, SETTINGS_SECTIONS } from '@/lib/club/settings-sections'
 
 describe('settings sections', () => {
-  it('groups Ajustes from the club to what it charges', () => {
+  it('groups Ajustes from the club to what it charges, monitoring last', () => {
     expect(SETTINGS_SECTIONS.map((section) => section.label)).toEqual([
       'Club',
       'Reservas y partidos',
@@ -10,6 +10,7 @@ describe('settings sections', () => {
       'Pagos',
       'Sellos',
       'Flyer',
+      'Monitoreo',
     ])
   })
 
