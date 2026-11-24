@@ -373,6 +373,25 @@ function reasonFor(plan: Plan, match: ScheduleMatch): string {
   return REASONS[problem](entryId ? (plan.entryName.get(entryId) ?? null) : null)
 }
 
+// The round of each group match: in the order given, a match joins the first round where neither pair plays yet.
+// The fixture comes from the database in no set order; placing round by round fills every court at each start
+// instead of leaving one empty while a pair rests (and the final without room at the end of the day).
+function groupRounds(matches: ScheduleMatch[]): Map<string, number> {
+  const rounds = new Map<string, number>()
+  const busy = new Map<string, Set<string>[]>()
+  for (const match of matches) {
+    if (match.stage !== 'group' || !match.groupId) continue
+    const groupRounds = busy.get(match.groupId) ?? []
+    busy.set(match.groupId, groupRounds)
+    const pairs = [match.entryA, match.entryB].filter((entryId): entryId is string => entryId !== null)
+    let round = groupRounds.findIndex((playing) => pairs.every((entryId) => !playing.has(entryId)))
+    if (round === -1) round = groupRounds.push(new Set()) - 1
+    for (const entryId of pairs) groupRounds[round].add(entryId)
+    rounds.set(match.id, round)
+  }
+  return rounds
+}
+
 export function scheduleChampionship(input: ScheduleInput): ScheduleResult {
   const plan = makePlan(input)
   const free: ScheduleMatch[] = []
@@ -383,9 +402,15 @@ export function scheduleChampionship(input: ScheduleInput): ScheduleResult {
   }
   const category = (match: ScheduleMatch) => plan.categoryOrder.get(match.categoryId) ?? 0
   const room = new Map(free.map((match) => [match.id, freeSlots(plan, match)]))
+  const round = groupRounds(input.matches)
   const groupStage = free
     .filter((match) => match.stage === 'group')
-    .sort((a, b) => (room.get(a.id) ?? 0) - (room.get(b.id) ?? 0) || category(a) - category(b))
+    .sort(
+      (a, b) =>
+        (room.get(a.id) ?? 0) - (room.get(b.id) ?? 0) ||
+        category(a) - category(b) ||
+        (round.get(a.id) ?? 0) - (round.get(b.id) ?? 0),
+    )
   for (const match of groupStage) placeBest(plan, match)
   improve(plan, groupStage)
   const knockout = free
