@@ -10,6 +10,7 @@ describe('settings sections', () => {
       'Pagos',
       'Sellos',
       'Flyer',
+      'Staff',
       'Monitoreo',
     ])
   })

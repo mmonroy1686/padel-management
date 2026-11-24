@@ -15,6 +15,8 @@ export default async function globalSetup(): Promise<void> {
     ids.push(...data.users.filter((user) => user.email?.endsWith(`@${E2E_DOMAIN}`)).map((user) => user.id))
     if (data.users.length < 1000) break
   }
+  // Staff invitations sent to e2e addresses, accepted or not.
+  await check(admin.from('club_invitations').delete().like('email', `%@${E2E_DOMAIN}`))
   if (ids.length === 0) return
   const idList = `(${ids.join(',')})`
 
