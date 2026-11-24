@@ -18,7 +18,7 @@ import { joinStatus } from '@/lib/domain/match-join'
 import { riskOf } from '@/lib/domain/match-risk'
 import { isInMatch, statusLabel } from '@/lib/domain/matches'
 import { matchesForMe } from '@/lib/domain/matches-for-me'
-import { categoryLabel, firstName, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
+import { categoryLabel, firstName, incompleteHome, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
 import { addDays, localDateOf, zonedTime } from '@/lib/domain/time'
 import { openTournamentsText } from '@/lib/domain/tournaments'
 import { DayUseHomeCard } from '@/components/day-use/day-use-home-card'
@@ -35,7 +35,7 @@ export default async function HomePage() {
   const viewer = await getViewer()
   if (!viewer) return <Landing name={(await getClub()).name} />
   const { club, profile, membership } = viewer
-  if (!membership || !isProfileComplete(profile, membership)) redirect('/bienvenida')
+  if (!membership || !isProfileComplete(profile, membership)) redirect(incompleteHome(membership))
 
   const now = new Date()
   const member = { ...viewer, membership }

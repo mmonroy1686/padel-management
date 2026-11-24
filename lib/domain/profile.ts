@@ -27,6 +27,12 @@ export function isStaffRole(role: Role | null | undefined): boolean {
   return role === 'admin' || role === 'reception'
 }
 
+// Inicio without a complete player profile: staff go to the panel (they need no player profile), the rest to the
+// welcome. Staff who open a player screen still get the welcome there (requirePlayer).
+export function incompleteHome(membership: { role: Role } | null): '/club' | '/bienvenida' {
+  return isStaffRole(membership?.role) ? '/club' : '/bienvenida'
+}
+
 export function categoryLabel(category: number | null, validated: boolean): string {
   if (category === null) return 'Sin categoría'
   return `${category}ª categoría, ${validated ? 'validada' : 'pendiente de validación'}`
