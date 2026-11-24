@@ -32,7 +32,8 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     // Never reuse a running dev server: it may be pointing at production.
     reuseExistingServer: false,
-    env: webServerEnv(),
+    // /plataforma opens on the e2e server's host.
+    env: { PLATFORM_HOST: `localhost:${PORT}`, ...webServerEnv() },
     timeout: 120_000,
   },
 })
