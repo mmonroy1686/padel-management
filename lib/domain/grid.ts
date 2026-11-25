@@ -33,6 +33,8 @@ export type GridBooking = {
   paymentState: PaymentState
   amountDue: number
   matchId?: string | null
+  // Reception marked «No vino» (lib/data/day.ts).
+  noShow?: boolean
   // Its players and their shares (staff only: lib/data/day.ts).
   turn?: TurnPlayers
 }

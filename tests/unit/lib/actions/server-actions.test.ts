@@ -30,7 +30,7 @@ vi.mock('@/lib/auth/viewer', () => ({
 
 const { bookSlot } = await import('@/app/(jugador)/reservar/actions')
 const { cancelMyBooking, reportTransfer } = await import('@/app/(jugador)/reservas/actions')
-const { cancelMatch, endSeries, loadSlot, recordCash, removeFromMatch } = await import('@/app/(club)/club/grilla/actions')
+const { cancelMatch, endSeries, loadSlot, markNoShow, recordCash, removeFromMatch } = await import('@/app/(club)/club/grilla/actions')
 const { addPricingRule, deleteCourt, updateBookingSettings, updatePaymentSettings } = await import('@/app/(club)/club/ajustes/actions')
 const { saveAvailability, savePreferredCourts, saveProfile } = await import('@/lib/actions/profile')
 const { createMatch, joinMatch, leaveMatch } = await import('@/app/(jugador)/partidos/actions')
@@ -279,5 +279,32 @@ describe('club match actions', () => {
     expect(rpc).toHaveBeenCalledWith('record_cash', { p_booking_id: BOOKING, p_amount: 400, p_payer_id: PLAYER, p_method: 'cash' })
     await cancelMatch(IDLE, form({ matchId: MATCH, note: ' Lluvia ' }))
     expect(rpc).toHaveBeenCalledWith('cancel_match', { p_match_id: MATCH, p_note: 'Lluvia' })
+  })
+})
+
+describe('markNoShow', () => {
+  const bookingId = 'b0000000-0000-0000-0000-000000000001'
+  const form = (values: Record<string, string>) => {
+    const data = new FormData()
+    for (const [name, value] of Object.entries(values)) data.set(name, value)
+    return data
+  }
+
+  it('marks and takes back «no vino» through mark_no_show', async () => {
+    rpc.mockClear()
+    expect(await markNoShow({ status: 'idle' }, form({ bookingId, noShow: 'true' }))).toEqual({ status: 'ok', message: 'Marcada: no vino.' })
+    expect(rpc).toHaveBeenCalledWith('mark_no_show', { p_booking_id: bookingId, p_no_show: true })
+    expect(await markNoShow({ status: 'idle' }, form({ bookingId, noShow: 'false' }))).toEqual({
+      status: 'ok',
+      message: 'Sacamos la marca de no vino.',
+    })
+    expect(rpc).toHaveBeenLastCalledWith('mark_no_show', { p_booking_id: bookingId, p_no_show: false })
+  })
+
+  it('stops bad input before the database', async () => {
+    rpc.mockClear()
+    expect(await markNoShow({ status: 'idle' }, form({ bookingId, noShow: 'yes' }))).toEqual(INVALID_INPUT)
+    expect(await markNoShow({ status: 'idle' }, form({ bookingId: 'nope', noShow: 'true' }))).toEqual(INVALID_INPUT)
+    expect(rpc).not.toHaveBeenCalled()
   })
 })

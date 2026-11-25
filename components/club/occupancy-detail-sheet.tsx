@@ -20,6 +20,27 @@ export type DetailActions = PlayersActions & {
   cancelMatch: FormAction
   removeFromMatch: FormAction
   release: FormAction
+  noShow: FormAction
+}
+
+// «No vino», once the turn started: marks it, or shows the mark with Deshacer. For the pilot's metrics.
+function NoShowControl({ bookingId, marked, action, onDone }: { bookingId: string; marked: boolean; action: FormAction; onDone: (message: string) => void }) {
+  return (
+    <div className="flex flex-col gap-2">
+      {marked ? <p className="font-semibold">Marcada: no vino</p> : null}
+      <ActionForm
+        action={action}
+        submitLabel={marked ? 'Deshacer' : 'No vino'}
+        pendingLabel={marked ? 'Deshaciendo…' : 'Marcando…'}
+        accessibleLabel={marked ? 'Deshacer «no vino»' : undefined}
+        variant="ghost"
+        onDone={onDone}
+      >
+        <input type="hidden" name="bookingId" value={bookingId} />
+        <input type="hidden" name="noShow" value={marked ? 'false' : 'true'} />
+      </ActionForm>
+    </div>
+  )
 }
 
 export function OccupancyDetailSheet({
@@ -88,15 +109,21 @@ export function OccupancyDetailSheet({
                 canAddPlayers={canAddPlayers(booking.turn, occupancy.endsAt, new Date())}
               />
             ) : null}
-            <ActionForm
-              action={actions.cancel}
-              submitLabel="Cancelar reserva"
-              pendingLabel="Cancelando…"
-              variant="secondary"
-              onDone={onDone}
-            >
-              <input type="hidden" name="bookingId" value={booking.id} />
-            </ActionForm>
+            {occupancy.startsAt <= new Date() ? (
+              <NoShowControl bookingId={booking.id} marked={booking.noShow ?? false} action={actions.noShow} onDone={onDone} />
+            ) : null}
+            {/* A no-show stays a played, charged booking: cancelling it would move it into the cancellations. */}
+            {booking.noShow ? null : (
+              <ActionForm
+                action={actions.cancel}
+                submitLabel="Cancelar reserva"
+                pendingLabel="Cancelando…"
+                variant="secondary"
+                onDone={onDone}
+              >
+                <input type="hidden" name="bookingId" value={booking.id} />
+              </ActionForm>
+            )}
             {booking.seriesId ? (
               <ActionForm
                 action={actions.endSeries}

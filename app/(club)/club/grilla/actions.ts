@@ -75,6 +75,17 @@ export async function cancelBooking(_previous: ActionState, form: FormData): Pro
   return fromRpc(error, 'Reserva cancelada. La cancha quedó libre.')
 }
 
+// «No vino» on a booking that already started; `noShow=false` takes it back.
+export async function markNoShow(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const bookingId = readUuid(form, 'bookingId')
+  const noShow = form.get('noShow')
+  if (!bookingId || (noShow !== 'true' && noShow !== 'false')) return INVALID_INPUT
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('mark_no_show', { p_booking_id: bookingId, p_no_show: noShow === 'true' })
+  revalidateBookings()
+  return fromRpc(error, noShow === 'true' ? 'Marcada: no vino.' : 'Sacamos la marca de no vino.')
+}
+
 export async function unblockCourt(_previous: ActionState, form: FormData): Promise<ActionState> {
   const occupancyId = readUuid(form, 'occupancyId')
   if (!occupancyId) return INVALID_INPUT

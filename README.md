@@ -124,6 +124,26 @@ El mapa de Ajustes → Datos del club y de «El club» en Inicio usa por defecto
 
 Las dos quedan fijas en el código del navegador al hacer el build: después de cargarlas o cambiarlas, hay que volver a desplegar. La búsqueda de direcciones («Buscar en el mapa») sigue usando Nominatim de OpenStreetMap, una consulta por clic.
 
+#### Métricas del piloto
+
+`docs/piloto/metricas.sql` tiene 7 consultas de solo lectura, por club y por semana, en la zona horaria del club:
+
+1. reservas por origen;
+2. ocupación por cancha y franja;
+3. cancelaciones y cancelaciones tardías;
+4. turnos recuperados por la lista de espera;
+5. jugadores activos y nuevos;
+6. cobros por medio;
+7. faltazos («No vino»).
+
+Las corre Miguel cada semana en Supabase → **SQL Editor**:
+
+1. Pegá **una** consulta por vez, porque el editor muestra solo el resultado de la última.
+2. Cambiá el slug del club en su primera línea (`where slug = 'rustic'`).
+3. Corré la consulta y exportá el resultado a CSV si hace falta.
+
+Muestran las últimas 8 semanas, de lunes a domingo; la actual va por la mitad. Cada consulta trae comentado un ejemplo de resultado contra el seed local. Para probarlas en local: `npm run demo:data` y después `docker exec -i supabase_db_padel-management psql -U postgres < docs/piloto/metricas.sql`.
+
 #### Backups
 
 `backup.yml` corre los lunes a las 03:00 (Montevideo): hace un dump de producción (roles, esquema y datos), lo cifra con `BACKUP_PASSPHRASE` y lo guarda 90 días como artifact del workflow. **Los archivos subidos (logos, comprobantes, afiches) no están en el backup**: solo sus registros en la base.
@@ -184,3 +204,4 @@ Para recuperar producción entera en un proyecto nuevo de Supabase, se usan los 
 - Fase 1: alta del jugador con categoría a validar, reserva de turnos de la grilla fija con precio por franja, cancelación con aviso, transferencia informada con comprobante, Mis reservas. Panel del club: grilla del día en vivo, carga de reservas, turnos fijos y bloqueos, cobros (confirmar, rechazar, efectivo, devoluciones), calendario, jugadores y ajustes.
 - Cobro con POS: el club activa **POS (tarjeta en recepción)** en Ajustes → Pagos. Recepción cobra con POS donde cobra en efectivo (Inicio, Grilla, Cobros, torneos, campeonatos y day use); el pago queda confirmado en el acto y Cobros lo separa del efectivo de la caja. No hay integración con el terminal ni pago con tarjeta desde la app. La migración se aplica sola al mergear; POS arranca apagado en todos los clubes.
 - Datos del club: el admin carga en Ajustes → Datos del club la dirección, la ubicación (tocando el mapa, buscando la dirección o pegando el link de Google Maps), WhatsApp, Instagram, email, servicios y hasta 8 fotos. El jugador los ve en la sección «El club» al final de Inicio, también sin sesión, con botones a WhatsApp, Instagram, email y «Cómo llegar». Lo que no se carga no se muestra.
+- «No vino»: en la grilla del club, el detalle de una reserva que ya empezó tiene «No vino» (y «Deshacer»). Lo marca recepción o el admin; no cambia el cobro ni libera la cancha. Sirve para medir los faltazos del piloto (`docs/piloto/metricas.sql`).

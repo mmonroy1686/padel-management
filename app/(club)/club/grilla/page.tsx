@@ -13,7 +13,7 @@ import { riskOf } from '@/lib/domain/match-risk'
 import { isLocalDate } from '@/lib/domain/input'
 import { addDays, localDateOf } from '@/lib/domain/time'
 import { chargeRest, chargeShare, saveBookingPlayers } from '@/lib/actions/booking-charges'
-import { cancelBooking, cancelMatch, endSeries, loadSlot, releaseSlotHold, removeFromMatch, unblockCourt } from './actions'
+import { cancelBooking, cancelMatch, endSeries, loadSlot, markNoShow, releaseSlotHold, removeFromMatch, unblockCourt } from './actions'
 import { ClubBoard } from './club-board'
 import { WaitingPanel } from '@/components/club/waiting-panel'
 import { loadDayWaits } from '@/lib/data/waitlist'
@@ -81,6 +81,7 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
             cancelMatch,
             removeFromMatch,
             release: releaseSlotHold,
+            noShow: markNoShow,
           }}
         />
         <div className="flex flex-col gap-6">

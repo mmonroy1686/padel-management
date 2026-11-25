@@ -72,6 +72,7 @@ function renderDetail(cell: GridCell, methods = { cash: true, transfer: true, ca
     cancelMatch: vi.fn<FormAction>(done),
     removeFromMatch: vi.fn<FormAction>(done),
     release: vi.fn<FormAction>(done),
+    noShow: vi.fn<FormAction>(done),
   }
   const onDone = vi.fn()
   render(
@@ -184,5 +185,30 @@ describe('OccupancyDetailSheet', () => {
     await waitFor(() => expect(actions.release).toHaveBeenCalledTimes(1))
     expect(sent(actions.release)).toEqual({ occupancyId: 'h1' })
     expect(onDone).toHaveBeenCalledWith('Listo.')
+  })
+})
+
+describe('OccupancyDetailSheet: no vino', () => {
+  it('marks a booking whose turn already started', async () => {
+    const { actions, sent } = renderDetail(booked)
+    await userEvent.click(screen.getByRole('button', { name: 'No vino' }))
+    await waitFor(() => expect(actions.noShow).toHaveBeenCalled())
+    expect(sent(actions.noShow)).toEqual({ bookingId: booked.booking!.id, noShow: 'true' })
+  })
+
+  it('shows the mark and takes it back', async () => {
+    const marked = { ...booked, booking: { ...booked.booking!, noShow: true } }
+    const { actions, sent } = renderDetail(marked)
+    expect(screen.getByText('Marcada: no vino')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cancelar reserva' })).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Deshacer «no vino»' }))
+    await waitFor(() => expect(actions.noShow).toHaveBeenCalled())
+    expect(sent(actions.noShow)).toMatchObject({ noShow: 'false' })
+  })
+
+  it('is not there before the turn starts', () => {
+    const later = new Date(Date.now() + 86_400_000)
+    renderDetail({ ...booked, occupancy: { ...booked.occupancy!, startsAt: later, endsAt: new Date(later.getTime() + 5_400_000) } })
+    expect(screen.queryByRole('button', { name: 'No vino' })).toBeNull()
   })
 })

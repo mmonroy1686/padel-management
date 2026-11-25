@@ -25,6 +25,7 @@ type BookingRow = {
   source: 'online' | 'reception'
   series_id: string | null
   match_id: string | null
+  no_show_at: string | null
   player: { display_name: string } | null
   match: { slots: SlotHolder[] } | null
   players: ExtraPlayerRow[]
@@ -45,6 +46,7 @@ function toGridBooking(row: BookingRow, occupancyId: string, viewerId: string): 
     paymentState: paymentState(row, row.payments),
     amountDue: amountDue(row.price, row.payments),
     matchId: row.match_id,
+    noShow: row.no_show_at !== null,
     turn: turnPlayers(row),
   }
 }
@@ -80,7 +82,7 @@ export async function loadDayGrid(
     supabase
       .from('bookings')
       .select(
-        'id, occupancy_id, player_id, guest_name, price, status, source, series_id, match_id, player:profiles!bookings_player_id_fkey(display_name), match:open_matches!bookings_match_id_fkey(slots:match_slots(position, player_id, player:profiles(display_name))), players:booking_players(position, player_id, name, player:profiles!booking_players_player_id_fkey(display_name)), payments(status, amount, payer_id, payer_position)',
+        'id, occupancy_id, player_id, guest_name, price, status, source, series_id, match_id, no_show_at, player:profiles!bookings_player_id_fkey(display_name), match:open_matches!bookings_match_id_fkey(slots:match_slots(position, player_id, player:profiles(display_name))), players:booking_players(position, player_id, name, player:profiles!booking_players_player_id_fkey(display_name)), payments(status, amount, payer_id, payer_position)',
       )
       .eq('club_id', club.id)
       .eq('status', 'confirmed')
