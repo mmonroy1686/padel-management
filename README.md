@@ -164,6 +164,7 @@ Para recuperar producción entera en un proyecto nuevo de Supabase, se usan los 
 - Reservas, cancelaciones, turnos fijos, bloqueos y pagos se escriben solo con las funciones de Postgres (`book_slot`, `staff_book`, `create_series`, `report_transfer`, …). Nadie escribe directo en `bookings`, `court_occupancy` ni `payments`.
 - Cada función falla con un código estable (`slot_taken`, `notice_period`, …); `lib/domain/errors.ts` lo traduce. Un código nuevo va en los dos lados.
 - Una migración que ya está en producción no se edita: se agrega otra.
+- `clubs` tiene permiso de escritura por columna: el admin solo actualiza directo lo que guarda Ajustes. Una columna nueva de `clubs` que el admin edita desde la tabla necesita su `grant update (columna) on public.clubs to authenticated` en la misma migración; sin eso, Ajustes falla con permiso denegado. `slug`, `timezone`, `setup_completed_at`, `id` y `created_at` no se tocan desde la app (el slug lo cambia la plataforma con `rename_club`).
 - Los e2e crean usuarios `@e2e.test` en el Supabase local y los borran al empezar cada corrida; se niegan a correr contra otro Supabase.
 
 ## Funciones disponibles
