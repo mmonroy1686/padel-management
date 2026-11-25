@@ -223,3 +223,25 @@ export function filterBoard(columns: BoardColumn[], filter: BoardFilter): BoardC
 export function pendingCount(columns: BoardColumn[], lane: LaneKey): number {
   return columns.filter((column) => column.lane === lane && !column.done).reduce((sum, column) => sum + column.count, 0)
 }
+
+// Sin cobrar, the way reception reads it: what was played today, row by row; what is older, one group per player
+// ("Sofía Cabrera · 2 deudas · $3.200") so the same name does not fill the column. A player with a single older debt
+// stays a plain row: a group of one only adds a tap.
+export type DebtGroup = { holder: string; items: BoardItem[]; total: number }
+export type SplitDebts = { today: BoardItem[]; older: BoardItem[]; groups: DebtGroup[] }
+
+export function splitDebts(items: BoardItem[], todayFrom: number): SplitDebts {
+  const today = items.filter((item) => item.at >= todayFrom)
+  const byHolder = new Map<string, BoardItem[]>()
+  for (const item of items.filter((candidate) => candidate.at < todayFrom)) {
+    const key = normalizeText(item.holder)
+    byHolder.set(key, [...(byHolder.get(key) ?? []), item])
+  }
+  const older: BoardItem[] = []
+  const groups: DebtGroup[] = []
+  for (const list of byHolder.values()) {
+    if (list.length === 1) older.push(list[0])
+    else groups.push({ holder: list[0].holder, items: list, total: totalsOf(list, (item) => item.amount).total })
+  }
+  return { today, older: older.sort(oldestFirst), groups: groups.sort((a, b) => a.items[0].at - b.items[0].at) }
+}

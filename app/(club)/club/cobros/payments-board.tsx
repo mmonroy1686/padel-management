@@ -1,22 +1,27 @@
 'use client'
 
 import { useActionState, useState, type ReactNode } from 'react'
+import { ChargeChoice } from '@/components/club/charge-choice'
 import type { FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { buttonClasses } from '@/components/ui/button'
 import { inputClasses } from '@/components/ui/field'
+import { Notice } from '@/components/ui/notice'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { IDLE, type ActionState } from '@/lib/actions/result'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/domain/format'
-import { METHOD_HOW, METHOD_LABELS } from '@/lib/domain/payments'
+import type { DeskMethod } from '@/lib/domain/payments'
 import {
   filterBoard,
   KIND_LABELS,
   LANES,
   pendingCount,
+  splitDebts,
   type BoardColumn,
   type BoardItem,
   type ColumnKey,
+  type DebtGroup,
   type LaneKey,
 } from '@/lib/domain/payments-board'
 import type { MoneyKind } from '@/lib/domain/payments-overview'
@@ -28,6 +33,8 @@ export type BoardActions = {
   refund: FormAction
   confirm: FormAction
   reject: FormAction
+  // "Confirmar las marcadas": several transfers at once.
+  confirmMany?: FormAction
 }
 
 // The tiles on top: what is owed, waiting, in and to give back, always in sight.
@@ -38,18 +45,25 @@ const SUMMARY: { key: ColumnKey; label: string; unit: [string, string]; tone: st
   { key: 'refunds', label: 'A devolver', unit: ['pago', 'pagos'], tone: 'text-danger' },
 ]
 
+// Done columns show the latest few; the rest is one tap away, so the page ends.
+const DONE_SHOWN = 5
+
 const plural = (count: number, [one, many]: [string, string]) => `${count} ${count === 1 ? one : many}`
 
 // What moved through the till, and by POS when there was any.
 const tillText = (column: BoardColumn) =>
   `${formatPrice(column.cash ?? 0)} en efectivo${column.card ? ` · ${formatPrice(column.card)} por POS` : ''}`
 
-// Cobros as a board: a summary on top, then one lane at a time (Cobrar or Devolver) with its columns side by side on
-// wide screens. Each payment sits in the column of its state and moves right when someone acts on it.
-export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; actions: BoardActions }) {
+// Cobros, for reception with someone waiting at the desk: the search first ("Cobrar a…"), then what is owed today
+// row by row and older debts one group per player, the transfers to confirm (one by one or the marked ones at
+// once), and what got done today as a short list. One lane at a time (Cobrar or Devolver). Charging asks how the
+// player paid, the same step as on Inicio.
+// `todayFrom`: the club's midnight (ms), where Sin cobrar splits today from older debts.
+export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: BoardColumn[]; actions: BoardActions; todayFrom?: number }) {
   const [lane, setLane] = useState<LaneKey>('collect')
   const [query, setQuery] = useState('')
   const [kind, setKind] = useState<MoneyKind | ''>('')
+  const [notice, setNotice] = useState<string | null>(null)
   // A copy of the transfer, so the sheet keeps its outcome after the page refreshes without it.
   const [reviewing, setReviewing] = useState<TransferView | null>(null)
   const shown = filterBoard(columns, { query, kind })
@@ -60,46 +74,18 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
     setLane(column.lane)
     requestAnimationFrame(() => document.getElementById(`column-${column.key}`)?.scrollIntoView({ block: 'start' }))
   }
+  const rowAction = (item: BoardItem) => <RowAction item={item} actions={actions} onReview={setReviewing} onDone={setNotice} />
 
   return (
-    <div className="flex flex-col gap-4">
-      <nav aria-label="Resumen de cobros" className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
-        {SUMMARY.map((tile) => {
-          const column = columns.find((item) => item.key === tile.key)
-          if (!column) return null
-          return (
-            <button
-              key={tile.key}
-              type="button"
-              onClick={() => goTo(column)}
-              className="flex min-h-11 flex-col items-start gap-0.5 rounded-2xl border border-border bg-surface p-3 text-left transition-colors hover:border-accent focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              <span className="text-xs font-semibold uppercase tracking-wide text-fg-muted">{tile.label}</span>
-              <span className={cn('font-display text-2xl font-bold tabular-nums sm:text-3xl', column.count > 0 ? tile.tone : 'text-fg-muted')}>
-                {formatPrice(column.total)}
-              </span>
-              <span className="text-sm text-fg-muted tabular-nums">
-                {column.cash !== undefined && column.count > 0
-                  ? tillText(column)
-                  : column.count > 0
-                    ? plural(column.count, tile.unit)
-                    : column.done
-                      ? 'Nada todavía'
-                      : 'Al día'}
-              </span>
-            </button>
-          )
-        })}
-      </nav>
-
+    <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           type="search"
           aria-label="Buscar por nombre o cancha"
-          placeholder="Buscar por nombre o cancha"
+          placeholder="Cobrar a… (nombre o cancha)"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          className={inputClasses}
+          className={cn(inputClasses, 'min-h-12 text-lg')}
         />
         <select
           aria-label="Tipo"
@@ -116,8 +102,40 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
         </select>
       </div>
 
-      {/* One lane at a time, so Devolver is one tap away however long Sin cobrar is. */}
-      <div role="group" aria-label="Carril" className="grid grid-cols-2 gap-2 sm:flex">
+      {notice ? <Notice onDismiss={() => setNotice(null)}>{notice}</Notice> : null}
+
+      <nav aria-label="Resumen de cobros" className="grid grid-cols-2 gap-2 md:grid-cols-4">
+        {SUMMARY.map((tile) => {
+          const column = columns.find((item) => item.key === tile.key)
+          if (!column) return null
+          return (
+            <button
+              key={tile.key}
+              type="button"
+              onClick={() => goTo(column)}
+              className="flex min-h-11 flex-col items-start rounded-xl px-3 py-2 text-left hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <span className="text-sm text-fg-muted">{tile.label}</span>
+              <span className={cn('text-lg font-semibold tabular-nums', column.count > 0 ? tile.tone : 'text-fg-muted')}>
+                {formatPrice(column.total)}
+              </span>
+              <span className="text-xs text-fg-muted tabular-nums">
+                {column.cash !== undefined && column.count > 0
+                  ? tillText(column)
+                  : column.count > 0
+                    ? plural(column.count, tile.unit)
+                    : column.done
+                      ? 'Nada todavía'
+                      : 'Al día'}
+              </span>
+            </button>
+          )
+        })}
+      </nav>
+
+      {/* One lane at a time, so Devolver is one tap away however long Sin cobrar is. A segmented control, not a
+          primary button: it changes the view, it does not charge anyone. */}
+      <div role="group" aria-label="Carril" className="inline-flex self-start rounded-full border border-border bg-surface p-1">
         {LANES.map((item) => (
           <button
             key={item.key}
@@ -126,8 +144,8 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
             aria-controls="cobros-lane"
             onClick={() => setLane(item.key)}
             className={cn(
-              'min-h-11 rounded-full border px-5 font-semibold focus-visible:outline-2 focus-visible:outline-accent',
-              lane === item.key ? 'border-accent bg-accent text-on-accent' : 'border-border hover:border-accent',
+              'min-h-10 rounded-full px-5 font-semibold focus-visible:outline-2 focus-visible:outline-accent',
+              lane === item.key ? 'bg-bg text-fg shadow-sm' : 'text-fg-muted',
             )}
           >
             {item.title} <span className="tabular-nums">{pendingCount(shown, item.key)}</span>
@@ -138,13 +156,19 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
       <section
         id="cobros-lane"
         aria-label={LANES.find((item) => item.key === lane)?.title}
-        className="grid items-start gap-4 lg:auto-cols-fr lg:grid-flow-col"
+        className="grid items-start gap-6 lg:auto-cols-fr lg:grid-flow-col"
       >
         {shown
           .filter((column) => column.lane === lane)
           .map((column) => (
             <ColumnView key={column.key} column={column} filtering={filtering}>
-              {(row) => <RowAction item={row} actions={actions} onReview={setReviewing} />}
+              {column.key === 'unpaid' && !filtering ? (
+                <UnpaidList items={column.items} todayFrom={todayFrom} action={rowAction} />
+              ) : column.key === 'transfers' && actions.confirmMany && column.items.length > 1 ? (
+                <TransferList items={column.items} confirmMany={actions.confirmMany} onDone={setNotice} action={rowAction} />
+              ) : (
+                <Rows items={column.items} limit={column.done ? DONE_SHOWN : undefined} action={rowAction} />
+              )}
             </ColumnView>
           ))}
       </section>
@@ -158,15 +182,12 @@ export function PaymentsBoard({ columns, actions }: { columns: BoardColumn[]; ac
   )
 }
 
-function ColumnView({ column, filtering, children }: { column: BoardColumn; filtering: boolean; children: (item: BoardItem) => ReactNode }) {
+function ColumnView({ column, filtering, children }: { column: BoardColumn; filtering: boolean; children: ReactNode }) {
   const titleId = `column-${column.key}`
   return (
-    <section
-      aria-labelledby={titleId}
-      className={cn('flex min-w-0 scroll-mt-4 flex-col rounded-2xl border px-4 py-3', column.done ? 'border-transparent bg-surface/60' : 'border-border bg-surface')}
-    >
-      <header className="flex items-baseline justify-between gap-2 border-b border-border pb-2">
-        <h2 id={titleId} className="font-display text-lg font-bold uppercase">
+    <section aria-labelledby={titleId} className="flex min-w-0 scroll-mt-4 flex-col">
+      <header className="flex items-baseline justify-between gap-2 pb-2">
+        <h2 id={titleId} className="text-lg font-semibold">
           {column.title}
         </h2>
         <span className="text-sm font-semibold text-fg-muted tabular-nums">
@@ -174,59 +195,240 @@ function ColumnView({ column, filtering, children }: { column: BoardColumn; filt
         </span>
       </header>
       {column.cash !== undefined && column.count > 0 ? (
-        <p className="pt-2 text-sm text-fg-muted tabular-nums">
+        <p className="pb-2 text-sm text-fg-muted tabular-nums">
           En efectivo: {formatPrice(column.cash)}
           {column.card ? ` · Por POS: ${formatPrice(column.card)}` : ''}
         </p>
       ) : null}
-      {column.items.length > 0 ? (
-        <ul className="flex flex-col divide-y divide-border">
-          {column.items.map((item) => (
-            <li key={item.id}>
-              <BoardRow item={item}>{children(item)}</BoardRow>
-            </li>
+      {column.items.length > 0 ? children : <p className="py-3 text-sm text-fg-muted">{filtering ? 'Nada coincide con la búsqueda.' : column.emptyText}</p>}
+    </section>
+  )
+}
+
+// Rows with a line between them; `limit` shows the latest few and "Ver los N" the rest.
+function Rows({ items, limit, action }: { items: BoardItem[]; limit?: number; action: (item: BoardItem) => ReactNode }) {
+  const [all, setAll] = useState(false)
+  const visible = limit && !all ? items.slice(0, limit) : items
+  return (
+    <>
+      <ul className="flex flex-col divide-y divide-border border-y border-border">
+        {visible.map((item) => (
+          <li key={item.id}>{action(item)}</li>
+        ))}
+      </ul>
+      {visible.length < items.length ? (
+        <button type="button" onClick={() => setAll(true)} className="min-h-11 self-start text-sm font-semibold text-accent-ink underline underline-offset-4">
+          Ver los {items.length}
+        </button>
+      ) : null}
+    </>
+  )
+}
+
+// Sin cobrar: today first, then older debts, one group per player who owes more than once.
+function UnpaidList({ items, todayFrom, action }: { items: BoardItem[]; todayFrom: number; action: (item: BoardItem) => ReactNode }) {
+  const { today, older, groups } = splitDebts(items, todayFrom)
+  return (
+    <div className="flex flex-col gap-4">
+      {today.length > 0 ? <Rows items={today} action={action} /> : <p className="text-sm text-fg-muted">Hoy nadie debe nada.</p>}
+      {older.length > 0 || groups.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold text-fg-muted">De días anteriores</h3>
+          {groups.length > 0 ? (
+            <ul aria-label="Deudas por jugador" className="flex flex-col divide-y divide-border border-y border-border">
+              {groups.map((group) => (
+                <DebtGroupRow key={group.holder} group={group} action={action} />
+              ))}
+            </ul>
+          ) : null}
+          {older.length > 0 ? <Rows items={older} action={action} /> : null}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function DebtGroupRow({ group, action }: { group: DebtGroup; action: (item: BoardItem) => ReactNode }) {
+  return (
+    <li>
+      <details className="group">
+        <summary className="flex min-h-14 cursor-pointer items-center gap-3 py-2.5">
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">{group.holder}</span>
+            <span className="block text-sm text-fg-muted">{group.items.length} deudas</span>
+          </span>
+          <span className="font-display text-xl font-bold tabular-nums">{formatPrice(group.total)}</span>
+          <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
+        </summary>
+        <ul className="flex flex-col divide-y divide-border border-t border-border pl-3">
+          {group.items.map((item) => (
+            <li key={item.id}>{action(item)}</li>
           ))}
         </ul>
-      ) : (
-        <p className="py-3 text-sm text-fg-muted">{filtering ? 'Nada coincide con la búsqueda.' : column.emptyText}</p>
-      )}
-    </section>
+      </details>
+    </li>
+  )
+}
+
+// Por confirmar with a box per transfer and "Confirmar las marcadas" for the ones already checked in the bank.
+function TransferList({
+  items,
+  confirmMany,
+  onDone,
+  action,
+}: {
+  items: BoardItem[]
+  confirmMany: FormAction
+  onDone: (message: string) => void
+  action: (item: BoardItem) => ReactNode
+}) {
+  const [marked, setMarked] = useState<Set<string>>(new Set())
+  const [state, formAction, pending] = useActionState(async (previous: ActionState, formData: FormData) => {
+    const result = (await confirmMany(previous, formData)) ?? previous
+    if (result.status === 'ok') {
+      setMarked(new Set())
+      onDone(result.message ?? '')
+    }
+    return result
+  }, IDLE)
+  const toggle = (id: string) =>
+    setMarked((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+  return (
+    <div className="flex flex-col gap-3">
+      <ul className="flex flex-col divide-y divide-border border-y border-border">
+        {items.map((item) => (
+          <li key={item.id} className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              aria-label={`Marcar la transferencia de ${item.holder}`}
+              checked={marked.has(item.id)}
+              onChange={() => toggle(item.id)}
+              className="size-5 shrink-0 accent-[var(--accent)]"
+            />
+            <div className="min-w-0 flex-1">{action(item)}</div>
+          </li>
+        ))}
+      </ul>
+      {marked.size > 0 ? (
+        <form action={formAction} className="flex flex-col gap-2">
+          {[...marked].map((id) => (
+            <input key={id} type="hidden" name="paymentId" value={id} />
+          ))}
+          <SubmitButton label={`Confirmar las marcadas (${marked.size})`} pendingLabel="Confirmando…" pending={pending} />
+          {state.status === 'error' ? (
+            <p role="alert" className="text-sm text-danger">
+              {state.message}
+            </p>
+          ) : null}
+        </form>
+      ) : null}
+    </div>
   )
 }
 
 const ROW_BUTTON = 'shrink-0 px-3 text-base'
 
-function RowAction({ item, actions, onReview }: { item: BoardItem; actions: BoardActions; onReview: (transfer: TransferView) => void }) {
+function RowAction({
+  item,
+  actions,
+  onReview,
+  onDone,
+}: {
+  item: BoardItem
+  actions: BoardActions
+  onReview: (transfer: TransferView) => void
+  onDone: (message: string) => void
+}) {
   const action = item.action
-  if (!action) return null
+  if (!action) return <BoardRow item={item} />
   if (action.type === 'review') {
     return (
-      <button
-        type="button"
-        aria-label={`Revisar la transferencia de ${item.holder}`}
-        onClick={() =>
-          onReview({ id: item.id, amount: item.amount, holder: item.holder, when: item.when, courtName: item.what, receiptUrl: action.receiptUrl })
-        }
-        className={buttonClasses({ className: ROW_BUTTON })}
-      >
-        Revisar
-      </button>
+      <BoardRow item={item}>
+        <button
+          type="button"
+          aria-label={`Revisar la transferencia de ${item.holder}`}
+          onClick={() =>
+            onReview({ id: item.id, amount: item.amount, holder: item.holder, when: item.when, courtName: item.what, receiptUrl: action.receiptUrl })
+          }
+          className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+        >
+          Revisar
+        </button>
+      </BoardRow>
     )
   }
-  return action.type === 'charge' ? (
-    <div className="flex shrink-0 flex-wrap justify-end gap-2">
-      {action.methods.map((method) => (
-        <RowForm
-          key={method}
-          action={actions.cash[item.kind]}
-          fields={{ ...action.fields, method }}
-          label={action.methods.length > 1 ? METHOD_LABELS[method] : 'Cobrar'}
-          accessibleLabel={`Cobrar ${METHOD_HOW[method]}`}
-        />
-      ))}
-    </div>
-  ) : (
-    <RowForm action={actions.refund} fields={action.fields} label="Devuelto" accessibleLabel="Marcar devuelto" />
+  if (action.type === 'charge') {
+    return <ChargeRow item={item} fields={action.fields} methods={action.methods} action={actions.cash[item.kind]} onDone={onDone} />
+  }
+  return (
+    <BoardRow item={item}>
+      <RowForm action={actions.refund} fields={action.fields} label="Devuelto" accessibleLabel="Marcar devuelto" />
+    </BoardRow>
+  )
+}
+
+// "Cobrar" opens how the player paid, under the row: the same step as on Inicio.
+function ChargeRow({
+  item,
+  fields,
+  methods,
+  action,
+  onDone,
+}: {
+  item: BoardItem
+  fields: Record<string, string>
+  methods: DeskMethod[]
+  action: FormAction
+  onDone: (message: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const title = `Cobrar ${formatPrice(item.amount)} a ${item.holder}`
+  return (
+    <BoardRow
+      item={item}
+      below={
+        open ? (
+          <ChargeChoice
+            title={title}
+            fields={fields}
+            action={action}
+            methods={{ cash: methods.includes('cash'), transfer: false, card: methods.includes('card') }}
+            onDone={(message) => {
+              setOpen(false)
+              // "Cobramos $1.200 en efectivo." → "Cobramos $1.200 en efectivo a Paula.": who, at the top of the board.
+              onDone(`${message.replace(/\.$/, '')} a ${item.holder}.`)
+            }}
+            onError={setError}
+            onCancel={() => setOpen(false)}
+          />
+        ) : error ? (
+          <p role="alert" className="text-sm text-danger">
+            {error}
+          </p>
+        ) : null
+      }
+    >
+      {open ? null : (
+        <button
+          type="button"
+          aria-label={title}
+          onClick={() => {
+            setError(null)
+            setOpen(true)
+          }}
+          className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+        >
+          Cobrar
+        </button>
+      )}
+    </BoardRow>
   )
 }
 

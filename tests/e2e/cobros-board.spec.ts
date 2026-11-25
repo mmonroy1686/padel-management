@@ -22,7 +22,10 @@ test('reception charges cash, confirms a transfer and rejects another on the boa
   const column = (name: string) => page.getByRole('region', { name, exact: true })
 
   // Cash on a Sin cobrar card: once the page refreshes, the card sits in Cobrado hoy.
-  await column('Sin cobrar').getByRole('article', { name: debtor.name }).getByRole('button', { name: 'Cobrar en efectivo' }).click()
+  // Cobrar asks how the player paid, as on Inicio.
+  const debt = column('Sin cobrar').getByRole('article', { name: debtor.name })
+  await debt.getByRole('button', { name: new RegExp(`^Cobrar .* a ${debtor.name}$`) }).click()
+  await debt.getByRole('group').getByRole('button', { name: 'Efectivo' }).click()
   await expect(column('Cobrado hoy').getByRole('article', { name: debtor.name })).toContainText('Efectivo')
   await expect(column('Sin cobrar').getByRole('article', { name: debtor.name })).toHaveCount(0)
 

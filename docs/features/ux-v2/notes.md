@@ -89,3 +89,30 @@ Aparece solo después de reservar o de armar un partido, no después de anotarse
 **Verificación:**
 - Vitest: `club-bottom-nav.test.tsx` y `tabs.test.ts` (la barra y «Más» por rol).
 - e2e completo en serie: 25 de 26. Falló `multi-club` al pedir el enlace de ingreso, y repetido solo pasa. No hizo falta cambiar ningún e2e: los que navegan por el panel usan Cobros y Grilla, que están en la barra.
+
+## Etapa 3: Cobros (25/11)
+
+- **La búsqueda va primero, más grande** («Cobrar a… (nombre o cancha)»). Le siguen el resumen, con números más chicos y sin tarjetas, y los carriles.
+- **Carriles:** Cobrar y Devolver pasan a un control segmentado (fondo `bg-bg` en el elegido), no a un botón ámbar lleno que parecía «cobrarles a 68».
+- **Sin cobrar:**
+  - lo de hoy, en filas;
+  - «De días anteriores»: un jugador con varias deudas viejas es **un grupo** («Valentina López · 5 deudas · $2.200») que se despliega; uno con una sola queda como fila. Lo arma `splitDebts` en `lib/domain/payments-board.ts`;
+  - si buscás, todo aparece en filas sueltas.
+- **Cobrar:** el mismo paso de elegir medio que en Inicio (`ChargeChoice`: Efectivo o POS, según lo que acepte el club). El botón dice «Cobrar» y su nombre accesible «Cobrar $1.200 a Paula». Al cobrar, arriba aparece «Cobramos $1.200 en efectivo a Paula.».
+- **Por confirmar:**
+  - cada transferencia tiene una casilla, y «Confirmar las marcadas (N)» las confirma juntas con la acción nueva `confirmPayments` (`confirm_payment` una por una);
+  - si una ya no estaba por confirmar, sigue con las demás y lo dice;
+  - «Revisar» sigue abriendo el sheet con el comprobante.
+- **Cobrado, rechazado y devuelto hoy:** se ven los últimos 5, y «Ver los N» muestra el resto.
+- **Las filas** muestran el nombre completo, sin truncar.
+- **Resultado:** la página pasó de unos 39.500 px a unos 10.000 px con los datos demo.
+
+**Lo que queda para la etapa 4:** «Deshacer» después de cobrar y «Anular cobro», que necesitan la migración.
+
+**Verificación:**
+- Vitest:
+  - `splitDebts`;
+  - el tablero: grupos y confirmar las marcadas;
+  - `confirmPayments`: todas, una que ya no estaba, y entrada inválida.
+- e2e: `cobros-board` y `card-payments` usan el paso nuevo de elegir medio. Pasan cobros, POS, la grilla de recepción y el Inicio del club.
+- Vitest 1372, lint, tsc y build.
