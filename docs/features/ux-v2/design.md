@@ -1,7 +1,7 @@
 ---
 feature: ux-v2
 type: design
-status: design
+status: approved
 date: 2026-11-25
 branch: feat/ux-v2
 references: impeccable critique del 25/11 (23/40)
@@ -83,8 +83,8 @@ Se sacan de arriba la categoría («5.ª categoría, validada. Revés»), que pa
 
 ## 2. Navegación del club en el celular
 
-- **En el celular (menos de 768 px), una barra inferior** con 5 lugares: **Inicio, Grilla, Cobros, Jugadores y Más**.
-- **«Más»** abre un sheet con Asistente, Calendario, Torneos, Day use y, si es admin, Ajustes, cada uno con su ícono y una línea que dice para qué es.
+- **En el celular (menos de 768 px), una barra inferior** con 5 lugares. **Admin:** Inicio, Grilla, Cobros, Ajustes y Más. **Recepción:** Inicio, Grilla, Cobros, Jugadores y Más.
+- **«Más»** abre un sheet con Asistente, Calendario, Torneos, Day use y, si es admin, Jugadores, cada uno con su ícono y una línea que dice para qué es.
 - **Desde 768 px** siguen las pestañas de arriba con todas las secciones, como hoy.
 - **Encabezado del club, en una sola línea:** el logo y el título de la sección. «Panel del club · Rustic Pádel» se saca (el logo ya lo dice), «Ir a la app» pasa al sheet «Más», y «Volver» no aparece en las pantallas principales.
 - La barra inferior reutiliza el `TabNav` (`variant="bottom"`) del jugador, con la pastilla en la sección actual.
@@ -132,17 +132,26 @@ Se sacan de arriba la categoría («5.ª categoría, validada. Revés»), que pa
 - **Los turnos fuera de horario** van como una fila más, en su hora, marcados «fuera de horario». Ya no hay un bloque «Fuera de la grilla» aparte.
 - La grilla del jugador ya entra en 3 columnas y no cambia, salvo por el texto del tipo.
 
-## 5. Formularios que guardan de una vez
+## 5. Formularios que se guardan solos
 
+Decisión de Miguel: guardado automático, sin botones «Guardar».
+
+- **Cómo se comporta:**
+  - las casillas, los interruptores y los selectores se guardan al tocarlos;
+  - los campos de texto se guardan al salir del campo (`blur`) o 800 ms después de dejar de escribir;
+  - al lado de cada grupo aparece «Guardando…», después «Guardado» con un tilde que se va a los 2 s, o el error en rojo con «Reintentar»;
+  - si el valor no pasa la validación, no se guarda: se muestra el error junto al campo y el valor anterior sigue en la base.
 - **Perfil del jugador:**
-  - un solo formulario con un «Guardar» fijo abajo, que aparece **solo cuando algo cambió** («Tenés cambios sin guardar · Guardar»);
-  - al querer salir con cambios, avisa.
-  - Horarios y canchas preferidas van detrás de «Preferencias de juego (opcional)», cerrado por defecto.
+  - nombre, teléfono, categoría, lado, horarios y canchas preferidas se guardan solos;
+  - horarios y canchas preferidas van detrás de «Preferencias de juego (opcional)», cerrado por defecto.
 - **Ajustes → Club:**
-  - nombre, WhatsApp y marca en un solo formulario con el mismo «Guardar» fijo;
-  - el logo y el fondo del flyer siguen guardándose al subirlos (es lo esperado con un archivo);
+  - nombre, WhatsApp y marca se guardan solos;
+  - el logo y el fondo del flyer siguen guardándose al subirlos;
   - una sola vista previa (la del modo actual) con un selector oscuro/claro, en vez de dos grandes.
-- Las otras secciones de Ajustes ya tienen un solo formulario y no cambian.
+- **Las otras secciones de Ajustes** (reservas, pagos, sellos) quedan con su «Guardar»: cambian reglas que se aplican juntas y conviene confirmarlas a propósito.
+- **Técnico:**
+  - un hook `useAutoSave(action, { debounce })` sobre las mismas Server Actions de hoy, que se llaman por campo o por grupo;
+  - las acciones ya validan y devuelven `ActionState`, así que no cambian las reglas.
 
 ## 6. Textos (`/impeccable clarify`)
 
@@ -160,9 +169,9 @@ Se sacan de arriba la categoría («5.ª categoría, validada. Revés»), que pa
 - Atajos de teclado.
 - Cambiar marca, paleta o fuentes: el tono «calma y aire» es de jerarquía y espacio, no de identidad.
 
-## Decisiones a confirmar con Miguel
+## Decisiones de Miguel (25/11)
 
-1. **Grilla en el celular:** una cancha por vez con pestañas (propuesto) o la vista «ahora y lo que sigue».
-2. **Anular cobro:** solo los del mismo día, en efectivo o POS (propuesto), o también días anteriores.
-3. **Perfil:** un «Guardar» fijo (propuesto) o guardado automático de cada casilla.
-4. **«Más» del club:** Asistente, Calendario, Torneos, Day use y Ajustes (propuesto). ¿Alguna de esas tiene que estar en la barra en lugar de Jugadores?
+1. Grilla en el celular: una cancha por vez, con pestañas.
+2. Anular cobro: solo los del mismo día, en efectivo o POS.
+3. Perfil y Ajustes → Club: guardado automático de cada campo, no un «Guardar» fijo.
+4. Barra del club en el celular: el admin ve Inicio, Grilla, Cobros, Ajustes y Más (Jugadores pasa a «Más»); recepción, que no tiene Ajustes, ve Inicio, Grilla, Cobros, Jugadores y Más.
