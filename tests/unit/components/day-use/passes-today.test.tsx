@@ -43,7 +43,7 @@ describe('SellSheet', () => {
     expect(screen.getByLabelText('Pase')).toHaveValue('p1')
     expect(options('Día')).toEqual(['Hoy', 'sáb 3'])
     expect(screen.getByLabelText('A nombre de')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Usar su recompensa (-100%)')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Usar su recompensa (Gratis)')).not.toBeInTheDocument()
   })
 
   it('changes the days with the pass', async () => {
@@ -56,7 +56,7 @@ describe('SellSheet', () => {
     renderSheet()
     await userEvent.click(screen.getByLabelText('Jugador del club'))
     expect(screen.getByRole('combobox', { name: 'Jugador' })).toHaveValue('')
-    expect(screen.getByLabelText('Usar su recompensa (-100%)')).not.toBeChecked()
+    expect(screen.getByLabelText('Usar su recompensa (Gratis)')).not.toBeChecked()
   })
 
   it('has no reward while the club has stamps off', async () => {

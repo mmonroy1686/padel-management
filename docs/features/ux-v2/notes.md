@@ -152,3 +152,33 @@ Aparece solo después de reservar o de armar un partido, no después de anotarse
 - Vitest: el selector de cancha en el celular, y que el jugador no lo tiene.
 - e2e: `tests/e2e/support/grid.ts` con `showCourt` (cancha conocida) y `revealInGrid` (busca la celda cancha por cancha). Lo usan `reception-grid`, `club-home` y `open-match`, y el primer turno libre se elige entre los visibles. Pasan la grilla de recepción, el Inicio del club, partido abierto y marca.
 - Vitest 1377, lint, tsc y build.
+
+## Etapa 6: formularios que se guardan solos y textos (25/11)
+
+- **`AutoSaveForm`** (`components/ui/auto-save-form.tsx`):
+  - las casillas, los radios y los selectores se guardan al cambiar; el texto, al dejar de escribir (800 ms) o al salir del campo;
+  - manda el formulario entero a la misma Server Action de antes, así que no cambian las reglas;
+  - lo que no pasa las validaciones del navegador (`required`, `maxLength`) no se manda;
+  - muestra «Guardando…», después «Guardado» durante 2 s, o el error con «Reintentar».
+- **Perfil:**
+  - tus datos, horarios, canchas preferidas y «Ya están en el club» se guardan solos, sin botones «Guardar»;
+  - horarios y canchas quedan dentro de «Preferencias de juego (opcional)», cerrado;
+  - las secciones van sin tarjetas.
+  - El formulario de bienvenida sigue con su «Guardar y seguir».
+- **Ajustes → Club:**
+  - el nombre se guarda solo;
+  - la marca muestra **una** vista previa con un selector Oscuro/Claro, en vez de las dos grandes.
+- **Textos:**
+  - «Dónde puedo sumarme», con tilde;
+  - la recompensa completa dice «Gratis» en vez de «-100%» («Usar mi recompensa (Gratis)»);
+  - después de pedir el enlace: «Si no llega en un minuto, mirá en spam o promociones».
+
+**Desvíos del diseño:**
+- **La marca no se guarda sola:** sigue con «Guardar marca». Cada retoque de color cambiaría al instante los colores de toda la app para todos los jugadores, y un `#RRGGBB` a medio escribir daría error mientras tipeás.
+- **El aviso «No quedan canchas libres…» de Partidos sigue en cada tarjeta:** juntarlo arriba de la lista cambia cómo `MatchCard` muestra el riesgo de cada partido, y cada partido puede tener un riesgo distinto. Queda para el pulido.
+- **«Configurar pases» no pasó a Ajustes** (ver la etapa 1).
+
+**Verificación:**
+- Vitest: el guardado automático (guarda solo, error y «Reintentar»), los formularios de Perfil, la vista previa con selector y «Gratis».
+- Vitest 1378, lint y tsc.
+- e2e completo con la base reseteada: 25 de 26. `reception-grid` falló porque la reserva quedó en la Cancha 2, oculta en el celular: Playwright no encuentra por rol lo que tiene `display: none`. Los tests ahora eligen la cancha antes de verificar una celda (`reception-grid`, `club-home`) y pasan. Build en verde.

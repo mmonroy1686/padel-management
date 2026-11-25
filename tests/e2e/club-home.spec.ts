@@ -62,8 +62,8 @@ test('reception charges each player of the court in play from the Inicio', async
   // The Grilla shows the same booking paid, with the same players.
   await page.getByRole('link', { name: 'Grilla' }).click()
   const cell = page.getByRole('button', { name: `${playing.courtName}, ${playing.time}: ${holder.name}` })
-  await expect(cell).toContainText('Pagada')
   await showCourt(page, playing.courtName)
+  await expect(cell).toContainText('Pagada')
   await cell.click()
   const detail = page.getByRole('dialog', { name: holder.name })
   await expect(detail.getByRole('list', { name: 'Jugadores' })).toContainText(partner.name)

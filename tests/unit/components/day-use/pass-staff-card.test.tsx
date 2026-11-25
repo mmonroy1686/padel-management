@@ -42,7 +42,7 @@ describe('PassStaffCard', () => {
 
   it('charges nothing for a full reward, and says so', () => {
     renderCard(makePass({ usedReward: true, discountPercent: 100, total: 0 }))
-    expect(screen.getByRole('article', { name: 'Ana Pérez' })).toHaveTextContent('Recompensa -100%')
+    expect(screen.getByRole('article', { name: 'Ana Pérez' })).toHaveTextContent('Recompensa Gratis')
     expect(screen.queryByRole('button', { name: /Cobrar/ })).not.toBeInTheDocument()
   })
 

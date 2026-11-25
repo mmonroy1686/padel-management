@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { BrandForm, type BrandFormProps } from '@/components/club/brand-form'
@@ -19,7 +19,12 @@ function renderForm(club: Partial<BrandFormProps['club']> = {}) {
   return action
 }
 
-const preview = (mode: 'oscuro' | 'claro') => screen.getByRole('region', { name: `Vista previa en modo ${mode}` })
+// One preview at a time: the toggle picks it.
+function preview(mode: 'oscuro' | 'claro') {
+  const toggle = screen.getByRole('button', { name: mode === 'oscuro' ? 'Oscuro' : 'Claro' })
+  if (toggle.getAttribute('aria-pressed') !== 'true') fireEvent.click(toggle)
+  return screen.getByRole('region', { name: `Vista previa en modo ${mode}` })
+}
 
 describe('BrandForm', () => {
   it('previews both modes with the colors being typed, before saving', async () => {

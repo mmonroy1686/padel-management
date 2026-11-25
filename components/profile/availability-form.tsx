@@ -1,6 +1,7 @@
 'use client'
 
-import { ActionForm, type FormAction } from '@/components/ui/action-form'
+import type { FormAction } from '@/components/ui/action-form'
+import { AutoSaveForm } from '@/components/ui/auto-save-form'
 import { availabilityKey, DAY_BAND_LABELS, DAY_BANDS } from '@/lib/domain/availability'
 import { WEEKDAYS_LONG } from '@/lib/domain/format'
 
@@ -11,7 +12,7 @@ const capitalize = (text: string) => `${text.charAt(0).toUpperCase()}${text.slic
 export function AvailabilityForm({ action, selected }: { action: FormAction; selected: string[] }) {
   const checked = new Set(selected)
   return (
-    <ActionForm action={action} submitLabel="Guardar horarios" variant="secondary">
+    <AutoSaveForm action={action} label="horarios">
       <table className="w-full text-sm">
         <caption className="sr-only">Días y franjas en que solés poder jugar</caption>
         <thead>
@@ -48,6 +49,6 @@ export function AvailabilityForm({ action, selected }: { action: FormAction; sel
           ))}
         </tbody>
       </table>
-    </ActionForm>
+    </AutoSaveForm>
   )
 }

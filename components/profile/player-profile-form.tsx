@@ -1,6 +1,7 @@
 'use client'
 
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
+import { AutoSaveForm } from '@/components/ui/auto-save-form'
 import { Field, inputClasses } from '@/components/ui/field'
 import {
   CATEGORIES,
@@ -38,8 +39,8 @@ export function PlayerProfileForm({
 }) {
   const onboarding = mode === 'onboarding'
 
-  return (
-    <ActionForm action={action} submitLabel={onboarding ? 'Guardar y seguir' : 'Guardar cambios'}>
+  const fields = (
+    <>
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <Field label="Nombre" htmlFor="displayName">
         <input
@@ -118,6 +119,16 @@ export function PlayerProfileForm({
           Otros jugadores pueden ver mi perfil
         </label>
       )}
+    </>
+  )
+  // Welcome: one deliberate "Guardar y seguir". Profile: each change saves itself (AutoSaveForm).
+  return onboarding ? (
+    <ActionForm action={action} submitLabel="Guardar y seguir">
+      {fields}
     </ActionForm>
+  ) : (
+    <AutoSaveForm action={action} label="tu perfil">
+      {fields}
+    </AutoSaveForm>
   )
 }

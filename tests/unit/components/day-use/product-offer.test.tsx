@@ -44,9 +44,9 @@ describe('ProductOffer', () => {
 
   it('offers the reward when there is one', async () => {
     renderOffer({ reward: { percent: 100 } })
-    await userEvent.click(screen.getByRole('button', { name: 'Usar mi recompensa (-100%)' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Usar mi recompensa (Gratis)' }))
     expect(screen.getByRole('dialog', { name: 'Comprar pase' })).toHaveTextContent(
-      'Con tu recompensa (-100%): $0. El day use con recompensa no suma sello.',
+      'Con tu recompensa (Gratis): $0. El day use con recompensa no suma sello.',
     )
     expect(hidden('useReward')).toBe('true')
   })

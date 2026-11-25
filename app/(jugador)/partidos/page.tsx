@@ -58,7 +58,7 @@ export default async function MatchesPage({ searchParams }: { searchParams: Sear
       </div>
       <nav aria-label="Filtro" className="flex gap-2">
         <Link href="/partidos" aria-current={showAll ? undefined : 'page'} className={filterClasses(!showAll)}>
-          Donde puedo sumarme
+          Dónde puedo sumarme
         </Link>
         <Link href="/partidos?ver=todos" aria-current={showAll ? 'page' : undefined} className={filterClasses(showAll)}>
           Todos

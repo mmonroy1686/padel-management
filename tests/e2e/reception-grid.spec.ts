@@ -24,6 +24,8 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
   // The booking is on the grid, with the transfer reported.
   await signInWithMagicLink(page, reception.email, `/club/grilla?dia=${day}`)
   const bookedCell = page.getByRole('button', { name: `${booked.courtName}, ${booked.time}: ${player.name}` })
+  // A phone shows one court at a time: the booking's.
+  await showCourt(page, booked.courtName)
   await expect(bookedCell).toContainText('Transferencia informada')
 
   // Confirm the payment in Cobros.
@@ -36,6 +38,7 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
   await expect(review.getByRole('status')).toContainText('confirm')
 
   await page.goto(`/club/grilla?dia=${day}`)
+  await showCourt(page, booked.courtName)
   await expect(bookedCell).toContainText('Pagada')
 
   // Block the first free slot.
