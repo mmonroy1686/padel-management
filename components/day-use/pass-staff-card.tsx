@@ -71,7 +71,7 @@ export function PassStaffCard({
         />
       ) : null}
       {bought ? (
-        <ActionForm action={actions.cancel} submitLabel="Cancelar pase" pendingLabel="Cancelando…" variant="ghost" onDone={onDone}>
+        <ActionForm action={actions.cancel} submitLabel="Cancelar pase" pendingLabel="Cancelando…" variant="danger" confirmLabel="¿Seguro? Tocá de nuevo" onDone={onDone}>
           <input type="hidden" name="passId" value={pass.id} />
         </ActionForm>
       ) : null}

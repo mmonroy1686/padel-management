@@ -111,7 +111,7 @@ function FullWaits({ waits, cancelAction }: { waits: WaitItem[]; cancelAction: F
         {waits.map((wait) => (
           <li key={wait.id} className="flex flex-col gap-2 rounded-xl border border-border bg-bg p-3">
             <span>{wait.text}</span>
-            <ActionForm action={cancelAction} submitLabel="Cancelar espera" pendingLabel="Cancelando…" variant="secondary">
+            <ActionForm action={cancelAction} submitLabel="Cancelar espera" pendingLabel="Cancelando…" variant="danger">
               <input type="hidden" name="waitId" value={wait.id} />
             </ActionForm>
           </li>

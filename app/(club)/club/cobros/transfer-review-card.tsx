@@ -62,7 +62,7 @@ export function TransferReviewCard({
         <input type="hidden" name="paymentId" value={transfer.id} />
       </ActionForm>
       {rejecting ? (
-        <ActionForm action={rejectAction} submitLabel="Rechazar transferencia" variant="secondary" onDone={setDone}>
+        <ActionForm action={rejectAction} submitLabel="Rechazar transferencia" variant="danger" confirmLabel="¿Seguro? Tocá de nuevo" onDone={setDone}>
           <input type="hidden" name="paymentId" value={transfer.id} />
           <Field label="Motivo" htmlFor={`reason-${transfer.id}`}>
             <input

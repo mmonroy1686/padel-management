@@ -1,5 +1,6 @@
 'use client'
 
+import { Notice } from '@/components/ui/notice'
 import { useCallback, useState } from 'react'
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import { TransferSheet, type ReportTransfer } from '@/components/booking/transfer-sheet'
@@ -52,9 +53,7 @@ export function PassBoard(props: PassBoardProps) {
         </span>
       </div>
       {notice ? (
-        <p role="status" className="rounded-xl border border-accent bg-surface p-3">
-          {notice}
-        </p>
+        <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
       ) : null}
       {pass.status !== 'cancelled' ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-4">

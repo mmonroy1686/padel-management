@@ -101,7 +101,7 @@ export default async function StaffSettingsPage() {
                     <input type="hidden" name="userId" value={member.userId} />
                     <input type="hidden" name="role" value={other} />
                   </ActionForm>
-                  <ActionForm action={removeStaff} submitLabel="Quitar acceso" pendingLabel="Quitando…" variant="danger" size="sm"
+                  <ActionForm action={removeStaff} submitLabel="Quitar acceso" pendingLabel="Quitando…" variant="danger" confirmLabel="¿Seguro? Tocá de nuevo" size="sm"
                     accessibleLabel={`Quitarle el acceso a ${name}`}>
                     <input type="hidden" name="userId" value={member.userId} />
                   </ActionForm>

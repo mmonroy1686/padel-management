@@ -49,7 +49,7 @@ export function CategoriesEditor({
                 <span className="font-semibold">{category.name}</span>
                 <span className="text-fg-muted"> · {category.detail}</span>
               </p>
-              <ActionForm action={deleteAction} submitLabel="Quitar" pendingLabel="Quitando…" variant="ghost">
+              <ActionForm action={deleteAction} submitLabel="Quitar" pendingLabel="Quitando…" variant="danger" size="sm">
                 <input type="hidden" name="categoryId" value={category.id} />
               </ActionForm>
             </li>

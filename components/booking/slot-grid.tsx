@@ -41,7 +41,7 @@ export function SlotGrid({ courts, rows, variant, onSelect, onWait, waited, time
         <caption className="sr-only">Turnos por cancha</caption>
         <thead>
           <tr>
-            <th scope="col" className={variant === 'player' ? 'w-12' : 'w-16'}>
+            <th scope="col" className={cn('sticky left-0 z-10 bg-bg', variant === 'player' ? 'w-12' : 'w-16')}>
               <span className="sr-only">Hora</span>
             </th>
             {courts.map((court) => (
@@ -59,7 +59,12 @@ export function SlotGrid({ courts, rows, variant, onSelect, onWait, waited, time
             <tr key={row.slot.label}>
               <th
                 scope="row"
-                className={cn('pr-1 text-left font-display font-bold', variant === 'player' ? 'text-base' : 'text-lg', row.past && 'opacity-50')}
+                className={cn(
+                  // Stays in view when the club's wide grid scrolls sideways, so every cell keeps its hour.
+                  'sticky left-0 z-10 bg-bg pr-1 text-left font-display font-bold',
+                  variant === 'player' ? 'text-base' : 'text-lg',
+                  row.past && 'text-fg-muted',
+                )}
               >
                 {row.slot.label}
               </th>

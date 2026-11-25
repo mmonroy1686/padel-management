@@ -15,6 +15,10 @@
   --on-court: #FFFFFF;
   --court-ink: #4DA3DB;
   --danger: #FF8A7A;
+  /* Motion: strong curves; the built-in ones feel soft. ease-out for what enters or answers a press, drawer for
+     sheets (iOS-like). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* Amber never works as text on a light background (1.85:1), so light mode uses amber-ink. */
@@ -85,17 +89,24 @@ body {
   :where(button:disabled, select:disabled, input:disabled) {
     cursor: not-allowed;
   }
+  :where(button, [role='button'], a[href], summary, label) {
+    /* The press scale is the feedback; the browser's grey tap flash on top of it looks broken. */
+    -webkit-tap-highlight-color: transparent;
+  }
   :where(button, [role='button'], a[href]) {
     transition-property: color, background-color, border-color, text-decoration-color, opacity, filter, transform;
     transition-duration: 150ms;
-    transition-timing-function: ease-out;
+    transition-timing-function: var(--ease-out);
   }
-  :where(button:not(:disabled), [role='button']:not([aria-disabled='true'])):hover {
-    filter: brightness(1.08);
-  }
-  /* Underlined text links get a thicker line on hover. */
-  :where(a[href]):hover {
-    text-decoration-thickness: 2px;
+  /* Hover only with a mouse: on a phone a tap would leave it stuck on. (Tailwind 4's hover: already does this.) */
+  @media (hover: hover) and (pointer: fine) {
+    :where(button:not(:disabled), [role='button']:not([aria-disabled='true'])):hover {
+      filter: brightness(1.08);
+    }
+    /* Underlined text links get a thicker line on hover. */
+    :where(a[href]):hover {
+      text-decoration-thickness: 2px;
+    }
   }
   @media (prefers-reduced-motion: no-preference) {
     :where(button:not(:disabled), [role='button']:not([aria-disabled='true'])):active {
@@ -136,7 +147,92 @@ body {
   .stamp-pop {
     transform-box: fill-box;
     transform-origin: center;
-    animation: stamp-pop 450ms ease-out;
+    animation: stamp-pop 380ms var(--ease-out);
+  }
+}
+
+/* Bottom sheet (components/ui/bottom-sheet.tsx): slides up from the edge on a phone, grows a little from the center
+   on a tablet; leaves faster than it came. data-state="closing" keeps it mounted while it goes. */
+.sheet-backdrop {
+  transition: opacity 200ms ease;
+  @starting-style {
+    opacity: 0;
+  }
+}
+.sheet-panel {
+  transition: transform 320ms var(--ease-drawer);
+  @starting-style {
+    transform: translateY(100%);
+  }
+}
+.sheet-root[data-state='closing'] .sheet-backdrop {
+  opacity: 0;
+}
+.sheet-root[data-state='closing'] .sheet-panel {
+  transform: translateY(100%);
+  transition-duration: 200ms;
+}
+@media (min-width: 48rem) {
+  .sheet-panel {
+    transition: transform 220ms var(--ease-out), opacity 220ms var(--ease-out);
+    @starting-style {
+      transform: scale(0.96);
+      opacity: 0;
+    }
+  }
+  .sheet-root[data-state='closing'] .sheet-panel {
+    transform: scale(0.96);
+    opacity: 0;
+    transition-duration: 150ms;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-panel,
+  .sheet-root[data-state='closing'] .sheet-panel {
+    transform: none;
+    transition: opacity 150ms ease;
+    @starting-style {
+      transform: none;
+      opacity: 0;
+    }
+  }
+  .sheet-root[data-state='closing'] .sheet-panel {
+    opacity: 0;
+  }
+}
+
+/* Menus (components/ui/actions-menu.tsx) grow from their button; closing is instant. */
+.menu-pop {
+  transform-origin: top right;
+  transition: transform 150ms var(--ease-out), opacity 150ms var(--ease-out);
+  @starting-style {
+    transform: scale(0.97);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-pop {
+    transform: none;
+    @starting-style {
+      transform: none;
+    }
+  }
+}
+
+/* A notice that just showed up (an action's outcome) eases in instead of popping. */
+.notice-in {
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notice-in {
+    transform: none;
+    @starting-style {
+      transform: none;
+    }
   }
 }
 
@@ -151,8 +247,8 @@ body {
 }
 
 @keyframes stamp-pop {
-  0% { transform: scale(0.4); opacity: 0; }
-  70% { transform: scale(1.15); opacity: 1; }
+  0% { transform: scale(0.8); opacity: 0; }
+  70% { transform: scale(1.05); opacity: 1; }
   100% { transform: scale(1); }
 }
 

@@ -139,6 +139,7 @@ describe('OccupancyDetailSheet', () => {
   it('cancels the booking', async () => {
     const { actions, onDone, sent } = renderDetail(booked)
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar reserva' }))
+    await userEvent.click(screen.getByRole('button', { name: '¿Seguro? Tocá de nuevo' }))
     await waitFor(() => expect(onDone).toHaveBeenCalledWith('Listo.'))
     expect(sent(actions.cancel)).toEqual({ bookingId: 'b-o1' })
   })

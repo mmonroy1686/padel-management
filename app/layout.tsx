@@ -35,7 +35,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export async function generateViewport(): Promise<Viewport> {
   const club = await findClub()
-  return { width: 'device-width', initialScale: 1, ...brandViewport(brandOrDefault(club)) }
+  // cover: the page reaches under the notch and the home bar, and env(safe-area-inset-*) (header, bottom bar, sheet)
+  // pads what must stay clear.
+  return { width: 'device-width', initialScale: 1, viewportFit: 'cover', ...brandViewport(brandOrDefault(club)) }
 }
 
 // The club's colors, written by the server before anything paints (no flash). globals.css keeps Rustic's as a

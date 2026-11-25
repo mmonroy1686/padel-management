@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
@@ -26,15 +26,15 @@ describe('BottomSheet', () => {
     expect(screen.getByText('Contenido')).toBeInTheDocument()
   })
 
-  it('always shows a visible ✕ close button and focuses it on open', () => {
+  it('always shows a visible close button and focuses it on open', () => {
     renderSheet()
     const close = screen.getByRole('button', { name: 'Cerrar' })
     expect(close).toBeVisible()
-    expect(close).toHaveTextContent('✕')
+    expect(close.querySelector('svg')).not.toBeNull()
     expect(close).toHaveFocus()
   })
 
-  it('closes from the ✕ button', async () => {
+  it('closes from the close button', async () => {
     const { onClose } = renderSheet()
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
     expect(onClose).toHaveBeenCalledTimes(1)
@@ -50,5 +50,24 @@ describe('BottomSheet', () => {
     const { onClose } = renderSheet()
     await userEvent.click(screen.getByTestId('sheet-backdrop'))
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('BottomSheet closing', () => {
+  it('stays a moment while it slides out, then goes, and the page scrolls again', async () => {
+    const { rerender } = render(
+      <BottomSheet open onClose={() => {}} title="Reserva">
+        <p>Contenido</p>
+      </BottomSheet>,
+    )
+    expect(document.body.style.overflow).toBe('hidden')
+    rerender(
+      <BottomSheet open={false} onClose={() => {}} title="Reserva">
+        <p>Contenido</p>
+      </BottomSheet>,
+    )
+    expect(document.body.style.overflow).toBe('')
+    expect(screen.getByText('Contenido')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog', { hidden: true })).toBeNull())
   })
 })

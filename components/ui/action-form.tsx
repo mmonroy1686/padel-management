@@ -2,6 +2,7 @@
 
 import { useActionState, type ReactNode } from 'react'
 import type { ButtonSize, ButtonVariant } from '@/components/ui/button'
+import { Icon } from '@/components/ui/icon'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { IDLE, type ActionState } from '@/lib/actions/result'
 import { cn } from '@/lib/cn'
@@ -17,6 +18,8 @@ export type ActionFormProps = {
   size?: ButtonSize
   icon?: ReactNode
   accessibleLabel?: string
+  // Destructive actions: asks once more before submitting (SubmitButton).
+  confirmLabel?: string
   onDone?: (message: string) => void
   className?: string
   children?: ReactNode
@@ -32,6 +35,7 @@ export function ActionForm({
   size = 'md',
   icon,
   accessibleLabel,
+  confirmLabel,
   onDone,
   className,
   children,
@@ -47,13 +51,15 @@ export function ActionForm({
     <form action={formAction} className={cn('flex flex-col gap-3', className)}>
       {children}
       {state.status === 'error' ? (
-        <p role="alert" className="rounded-xl border border-accent bg-bg p-3 text-sm">
-          {state.message}
+        <p role="alert" className="notice-in flex items-start gap-2 rounded-xl border border-danger bg-bg p-3 text-sm">
+          <Icon name="alert" className="mt-0.5 size-4 text-danger" />
+          <span>{state.message}</span>
         </p>
       ) : null}
       {state.status === 'ok' && !onDone ? (
-        <p role="status" className="text-sm">
-          {state.message}
+        <p role="status" className="notice-in flex items-start gap-2 text-sm">
+          <Icon name="check" className="mt-0.5 size-4 text-court-ink" />
+          <span>{state.message}</span>
         </p>
       ) : null}
       <SubmitButton
@@ -64,6 +70,7 @@ export function ActionForm({
         fullWidth={size === 'md'}
         icon={icon}
         accessibleLabel={accessibleLabel}
+        confirmLabel={confirmLabel}
         pending={pending}
       />
     </form>

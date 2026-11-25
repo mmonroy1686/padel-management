@@ -41,6 +41,7 @@ describe('PricesTable', () => {
     expect(row).toHaveTextContent('24:00')
     expect(row).toHaveTextContent('$1.600')
     await userEvent.click(within(row).getByRole('button', { name: 'Borrar' }))
+    await userEvent.click(within(row).getByRole('button', { name: '¿Seguro? Tocá de nuevo' }))
     await waitFor(() => expect(remove).toHaveBeenCalledTimes(1))
     expect(remove.mock.calls[0][1].get('ruleId')).toBe('r1')
   })

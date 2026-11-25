@@ -1,5 +1,6 @@
 'use client'
 
+import { Notice } from '@/components/ui/notice'
 import { useCallback, useState } from 'react'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { isOpenOn, type DayUseOverride, type DayUseProduct } from '@/lib/domain/day-use'
@@ -26,9 +27,7 @@ export function OverrideCalendar({
   return (
     <div className="flex flex-col gap-3">
       {notice ? (
-        <p role="status" className="rounded-xl border border-accent bg-surface p-3 text-sm">
-          {notice}
-        </p>
+        <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
       ) : null}
       <div className="-mx-4 overflow-x-auto px-4">
         <table aria-label="Calendario de day use" className="w-full min-w-[40rem] text-sm">

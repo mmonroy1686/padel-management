@@ -1,5 +1,6 @@
 'use client'
 
+import { Notice } from '@/components/ui/notice'
 import { useCallback, useState } from 'react'
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import type { FormAction } from '@/components/ui/action-form'
@@ -103,9 +104,7 @@ export function PassesToday({
         <Button onClick={() => setSelling(true)}>Vender pase</Button>
       </div>
       {notice ? (
-        <p role="status" className="rounded-xl border border-accent bg-surface p-3">
-          {notice}
-        </p>
+        <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
       ) : null}
       <DataTable
         caption={`Pases ${forDay}`}

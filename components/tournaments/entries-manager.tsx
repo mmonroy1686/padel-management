@@ -49,7 +49,7 @@ export function EntriesManager({ tournament, deskMethods, actions }: { tournamen
           </span>
         ),
         actions: editable ? (
-          <ActionForm action={actions.remove} submitLabel="Sacar del torneo" pendingLabel="Sacando…" variant="ghost">
+          <ActionForm action={actions.remove} submitLabel="Sacar del torneo" pendingLabel="Sacando…" variant="danger" size="sm" confirmLabel="¿Seguro? Tocá de nuevo">
             <input type="hidden" name="entryId" value={entry.id} />
           </ActionForm>
         ) : null,

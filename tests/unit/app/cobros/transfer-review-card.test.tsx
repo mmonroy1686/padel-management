@@ -43,6 +43,7 @@ describe('TransferReviewCard', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Rechazar' }))
     await userEvent.type(screen.getByLabelText('Motivo'), 'No llegó')
     await userEvent.click(screen.getByRole('button', { name: 'Rechazar transferencia' }))
+    await userEvent.click(screen.getByRole('button', { name: '¿Seguro? Tocá de nuevo' }))
     await waitFor(() => expect(rejectAction).toHaveBeenCalledTimes(1))
     expect(Object.fromEntries(rejectAction.mock.calls[0][1].entries())).toEqual({ paymentId: 'p1', reason: 'No llegó' })
   })
