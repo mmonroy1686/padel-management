@@ -32,9 +32,21 @@ grant update (
   flyer_background_path
 ) on public.clubs to authenticated;
 
+-- Before closing the door, nothing already got through it: stop here if a club has an unknown timezone or a reserved
+-- slug, so it gets fixed by hand instead of staying broken.
+do $$
+begin
+  if exists (select 1 from public.clubs c
+              where not exists (select 1 from pg_catalog.pg_timezone_names z where z.name = c.timezone)
+                 or c.slug = any (array['www', 'app', 'api', 'plataforma', 'admin', 'mail', 'static', 'assets', 'staging', 'status'])) then
+    raise exception 'a club has an unknown timezone or a reserved slug: fix it before this migration';
+  end if;
+end;
+$$;
+
 -- A timezone Postgres knows, whoever writes it (the service role and superusers too). A trigger, not a check: a check
--- may only call immutable functions, and pg_timezone_names reads the timezone database, which an update of the
--- server can change. Lying about that would break a restore if a name ever went away; the trigger only judges writes.
+-- may only call immutable functions, and the timezone list can change with a server update. The trigger checks each
+-- write; an immutable check would make a restore fail if a zone name were removed.
 create function private.check_club_timezone()
 returns trigger
 language plpgsql

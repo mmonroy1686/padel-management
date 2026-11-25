@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 \ir helpers/slot.psql
 \ir helpers/club.psql
-select plan(23);
+select plan(24);
 
 -- Omar (f1) runs the platform; he is not a member of club T.
 insert into public.platform_admins (user_id) values ('00000000-0000-0000-0000-0000000000f1');
@@ -17,6 +17,11 @@ select is(
         'loyalty_every', 'loyalty_expiry_months', 'match_close_minutes', 'max_active_bookings', 'name', 'opens_at',
         'phone', 'slot_minutes', 'transfer_details', 'transfer_receipt_required'],
   'the API updates only the columns Ajustes writes');
+select ok(
+  not exists (select 1 from pg_catalog.pg_attribute
+               where attrelid = 'public.clubs'::regclass and attnum > 0 and not attisdropped
+                 and has_column_privilege('anon', attrelid, attnum, 'UPDATE')),
+  'a visitor updates nothing');
 
 -- Any writer, even postgres: the timezone is one Postgres knows.
 select throws_ok(

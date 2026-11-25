@@ -19,6 +19,7 @@ Corte A de la auditoría del 24/11: el admin de un club podía cambiar cualquier
     - las columnas de marca (`brand_primary`, `brand_background`, `color_mode`), que ya se guardaban con `save_club_brand`.
   - Las funciones `security definer` que escriben en `clubs` no usan el grant: `save_club_brand`, `finish_club_setup`, `create_club` y, en la rama de Datos del club, `save_club_info`.
   - Agrega el trigger `clubs_timezone_known`: con una zona que no está en `pg_timezone_names`, falla con `invalid_timezone`, para cualquiera que escriba (también el service role y postgres).
+  - Antes de cerrar el permiso, frena la migración si un club ya tiene una zona desconocida o un slug reservado, para corregirlo a mano.
   - Agrega `rename_club(p_club_id, p_slug)`, solo para el super-admin. Aplica las mismas reglas que un club nuevo (`private.checked_slug`). Si el nombre es el mismo que ya tiene, no cambia nada.
 - /plataforma: cada club tiene «Cambiar dirección», que avisa que los links viejos dejan de andar. Aparece solo si hay dominio (`NEXT_PUBLIC_ROOT_DOMAIN`).
 - README («Cómo trabajamos»): una columna nueva de `clubs` que edita el admin necesita su `grant update (columna)`.
@@ -31,11 +32,11 @@ Corte A de la auditoría del 24/11: el admin de un club podía cambiar cualquier
 
 ## Verificación
 
-- pgTAP `clubs_columns.test.sql` (23):
-  - el grant tiene exactamente las columnas de Ajustes;
+- pgTAP `clubs_columns.test.sql` (24):
+  - el grant tiene exactamente las columnas de Ajustes, y `anon` no edita ninguna;
   - el admin no puede cambiar `slug`, `timezone`, `setup_completed_at`, `id`, `created_at` ni la marca (`42501`);
   - el admin sí guarda todas las columnas de Ajustes juntas;
   - recepción y los jugadores no cambian nada, y ningún admin toca otro club;
   - una zona inválida falla incluso para postgres;
   - `rename_club`: forbidden, reservado, en uso, mal formado, not_found y anon.
-- La suite pgTAP completa pasa: 1362 tests.
+- La suite pgTAP completa pasa: 1363 tests. e2e en serie: 21 de 25 pasan en la corrida completa (1 se saltea); `card-payments`, `club-setup` y `championship-day` fallaron en la corrida completa con la base ya usada y pasaron solos con la base reseteada; `championship-day` falla igual en `main` con datos de corridas anteriores (reusa el día +22).
