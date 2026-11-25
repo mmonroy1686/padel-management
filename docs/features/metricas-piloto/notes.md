@@ -52,3 +52,8 @@ branch: feat/metricas-piloto
 - Consulta 6: aclara que un cobro devuelto sale de su semana y aparece en la semana de la devolución, porque al
   devolver se pisa `confirmed_at`.
 - pgTAP: 4 casos más (id desconocido, `null`, deshacer sin marca, partido abierto). Total 17.
+
+## Verificación final (25/11)
+
+- pgTAP 1417 (80 archivos), Vitest 1351, lint, tsc y build. e2e de grilla de recepción, POS y cobros: 3 de 3.
+- Miguel probó «No vino» en localhost: OK.
