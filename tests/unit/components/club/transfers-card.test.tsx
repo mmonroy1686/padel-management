@@ -12,6 +12,6 @@ describe('TransfersCard', () => {
     const card = screen.getByRole('region', { name: 'Transferencias por confirmar' })
     expect(card).toHaveTextContent('11 transferencias por confirmar · $13.800')
     expect(card).toHaveTextContent('la más vieja hace 2 h')
-    expect(screen.getByRole('link', { name: 'Revisar →' })).toHaveAttribute('href', '/club/cobros#transferencias')
+    expect(screen.getByRole('link', { name: /^11 transferencias por confirmar · \$13\.800,\s*la más vieja hace 2 h · Revisar en Cobros$/ })).toHaveAttribute('href', '/club/cobros#transferencias')
   })
 })

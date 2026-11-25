@@ -7,6 +7,7 @@ import type { MemberOption } from '@/lib/domain/members'
 import { BookingPlayers, type PlayersActions } from './booking-players'
 import type { PayMethods } from './charge-choice'
 
+// A block of turns of the Inicio (TurnRows) and what each opened court needs.
 export type CourtListProps = {
   items: CourtItem[]
   timezone: string
@@ -28,37 +29,11 @@ export function courtHours(item: Pick<CourtItem, 'startsAt' | 'endsAt'>, timezon
   return `${timeIn(item.startsAt, timezone)} a ${timeIn(item.endsAt, timezone)}`
 }
 
-// The courts of one Inicio block: a court with its players per booking or match, a narrow card per block,
-// tournament or day use.
-export function CourtList({ items, timezone, methods, members, actions, now }: CourtListProps) {
-  return (
-    <ul className="grid gap-3 md:grid-cols-2">
-      {items.map((item) =>
-        item.kind === 'turn' ? (
-          <li key={item.id}>
-            <CourtTurnCard
-              turn={item}
-              now={now}
-              timezone={timezone}
-              methods={methods}
-              members={members}
-              actions={actions}
-            />
-          </li>
-        ) : (
-          <li key={item.id} className="md:col-span-2">
-            <EventCard event={item} hours={courtHours(item, timezone)} />
-          </li>
-        ),
-      )}
-    </ul>
-  )
-}
-
-function EventCard({ event, hours }: { event: CourtEvent; hours: string }) {
+// A block, tournament or day use in a list of turns: a quiet row with its icon, a tournament with its link.
+export function EventRow({ event, hours }: { event: CourtEvent; hours: string }) {
   const name = `${event.courtName} · ${event.label}`
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-2">
+    <div className="flex min-h-14 flex-wrap items-center gap-3 py-2">
       <Icon name={EVENT_ICONS[event.occupancyKind] ?? 'clock'} className="text-accent-ink" />
       {event.href ? (
         <Link href={event.href} className="inline-flex min-h-11 items-center font-semibold text-accent-ink underline">

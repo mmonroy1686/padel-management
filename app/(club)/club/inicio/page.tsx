@@ -2,10 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { CourtList } from '@/components/club/court-card'
 import { HomeDay } from '@/components/club/home-day'
-import { PendingList } from '@/components/club/pending-list'
 import { TransfersCard } from '@/components/club/transfers-card'
+import { TurnRows } from '@/components/club/turn-rows'
 import { Card } from '@/components/ui/card'
 import { AutoRefresh } from '@/components/live/auto-refresh'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
@@ -31,9 +30,10 @@ function HomeSection({ id, title, children }: { id: string; title: string; child
   )
 }
 
-// Reception's and the admin's first screen: transfers to review, the courts in play (and the ones that just ended
-// and still owe), what comes next, what is still owed today and the day. It renders again when an occupancy changes
-// (Realtime) and every minute, so bookings move from Próximos to En cancha and to Pendientes on their own.
+// Reception's and the admin's first screen, as rows: the courts in play (and the ones that just ended and still
+// owe), what comes next, and what is still owed today (transfers to review on top), then the day. One button per
+// turn opens its court. It renders again when an occupancy changes (Realtime) and every minute, so bookings move
+// from Próximos to En cancha and to Pendientes on their own.
 // A new club (setup not finished): its admin goes to the setup assistant the first time, and Inicio says how to come
 // back to it; reception reads that the admin is setting it up.
 function SetupNotice({ state, admin }: { state: { activeCourts: number; priceRules: number }; admin: boolean }) {
@@ -86,11 +86,10 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
       <AutoRefresh seconds={60} />
 
       {setupNotice}
-      {home.transfers ? <TransfersCard summary={home.transfers} /> : null}
 
       <HomeSection id="en-cancha" title="En cancha ahora">
         {inPlay.length > 0 ? (
-          <CourtList items={inPlay} {...list} />
+          <TurnRows items={inPlay} {...list} />
         ) : (
           <p className="text-fg-muted">
             No hay canchas en juego ahora.
@@ -101,15 +100,16 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
 
       <HomeSection id="proximos" title="Próximos">
         {upcoming.length > 0 ? (
-          <CourtList items={upcoming} {...list} />
+          <TurnRows items={upcoming} {...list} />
         ) : (
           <p className="text-fg-muted">No empieza nada en la próxima hora y media.</p>
         )}
       </HomeSection>
 
       <HomeSection id="pendientes" title="Pendientes de cobro">
+        {home.transfers ? <TransfersCard summary={home.transfers} /> : null}
         {pending.length > 0 ? (
-          <PendingList turns={pending} {...list} />
+          <TurnRows items={pending} {...list} />
         ) : (
           <p className="text-fg-muted">Lo jugado hoy está cobrado.</p>
         )}

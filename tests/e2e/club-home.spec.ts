@@ -16,8 +16,11 @@ test('reception charges each player of the court in play from the Inicio', async
   await signInWithMagicLink(page, reception.email, '/club')
   await expect(page).toHaveURL(/\/club\/inicio$/)
   const inPlay = page.getByRole('region', { name: 'En cancha ahora' })
+  // A compact row per turn; «Cobrar» opens its court, with the charges at hand.
+  const row = inPlay.getByRole('listitem').filter({ hasText: holder.name })
+  await expect(row).toContainText(playing.courtName)
+  await row.getByRole('button', { name: new RegExp(`^Cobrar ${playing.courtName}, `) }).click()
   const card = inPlay.getByRole('article').filter({ hasText: holder.name })
-  await expect(card).toContainText(playing.courtName)
   await expect(card.getByRole('progressbar')).toBeVisible()
 
   // Completar jugadores: a member and a name; player 4 stays unnamed.
@@ -34,17 +37,12 @@ test('reception charges each player of the court in play from the Inicio', async
   await expect(players).toContainText('Jugador 4')
 
   // His share in cash.
-  // One "Cobrar" per turn opens its charges.
-  await card.getByRole('button', { name: 'Cobrar ($1.200)' }).click()
   await card.getByRole('button', { name: `Cobrar $300 a ${partner.name}` }).click()
   await card.getByRole('group', { name: `Cobrar $300 a ${partner.name}` }).getByRole('button', { name: 'Efectivo' }).click()
   await expect(card.getByRole('status')).toHaveText('Cobramos $300 en efectivo.')
   await expect(players.getByRole('listitem').filter({ hasText: partner.name })).toContainText('Pagó')
 
   // Everything left by transfer: the card is paid.
-  // The page refreshes after a charge: if the turn came back closed, open its charges again.
-  const reopen = card.getByRole('button', { name: 'Cobrar ($900)' })
-  if (await reopen.isVisible()) await reopen.click()
   await card.getByRole('button', { name: 'Cobrar todo lo que falta ($900)' }).click()
   await card.getByRole('group', { name: 'Cobrar todo lo que falta ($900)' }).getByRole('button', { name: 'Me transfirió' }).click()
   await expect(card.getByRole('status')).toHaveText('Cobramos $900 por transferencia.')
@@ -56,7 +54,7 @@ test('reception charges each player of the court in play from the Inicio', async
     { method: 'cash', amount: 300, status: 'confirmed', payer_position: 2, receipt_path: null },
     { method: 'transfer', amount: 900, status: 'confirmed', payer_position: null, receipt_path: null },
   ])
-  await page.getByRole('link', { name: 'Cobros' }).click()
+  await page.getByRole('link', { name: 'Cobros', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Por confirmar', exact: true })).not.toContainText(holder.name)
 
   // The Grilla shows the same booking paid, with the same players.
@@ -79,18 +77,20 @@ test('a court that just ended stays in play while it owes, and leaves once it is
 
   // Ended 10 minutes ago and owes everything: still in "En cancha ahora", without the bar, not in Pendientes.
   await signInWithMagicLink(page, reception.email, '/club/inicio')
-  const card = page.getByRole('region', { name: 'En cancha ahora' }).getByRole('article').filter({ hasText: holder.name })
-  await expect(card).toContainText(recent.courtName)
-  await expect(card).toContainText(/Terminó hace 1\d min/)
+  const inPlay = page.getByRole('region', { name: 'En cancha ahora' })
+  const row = inPlay.getByRole('listitem').filter({ hasText: holder.name })
+  await expect(row).toContainText(recent.courtName)
+  await expect(row).toContainText(/Terminó hace 1\d min · Debe \$1\.200/)
+  await row.getByRole('button', { name: new RegExp(`^Cobrar ${recent.courtName}, `) }).click()
+  const card = inPlay.getByRole('article').filter({ hasText: holder.name })
   await expect(card.getByRole('progressbar')).toHaveCount(0)
   await expect(card.getByRole('list', { name: 'Jugadores' }).getByRole('listitem')).toHaveCount(4)
   await expect(page.getByRole('region', { name: 'Pendientes de cobro' })).not.toContainText(holder.name)
 
   // Everything in cash from the court: once paid, it leaves the Inicio.
-  await card.getByRole('button', { name: 'Cobrar ($1.200)' }).click()
   await card.getByRole('button', { name: 'Cobrar todo lo que falta ($1.200)' }).click()
   await card.getByRole('group', { name: 'Cobrar todo lo que falta ($1.200)' }).getByRole('button', { name: 'Efectivo' }).click()
-  await expect(card).toHaveCount(0)
+  await expect(row).toHaveCount(0)
   await expect(page.getByRole('region', { name: 'Pendientes de cobro' })).not.toContainText(holder.name)
   expect(await paymentsOf(recent.bookingId)).toEqual([
     { method: 'cash', amount: 1200, status: 'confirmed', payer_position: null, receipt_path: null },
