@@ -27,7 +27,7 @@ branch: feat/metricas-piloto
 
 ## Verificación
 
-- pgTAP `no_show.test.sql` (13):
+- pgTAP `no_show.test.sql` (13, después 17):
   - permisos: el jugador y el staff de otro club no pueden marcar;
   - estados: falla con una reserva futura o cancelada;
   - marcar y deshacer funcionan;
@@ -39,3 +39,16 @@ branch: feat/metricas-piloto
   - las 7 consultas corren sin errores;
   - con `norte` no aparece nada de Rustic;
   - con una reserva marcada «No vino» en una transacción descartada, la consulta 7 cuenta 1.
+
+## Arreglos de la revisión
+
+- `mark_no_show` rechaza las reservas de partidos abiertos (`invalid_state`): el diseño deja «No vino» solo para
+  reservas de cancha, y la consulta 7 ya no las cuenta en el denominador.
+- Una reserva marcada «No vino» ya no ofrece «Cancelar reserva»: cancelarla la pasaría a las cancelaciones, sacaría
+  su ocupación y la quitaría de los faltazos.
+- Consulta 3: separa las cancelaciones del jugador de las del club; solo las del jugador pueden ser tardías.
+- Consulta 4: un turno recuperado que después se canceló no cuenta.
+- Consulta 5: los campeonatos cuentan solo las parejas activas o en espera.
+- Consulta 6: aclara que un cobro devuelto sale de su semana y aparece en la semana de la devolución, porque al
+  devolver se pisa `confirmed_at`.
+- pgTAP: 4 casos más (id desconocido, `null`, deshacer sin marca, partido abierto). Total 17.

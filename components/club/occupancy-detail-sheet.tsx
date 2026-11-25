@@ -112,15 +112,18 @@ export function OccupancyDetailSheet({
             {occupancy.startsAt <= new Date() ? (
               <NoShowControl bookingId={booking.id} marked={booking.noShow ?? false} action={actions.noShow} onDone={onDone} />
             ) : null}
-            <ActionForm
-              action={actions.cancel}
-              submitLabel="Cancelar reserva"
-              pendingLabel="Cancelando…"
-              variant="secondary"
-              onDone={onDone}
-            >
-              <input type="hidden" name="bookingId" value={booking.id} />
-            </ActionForm>
+            {/* A no-show stays a played, charged booking: cancelling it would move it into the cancellations. */}
+            {booking.noShow ? null : (
+              <ActionForm
+                action={actions.cancel}
+                submitLabel="Cancelar reserva"
+                pendingLabel="Cancelando…"
+                variant="secondary"
+                onDone={onDone}
+              >
+                <input type="hidden" name="bookingId" value={booking.id} />
+              </ActionForm>
+            )}
             {booking.seriesId ? (
               <ActionForm
                 action={actions.endSeries}

@@ -200,6 +200,7 @@ describe('OccupancyDetailSheet: no vino', () => {
     const marked = { ...booked, booking: { ...booked.booking!, noShow: true } }
     const { actions, sent } = renderDetail(marked)
     expect(screen.getByText('Marcada: no vino')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cancelar reserva' })).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: 'Deshacer «no vino»' }))
     await waitFor(() => expect(actions.noShow).toHaveBeenCalled())
     expect(sent(actions.noShow)).toMatchObject({ noShow: 'false' })

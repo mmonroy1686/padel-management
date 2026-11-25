@@ -75,7 +75,8 @@ order by w.week, c.sort_order, w.ord;
 -- 2026-11-16 | Cancha 1 | tarde  |           35.0 |            9.5 | 27.1
 -- 2026-11-16 | Cancha 1 | noche  |           28.0 |           17.5 | 62.5
 
--- 3. Cancelaciones, por la semana del turno. Tardías: canceladas con menos aviso que el que pide el club
+-- 3. Cancelaciones, por la semana del turno, separadas en las del jugador y las del club (lluvia, un turno fijo que
+--    se terminó, una carga corregida). Tardías: las del jugador con menos aviso que el que pide el club
 --    (cancellation_notice_hours de hoy). El porcentaje es sobre todas las reservas de la semana.
 with params as (select id as club_id, timezone as tz, cancellation_notice_hours as notice from public.clubs where slug = 'rustic'),
 weeks as (
@@ -87,7 +88,9 @@ weeks as (
 select w.week as semana,
        count(b.id) as reservas,
        count(b.id) filter (where b.status = 'cancelled') as canceladas,
-       count(b.id) filter (where b.status = 'cancelled'
+       count(b.id) filter (where b.status = 'cancelled' and b.cancelled_by = b.player_id) as por_el_jugador,
+       count(b.id) filter (where b.status = 'cancelled' and b.cancelled_by is distinct from b.player_id) as por_el_club,
+       count(b.id) filter (where b.status = 'cancelled' and b.cancelled_by = b.player_id
                              and b.cancelled_at > b.starts_at - make_interval(hours => (select notice from params))) as tardias,
        round(100.0 * count(b.id) filter (where b.status = 'cancelled') / nullif(count(b.id), 0), 1) as pct_canceladas
 from weeks w
@@ -95,11 +98,12 @@ left join public.bookings b
   on b.club_id = (select club_id from params) and b.starts_at >= w.from_ts and b.starts_at < w.to_ts
 group by w.week
 order by w.week;
--- semana     | reservas | canceladas | tardias | pct_canceladas
--- 2026-11-16 |       56 |          0 |       0 |            0.0
+-- semana     | reservas | canceladas | por_el_jugador | por_el_club | tardias | pct_canceladas
+-- 2026-11-16 |       56 |          0 |              0 |           0 |       0 |            0.0
 
 -- 4. Turnos recuperados por la lista de espera: un turno que se liberó, se le guardó a alguien que esperaba y lo
---    reservó. Por la semana del turno, con lo que valían esas reservas.
+--    reservó (y no la canceló después). Por la semana del turno, con lo que valían esas reservas. Ofrecidos cuenta
+--    ofertas: un mismo turno puede ofrecerse a varios de la lista, uno después del otro.
 with params as (select id as club_id, timezone as tz from public.clubs where slug = 'rustic'),
 weeks as (
   select ws::date as week, ws at time zone p.tz as from_ts, (ws + interval '7 days') at time zone p.tz as to_ts
@@ -108,9 +112,9 @@ weeks as (
                        date_trunc('week', now() at time zone p.tz), interval '1 week') as ws
 )
 select w.week as semana,
-       count(h.id) filter (where h.status = 'claimed') as recuperados,
+       count(h.id) filter (where h.status = 'claimed' and b.status = 'confirmed') as recuperados,
        count(h.id) as ofrecidos,
-       coalesce(sum(b.price) filter (where h.status = 'claimed'), 0) as pesos_recuperados
+       coalesce(sum(b.price) filter (where h.status = 'claimed' and b.status = 'confirmed'), 0) as pesos_recuperados
 from weeks w
 left join public.slot_holds h
   on h.club_id = (select club_id from params) and h.starts_at >= w.from_ts and h.starts_at < w.to_ts
@@ -147,7 +151,7 @@ activity (player_id, at) as (
      and e.player_id is not null
   union all
   select unnest(array[e.player1_id, e.player2_id]), e.created_at from public.championship_entries e
-   where e.club_id = (select club_id from params)
+   where e.club_id = (select club_id from params) and e.status in ('active', 'waiting')
 )
 select w.week as semana,
        (select count(distinct a.player_id) from activity a
@@ -159,10 +163,12 @@ from weeks w
 order by w.week;
 -- semana     | activos | nuevos
 -- 2026-11-16 |      16 |      0
--- 2026-11-23 |      56 |     23
+-- 2026-11-23 |      55 |     21
 
--- 6. Cobros por medio, por la semana en que se confirmaron: efectivo, transferencia y POS. Devueltos aparte (se
---    cobraron y después se devolvieron). Incluye reservas, partidos, torneos, campeonatos y day use.
+-- 6. Cobros por medio: efectivo, transferencia y POS. Incluye reservas, partidos, torneos, campeonatos y day use.
+--    cobros y pesos: los que siguen cobrados, por la semana en que se confirmaron. devueltos: por la semana en que se
+--    devolvieron (al devolver, la app pisa confirmed_at con ese momento), así que salen de su semana original y
+--    aparecen en esta. La plata que entró en una semana es pesos más los devueltos de semanas posteriores.
 with params as (select id as club_id, timezone as tz from public.clubs where slug = 'rustic'),
 weeks as (
   select ws::date as week, ws at time zone p.tz as from_ts, (ws + interval '7 days') at time zone p.tz as to_ts
@@ -186,7 +192,8 @@ order by w.week, p.method;
 -- 2026-11-16 | efectivo      |     36 |  52800 |         0 |               0
 -- 2026-11-16 | transferencia |     12 |  19200 |         0 |               0
 
--- 7. Faltazos: reservas confirmadas que recepción marcó «No vino», sobre las que ya empezaron esa semana.
+-- 7. Faltazos: reservas de cancha que recepción marcó «No vino», sobre las que ya empezaron esa semana. Los partidos
+--    abiertos no cuentan: ahí «No vino» no se marca.
 with params as (select id as club_id, timezone as tz from public.clubs where slug = 'rustic'),
 weeks as (
   select ws::date as week, ws at time zone p.tz as from_ts, (ws + interval '7 days') at time zone p.tz as to_ts
@@ -201,7 +208,7 @@ select w.week as semana,
 from weeks w
 left join public.bookings b
   on b.club_id = (select club_id from params) and b.status = 'confirmed'
- and b.starts_at >= w.from_ts and b.starts_at < w.to_ts and b.starts_at < now()
+ and b.starts_at >= w.from_ts and b.starts_at < w.to_ts and b.starts_at < now() and b.match_id is null
 group by w.week
 order by w.week;
 -- semana     | jugadas | no_vino | pct_no_vino

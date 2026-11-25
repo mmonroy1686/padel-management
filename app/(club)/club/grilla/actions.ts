@@ -75,7 +75,7 @@ export async function cancelBooking(_previous: ActionState, form: FormData): Pro
   return fromRpc(error, 'Reserva cancelada. La cancha quedó libre.')
 }
 
-// «No vino» on a booking that already started; `noShow=false` takes it back. Payments and the court stay as they are.
+// «No vino» on a booking that already started; `noShow=false` takes it back.
 export async function markNoShow(_previous: ActionState, form: FormData): Promise<ActionState> {
   const bookingId = readUuid(form, 'bookingId')
   const noShow = form.get('noShow')

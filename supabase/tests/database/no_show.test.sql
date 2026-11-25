@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 \ir helpers/slot.psql
 \ir helpers/club.psql
-select plan(13);
+select plan(17);
 
 -- Played (started an hour and a half ago), still to come, and cancelled, all Ana's.
 call test_helpers.make_booking('b0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
@@ -14,6 +14,13 @@ call test_helpers.make_booking('b0000000-0000-0000-0000-000000000003', 'c0000000
 update public.bookings set status = 'cancelled', cancelled_at = now() - interval '4 hours', occupancy_id = null
  where id = 'b0000000-0000-0000-0000-000000000003';
 delete from public.court_occupancy o where not exists (select 1 from public.bookings b where b.occupancy_id = o.id) and o.kind = 'booking';
+
+-- An open match's booking (the FK skipped on purpose: only match_id matters here).
+call test_helpers.make_booking('b0000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000002',
+  tstzrange(now() - interval '6 hours', now() - interval '270 minutes', '[)'), '00000000-0000-0000-0000-0000000000a1');
+set local session_replication_role = replica;
+update public.bookings set match_id = gen_random_uuid(), player_id = null where id = 'b0000000-0000-0000-0000-000000000004';
+set local session_replication_role = origin;
 
 -- Omar is reception of another club.
 insert into public.clubs (id, slug, name) values ('a0000000-0000-0000-0000-000000000002', 'otro-club', 'Otro');
@@ -60,6 +67,12 @@ select is(
 
 select throws_ok($$ select public.mark_no_show('b0000000-0000-0000-0000-000000000002', true) $$,
   'P0001', 'invalid_state', 'not before it starts');
+select throws_ok($$ select public.mark_no_show('b0000000-0000-0000-0000-000000000004', true) $$,
+  'P0001', 'invalid_state', 'nor on an open match: its players come one by one');
+select throws_ok($$ select public.mark_no_show('b0000000-0000-0000-0000-0000000000ff', true) $$,
+  'P0001', 'not_found', 'the booking exists');
+select throws_ok($$ select public.mark_no_show('b0000000-0000-0000-0000-000000000001', null) $$,
+  'P0001', 'invalid_input', 'it says which way');
 select throws_ok($$ select public.mark_no_show('b0000000-0000-0000-0000-000000000003', true) $$,
   'P0001', 'invalid_state', 'nor on a cancelled booking');
 
@@ -70,6 +83,8 @@ select results_eq(
   $$ select no_show_at, no_show_by from public.bookings where id = 'b0000000-0000-0000-0000-000000000001' $$,
   $$ values (null::timestamptz, null::uuid) $$,
   'and nothing is left');
+select lives_ok($$ select public.mark_no_show('b0000000-0000-0000-0000-000000000001', false) $$,
+  'undoing an unmarked booking is no change');
 select throws_ok(
   $$ update public.bookings set no_show_at = now() where id = 'b0000000-0000-0000-0000-000000000001' $$,
   '42501', null, 'only through mark_no_show');

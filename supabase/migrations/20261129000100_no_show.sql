@@ -1,13 +1,13 @@
 -- «No vino» (docs/features/metricas-piloto/design.md): reception marks a booking whose player did not show up, to
--- count no-shows in the pilot's metrics (docs/piloto/metricas.sql). Not a booking_status: the court was taken and
--- charged all the same, so every function that looks at status = 'confirmed' stays as it is. Payments and the
--- occupancy do not change.
+-- count no-shows in the pilot's metrics (docs/piloto/metricas.sql). no_show_at: when it was marked (null: the player
+-- came, or nobody said otherwise); no_show_by: who marked it. The booking stays confirmed.
 alter table public.bookings
   add column no_show_at timestamptz,
   add column no_show_by uuid references public.profiles (id) on delete set null,
   add constraint bookings_no_show_both check (no_show_at is not null or no_show_by is null);
 
--- Staff of the club, on a confirmed booking that already started. p_no_show false takes the mark back (a mistap).
+-- Staff of the club, on a confirmed court booking (not an open match) that already started. p_no_show false takes
+-- the mark back (a mistap).
 create function public.mark_no_show(p_booking_id uuid, p_no_show boolean)
 returns void
 language plpgsql
@@ -27,7 +27,7 @@ begin
   if p_no_show is null then
     perform private.fail('invalid_input');
   end if;
-  if v_booking.status <> 'confirmed' or v_booking.starts_at > now() then
+  if v_booking.status <> 'confirmed' or v_booking.starts_at > now() or v_booking.match_id is not null then
     perform private.fail('invalid_state');
   end if;
   if p_no_show and v_booking.no_show_at is not null then
