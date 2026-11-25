@@ -77,7 +77,7 @@ export function ActionsMenu({ items, label }: { items: MenuItem[]; label: string
               close(event.key === 'Escape')
             }
           }}
-          className="absolute right-0 z-20 mt-1 flex min-w-48 flex-col rounded-xl border border-border bg-bg p-1 shadow-lg"
+          className="menu-pop absolute right-0 z-20 mt-1 flex min-w-48 flex-col rounded-xl border border-border bg-bg p-1 shadow-lg"
         >
           {ordered.map((item, index) => (
             <li key={item.label} role="none" className={cn(item.danger && index > 0 && 'mt-1 border-t border-border pt-1')}>

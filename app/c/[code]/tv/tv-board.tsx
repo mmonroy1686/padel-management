@@ -57,7 +57,10 @@ export function TvBoard({ club, name, screens, seconds = 20 }: TvBoardProps) {
               <li
                 key={item.key}
                 aria-current={position === index ? 'step' : undefined}
-                className={cn('h-3 rounded-full transition-all', position === index ? 'w-10 bg-accent' : 'w-3 bg-border')}
+                className={cn(
+                  'h-3 rounded-full transition-[width,background-color] duration-300 ease-(--ease-out)',
+                  position === index ? 'w-10 bg-accent' : 'w-3 bg-border',
+                )}
               >
                 <span className="sr-only">{item.title}</span>
               </li>

@@ -61,5 +61,6 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
   // Cancel the player's booking: the slot is free again.
   await bookedCell.click()
   await page.getByRole('dialog', { name: player.name }).getByRole('button', { name: 'Cancelar reserva' }).click()
+  await page.getByRole('dialog', { name: player.name }).getByRole('button', { name: '¿Seguro? Tocá de nuevo' }).click()
   await expect(page.getByRole('button', { name: `Cargar ${booked.courtName}, ${booked.time}` })).toBeVisible()
 })

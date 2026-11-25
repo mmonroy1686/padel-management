@@ -35,7 +35,7 @@ export function CancelMatchForm({
   onDone?: (message: string) => void
 }) {
   return (
-    <ActionForm action={action} submitLabel="Cancelar partido" pendingLabel="Cancelando…" variant="danger" onDone={onDone}>
+    <ActionForm action={action} submitLabel="Cancelar partido" pendingLabel="Cancelando…" variant="danger" confirmLabel="¿Seguro? Tocá de nuevo" onDone={onDone}>
       <input type="hidden" name="matchId" value={matchId} />
       <Field label="Motivo (opcional)" htmlFor={`note-${matchId}`}>
         <input id={`note-${matchId}`} name="note" maxLength={120} className={inputClasses} />

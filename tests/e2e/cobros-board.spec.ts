@@ -41,6 +41,7 @@ test('reception charges cash, confirms a transfer and rejects another on the boa
   await rejection.getByRole('button', { name: 'Rechazar', exact: true }).click()
   await rejection.getByLabel('Motivo').fill('No llegó a la cuenta')
   await rejection.getByRole('button', { name: 'Rechazar transferencia' }).click()
+  await rejection.getByRole('button', { name: '¿Seguro? Tocá de nuevo' }).click()
   await expect(rejection.getByRole('status')).toBeVisible()
   await rejection.getByRole('button', { name: 'Cerrar' }).click()
   await expect(column('Rechazado hoy').getByRole('article', { name: rejected.name })).toContainText('No llegó a la cuenta')

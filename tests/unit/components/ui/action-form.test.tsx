@@ -42,3 +42,29 @@ describe('ActionForm', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Guardamos tus cambios.')
   })
 })
+
+describe('ActionForm with confirmLabel', () => {
+  it('asks once more before an action that cannot be undone', async () => {
+    const action = actionReturning({ status: 'ok', message: 'Borrado.' })
+    render(<ActionForm action={action} submitLabel="Borrar" confirmLabel="¿Seguro? Tocá de nuevo" variant="danger" />)
+    await userEvent.click(screen.getByRole('button', { name: 'Borrar' }))
+    expect(action).not.toHaveBeenCalled()
+    await userEvent.click(screen.getByRole('button', { name: '¿Seguro? Tocá de nuevo' }))
+    await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
+  })
+
+  it('goes back to the label if the second tap does not come', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      const action = actionReturning({ status: 'ok', message: 'Borrado.' })
+      render(<ActionForm action={action} submitLabel="Borrar" confirmLabel="¿Seguro? Tocá de nuevo" />)
+      await userEvent.click(screen.getByRole('button', { name: 'Borrar' }))
+      expect(screen.getByRole('button', { name: '¿Seguro? Tocá de nuevo' })).toBeInTheDocument()
+      await vi.advanceTimersByTimeAsync(3100)
+      expect(await screen.findByRole('button', { name: 'Borrar' })).toBeInTheDocument()
+      expect(action).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})

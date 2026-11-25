@@ -42,7 +42,7 @@ export function SmallCategories({
                   </Field>
                 </ActionForm>
               ) : null}
-              <ActionForm action={actions.cancel} submitLabel="Cancelar categoría" pendingLabel="Cancelando…" variant="danger">
+              <ActionForm action={actions.cancel} submitLabel="Cancelar categoría" pendingLabel="Cancelando…" variant="danger" confirmLabel="¿Seguro? Tocá de nuevo">
                 <input type="hidden" name="categoryId" value={category.id} />
               </ActionForm>
             </li>

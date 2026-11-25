@@ -1,5 +1,6 @@
 'use client'
 
+import { Notice } from '@/components/ui/notice'
 import { useCallback, useState } from 'react'
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import { TransferSheet, type ReportTransfer } from '@/components/booking/transfer-sheet'
@@ -70,9 +71,7 @@ export function TournamentBoard(props: TournamentBoardProps) {
         </span>
       </div>
       {notice ? (
-        <p role="status" className="rounded-xl border border-accent bg-surface p-3">
-          {notice}
-        </p>
+        <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
       ) : null}
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
         <dt className="text-fg-muted">Cuándo</dt>

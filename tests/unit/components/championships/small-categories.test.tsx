@@ -30,6 +30,7 @@ describe('SmallCategories', () => {
     await waitFor(() => expect(merge).toHaveBeenCalled())
     expect(Object.fromEntries(merge.mock.calls[0][1].entries())).toEqual({ categoryId: 'k2', intoId: 'k3' })
     await userEvent.click(within(item).getByRole('button', { name: 'Cancelar categoría' }))
+    await userEvent.click(within(item).getByRole('button', { name: '¿Seguro? Tocá de nuevo' }))
     await waitFor(() => expect(cancel).toHaveBeenCalled())
     expect(cancel.mock.calls[0][1].get('categoryId')).toBe('k2')
   })

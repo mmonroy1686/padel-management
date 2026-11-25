@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useEdgeFade } from '@/components/ui/use-edge-fade'
 import { cn } from '@/lib/cn'
 import type { LocalDate } from '@/lib/domain/time'
 
@@ -9,14 +12,17 @@ export type DayStripProps = {
   basePath: string
 }
 
+// The days scroll sideways on a phone: the edge with more days fades, the chosen one stays in view, and a swipe
+// stops on a day instead of halfway.
 export function DayStrip({ days, selected, basePath }: DayStripProps) {
+  const fade = useEdgeFade<HTMLElement>(selected)
   return (
-    <nav aria-label="Día" className="-mx-4 overflow-x-auto px-4">
+    <nav {...fade} aria-label="Día" className="tab-scroll -mx-4 snap-x snap-proximity scroll-px-4 overflow-x-auto px-4">
       <ul className="flex gap-2">
         {days.map(({ date, label, closed }) => {
           const current = date === selected
           return (
-            <li key={date}>
+            <li key={date} className="snap-start">
               <Link
                 href={`${basePath}?dia=${date}`}
                 aria-current={current ? 'date' : undefined}

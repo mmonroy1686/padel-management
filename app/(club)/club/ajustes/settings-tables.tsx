@@ -92,7 +92,7 @@ export function PricesTable({ rules, deleteAction }: { rules: PriceRow[]; delete
       to: <span className="tabular-nums">{hhmm(rule.to_time)}</span>,
       price: <span className="font-semibold tabular-nums">{formatPrice(rule.price)}</span>,
       actions: (
-        <ActionForm action={deleteAction} submitLabel="Borrar" variant="ghost">
+        <ActionForm action={deleteAction} submitLabel="Borrar" variant="danger" size="sm" confirmLabel="¿Seguro? Tocá de nuevo">
           <input type="hidden" name="ruleId" value={rule.id} />
         </ActionForm>
       ),

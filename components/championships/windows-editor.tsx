@@ -37,7 +37,7 @@ export function WindowsEditor({
                 <span className="font-semibold">{window.text}</span>
                 <span className="text-fg-muted"> · {window.courts}</span>
               </p>
-              <ActionForm action={deleteAction} submitLabel="Quitar" pendingLabel="Quitando…" variant="ghost">
+              <ActionForm action={deleteAction} submitLabel="Quitar" pendingLabel="Quitando…" variant="danger" size="sm">
                 <input type="hidden" name="windowId" value={window.id} />
               </ActionForm>
             </li>

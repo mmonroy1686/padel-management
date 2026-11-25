@@ -1,5 +1,6 @@
 'use client'
 
+import { Notice } from '@/components/ui/notice'
 import { useCallback, useState } from 'react'
 import { TransferSheet, type ReportTransfer } from '@/components/booking/transfer-sheet'
 import { MyEntryCard, type MyEntryView } from '@/components/championships/my-entry-card'
@@ -61,9 +62,7 @@ export function ChampionshipBoard(props: ChampionshipBoardProps) {
         <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-semibold">{props.statusLabel}</span>
       </div>
       {notice ? (
-        <p role="status" className="rounded-xl border border-accent bg-surface p-3">
-          {notice}
-        </p>
+        <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
       ) : null}
       {props.cancelled ? (
         <p role="note" className="rounded-xl border border-accent p-3">

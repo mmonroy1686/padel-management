@@ -118,7 +118,8 @@ export function OccupancyDetailSheet({
                 action={actions.cancel}
                 submitLabel="Cancelar reserva"
                 pendingLabel="Cancelando…"
-                variant="secondary"
+                variant="danger"
+                confirmLabel="¿Seguro? Tocá de nuevo"
                 onDone={onDone}
               >
                 <input type="hidden" name="bookingId" value={booking.id} />

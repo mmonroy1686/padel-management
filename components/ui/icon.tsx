@@ -161,6 +161,7 @@ const PATHS = {
       <path d="m9 6 3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3" />
     </>
   ),
+  x: <path d="M18 6 6 18M6 6l12 12" />,
   'chevron-down': <path d="m6 9 6 6 6-6" />,
   check: <path d="m5 12 5 5 9-10" />,
 } satisfies Record<string, ReactNode>
@@ -187,7 +188,7 @@ export function Icon({ name, className }: { name: IconName; className?: string }
 
 export function Spinner({ className }: { className?: string }) {
   return (
-    <svg aria-hidden="true" data-spinner viewBox="0 0 24 24" fill="none" className={cn('size-5 shrink-0 animate-spin', className)}>
+    <svg aria-hidden="true" data-spinner viewBox="0 0 24 24" fill="none" className={cn('size-5 shrink-0 animate-spin [animation-duration:750ms]', className)}>
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth={3} opacity={0.25} />
       <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth={3} strokeLinecap="round" />
     </svg>

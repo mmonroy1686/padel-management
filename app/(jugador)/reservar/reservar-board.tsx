@@ -1,5 +1,6 @@
 'use client'
 
+import { Notice } from '@/components/ui/notice'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookingSheet, type BookingChoice } from '@/components/booking/booking-sheet'
 import { Legend } from '@/components/booking/legend'
@@ -95,9 +96,7 @@ export function ReservarBoard({
   return (
     <div className="flex flex-col gap-4">
       {notice ? (
-        <p ref={noticeRef} role="status" className="rounded-xl border border-accent bg-surface p-3">
-          {notice}
-        </p>
+        <Notice ref={noticeRef} onDismiss={() => setNotice(null)}>{notice}</Notice>
       ) : null}
       <DayWaitsNote items={dayWaits.map((wait) => waitRangeText(wait, courts))} onOpen={() => openWait(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3">

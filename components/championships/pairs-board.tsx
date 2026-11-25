@@ -1,5 +1,6 @@
 'use client'
 
+import { Notice } from '@/components/ui/notice'
 import { useCallback, useState } from 'react'
 import { AddPairSheet } from '@/components/championships/add-pair-sheet'
 import { PairsTable, type PairAction } from '@/components/championships/pairs-table'
@@ -52,9 +53,7 @@ export function PairsBoard({
         {editable && categories.length > 0 ? <Button onClick={() => setSheet({ kind: 'add' })}>Cargar pareja</Button> : null}
       </div>
       {notice ? (
-        <p role="status" className="rounded-xl border border-accent bg-surface p-3">
-          {notice}
-        </p>
+        <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
       ) : null}
       {categories.map((category) => (
         <section key={category.id} aria-labelledby={`categoria-${category.id}`} className="flex flex-col gap-2">
