@@ -68,3 +68,24 @@ Aparece solo después de reservar o de armar un partido, no después de anotarse
 
 - Vitest 1360, lint, tsc y build.
 - e2e en serie con la base reseteada: 26 de 26.
+
+## Etapa 2: navegación del club en el celular (25/11)
+
+- **Barra inferior, solo en el celular** (`components/nav/club-bottom-nav.tsx`, `md:hidden`):
+  - admin: Inicio, Grilla, Cobros, Ajustes y Más;
+  - recepción: Inicio, Grilla, Cobros, Jugadores y Más;
+  - la sección actual lleva la pastilla, igual que la barra del jugador;
+  - «Más» se marca cuando estás en una sección que vive ahí.
+- **La hoja «Más»** tiene:
+  - Asistente, Calendario, Torneos, Day use y (si sos admin) Jugadores, cada una con una línea de para qué sirve;
+  - «Ir a la app de jugadores».
+  - Se cierra sola al navegar, porque queda atada a la dirección donde se abrió (sin efecto que cambie estado).
+- **Datos** (`lib/club/tabs.ts`): `clubBarTabs` y `clubMoreTabs` arman, según el rol, la barra y «Más» a partir de la misma lista `clubTabs`.
+- **Encabezado en el celular:** logo y nombre de la sección en una línea. «Panel del club · nombre», «Volver» e «Ir a la app» se ven desde tablet.
+- **Pestañas de arriba:** se ven solo desde 768 px.
+- El contenido deja 7rem abajo en el celular para la barra.
+- Ícono nuevo `more`.
+
+**Verificación:**
+- Vitest: `club-bottom-nav.test.tsx` y `tabs.test.ts` (la barra y «Más» por rol).
+- e2e completo en serie: 25 de 26. Falló `multi-club` al pedir el enlace de ingreso, y repetido solo pasa. No hizo falta cambiar ningún e2e: los que navegan por el panel usan Cobros y Grilla, que están en la barra.
