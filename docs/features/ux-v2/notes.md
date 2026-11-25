@@ -182,3 +182,17 @@ Aparece solo después de reservar o de armar un partido, no después de anotarse
 - Vitest: el guardado automático (guarda solo, error y «Reintentar»), los formularios de Perfil, la vista previa con selector y «Gratis».
 - Vitest 1378, lint y tsc.
 - e2e completo con la base reseteada: 25 de 26. `reception-grid` falló porque la reserva quedó en la Cancha 2, oculta en el celular: Playwright no encuentra por rol lo que tiene `display: none`. Los tests ahora eligen la cancha antes de verificar una celda (`reception-grid`, `club-home`) y pasan. Build en verde.
+
+## Etapa 7: pulido y nueva crítica (25/11)
+
+- **Pulido:** los títulos de sección pasan a `text-lg font-semibold` en toda la app (49 lugares). Quedan con mayúsculas condensadas solo el título de cada pantalla, el de los sheets y la página pública del campeonato, que se lee de lejos en la TV.
+- **Nueva crítica de impeccable** (dos evaluaciones aisladas, las capturas en `scratchpad/after7`): **26/40**, contra 23/40 antes. **La meta de 30 no se cumplió.**
+  - Resueltos, según la revisión: la navegación del club en el celular, la Grilla en el celular, Cobros más corto y más seguro (deshacer, anular, búsqueda primero) y el Inicio del jugador.
+  - Lo que sigue pesando:
+    1. Cobros todavía repite al jugador entre lo de hoy y lo anterior, y las 21 transferencias ocupan cerca del 40 % de la página.
+    2. El Inicio del club todavía abre con las transferencias y no con «Ahora»; «Completar jugadores» se repite y pesa más que «Cobrar».
+    3. Partidos, Torneos y Reservar tienen muchos botones llenos o links ámbar (6 «Sumarme», 8 «Avisame»).
+    4. Ajustes casi no cambió: el menú de 9 secciones arriba, títulos en mayúsculas y tres formas de guardar en la misma pantalla.
+    5. Jugadores (club) sigue siendo una pila de tarjetas.
+  - Detector: 2 avisos, los dos falsos positivos (la red dibujada de la cancha y el crédito del mapa de Leaflet).
+- **`DESIGN.md` todavía no se escribió:** conviene escribirlo después de la segunda vuelta, para que documente el sistema terminado.
