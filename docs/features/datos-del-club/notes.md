@@ -40,8 +40,11 @@ branch: feat/datos-del-club
 - Rebaseada sobre `fix/clubs-columnas` (corte A). Las columnas nuevas de `clubs` las escribe `save_club_info`
   (`security definer`), así que no necesitan `grant update`: el admin no las puede tocar directo por la tabla.
 - `add_club_photo` verifica que el archivo exista en `storage.objects` (bucket `club-logos`); si no, falla con
-  `photo_missing` y no deja fila. Mensaje en `lib/domain/errors.ts`. La migración se editó en el lugar porque todavía
-  no está en producción.
+  `photo_missing` y no deja fila. Mensaje en `lib/domain/errors.ts`. Va en una migración nueva,
+  `20261128000300_club_photo_uploaded.sql` (`create or replace`, mismos permisos), porque `20261128000100` ya está en
+  producción desde el PR #42.
+- `migrate.yml` usa `supabase db push --include-all`. El corte A (`20261127000200`) se mergeó después de
+  `20261128000100`, y sin ese flag `db push` rechaza una migración más vieja que la última aplicada.
 - El mapa toma las tiles y la atribución de `NEXT_PUBLIC_MAP_TILES_URL` y `NEXT_PUBLIC_MAP_ATTRIBUTION`
   (`mapTiles` en `lib/domain/club-info.ts`). Sin ellas, o con una URL que no sea una plantilla `https` con `{z}`,
   `{x}` e `{y}`, queda OpenStreetMap como hoy. El `location-picker` usa el mismo `ClubMap`. README, «Mapa del club»:
