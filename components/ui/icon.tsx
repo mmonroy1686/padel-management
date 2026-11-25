@@ -162,6 +162,7 @@ const PATHS = {
     </>
   ),
   x: <path d="M18 6 6 18M6 6l12 12" />,
+  'chevron-right': <path d="m9 6 6 6-6 6" />,
   'chevron-down': <path d="m6 9 6 6 6-6" />,
   check: <path d="m5 12 5 5 9-10" />,
 } satisfies Record<string, ReactNode>

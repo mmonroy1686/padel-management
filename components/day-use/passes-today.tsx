@@ -97,12 +97,13 @@ export function PassesToday({
 
   return (
     <section aria-labelledby="pases-hoy" className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="pases-hoy" className="font-display text-2xl font-bold uppercase">
-          Pases {forDay} ({passes.length})
-        </h2>
-        <Button onClick={() => setSelling(true)}>Vender pase</Button>
-      </div>
+      {/* What reception does here, first. */}
+      <Button fullWidth onClick={() => setSelling(true)}>
+        Vender pase
+      </Button>
+      <h2 id="pases-hoy" className="mt-4 text-lg font-semibold">
+        Pases {forDay} ({passes.length})
+      </h2>
       {notice ? (
         <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
       ) : null}

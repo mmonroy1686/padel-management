@@ -4,8 +4,6 @@ import { deskMethods } from '@/lib/domain/payments'
 import { DayStrip } from '@/components/booking/day-strip'
 import { PassesToday } from '@/components/day-use/passes-today'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
-import { buttonClasses } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadOverrides, loadPassesOn, loadProducts, loadRewardsUsed } from '@/lib/data/day-use'
 import { loadMemberOptions } from '@/lib/data/members'
@@ -46,32 +44,23 @@ export default async function ClubDayUsePage({ searchParams }: { searchParams: S
     }))
     .filter((offer) => offer.days.length > 0)
   const rule = loyaltyRuleOf(club)
-  const tiles = [
-    { label: isToday ? 'Ingresos de hoy' : 'Cobrado', value: formatPrice(collectedToday(passes)) },
-    { label: 'Adentro', value: String(passes.filter((pass) => pass.status === 'inside').length) },
-    { label: 'Recompensas usadas (30 días)', value: String(rewardsUsed) },
-  ]
+  // The day in one line, and only what moved: three tiles of $0 / 0 / 0 above the action said nothing.
+  const summary = [
+    collectedToday(passes) > 0 ? `${formatPrice(collectedToday(passes))} ${isToday ? 'cobrados hoy' : 'cobrados'}` : null,
+    passes.some((pass) => pass.status === 'inside') ? `${passes.filter((pass) => pass.status === 'inside').length} adentro` : null,
+    rewardsUsed > 0 ? `${rewardsUsed} recompensas usadas en 30 días` : null,
+  ].filter((part): part is string => part !== null)
 
   return (
     <>
       <LiveOccupancy clubId={club.id} />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-lg font-semibold">{dayLongLabel(date)}</p>
-        {membership.role === 'admin' ? (
-          <Link href="/club/day-use/configuracion" className={buttonClasses({ variant: 'secondary' })}>
-            Configurar pases
-          </Link>
-        ) : null}
-      </div>
+      <p className="text-lg font-semibold">{dayLongLabel(date)}</p>
       <DayStrip days={days.map(({ date: day, label, closed }) => ({ date: day, label, closed }))} selected={date} basePath="/club/day-use" />
-      <dl aria-label="Resumen del día" className="grid grid-cols-3 gap-2 sm:gap-3">
-        {tiles.map((tile) => (
-          <Card key={tile.label} className="flex flex-col gap-1 p-3">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-fg-muted">{tile.label}</dt>
-            <dd className="font-display text-2xl font-bold tabular-nums">{tile.value}</dd>
-          </Card>
-        ))}
-      </dl>
+      {summary.length > 0 ? (
+        <p aria-label="Resumen del día" className="text-fg-muted">
+          {summary.join(' · ')}
+        </p>
+      ) : null}
       <PassesToday
         passes={passes}
         today={today}
@@ -81,6 +70,11 @@ export default async function ClubDayUsePage({ searchParams }: { searchParams: S
         actions={{ checkIn: checkInPass, cash: recordPassCash, cancel: cancelPass }}
         sell={{ offers, members, rewardPercent: rule.enabled ? rule.discountPercent : null, action: sellDayUse }}
       />
+      {membership.role === 'admin' ? (
+        <Link href="/club/day-use/configuracion" className="inline-flex min-h-11 items-center self-start font-semibold text-accent-ink underline underline-offset-4">
+          Configurar pases y horarios
+        </Link>
+      ) : null}
     </>
   )
 }

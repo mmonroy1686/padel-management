@@ -49,6 +49,7 @@ export default async function ReservarPage({ searchParams }: { searchParams: Sea
         rows={grid.rows}
         dayText={dayLongLabel(date)}
         paymentNote={paymentMethodsNote(club)}
+        transferDetails={club.accepts_transfer ? club.transfer_details : null}
         cancellationRule={cancellationRule(club.cancellation_notice_hours)}
         bookAction={bookSlot}
         date={date}

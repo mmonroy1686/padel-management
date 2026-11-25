@@ -79,6 +79,7 @@ export function CourtTurnCard({
   methods,
   members,
   actions,
+  chargesOpen,
 }: {
   turn: CourtTurn
   now: Date
@@ -86,6 +87,7 @@ export function CourtTurnCard({
   methods: PayMethods
   members: MemberOption[]
   actions: PlayersActions
+  chargesOpen?: boolean
 }) {
   const hours = courtHours(turn, timezone)
   const time = now.getTime()
@@ -96,7 +98,7 @@ export function CourtTurnCard({
   return (
     <Card role="article" aria-label={`${turn.courtName}, ${hours}`} className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="font-display text-xl font-bold uppercase">{turn.courtName}</h3>
+        <h3 className="text-lg font-semibold">{turn.courtName}</h3>
         <span className="text-sm text-fg-muted">
           {hours}
           {turn.isMatch ? ' · Partido abierto' : ''}
@@ -131,6 +133,7 @@ export function CourtTurnCard({
         members={members}
         actions={actions}
         layout="court"
+        chargesOpen={chargesOpen}
         canAddPlayers={canAddPlayers(turn, turn.endsAt, now)}
       />
     </Card>

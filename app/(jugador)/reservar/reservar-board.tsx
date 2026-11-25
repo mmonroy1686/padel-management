@@ -1,5 +1,6 @@
 'use client'
 
+import { BookingNextSteps } from '@/components/booking/booking-next-steps'
 import { Notice } from '@/components/ui/notice'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookingSheet, type BookingChoice } from '@/components/booking/booking-sheet'
@@ -21,6 +22,7 @@ export function ReservarBoard({
   rows,
   dayText,
   paymentNote,
+  transferDetails,
   cancellationRule,
   bookAction,
   date,
@@ -36,6 +38,8 @@ export function ReservarBoard({
   rows: GridRow[]
   dayText: string
   paymentNote: string
+  // The club's transfer details, shown right after booking (null when it does not take transfers).
+  transferDetails: string | null
   cancellationRule: string
   bookAction: FormAction
   date: LocalDate
@@ -52,6 +56,8 @@ export function ReservarBoard({
   const [onlyFree, setOnlyFree] = useState(false)
   const [showPast, setShowPast] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  // A booking just went through: show how to pay under the notice.
+  const [justBooked, setJustBooked] = useState(false)
   const [matchInitial, setMatchInitial] = useState<MatchFormInitial | null>(null)
   const [waitOpen, setWaitOpen] = useState(false)
   const [waitInitial, setWaitInitial] = useState<WaitInitial | null>(null)
@@ -59,11 +65,13 @@ export function ReservarBoard({
   const booked = useCallback((message: string) => {
     setChoice(null)
     setNotice(message)
+    setJustBooked(true)
   }, [])
   const closeWait = useCallback(() => setWaitOpen(false), [])
   const waited = useCallback((message: string) => {
     setWaitOpen(false)
     setNotice(message)
+    setJustBooked(false)
   }, [])
 
   // The outcome of an action shows on top of the grid: bring it into view.
@@ -98,6 +106,7 @@ export function ReservarBoard({
       {notice ? (
         <Notice ref={noticeRef} onDismiss={() => setNotice(null)}>{notice}</Notice>
       ) : null}
+      {notice && justBooked ? <BookingNextSteps paymentNote={paymentNote} transferDetails={transferDetails} /> : null}
       <DayWaitsNote items={dayWaits.map((wait) => waitRangeText(wait, courts))} onOpen={() => openWait(null)} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Legend variant="player" />

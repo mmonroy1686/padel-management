@@ -1,30 +1,22 @@
-import Link from 'next/link'
-import { buttonClasses } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { PageSection } from '@/components/ui/page-section'
+import { RowLink, RowList } from '@/components/ui/row-list'
 import type { DayUseHome } from '@/lib/domain/day-use'
 import { StampRow } from './stamp-row'
 
-// Design: "Inicio", the day use card: stamps, today's pass and "Hoy: N en el club".
+// Inicio's day use: the stamps, and one row to today's pass or to buy one. A quiet section, not a card: the
+// screen's one big action is "Reservar cancha".
 export function DayUseHomeCard({ home }: { home: DayUseHome }) {
   return (
-    <Card className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display text-2xl font-bold uppercase">Day use</h2>
-        <Link href="/day-use" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink underline">
-          Ver day use
-        </Link>
-      </div>
+    <PageSection id="day-use" title="Day use" more={{ href: '/day-use', label: 'Ver day use' }}>
       {home.rule.enabled ? <StampRow loyalty={home.loyalty} rule={home.rule} /> : null}
-      {home.todayPass ? (
-        <Link href={`/day-use/pase/${home.todayPass.id}`} className={buttonClasses({ fullWidth: true })}>
-          Tu pase de hoy: {home.todayPass.text}
-        </Link>
-      ) : (
-        <Link href="/day-use" className={buttonClasses({ variant: 'secondary', fullWidth: true })}>
-          Comprar un pase
-        </Link>
-      )}
+      <RowList>
+        {home.todayPass ? (
+          <RowLink href={`/day-use/pase/${home.todayPass.id}`} icon="ticket" title={`Tu pase de hoy: ${home.todayPass.text}`} />
+        ) : (
+          <RowLink href="/day-use" icon="ticket" title="Comprar un pase" />
+        )}
+      </RowList>
       {home.todayText ? <p className="text-sm text-fg-muted">{home.todayText}</p> : null}
-    </Card>
+    </PageSection>
   )
 }
