@@ -5,6 +5,7 @@ describe('settings sections', () => {
   it('groups Ajustes from the club to what it charges, monitoring last', () => {
     expect(SETTINGS_SECTIONS.map((section) => section.label)).toEqual([
       'Club',
+      'Datos del club',
       'Reservas y partidos',
       'Canchas y precios',
       'Pagos',

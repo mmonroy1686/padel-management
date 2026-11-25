@@ -7,6 +7,12 @@ export type SettingsSection = { href: string; label: string; icon: IconName; des
 export const SETTINGS_SECTIONS: SettingsSection[] = [
   { href: '/club/ajustes', label: 'Club', icon: 'palette', description: 'Nombre, logo y colores.' },
   {
+    href: '/club/ajustes/datos',
+    label: 'Datos del club',
+    icon: 'pin',
+    description: 'Ubicación, contacto, servicios y fotos que ven los jugadores en Inicio.',
+  },
+  {
     href: '/club/ajustes/reservas',
     label: 'Reservas y partidos',
     icon: 'calendar',

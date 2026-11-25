@@ -66,6 +66,11 @@ const MESSAGES = {
   invalid_slug: 'Usá letras minúsculas, números y guiones, de 2 a 40 caracteres.',
   invalid_timezone: 'Elegí una zona horaria de la lista.',
   setup_incomplete: 'Para terminar, el club necesita al menos una cancha y un precio.',
+  invalid_location: 'Marcá la ubicación de nuevo en el mapa.',
+  invalid_maps_url: 'Pegá el link que da Google Maps al compartir el lugar.',
+  invalid_instagram: 'Revisá el Instagram: el usuario lleva letras, números, puntos y guiones bajos.',
+  invalid_amenity: 'Elegí los servicios de la lista.',
+  too_many_photos: 'El club ya tiene 8 fotos. Quitá una para subir otra.',
   sign_in_with_link: 'Para aceptar la invitación, entrá con el enlace que te llega por email o con Google.',
 } as const
 

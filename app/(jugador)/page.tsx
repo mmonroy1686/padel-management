@@ -21,7 +21,10 @@ import { matchesForMe } from '@/lib/domain/matches-for-me'
 import { categoryLabel, firstName, incompleteHome, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
 import { addDays, localDateOf, zonedTime } from '@/lib/domain/time'
 import { openTournamentsText } from '@/lib/domain/tournaments'
+import { ClubSection } from '@/components/club-info/club-section'
 import { DayUseHomeCard } from '@/components/day-use/day-use-home-card'
+import { loadClubInfo } from '@/lib/data/club-info'
+import type { Club } from '@/lib/auth/viewer'
 import { loadDayUseHome } from '@/lib/data/day-use'
 import { cancelMyBooking, reportTransfer } from './reservas/actions'
 import { HoldBanner } from '@/components/waitlist/hold-banner'
@@ -33,14 +36,17 @@ import { holdText, waitItems } from '@/lib/domain/waitlist'
 
 export default async function HomePage() {
   const viewer = await getViewer()
-  if (!viewer) return <Landing name={(await getClub()).name} />
+  if (!viewer) {
+    const club = await getClub()
+    return <Landing club={club} />
+  }
   const { club, profile, membership } = viewer
   if (!membership || !isProfileComplete(profile, membership)) redirect(incompleteHome(membership))
 
   const now = new Date()
   const member = { ...viewer, membership }
   const windowEnd = zonedTime(addDays(localDateOf(now, club.timezone), club.booking_window_days + 1), 0, club.timezone)
-  const [grid, bookings, matches, context, tournaments, dayUse, waitlist, championshipMatches] = await Promise.all([
+  const [grid, bookings, matches, context, tournaments, dayUse, waitlist, championshipMatches, clubInfo] = await Promise.all([
     loadDayGrid(club, localDateOf(now, club.timezone), { userId: viewer.userId, audience: 'player' }, now),
     loadMyBookings(viewer, now),
     loadMatches(club, { from: now, to: windowEnd }),
@@ -49,6 +55,7 @@ export default async function HomePage() {
     loadDayUseHome(viewer, now),
     loadMyWaitlist(viewer, now),
     loadMyChampionshipMatches(club, viewer.userId, now),
+    loadClubInfo(club),
   ])
   const freeToday = countFree(grid.rows)
   const forMe = matchesForMe(
@@ -195,20 +202,23 @@ export default async function HomePage() {
           </Link>
         ) : null}
       </div>
+      {clubInfo ? <ClubSection view={clubInfo} clubName={club.name} timezone={club.timezone} /> : null}
     </>
   )
 }
 
-function Landing({ name }: { name: string }) {
+async function Landing({ club }: { club: Club }) {
+  const clubInfo = await loadClubInfo(club)
   return (
     <>
-      <h1 className="font-display text-4xl font-bold uppercase">{name}</h1>
+      <h1 className="font-display text-4xl font-bold uppercase">{club.name}</h1>
       <Card>
         <p className="mb-4 text-fg-muted">Reservá cancha, armá partido y anotate en los torneos desde el celular.</p>
         <Link href="/auth/ingreso" className={buttonClasses({ fullWidth: true })}>
           Ingresar
         </Link>
       </Card>
+      {clubInfo ? <ClubSection view={clubInfo} clubName={club.name} timezone={club.timezone} /> : null}
     </>
   )
 }
