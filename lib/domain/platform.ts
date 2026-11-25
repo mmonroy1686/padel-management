@@ -1,4 +1,5 @@
 import { errorMessage } from './errors'
+import { readUuid } from './input'
 import type { ParseResult } from './settings'
 
 // The platform (/plataforma): the clubs and how far each one got, and the form that creates one.
@@ -40,20 +41,37 @@ export function suggestSlug(name: string): string {
 
 export type NewClub = { name: string; slug: string; timezone: string; adminEmail: string }
 
+function readField(form: FormData, field: string): string {
+  const value = form.get(field)
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+// The subdomain, lowercased; null without its shape. create_club and rename_club check that it is free.
+function readSlug(form: FormData): string | null {
+  const slug = readField(form, 'slug').toLowerCase()
+  return slug.length >= 2 && slug.length <= 40 && SLUG.test(slug) ? slug : null
+}
+
 export function parseNewClubForm(form: FormData): ParseResult<NewClub> {
-  const read = (field: string) => {
-    const value = form.get(field)
-    return typeof value === 'string' ? value.trim() : ''
-  }
+  const read = (field: string) => readField(form, field)
   const name = read('name')
   if (!name || name.length > 60) return { ok: false, message: 'Poné el nombre del club.' }
-  const slug = read('slug').toLowerCase()
-  if (slug.length < 2 || slug.length > 40 || !SLUG.test(slug)) return { ok: false, message: errorMessage('invalid_slug') }
+  const slug = readSlug(form)
+  if (!slug) return { ok: false, message: errorMessage('invalid_slug') }
   const timezone = read('timezone')
   if (!TIMEZONES.some((zone) => zone.id === timezone)) return { ok: false, message: errorMessage('invalid_timezone') }
   const adminEmail = read('adminEmail').toLowerCase()
   if (adminEmail.length > 254 || !EMAIL.test(adminEmail)) return { ok: false, message: errorMessage('invalid_email') }
   return { ok: true, value: { name, slug, timezone, adminEmail } }
+}
+
+// /plataforma → "Cambiar dirección": the club and its new subdomain.
+export function parseRenameClubForm(form: FormData): ParseResult<{ clubId: string; slug: string }> {
+  const clubId = readUuid(form, 'clubId')
+  if (!clubId) return { ok: false, message: errorMessage('invalid_input') }
+  const slug = readSlug(form)
+  if (!slug) return { ok: false, message: errorMessage('invalid_slug') }
+  return { ok: true, value: { clubId, slug } }
 }
 
 export type PlatformClub = {
