@@ -31,7 +31,7 @@ export default async function PassByCodePage({ params }: { params: Params }) {
       <LiveOccupancy clubId={club.id} />
       <BackLink href="/club/day-use">Volver a day use</BackLink>
       <div>
-        <h2 className="font-display text-2xl font-bold uppercase">Pase {pass.code}</h2>
+        <h2 className="text-lg font-semibold">Pase {pass.code}</h2>
         <p className="text-fg-muted">
           {dayLongLabel(pass.date)}
           {pass.date === today ? ' (hoy)' : ''}

@@ -7,7 +7,7 @@ export function WaitingCard({ waits, cancelAction }: { waits: WaitItem[]; cancel
   if (waits.length === 0) return null
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="font-display text-2xl font-bold uppercase">Esperando turno</h2>
+      <h2 className="text-lg font-semibold">Esperando turno</h2>
       <ul aria-label="Tus esperas" className="flex flex-col gap-2">
         {waits.map((wait) => (
           <li key={wait.id} className="flex flex-col gap-2 rounded-xl border border-border bg-bg p-3">

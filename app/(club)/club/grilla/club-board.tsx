@@ -44,7 +44,7 @@ export function ClubBoard({
   return (
     <section aria-labelledby="grilla" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="grilla" className="font-display text-2xl font-bold uppercase">
+        <h2 id="grilla" className="text-lg font-semibold">
           Grilla de canchas
         </h2>
         {/* On a phone each cell says its kind in words; the legend is for the full grid. */}

@@ -50,7 +50,7 @@ export function RecurringOverview({
     <>
       <section aria-labelledby="fijos" className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 id="fijos" className="font-display text-2xl font-bold uppercase">
+          <h2 id="fijos" className="text-lg font-semibold">
             Turnos fijos
           </h2>
           <ul aria-label="Resumen de turnos fijos" className="flex flex-wrap gap-2 text-sm">
@@ -116,7 +116,7 @@ export function RecurringOverview({
 
       <section id="salteadas" aria-labelledby="salteadas-titulo" className="flex scroll-mt-4 flex-col gap-3">
         <div>
-          <h2 id="salteadas-titulo" className="font-display text-2xl font-bold uppercase">
+          <h2 id="salteadas-titulo" className="text-lg font-semibold">
             Fechas sin reservar{skips.length > 0 ? ` (${skips.length})` : ''}
           </h2>
           {skips.length > 0 ? (

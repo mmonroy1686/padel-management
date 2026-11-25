@@ -23,7 +23,7 @@ export function FormingMatchesPanel({
 }) {
   return (
     <section aria-labelledby="armandose" className="flex flex-col gap-3">
-      <h2 id="armandose" className="font-display text-2xl font-bold uppercase">
+      <h2 id="armandose" className="text-lg font-semibold">
         Partidos armándose
       </h2>
       {items.length === 0 ? (

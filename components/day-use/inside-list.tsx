@@ -5,7 +5,7 @@ import { timeIn } from '@/lib/domain/format'
 export function InsideList({ people, timezone }: { people: InsidePerson[]; timezone: string }) {
   return (
     <section aria-labelledby="en-el-club" className="flex flex-col gap-2">
-      <h2 id="en-el-club" className="font-display text-2xl font-bold uppercase">
+      <h2 id="en-el-club" className="text-lg font-semibold">
         Ya están en el club
       </h2>
       {people.length > 0 ? (

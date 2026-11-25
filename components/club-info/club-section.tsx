@@ -9,7 +9,7 @@ import { PhotoStrip } from './photo-strip'
 export function ClubSection({ view, clubName, timezone }: { view: ClubInfoView; clubName: string; timezone: string }) {
   return (
     <section aria-labelledby="el-club" className="flex flex-col gap-3">
-      <h2 id="el-club" className="font-display text-2xl font-bold uppercase">
+      <h2 id="el-club" className="text-lg font-semibold">
         El club
       </h2>
       {view.photos.length > 0 ? <PhotoStrip photos={view.photos} clubName={clubName} /> : null}

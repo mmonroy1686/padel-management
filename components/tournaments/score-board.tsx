@@ -12,7 +12,7 @@ export function ScoreBoard({ tournament, timezone, action }: { tournament: Tourn
   return (
     <section aria-labelledby="resultados" className="flex flex-col gap-3">
       <div>
-        <h2 id="resultados" className="font-display text-2xl font-bold uppercase">
+        <h2 id="resultados" className="text-lg font-semibold">
           Resultados
         </h2>
         <p className="text-sm text-fg-muted">

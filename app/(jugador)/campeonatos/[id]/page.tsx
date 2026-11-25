@@ -127,7 +127,7 @@ export default async function ChampionshipPage({ params, searchParams }: { param
       {board}
       {live ? (
         <section aria-labelledby="mis-partidos" className="flex flex-col gap-3">
-          <h2 id="mis-partidos" className="font-display text-2xl font-bold uppercase">
+          <h2 id="mis-partidos" className="text-lg font-semibold">
             Mis partidos
           </h2>
           {mine.length > 0 ? (

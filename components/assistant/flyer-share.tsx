@@ -53,7 +53,7 @@ export function FlyerShare({ imageUrl, fileName, text }: { imageUrl: string; fil
 
   return (
     <section aria-labelledby="difundir" className="flex flex-col gap-3">
-      <h2 id="difundir" className="font-display text-2xl font-bold uppercase">
+      <h2 id="difundir" className="text-lg font-semibold">
         Difundir libres
       </h2>
       {/* eslint-disable-next-line @next/next/no-img-element -- drawn per request by our route, not a static asset */}

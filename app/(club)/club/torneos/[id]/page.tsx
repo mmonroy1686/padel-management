@@ -74,7 +74,7 @@ export default async function ManageTournamentPage({ params }: { params: Params 
       {tournament.status === 'in_progress' ? <ScoreBoard tournament={tournament} timezone={club.timezone} action={recordScore} /> : null}
       {played ? (
         <section aria-labelledby="ranking" className="flex flex-col gap-2">
-          <h2 id="ranking" className="font-display text-2xl font-bold uppercase">
+          <h2 id="ranking" className="text-lg font-semibold">
             {tournament.status === 'finished' ? 'Ranking final' : 'Ranking'}
           </h2>
           <Podium rows={rows} finished={tournament.status === 'finished'} />

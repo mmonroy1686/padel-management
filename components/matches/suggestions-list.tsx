@@ -6,7 +6,7 @@ import { inviteText, type SuggestionView } from '@/lib/domain/match-suggestions'
 export function SuggestionsList({ suggestions, shareText }: { suggestions: SuggestionView[]; shareText: string }) {
   return (
     <section aria-labelledby="invita" className="flex flex-col gap-3">
-      <h2 id="invita" className="font-display text-2xl font-bold uppercase">
+      <h2 id="invita" className="text-lg font-semibold">
         Invitá a quien le puede servir
       </h2>
       <p className="text-sm text-fg-muted">

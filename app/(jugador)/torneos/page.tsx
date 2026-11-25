@@ -47,7 +47,7 @@ export default async function TournamentsPage() {
       </div>
       {upcomingChampionshipsList.length > 0 ? (
         <section aria-labelledby="campeonatos" className="flex flex-col gap-3">
-          <h2 id="campeonatos" className="font-display text-2xl font-bold uppercase">
+          <h2 id="campeonatos" className="text-lg font-semibold">
             Campeonatos
           </h2>
           <ul className="grid gap-3 md:grid-cols-2">
@@ -69,7 +69,7 @@ export default async function TournamentsPage() {
         </section>
       ) : null}
       <section aria-labelledby="americanos" className="flex flex-col gap-3">
-        <h2 id="americanos" className="font-display text-2xl font-bold uppercase">
+        <h2 id="americanos" className="text-lg font-semibold">
           Americanos
         </h2>
         <p className="text-fg-muted">Te anotás solo y en cada ronda cambiás de pareja.</p>
@@ -83,7 +83,7 @@ export default async function TournamentsPage() {
       </section>
       {finished.length > 0 ? (
         <section aria-labelledby="finalizados" className="flex flex-col gap-3">
-          <h2 id="finalizados" className="font-display text-2xl font-bold uppercase">
+          <h2 id="finalizados" className="text-lg font-semibold">
             Finalizados
           </h2>
           <ul className="grid gap-3 md:grid-cols-2">{finished.map(card)}</ul>
