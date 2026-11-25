@@ -63,7 +63,10 @@ describe('PaymentsBoard', () => {
   it('shows the Cobrar lane with its columns, the rejected transfer with its reason', () => {
     renderBoard()
     expect(within(column('Sin cobrar')).getByText('2 · $1.650')).toBeInTheDocument()
-    expect(within(column('Por confirmar')).getByRole('article', { name: 'Ana López' })).toBeInTheDocument()
+    // Por confirmar is folded into one line, with its count and money in the header.
+    expect(within(column('Por confirmar')).getByText('1 · $1.600')).toBeInTheDocument()
+    expect(within(column('Por confirmar')).queryByRole('article')).not.toBeInTheDocument()
+    expect(within(column('Por confirmar')).getByRole('button', { name: 'Ver la transferencia' })).toBeInTheDocument()
     expect(within(column('Cobrado hoy')).getByRole('article', { name: 'Hugo' })).toHaveTextContent('Efectivo · 14:10')
     expect(column('Cobrado hoy')).toHaveTextContent('En efectivo: $300')
     expect(within(column('Rechazado hoy')).getByRole('article', { name: 'Kevin' })).toHaveTextContent('Rechazada · 16:00 · No llegó la plata')
@@ -90,6 +93,7 @@ describe('PaymentsBoard', () => {
   it('reviews a transfer in a sheet that keeps its outcome', async () => {
     const actions = renderBoard()
     const transfers = column('Por confirmar')
+    await userEvent.click(within(transfers).getByRole('button', { name: 'Ver la transferencia' }))
     expect(within(transfers).getByRole('link', { name: 'Ver comprobante de Ana López' })).toHaveAttribute('href', 'https://x/r1.png')
     await userEvent.click(within(transfers).getByRole('button', { name: 'Revisar la transferencia de Ana López' }))
     const sheet = screen.getByRole('dialog', { name: 'Transferencia de Ana López' })
@@ -137,11 +141,15 @@ describe('PaymentsBoard, for the desk', () => {
     reject: noop(),
   })
 
-  it('keeps today row by row and groups a player who owes from several older days', () => {
+  it('shows each player once, today and older debts together', () => {
     const columns = paymentsBoard(
       {
         ...INPUT,
-        unpaid: [debt('b1', 'Sofía', '2026-11-20T23:00:00Z'), debt('b2', 'Sofía', '2026-11-21T23:00:00Z'), debt('b3', 'Leo', '2026-11-25T15:00:00Z')],
+        unpaid: [
+          debt('b1', 'Sofía', '2026-11-20T23:00:00Z'),
+          debt('b2', 'Sofía', '2026-11-25T14:00:00Z'),
+          debt('b3', 'Leo', '2026-11-25T15:00:00Z'),
+        ],
         unpaidPasses: [],
       },
       { when: () => '', time: () => '', deskMethods: ['cash'] },
@@ -151,7 +159,7 @@ describe('PaymentsBoard, for the desk', () => {
     expect(within(unpaid).getByRole('article', { name: 'Leo' })).toBeInTheDocument()
     const groups = within(unpaid).getByRole('list', { name: 'Deudas por jugador' })
     expect(groups).toHaveTextContent('Sofía')
-    expect(groups).toHaveTextContent('2 deudas')
+    expect(groups).toHaveTextContent('2 deudas · incluye hoy')
     expect(groups).toHaveTextContent('$2.000')
   })
 
@@ -168,6 +176,9 @@ describe('PaymentsBoard, for the desk', () => {
       { when: () => '', time: () => '', deskMethods: ['cash'] },
     )
     render(<PaymentsBoard columns={columns} actions={{ ...baseActions(), confirmMany }} />)
+    // Folded into one line until reception opens it.
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Ver las 2 transferencias' }))
     await userEvent.click(screen.getByRole('checkbox', { name: 'Marcar la transferencia de Ana López' }))
     await userEvent.click(screen.getByRole('checkbox', { name: 'Marcar la transferencia de Bruno' }))
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar las marcadas (2)' }))

@@ -17,7 +17,7 @@ import {
   KIND_LABELS,
   LANES,
   pendingCount,
-  splitDebts,
+  debtsByPlayer,
   type BoardColumn,
   type BoardItem,
   type ColumnKey,
@@ -59,11 +59,11 @@ const plural = (count: number, [one, many]: [string, string]) => `${count} ${cou
 const tillText = (column: BoardColumn) =>
   `${formatPrice(column.cash ?? 0)} en efectivo${column.card ? ` · ${formatPrice(column.card)} por POS` : ''}`
 
-// Cobros, for reception with someone waiting at the desk: the search first ("Cobrar a…"), then what is owed today
-// row by row and older debts one group per player, the transfers to confirm (one by one or the marked ones at
-// once), and what got done today as a short list. One lane at a time (Cobrar or Devolver). Charging asks how the
+// Cobros, for reception with someone waiting at the desk: the search first ("Cobrar a…"), then what is owed, one
+// entry per player (whoever owes from today first), the transfers to confirm folded into one line (then one by one
+// or the marked ones at once), and what got done today as a short list. One lane at a time (Cobrar or Devolver). Charging asks how the
 // player paid, the same step as on Inicio.
-// `todayFrom`: the club's midnight (ms), where Sin cobrar splits today from older debts.
+// `todayFrom`: the club's midnight (ms): players who owe from today go first in Sin cobrar.
 export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: BoardColumn[]; actions: BoardActions; todayFrom?: number }) {
   const [lane, setLane] = useState<LaneKey>('collect')
   const [query, setQuery] = useState('')
@@ -73,10 +73,19 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
   const [reviewing, setReviewing] = useState<TransferView | null>(null)
   const shown = filterBoard(columns, { query, kind })
   const filtering = query.trim() !== '' || kind !== ''
+  // Por confirmar is back-office work: folded into one line until reception opens it (its tile, or Inicio's link to
+  // #transferencias), so the debts of the people at the desk stay on top. A search shows the matches unfolded.
+  const [transfersOpen, setTransfersOpen] = useState(false)
+  useEffect(() => {
+    if (window.location.hash !== '#transferencias') return
+    setTransfersOpen(true)
+    requestAnimationFrame(() => document.getElementById('column-transfers')?.scrollIntoView({ block: 'start' }))
+  }, [])
 
   // A tile opens its lane and brings its column into view (a click commits before the next frame).
   const goTo = (column: BoardColumn) => {
     setLane(column.lane)
+    if (column.key === 'transfers') setTransfersOpen(true)
     requestAnimationFrame(() => document.getElementById(`column-${column.key}`)?.scrollIntoView({ block: 'start' }))
   }
   // The charge just made, for "Deshacer" for a few seconds: once the page refreshes it is the newest row of Cobrado hoy
@@ -200,6 +209,15 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
             <ColumnView key={column.key} column={column} filtering={filtering}>
               {column.key === 'unpaid' && !filtering ? (
                 <UnpaidList items={column.items} todayFrom={todayFrom} action={rowAction} />
+              ) : column.key === 'transfers' && !transfersOpen && !filtering ? (
+                <button
+                  type="button"
+                  aria-expanded={false}
+                  onClick={() => setTransfersOpen(true)}
+                  className={buttonClasses({ variant: 'secondary', fullWidth: true })}
+                >
+                  {column.items.length === 1 ? 'Ver la transferencia' : `Ver las ${column.items.length} transferencias`}
+                </button>
               ) : column.key === 'transfers' && actions.confirmMany && column.items.length > 1 ? (
                 <TransferList items={column.items} confirmMany={actions.confirmMany} onDone={setNotice} action={rowAction} />
               ) : (
@@ -261,26 +279,19 @@ function Rows({ items, limit, action }: { items: BoardItem[]; limit?: number; ac
   )
 }
 
-// Sin cobrar: today first, then older debts, one group per player who owes more than once.
+// Sin cobrar: one entry per player (today and older days together), whoever owes from today first.
 function UnpaidList({ items, todayFrom, action }: { items: BoardItem[]; todayFrom: number; action: (item: BoardItem) => ReactNode }) {
-  const { today, older, groups } = splitDebts(items, todayFrom)
+  const groups = debtsByPlayer(items, todayFrom)
   return (
-    <div className="flex flex-col gap-4">
-      {today.length > 0 ? <Rows items={today} action={action} /> : <p className="text-sm text-fg-muted">Hoy nadie debe nada.</p>}
-      {older.length > 0 || groups.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold text-fg-muted">De días anteriores</h3>
-          {groups.length > 0 ? (
-            <ul aria-label="Deudas por jugador" className="flex flex-col divide-y divide-border border-y border-border">
-              {groups.map((group) => (
-                <DebtGroupRow key={group.holder} group={group} action={action} />
-              ))}
-            </ul>
-          ) : null}
-          {older.length > 0 ? <Rows items={older} action={action} /> : null}
-        </div>
-      ) : null}
-    </div>
+    <ul aria-label="Deudas por jugador" className="flex flex-col divide-y divide-border border-y border-border">
+      {groups.map((group) =>
+        group.items.length === 1 ? (
+          <li key={group.items[0].id}>{action(group.items[0])}</li>
+        ) : (
+          <DebtGroupRow key={group.holder} group={group} action={action} />
+        ),
+      )}
+    </ul>
   )
 }
 
@@ -291,7 +302,9 @@ function DebtGroupRow({ group, action }: { group: DebtGroup; action: (item: Boar
         <summary className="flex min-h-14 cursor-pointer items-center gap-3 py-2.5">
           <span className="min-w-0 flex-1">
             <span className="block font-semibold">{group.holder}</span>
-            <span className="block text-sm text-fg-muted">{group.items.length} deudas</span>
+            <span className="block text-sm text-fg-muted">
+              {group.items.length} deudas{group.today ? " · incluye hoy" : ""}
+            </span>
           </span>
           <span className="font-display text-xl font-bold tabular-nums">{formatPrice(group.total)}</span>
           <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>

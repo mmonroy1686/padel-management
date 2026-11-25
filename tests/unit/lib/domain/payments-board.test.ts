@@ -4,7 +4,7 @@ import {
   filterBoard,
   paymentsBoard,
   pendingCount,
-  splitDebts,
+  debtsByPlayer,
   type BoardItem,
   type BoardColumn,
   type BoardFormat,
@@ -182,7 +182,7 @@ describe('pendingCount', () => {
   })
 })
 
-describe('splitDebts', () => {
+describe('debtsByPlayer', () => {
   const debt = (id: string, holder: string, at: number, amount = 1200): BoardItem => ({
     id,
     kind: 'booking',
@@ -194,22 +194,25 @@ describe('splitDebts', () => {
   })
   const TODAY = 1_000_000
 
-  it('keeps today row by row, and groups a player with several older debts', () => {
-    const split = splitDebts(
+  it('one entry per player, today and older together; whoever owes from today first', () => {
+    const groups = debtsByPlayer(
       [
         debt('a', 'Sofía Cabrera', 100),
         debt('b', 'Nicolás Rodríguez', 200),
         debt('c', 'sofia cabrera', 300, 2000),
-        debt('d', 'Ana', TODAY + 10),
+        debt('d', 'Ana', TODAY + 20),
+        debt('e', 'Nicolás Rodríguez', TODAY + 10),
       ],
       TODAY,
     )
-    expect(split.today.map((item) => item.id)).toEqual(['d'])
-    expect(split.older.map((item) => item.id)).toEqual(['b'])
-    expect(split.groups).toEqual([{ holder: 'Sofía Cabrera', items: [expect.objectContaining({ id: 'a' }), expect.objectContaining({ id: 'c' })], total: 3200 }])
+    expect(groups.map((group) => [group.holder, group.items.map((item) => item.id), group.total, group.today])).toEqual([
+      ['Nicolás Rodríguez', ['b', 'e'], 2400, true],
+      ['Ana', ['d'], 1200, true],
+      ['Sofía Cabrera', ['a', 'c'], 3200, false],
+    ])
   })
 
-  it('has nothing to split when nothing is owed', () => {
-    expect(splitDebts([], TODAY)).toEqual({ today: [], older: [], groups: [] })
+  it('has nothing to group when nothing is owed', () => {
+    expect(debtsByPlayer([], TODAY)).toEqual([])
   })
 })

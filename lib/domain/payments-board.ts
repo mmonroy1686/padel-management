@@ -231,24 +231,26 @@ export function pendingCount(columns: BoardColumn[], lane: LaneKey): number {
   return columns.filter((column) => column.lane === lane && !column.done).reduce((sum, column) => sum + column.count, 0)
 }
 
-// Sin cobrar, the way reception reads it: what was played today, row by row; what is older, one group per player
-// ("Sofía Cabrera · 2 deudas · $3.200") so the same name does not fill the column. A player with a single older debt
-// stays a plain row: a group of one only adds a tap.
-export type DebtGroup = { holder: string; items: BoardItem[]; total: number }
-export type SplitDebts = { today: BoardItem[]; older: BoardItem[]; groups: DebtGroup[] }
+// Sin cobrar, the way reception reads it: one entry per player, today and older days together, so the same name
+// shows once ("Sofía Cabrera · 3 deudas · $3.600"). Whoever owes from today comes first, in the order they played;
+// then the rest, the oldest debt first. A player with a single debt is a plain row: a group of one only adds a tap.
+export type DebtGroup = { holder: string; items: BoardItem[]; total: number; today: boolean }
 
-export function splitDebts(items: BoardItem[], todayFrom: number): SplitDebts {
-  const today = items.filter((item) => item.at >= todayFrom)
+export function debtsByPlayer(items: BoardItem[], todayFrom: number): DebtGroup[] {
   const byHolder = new Map<string, BoardItem[]>()
-  for (const item of items.filter((candidate) => candidate.at < todayFrom)) {
+  for (const item of [...items].sort(oldestFirst)) {
     const key = normalizeText(item.holder)
     byHolder.set(key, [...(byHolder.get(key) ?? []), item])
   }
-  const older: BoardItem[] = []
-  const groups: DebtGroup[] = []
-  for (const list of byHolder.values()) {
-    if (list.length === 1) older.push(list[0])
-    else groups.push({ holder: list[0].holder, items: list, total: totalsOf(list, (item) => item.amount).total })
-  }
-  return { today, older: older.sort(oldestFirst), groups: groups.sort((a, b) => a.items[0].at - b.items[0].at) }
+  const groups = [...byHolder.values()].map((list) => ({
+    holder: list[0].holder,
+    items: list,
+    total: totalsOf(list, (item) => item.amount).total,
+    today: list.some((item) => item.at >= todayFrom),
+  }))
+  const firstToday = (group: DebtGroup) => group.items.find((item) => item.at >= todayFrom)?.at ?? 0
+  return [
+    ...groups.filter((group) => group.today).sort((a, b) => firstToday(a) - firstToday(b)),
+    ...groups.filter((group) => !group.today),
+  ]
 }
