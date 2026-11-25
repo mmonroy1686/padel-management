@@ -2721,6 +2721,43 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"rename_club":
+{ Args: { "p_club_id": string,"p_slug": string }; Returns: {
+              "accepts_card": boolean,
+"accepts_cash": boolean,
+"accepts_transfer": boolean,
+"booking_window_days": number,
+"brand_background": string,
+"brand_primary": string,
+"cancellation_notice_hours": number,
+"closes_at": string,
+"color_mode": Database["public"]['Enums']["club_color_mode"],
+"created_at": string,
+"flyer_background_path": string | null,
+"id": string,
+"logo_path": string | null,
+"loyalty_discount_percent": number,
+"loyalty_enabled": boolean,
+"loyalty_every": number,
+"loyalty_expiry_months": number | null,
+"match_close_minutes": number,
+"max_active_bookings": number,
+"name": string,
+"opens_at": string,
+"phone": string | null,
+"setup_completed_at": string | null,
+"slot_minutes": number,
+"slug": string,
+"timezone": string,
+"transfer_details": string | null,
+"transfer_receipt_required": boolean
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "clubs"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "reopen_tournament_registration":
 { Args: { "p_tournament_id": string }; Returns: {
               "cancelled_at": string | null,
