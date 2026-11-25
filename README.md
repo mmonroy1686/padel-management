@@ -113,6 +113,17 @@ Solo se mandan errores, sin grabación de sesiones ni medición de rendimiento. 
 
 Para comprobar que funciona: con el usuario admin, **Ajustes → Monitoreo** manda un error de prueba desde el servidor y otro desde el navegador. Cada uno muestra su ID y aparece en Sentry → Issues como «Prueba de monitoreo» (environment `production` o `preview`); después se marca como resuelto. Si dice «Sentry está apagado acá», falta `NEXT_PUBLIC_SENTRY_DSN` en ese entorno o el deploy es anterior a cargarla.
 
+#### Mapa del club
+
+El mapa de Ajustes → Datos del club y de «El club» en Inicio usa por defecto los servidores públicos de OpenStreetMap, sin clave. Alcanzan para desarrollo y el piloto, pero no están pensados para una app comercial con tráfico: **antes de sumar más clubes hay que poner un proveedor de mapas con clave** y cargar en Vercel:
+
+| Variable | Para qué |
+| --- | --- |
+| `NEXT_PUBLIC_MAP_TILES_URL` | La plantilla de imágenes del proveedor, `https://…/{z}/{x}/{y}.png` con su clave. Sin `https://` o sin `{z}`, `{x}` y `{y}` se ignora y queda OpenStreetMap |
+| `NEXT_PUBLIC_MAP_ATTRIBUTION` | El crédito que exige el proveedor, en HTML (por ejemplo `&copy; <a href="…">Proveedor</a>`). Se muestra en la esquina del mapa |
+
+Las dos quedan fijas en el código del navegador al hacer el build: después de cargarlas o cambiarlas, hay que volver a desplegar. La búsqueda de direcciones («Buscar en el mapa») sigue usando Nominatim de OpenStreetMap, una consulta por clic.
+
 #### Backups
 
 `backup.yml` corre los lunes a las 03:00 (Montevideo): hace un dump de producción (roles, esquema y datos), lo cifra con `BACKUP_PASSPHRASE` y lo guarda 90 días como artifact del workflow. **Los archivos subidos (logos, comprobantes, afiches) no están en el backup**: solo sus registros en la base.
@@ -172,4 +183,4 @@ Para recuperar producción entera en un proyecto nuevo de Supabase, se usan los 
 - Fase 0: ingreso por enlace mágico y Google, esquema núcleo con RLS, doble reserva imposible por constraint, límites de reserva y cancelación por club.
 - Fase 1: alta del jugador con categoría a validar, reserva de turnos de la grilla fija con precio por franja, cancelación con aviso, transferencia informada con comprobante, Mis reservas. Panel del club: grilla del día en vivo, carga de reservas, turnos fijos y bloqueos, cobros (confirmar, rechazar, efectivo, devoluciones), calendario, jugadores y ajustes.
 - Cobro con POS: el club activa **POS (tarjeta en recepción)** en Ajustes → Pagos. Recepción cobra con POS donde cobra en efectivo (Inicio, Grilla, Cobros, torneos, campeonatos y day use); el pago queda confirmado en el acto y Cobros lo separa del efectivo de la caja. No hay integración con el terminal ni pago con tarjeta desde la app. La migración se aplica sola al mergear; POS arranca apagado en todos los clubes.
-- Datos del club: el admin carga en Ajustes → Datos del club la dirección, la ubicación (tocando el mapa de OpenStreetMap, buscando la dirección o pegando el link de Google Maps), WhatsApp, Instagram, email, servicios y hasta 8 fotos. El jugador los ve en la sección «El club» al final de Inicio, también sin sesión, con botones a WhatsApp, Instagram, email y «Cómo llegar». Lo que no se carga no se muestra.
+- Datos del club: el admin carga en Ajustes → Datos del club la dirección, la ubicación (tocando el mapa, buscando la dirección o pegando el link de Google Maps), WhatsApp, Instagram, email, servicios y hasta 8 fotos. El jugador los ve en la sección «El club» al final de Inicio, también sin sesión, con botones a WhatsApp, Instagram, email y «Cómo llegar». Lo que no se carga no se muestra.

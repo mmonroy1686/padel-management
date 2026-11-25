@@ -34,3 +34,15 @@ branch: feat/datos-del-club
 
 - pgTAP 1374 (35 nuevos), Vitest 1341, e2e 26 (en serie; `club-home` y `club-setup` fallaron una vez por tiempos y
   pasaron al repetir), lint, tsc y build.
+
+## Auditoría del 24/11 (corte B)
+
+- Rebaseada sobre `fix/clubs-columnas` (corte A). Las columnas nuevas de `clubs` las escribe `save_club_info`
+  (`security definer`), así que no necesitan `grant update`: el admin no las puede tocar directo por la tabla.
+- `add_club_photo` verifica que el archivo exista en `storage.objects` (bucket `club-logos`); si no, falla con
+  `photo_missing` y no deja fila. Mensaje en `lib/domain/errors.ts`. La migración se editó en el lugar porque todavía
+  no está en producción.
+- El mapa toma las tiles y la atribución de `NEXT_PUBLIC_MAP_TILES_URL` y `NEXT_PUBLIC_MAP_ATTRIBUTION`
+  (`mapTiles` en `lib/domain/club-info.ts`). Sin ellas, o con una URL que no sea una plantilla `https` con `{z}`,
+  `{x}` e `{y}`, queda OpenStreetMap como hoy. El `location-picker` usa el mismo `ClubMap`. README, «Mapa del club»:
+  antes de sumar clubes hay que poner un proveedor con clave (lo elige Miguel).
