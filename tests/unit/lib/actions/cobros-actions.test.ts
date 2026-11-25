@@ -9,7 +9,7 @@ vi.mock('server-only', () => ({}))
 vi.mock('@/lib/actions/revalidate', () => ({ revalidateBookings }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ rpc }) }))
 
-const { confirmPayments } = await import('@/app/(club)/club/cobros/actions')
+const { confirmPayments, voidPayment } = await import('@/app/(club)/club/cobros/actions')
 const IDLE = { status: 'idle' as const }
 const T1 = 'a0000000-0000-0000-0000-000000000001'
 const T2 = 'a0000000-0000-0000-0000-000000000002'
@@ -47,5 +47,21 @@ describe('confirmPayments', () => {
     expect(await confirmPayments(IDLE, form([]))).toMatchObject({ status: 'error' })
     expect(await confirmPayments(IDLE, form(['nope']))).toMatchObject({ status: 'error' })
     expect(rpc).not.toHaveBeenCalled()
+  })
+})
+
+describe('voidPayment', () => {
+  it('takes a desk charge back through void_desk_payment', async () => {
+    const data = new FormData()
+    data.set('paymentId', T1)
+    expect(await voidPayment(IDLE, data)).toEqual({ status: 'ok', message: 'Cobro anulado. Vuelve a figurar como deuda.' })
+    expect(rpc).toHaveBeenCalledWith('void_desk_payment', { p_payment_id: T1 })
+  })
+
+  it('says why when it cannot', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'invalid_state' } })
+    const data = new FormData()
+    data.set('paymentId', T1)
+    expect(await voidPayment(IDLE, data)).toMatchObject({ status: 'error' })
   })
 })

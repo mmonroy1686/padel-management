@@ -49,6 +49,8 @@ export type ItemAction =
   | { type: 'charge'; fields: Record<string, string>; methods: DeskMethod[] }
   | { type: 'refund'; fields: Record<string, string> }
   | { type: 'review'; receiptUrl: string | null }
+  // A cash or POS charge of today, taken back (void_desk_payment).
+  | { type: 'void'; fields: Record<string, string> }
 
 export type BoardItem = {
   id: string
@@ -184,7 +186,12 @@ export function paymentsBoard(input: BoardInput, format: BoardFormat): BoardColu
         action: { type: 'review', receiptUrl: transfer.receiptUrl },
       }))
       .sort(oldestFirst),
-    collected: input.doneToday.confirmed.map((payment) => done(payment)).sort(latestFirst),
+    collected: input.doneToday.confirmed
+      .map((payment): BoardItem => ({
+        ...done(payment),
+        ...(payment.method === 'transfer' ? {} : { action: { type: 'void', fields: { paymentId: payment.id } } }),
+      }))
+      .sort(latestFirst),
     rejected: input.doneToday.rejected.map((payment) => done(payment, payment.reason?.trim() || 'Sin motivo')).sort(latestFirst),
     refunds: input.refunds
       .map((item): BoardItem => ({

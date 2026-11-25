@@ -121,12 +121,12 @@ describe('paymentsBoard', () => {
     ])
   })
 
-  it('shows what got done today, latest first, with the method and the time and no action', () => {
+  it('shows what got done today, latest first, with the method and the time; a desk charge can be voided', () => {
     const columns = paymentsBoard(input(), FORMAT)
     const collected = column(columns, 'collected')
     expect(collected.items.map((item) => [item.holder, item.done, item.action, item.when])).toEqual([
       ['Inés', { method: 'transfer', time: '15:30' }, undefined, ''],
-      ['Hugo', { method: 'cash', time: '14:10' }, undefined, 'día 2026-11-23'],
+      ['Hugo', { method: 'cash', time: '14:10' }, { type: 'void', fields: { paymentId: 'd1' } }, 'día 2026-11-23'],
     ])
     expect([collected.count, collected.total, collected.cash, collected.card]).toEqual([2, 750, 300, 0])
     expect(column(columns, 'unpaid').cash).toBeUndefined()

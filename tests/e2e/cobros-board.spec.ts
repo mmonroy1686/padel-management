@@ -29,6 +29,14 @@ test('reception charges cash, confirms a transfer and rejects another on the boa
   await expect(column('Cobrado hoy').getByRole('article', { name: debtor.name })).toContainText('Efectivo')
   await expect(column('Sin cobrar').getByRole('article', { name: debtor.name })).toHaveCount(0)
 
+  // Charged by mistake: Deshacer, right after, puts the debt back; then the right charge again.
+  await page.getByRole('button', { name: `Deshacer el cobro a ${debtor.name}` }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Cobro anulado' })).toBeVisible()
+  await expect(debt).toBeVisible()
+  await debt.getByRole('button', { name: new RegExp(`^Cobrar .* a ${debtor.name}$`) }).click()
+  await debt.getByRole('group').getByRole('button', { name: 'Efectivo' }).click()
+  await expect(column('Cobrado hoy').getByRole('article', { name: debtor.name })).toHaveCount(1)
+
   // A reported transfer: confirmed in its sheet, it leaves Por confirmar for Cobrado hoy.
   await column('Por confirmar').getByRole('button', { name: `Revisar la transferencia de ${payer.name}` }).click()
   const review = page.getByRole('dialog', { name: `Transferencia de ${payer.name}` })

@@ -116,3 +116,23 @@ Aparece solo después de reservar o de armar un partido, no después de anotarse
   - `confirmPayments`: todas, una que ya no estaba, y entrada inválida.
 - e2e: `cobros-board` y `card-payments` usan el paso nuevo de elegir medio. Pasan cobros, POS, la grilla de recepción y el Inicio del club.
 - Vitest 1372, lint, tsc y build.
+
+## Etapa 4: deshacer y anular un cobro (25/11)
+
+- **Migraciones:**
+  - `20261130000100_payment_voided_status.sql`: el valor `voided` de `payment_status`, solo en su migración, porque un valor de enum nuevo no se puede usar en la misma transacción.
+  - `20261130000110_void_desk_payment.sql`:
+    - columnas `voided_at` y `voided_by`;
+    - el check de efectivo acepta `voided`, y un check nuevo exige `voided_at` cuando el estado es `voided`;
+    - la RPC `void_desk_payment`: solo staff del club, solo efectivo o POS confirmado **hoy** en la zona horaria del club (decisión de Miguel). Si no, `invalid_state`.
+- **Por qué alcanza con eso:** todo lo que suma lo pagado (reservas, partidos, torneos, campeonatos, day use) cuenta `status = 'confirmed'`, así que un pago anulado vuelve a dejar la deuda sin tocar ninguna otra función. Cobros tampoco lo carga como «cobrado hoy».
+- **Cobros:**
+  - en «Cobrado hoy», cada cobro en efectivo o POS tiene «Anular», en rojo y con confirmación en dos toques;
+  - después de cobrar, junto al aviso aparece «Deshacer» durante 10 segundos. Busca en «Cobrado hoy» el cobro recién hecho (mismo jugador y monto, del último minuto) y lo anula.
+- **`metricas.sql`:** la consulta 6 suma la columna `anulados`.
+
+**Verificación:**
+- pgTAP `void_desk_payment.test.sql` (12): el check, jugador y otro club no, recepción sí, queda con quién y cuándo, deja de contar como pagado, no dos veces, no de otro día, no una transferencia, `not_found`, escritura directa (42501) y anon.
+- Vitest: anular en el tablero y la acción `voidPayment`.
+- e2e: `cobros-board` cobra, toca «Deshacer», ve la deuda de nuevo y vuelve a cobrar.
+- Completo con la base reseteada: pgTAP 1429, Vitest 1375, lint, tsc, build y e2e 26 de 26.

@@ -176,3 +176,23 @@ describe('PaymentsBoard, for the desk', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('2 transferencias confirmadas.')
   })
 })
+
+describe('PaymentsBoard, taking a charge back', () => {
+  it('voids a cash charge of today after a second tap', async () => {
+    const voidAction = vi.fn<FormAction>(async () => ({ status: 'ok', message: 'Cobro anulado. Vuelve a figurar como deuda.' }))
+    const noop = () => vi.fn<FormAction>(async () => ({ status: 'ok', message: 'Listo.' }))
+    render(
+      <PaymentsBoard
+        columns={COLUMNS}
+        actions={{ cash: { booking: noop(), tournament: noop(), day_use: noop(), championship: noop() }, refund: noop(), confirm: noop(), reject: noop(), void: voidAction }}
+      />,
+    )
+    const hugo = within(column('Cobrado hoy')).getByRole('article', { name: 'Hugo' })
+    await userEvent.click(within(hugo).getByRole('button', { name: 'Anular el cobro a Hugo' }))
+    expect(voidAction).not.toHaveBeenCalled()
+    await userEvent.click(within(hugo).getByRole('button', { name: '¿Anular? Tocá de nuevo' }))
+    await waitFor(() => expect(voidAction).toHaveBeenCalledTimes(1))
+    expect(voidAction.mock.calls[0][1].get('paymentId')).toBe('d1')
+    expect(await screen.findByRole('status')).toHaveTextContent('Cobro anulado.')
+  })
+})

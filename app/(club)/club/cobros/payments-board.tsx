@@ -1,8 +1,8 @@
 'use client'
 
-import { useActionState, useState, type ReactNode } from 'react'
+import { useActionState, useEffect, useState, type ReactNode } from 'react'
 import { ChargeChoice } from '@/components/club/charge-choice'
-import type { FormAction } from '@/components/ui/action-form'
+import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { buttonClasses } from '@/components/ui/button'
 import { inputClasses } from '@/components/ui/field'
@@ -35,6 +35,8 @@ export type BoardActions = {
   reject: FormAction
   // "Confirmar las marcadas": several transfers at once.
   confirmMany?: FormAction
+  // "Anular" / "Deshacer": a cash or POS charge of today, taken back.
+  void?: FormAction
 }
 
 // The tiles on top: what is owed, waiting, in and to give back, always in sight.
@@ -47,6 +49,9 @@ const SUMMARY: { key: ColumnKey; label: string; unit: [string, string]; tone: st
 
 // Done columns show the latest few; the rest is one tap away, so the page ends.
 const DONE_SHOWN = 5
+
+// How long "Deshacer" stays after a charge.
+const UNDO_MS = 10_000
 
 const plural = (count: number, [one, many]: [string, string]) => `${count} ${count === 1 ? one : many}`
 
@@ -74,7 +79,31 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
     setLane(column.lane)
     requestAnimationFrame(() => document.getElementById(`column-${column.key}`)?.scrollIntoView({ block: 'start' }))
   }
-  const rowAction = (item: BoardItem) => <RowAction item={item} actions={actions} onReview={setReviewing} onDone={setNotice} />
+  // The charge just made, for "Deshacer" for a few seconds: once the page refreshes it is the newest row of Cobrado hoy
+  // with the same player and amount.
+  const [lastCharge, setLastCharge] = useState<{ holder: string; amount: number; at: number } | null>(null)
+  useEffect(() => {
+    if (!lastCharge) return
+    const timer = window.setTimeout(() => setLastCharge(null), UNDO_MS)
+    return () => window.clearTimeout(timer)
+  }, [lastCharge])
+  const undoable = lastCharge
+    ? columns
+        .find((column) => column.key === 'collected')
+        ?.items.find(
+          (item) =>
+            item.action?.type === 'void' && item.holder === lastCharge.holder && item.amount === lastCharge.amount && item.at >= lastCharge.at - 60_000,
+        )
+    : undefined
+  const charged = (message: string, item: BoardItem) => {
+    setNotice(message)
+    setLastCharge({ holder: item.holder, amount: item.amount, at: Date.now() })
+  }
+  const done = (message: string) => {
+    setNotice(message)
+    setLastCharge(null)
+  }
+  const rowAction = (item: BoardItem) => <RowAction item={item} actions={actions} onReview={setReviewing} onDone={done} onCharged={charged} />
 
   return (
     <div className="flex flex-col gap-5">
@@ -102,7 +131,14 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
         </select>
       </div>
 
-      {notice ? <Notice onDismiss={() => setNotice(null)}>{notice}</Notice> : null}
+      {notice ? (
+        <div className="flex flex-col gap-2">
+          <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
+          {undoable?.action?.type === 'void' && actions.void ? (
+            <RowForm action={actions.void} fields={undoable.action.fields} label="Deshacer" accessibleLabel={`Deshacer el cobro a ${undoable.holder}`} onDone={done} />
+          ) : null}
+        </div>
+      ) : null}
 
       <nav aria-label="Resumen de cobros" className="grid grid-cols-2 gap-2 md:grid-cols-4">
         {SUMMARY.map((tile) => {
@@ -339,14 +375,39 @@ function RowAction({
   actions,
   onReview,
   onDone,
+  onCharged,
 }: {
   item: BoardItem
   actions: BoardActions
   onReview: (transfer: TransferView) => void
   onDone: (message: string) => void
+  onCharged: (message: string, item: BoardItem) => void
 }) {
   const action = item.action
   if (!action) return <BoardRow item={item} />
+  if (action.type === 'void') {
+    return (
+      <BoardRow item={item}>
+        {actions.void ? (
+          <ActionForm
+            action={actions.void}
+            submitLabel="Anular"
+            pendingLabel="Anulando…"
+            confirmLabel="¿Anular? Tocá de nuevo"
+            accessibleLabel={`Anular el cobro a ${item.holder}`}
+            variant="danger"
+            size="sm"
+            onDone={onDone}
+            className="shrink-0"
+          >
+            {Object.entries(action.fields).map(([name, value]) => (
+              <input key={name} type="hidden" name={name} value={value} />
+            ))}
+          </ActionForm>
+        ) : null}
+      </BoardRow>
+    )
+  }
   if (action.type === 'review') {
     return (
       <BoardRow item={item}>
@@ -364,7 +425,7 @@ function RowAction({
     )
   }
   if (action.type === 'charge') {
-    return <ChargeRow item={item} fields={action.fields} methods={action.methods} action={actions.cash[item.kind]} onDone={onDone} />
+    return <ChargeRow item={item} fields={action.fields} methods={action.methods} action={actions.cash[item.kind]} onDone={(message) => onCharged(message, item)} />
   }
   return (
     <BoardRow item={item}>
@@ -434,8 +495,24 @@ function ChargeRow({
 
 // A short button that runs the action in place; an error shows right under it. On success the page refreshes and the
 // row moves to its done column.
-function RowForm({ action, fields, label, accessibleLabel }: { action: FormAction; fields: Record<string, string>; label: string; accessibleLabel: string }) {
-  const [state, formAction, pending] = useActionState(async (previous: ActionState, formData: FormData): Promise<ActionState> => (await action(previous, formData)) ?? previous, IDLE)
+function RowForm({
+  action,
+  fields,
+  label,
+  accessibleLabel,
+  onDone,
+}: {
+  action: FormAction
+  fields: Record<string, string>
+  label: string
+  accessibleLabel: string
+  onDone?: (message: string) => void
+}) {
+  const [state, formAction, pending] = useActionState(async (previous: ActionState, formData: FormData): Promise<ActionState> => {
+    const result = (await action(previous, formData)) ?? previous
+    if (result.status === 'ok') onDone?.(result.message ?? '')
+    return result
+  }, IDLE)
   return (
     <form action={formAction} className="flex shrink-0 flex-col items-end gap-1">
       {Object.entries(fields).map(([name, value]) => (

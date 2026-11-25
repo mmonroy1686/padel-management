@@ -14,6 +14,16 @@ export async function confirmPayment(_previous: ActionState, form: FormData): Pr
   return fromRpc(error, 'Pago confirmado.')
 }
 
+// "Anular cobro" / "Deshacer": a cash or POS charge of today, taken back. The debt is owed again.
+export async function voidPayment(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const paymentId = readUuid(form, 'paymentId')
+  if (!paymentId) return INVALID_INPUT
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('void_desk_payment', { p_payment_id: paymentId })
+  revalidateBookings()
+  return fromRpc(error, 'Cobro anulado. Vuelve a figurar como deuda.')
+}
+
 // "Confirmar las marcadas": the same confirm_payment, one transfer at a time. One that fails (someone else just
 // rejected it) does not stop the rest; the message says how many went through.
 export async function confirmPayments(_previous: ActionState, form: FormData): Promise<ActionState> {
