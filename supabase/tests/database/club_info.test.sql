@@ -2,10 +2,15 @@ begin;
 create extension if not exists pgtap with schema extensions;
 \ir helpers/slot.psql
 \ir helpers/club.psql
-select plan(35);
+select plan(37);
 
 -- A second club, for the "another club" cases.
 insert into public.clubs (id, slug, name, timezone) values ('a0000000-0000-0000-0000-000000000002', 'otro', 'Otro', 'America/Montevideo');
+
+-- The files the browser uploaded: photo-1 to photo-9 of club T, and one of the other club.
+insert into storage.objects (bucket_id, name)
+select 'club-logos', 'a0000000-0000-0000-0000-000000000001/photo-' || n || '.jpg' from generate_series(1, 9) as n
+union all select 'club-logos', 'a0000000-0000-0000-0000-000000000002/photo-1.jpg';
 
 create function test_helpers.save_info(
   p_address text default 'Av. Italia 1234',
@@ -81,6 +86,10 @@ select throws_ok($$ select test_helpers.save_info(p_club => 'a0000000-0000-0000-
   'forbidden', 'not for another club');
 
 -- Photos.
+select throws_ok(
+  $$ select public.add_club_photo('a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001/photo-50.jpg') $$,
+  'P0001', 'photo_missing', 'a photo whose file was not uploaded');
+select is((select count(*)::int from public.club_photos where path like '%/photo-50.jpg'), 0, 'leaves no row');
 select lives_ok(
   $$ select public.add_club_photo('a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001/photo-' || n || '.jpg')
        from generate_series(1, 8) as n $$,

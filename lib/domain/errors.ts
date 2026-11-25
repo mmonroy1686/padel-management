@@ -71,6 +71,7 @@ const MESSAGES = {
   invalid_instagram: 'Revisá el Instagram: el usuario lleva letras, números, puntos y guiones bajos.',
   invalid_amenity: 'Elegí los servicios de la lista.',
   too_many_photos: 'El club ya tiene 8 fotos. Quitá una para subir otra.',
+  photo_missing: 'La foto no se terminó de subir. Probá de nuevo.',
   sign_in_with_link: 'Para aceptar la invitación, entrá con el enlace que te llega por email o con Google.',
 } as const
 
