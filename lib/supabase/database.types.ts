@@ -44,13 +44,13 @@ isOneToOne: false
                   ]
                 },"bookings": {
                   Row: {
-                    "cancelled_at": string | null,"cancelled_by": string | null,"club_id": string,"court_id": string,"created_at": string,"created_by": string | null,"ends_at": string | null,"guest_name": string | null,"id": string,"match_id": string | null,"occupancy_id": string | null,"period": unknown,"player_id": string | null,"price": number,"series_id": string | null,"source": Database["public"]['Enums']["booking_source"],"starts_at": string | null,"status": Database["public"]['Enums']["booking_status"]
+                    "cancelled_at": string | null,"cancelled_by": string | null,"club_id": string,"court_id": string,"created_at": string,"created_by": string | null,"ends_at": string | null,"guest_name": string | null,"id": string,"match_id": string | null,"no_show_at": string | null,"no_show_by": string | null,"occupancy_id": string | null,"period": unknown,"player_id": string | null,"price": number,"series_id": string | null,"source": Database["public"]['Enums']["booking_source"],"starts_at": string | null,"status": Database["public"]['Enums']["booking_status"]
                   }
                   Insert: {
-                    "cancelled_at"?: string | null,"cancelled_by"?: string | null,"club_id": string,"court_id": string,"created_at"?: string,"created_by"?: string | null,"ends_at"?: never,"guest_name"?: string | null,"id"?: string,"match_id"?: string | null,"occupancy_id"?: string | null,"period": unknown,"player_id"?: string | null,"price": number,"series_id"?: string | null,"source": Database["public"]['Enums']["booking_source"],"starts_at"?: never,"status"?: Database["public"]['Enums']["booking_status"]
+                    "cancelled_at"?: string | null,"cancelled_by"?: string | null,"club_id": string,"court_id": string,"created_at"?: string,"created_by"?: string | null,"ends_at"?: never,"guest_name"?: string | null,"id"?: string,"match_id"?: string | null,"no_show_at"?: string | null,"no_show_by"?: string | null,"occupancy_id"?: string | null,"period": unknown,"player_id"?: string | null,"price": number,"series_id"?: string | null,"source": Database["public"]['Enums']["booking_source"],"starts_at"?: never,"status"?: Database["public"]['Enums']["booking_status"]
                   }
                   Update: {
-                    "cancelled_at"?: string | null,"cancelled_by"?: string | null,"club_id"?: string,"court_id"?: string,"created_at"?: string,"created_by"?: string | null,"ends_at"?: never,"guest_name"?: string | null,"id"?: string,"match_id"?: string | null,"occupancy_id"?: string | null,"period"?: unknown,"player_id"?: string | null,"price"?: number,"series_id"?: string | null,"source"?: Database["public"]['Enums']["booking_source"],"starts_at"?: never,"status"?: Database["public"]['Enums']["booking_status"]
+                    "cancelled_at"?: string | null,"cancelled_by"?: string | null,"club_id"?: string,"court_id"?: string,"created_at"?: string,"created_by"?: string | null,"ends_at"?: never,"guest_name"?: string | null,"id"?: string,"match_id"?: string | null,"no_show_at"?: string | null,"no_show_by"?: string | null,"occupancy_id"?: string | null,"period"?: unknown,"player_id"?: string | null,"price"?: number,"series_id"?: string | null,"source"?: Database["public"]['Enums']["booking_source"],"starts_at"?: never,"status"?: Database["public"]['Enums']["booking_status"]
                   }
                   Relationships: [
                     {
@@ -82,6 +82,12 @@ isOneToOne: false
       columns: ["match_id"]
 isOneToOne: false
       referencedRelation: "open_matches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "bookings_no_show_by_fkey"
+      columns: ["no_show_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "bookings_occupancy_id_fkey"
@@ -1337,6 +1343,8 @@ isOneToOne: false
 "guest_name": string | null,
 "id": string,
 "match_id": string | null,
+"no_show_at": string | null,
+"no_show_by": string | null,
 "occupancy_id": string | null,
 "period": unknown,
 "player_id": string | null,
@@ -1392,6 +1400,8 @@ isOneToOne: false
 "guest_name": string | null,
 "id": string,
 "match_id": string | null,
+"no_show_at": string | null,
+"no_show_by": string | null,
 "occupancy_id": string | null,
 "period": unknown,
 "player_id": string | null,
@@ -1526,6 +1536,8 @@ isOneToOne: false
 "guest_name": string | null,
 "id": string,
 "match_id": string | null,
+"no_show_at": string | null,
+"no_show_by": string | null,
 "occupancy_id": string | null,
 "period": unknown,
 "player_id": string | null,
@@ -1723,6 +1735,8 @@ isOneToOne: false
 "guest_name": string | null,
 "id": string,
 "match_id": string | null,
+"no_show_at": string | null,
+"no_show_by": string | null,
 "occupancy_id": string | null,
 "period": unknown,
 "player_id": string | null,
@@ -2255,6 +2269,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"mark_no_show":
+{ Args: { "p_booking_id": string,"p_no_show": boolean }; Returns: undefined
+                           },
 "mark_notifications_read":
 { Args: Record<PropertyKey, never>; Returns: number
                            } |
@@ -2768,16 +2785,23 @@ isOneToOne: false
               "accepts_card": boolean,
 "accepts_cash": boolean,
 "accepts_transfer": boolean,
+"address": string | null,
+"amenities": (string)[],
 "booking_window_days": number,
 "brand_background": string,
 "brand_primary": string,
 "cancellation_notice_hours": number,
 "closes_at": string,
 "color_mode": Database["public"]['Enums']["club_color_mode"],
+"contact_email": string | null,
 "created_at": string,
 "flyer_background_path": string | null,
+"google_maps_url": string | null,
 "id": string,
+"instagram": string | null,
+"latitude": number | null,
 "logo_path": string | null,
+"longitude": number | null,
 "loyalty_discount_percent": number,
 "loyalty_enabled": boolean,
 "loyalty_every": number,
@@ -3267,6 +3291,8 @@ isOneToOne: false
 "guest_name": string | null,
 "id": string,
 "match_id": string | null,
+"no_show_at": string | null,
+"no_show_by": string | null,
 "occupancy_id": string | null,
 "period": unknown,
 "player_id": string | null,
