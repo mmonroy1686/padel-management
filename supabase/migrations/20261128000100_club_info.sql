@@ -119,7 +119,7 @@ begin
 end;
 $$;
 
--- A photo already uploaded to the club's folder goes last.
+-- A photo already uploaded to the club's folder goes last; one whose file is not there is photo_missing.
 create function public.add_club_photo(p_club_id uuid, p_path text)
 returns uuid
 language plpgsql
@@ -139,6 +139,10 @@ begin
   if p_path is null or split_part(p_path, '/', 1) <> p_club_id::text
      or split_part(p_path, '/', 2) !~ '^photo-[0-9]{1,15}\.jpg$' or split_part(p_path, '/', 3) <> '' then
     perform private.fail('invalid_input');
+  end if;
+  -- The browser uploads first; a path with nothing behind it would show a broken photo on Inicio.
+  if not exists (select 1 from storage.objects o where o.bucket_id = 'club-logos' and o.name = p_path) then
+    perform private.fail('photo_missing');
   end if;
   insert into public.club_photos (club_id, path, position) values (p_club_id, p_path, v_count) returning id into v_id;
   return v_id;
