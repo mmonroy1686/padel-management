@@ -136,3 +136,19 @@ Aparece solo después de reservar o de armar un partido, no después de anotarse
 - Vitest: anular en el tablero y la acción `voidPayment`.
 - e2e: `cobros-board` cobra, toca «Deshacer», ve la deuda de nuevo y vuelve a cobrar.
 - Completo con la base reseteada: pgTAP 1429, Vitest 1375, lint, tsc, build y e2e 26 de 26.
+
+## Etapa 5: la Grilla en el celular (25/11)
+
+- **Una cancha por vez en el celular:** un control segmentado («Cancha 1 · Cancha 2 · Cancha 3») arriba de la grilla elige cuál se ve. Las otras columnas se ocultan con `hidden md:table-cell`, así que desde tablet la grilla sigue completa, sin JS de por medio. Las celdas ocupan todo el ancho y el nombre entra entero (hasta 2 líneas).
+- **El tipo ya iba escrito en cada celda** («Reserva, en recepción», «Torneo», «Turno fijo») junto con el pago. La leyenda de 7 entradas se ve solo desde tablet.
+- **«Fuera de la grilla» pasa a «Fuera de horario»**, en la celda y en la lista del tablero.
+- La grilla del jugador no cambia: ya entra en 3 columnas.
+
+**Desvíos del diseño:**
+- No hay deslizar de costado entre canchas: con el control segmentado alcanza, y deslizar choca con el scroll de la página.
+- Los turnos fuera de horario siguen en su lista abajo, con el nombre nuevo, en vez de una fila más en su hora: moverlos a la grilla cambia `buildDayGrid` y su cálculo de filas, y no era lo que hacía difícil la pantalla.
+
+**Tests:**
+- Vitest: el selector de cancha en el celular, y que el jugador no lo tiene.
+- e2e: `tests/e2e/support/grid.ts` con `showCourt` (cancha conocida) y `revealInGrid` (busca la celda cancha por cancha). Lo usan `reception-grid`, `club-home` y `open-match`, y el primer turno libre se elige entre los visibles. Pasan la grilla de recepción, el Inicio del club, partido abierto y marca.
+- Vitest 1377, lint, tsc y build.

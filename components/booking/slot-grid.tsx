@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/cn'
 import { formatPrice, timeIn } from '@/lib/domain/format'
@@ -35,8 +36,31 @@ const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 
 // One grid for both sides: players see free, taken and their own; the club sees who and how paid.
 export function SlotGrid({ courts, rows, variant, onSelect, onWait, waited, timezone }: SlotGridProps) {
+  // The club's grid on a phone: one court at a time, chosen on top, so each cell has the whole width for the name,
+  // the kind and the payment. From a tablet up every court shows (the other columns are only hidden below md).
+  const [shownCourt, setShownCourt] = useState(0)
+  const oneAtATime = variant === 'club' && courts.length > 1
+  const column = (index: number) => (oneAtATime && index !== shownCourt ? 'hidden md:table-cell' : '')
   return (
-    <div className="-mx-4 overflow-x-auto px-4">
+    <div className="-mx-4 flex flex-col gap-3 overflow-x-auto px-4">
+      {oneAtATime ? (
+        <div role="group" aria-label="Cancha" className="flex gap-1 self-start overflow-x-auto rounded-full border border-border bg-surface p-1 md:hidden">
+          {courts.map((court, index) => (
+            <button
+              key={court.id}
+              type="button"
+              aria-pressed={index === shownCourt}
+              onClick={() => setShownCourt(index)}
+              className={cn(
+                'min-h-10 whitespace-nowrap rounded-full px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-accent',
+                index === shownCourt ? 'bg-bg text-fg shadow-sm' : 'text-fg-muted',
+              )}
+            >
+              {court.name}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <table className="w-full min-w-[18rem] border-separate border-spacing-1">
         <caption className="sr-only">Turnos por cancha</caption>
         <thead>
@@ -44,8 +68,8 @@ export function SlotGrid({ courts, rows, variant, onSelect, onWait, waited, time
             <th scope="col" className={cn('sticky left-0 z-10 bg-bg', variant === 'player' ? 'w-12' : 'w-16')}>
               <span className="sr-only">Hora</span>
             </th>
-            {courts.map((court) => (
-              <th key={court.id} scope="col" className="text-left text-sm font-semibold">
+            {courts.map((court, index) => (
+              <th key={court.id} scope="col" className={cn('text-left text-sm font-semibold', column(index))}>
                 {court.name}
                 <span className="block text-xs font-normal text-fg-muted">
                   {court.isCovered ? 'Techada' : 'Al aire libre'}
@@ -76,7 +100,7 @@ export function SlotGrid({ courts, rows, variant, onSelect, onWait, waited, time
                   <td
                     key={cell.court.id}
                     rowSpan={rowsCovered(rows, rowIndex, courtIndex)}
-                    className={cn('h-px', variant === 'player' ? 'min-w-0' : 'min-w-28')}
+                    className={cn('h-px', variant === 'player' ? 'min-w-0' : 'min-w-28', column(courtIndex))}
                   >
                     {variant === 'player' ? (
                       <PlayerCell cell={cell} past={row.past} onSelect={onSelect} onWait={onWait} waited={waited?.(cell) ?? false} />
@@ -213,14 +237,14 @@ function ClubCell({
         onClick={() => onSelect(cell)}
         className={cn(CELL, CELL_STYLES[CLUB_STYLES[occupancy.kind]], FOCUS, cell.state === 'past' && 'opacity-60')}
       >
-        <b className="line-clamp-1">{title}</b>
+        <b className="line-clamp-2">{title}</b>
         <span className="text-xs">
           {occupancy.kind === 'hold' ? `${kindLabel}, lista de espera` : kindLabel}
           {booking ? `, ${booking.source === 'online' ? 'online' : 'en recepción'}` : ''}
         </span>
         {ends ? <span className="text-xs tabular-nums">Hasta las {ends}</span> : null}
         {booking ? <PaymentBadge state={booking.paymentState} className="mt-1" /> : null}
-        {cell.offGrid ? <span className="text-xs">Fuera de la grilla</span> : null}
+        {cell.offGrid ? <span className="text-xs">Fuera de horario</span> : null}
       </button>
     )
   }

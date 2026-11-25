@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMember } from './support/admin'
+import { showCourt } from './support/grid'
 import { signInWithMagicLink } from './support/auth'
 import { insertPlayingBooking, insertRecentBooking, paymentsOf } from './support/club-home'
 
@@ -62,6 +63,7 @@ test('reception charges each player of the court in play from the Inicio', async
   await page.getByRole('link', { name: 'Grilla' }).click()
   const cell = page.getByRole('button', { name: `${playing.courtName}, ${playing.time}: ${holder.name}` })
   await expect(cell).toContainText('Pagada')
+  await showCourt(page, playing.courtName)
   await cell.click()
   const detail = page.getByRole('dialog', { name: holder.name })
   await expect(detail.getByRole('list', { name: 'Jugadores' })).toContainText(partner.name)

@@ -132,3 +132,23 @@ describe('open matches on the grid', () => {
     expect(screen.getByRole('button', { name: 'Cargar Cancha 1, 20:00' })).toHaveTextContent('Armándose 1/4 · no bloquea')
   })
 })
+
+describe('SlotGrid for the club on a phone', () => {
+  it('shows one court at a time, picked on top; the others hide below md', async () => {
+    const grid = makeGrid()
+    render(<SlotGrid courts={COURTS} rows={grid.rows} variant="club" onSelect={vi.fn()} />)
+    const picker = screen.getByRole('group', { name: 'Cancha' })
+    const [first, second] = COURTS
+    expect(screen.getByRole('button', { name: first.name })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('columnheader', { name: new RegExp(second.name) }).className).toContain('hidden md:table-cell')
+    await userEvent.click(screen.getByRole('button', { name: second.name }))
+    expect(screen.getByRole('button', { name: second.name })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('columnheader', { name: new RegExp(first.name) }).className).toContain('hidden md:table-cell')
+    expect(picker.className).toContain('md:hidden')
+  })
+
+  it('players keep every court side by side', () => {
+    render(<SlotGrid courts={COURTS} rows={makeGrid().rows} variant="player" onSelect={vi.fn()} />)
+    expect(screen.queryByRole('group', { name: 'Cancha' })).not.toBeInTheDocument()
+  })
+})

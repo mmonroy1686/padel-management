@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { addDays, localDateOf } from '../../lib/domain/time'
 import { clubRow, createMember } from './support/admin'
+import { revealInGrid } from './support/grid'
 import { signInWithMagicLink } from './support/auth'
 import { joinMatchAs } from './support/matches'
 
@@ -40,5 +41,7 @@ test('a player creates a match, three more join and the court gets booked', asyn
   // Reception sees the court taken by the match.
   await page.context().clearCookies()
   await signInWithMagicLink(page, reception.email, `/club/grilla?dia=${day}`)
-  await expect(page.getByRole('button', { name: /, 20:00: Partido abierto$/ })).toBeVisible()
+  const matchCell = page.getByRole('button', { name: /, 20:00: Partido abierto$/ })
+  await revealInGrid(page, matchCell)
+  await expect(matchCell).toBeVisible()
 })
