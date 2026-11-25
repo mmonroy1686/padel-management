@@ -109,6 +109,25 @@ await check(
     .eq('id', club.id),
 )
 
+// Datos del club for «El club» at the end of Inicio, only if the club has none: what an admin loaded stays as it is.
+// Through save_club_info as the demo admin, so the same checks apply.
+if (!club.address && club.latitude === null && !club.phone && !club.instagram && !club.contact_email && club.amenities.length === 0) {
+  await check(
+    clubAdmin.rpc('save_club_info', {
+      p_club_id: club.id,
+      p_address: 'Av. Italia 4560, Montevideo',
+      p_latitude: -34.8889,
+      p_longitude: -56.1094,
+      p_google_maps_url: '',
+      p_phone: '092 369 558',
+      p_instagram: 'rusticpadel',
+      p_contact_email: 'hola@rusticpadel.test',
+      p_amenities: ['showers', 'parking', 'bar', 'racket_rental', 'wifi'],
+    }),
+  )
+  console.log('Datos del club cargados (dirección, mapa, WhatsApp, Instagram, email y servicios).')
+}
+
 // ---------- time ----------
 const TZ = club.timezone
 const today = localDate(new Date())

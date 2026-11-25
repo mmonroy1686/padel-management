@@ -23,7 +23,7 @@ export const metadata: Metadata = { title: 'Inicio' }
 function HomeSection({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
-      <h2 id={id} className="font-display text-2xl font-bold uppercase">
+      <h2 id={id} className="text-lg font-semibold">
         {title}
       </h2>
       {children}

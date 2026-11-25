@@ -38,7 +38,7 @@ export function CategoriesEditor({
 }) {
   return (
     <section aria-labelledby="categorias-del-campeonato" className="flex flex-col gap-3">
-      <h2 id="categorias-del-campeonato" className="font-display text-2xl font-bold uppercase">
+      <h2 id="categorias-del-campeonato" className="text-lg font-semibold">
         Categorías
       </h2>
       {categories.length > 0 ? (

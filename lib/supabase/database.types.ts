@@ -776,13 +776,13 @@ isOneToOne: false
                   ]
                 },"payments": {
                   Row: {
-                    "amount": number,"booking_id": string | null,"championship_entry_id": string | null,"club_id": string,"confirmed_at": string | null,"confirmed_by": string | null,"created_at": string,"day_use_pass_id": string | null,"id": string,"method": Database["public"]['Enums']["payment_method"],"payer_id": string | null,"payer_position": number | null,"receipt_path": string | null,"rejection_reason": string | null,"reported_by": string | null,"status": Database["public"]['Enums']["payment_status"],"tournament_entry_id": string | null
+                    "amount": number,"booking_id": string | null,"championship_entry_id": string | null,"club_id": string,"confirmed_at": string | null,"confirmed_by": string | null,"created_at": string,"day_use_pass_id": string | null,"id": string,"method": Database["public"]['Enums']["payment_method"],"payer_id": string | null,"payer_position": number | null,"receipt_path": string | null,"rejection_reason": string | null,"reported_by": string | null,"status": Database["public"]['Enums']["payment_status"],"tournament_entry_id": string | null,"voided_at": string | null,"voided_by": string | null
                   }
                   Insert: {
-                    "amount": number,"booking_id"?: string | null,"championship_entry_id"?: string | null,"club_id": string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"day_use_pass_id"?: string | null,"id"?: string,"method": Database["public"]['Enums']["payment_method"],"payer_id"?: string | null,"payer_position"?: number | null,"receipt_path"?: string | null,"rejection_reason"?: string | null,"reported_by"?: string | null,"status": Database["public"]['Enums']["payment_status"],"tournament_entry_id"?: string | null
+                    "amount": number,"booking_id"?: string | null,"championship_entry_id"?: string | null,"club_id": string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"day_use_pass_id"?: string | null,"id"?: string,"method": Database["public"]['Enums']["payment_method"],"payer_id"?: string | null,"payer_position"?: number | null,"receipt_path"?: string | null,"rejection_reason"?: string | null,"reported_by"?: string | null,"status": Database["public"]['Enums']["payment_status"],"tournament_entry_id"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
                   }
                   Update: {
-                    "amount"?: number,"booking_id"?: string | null,"championship_entry_id"?: string | null,"club_id"?: string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"day_use_pass_id"?: string | null,"id"?: string,"method"?: Database["public"]['Enums']["payment_method"],"payer_id"?: string | null,"payer_position"?: number | null,"receipt_path"?: string | null,"rejection_reason"?: string | null,"reported_by"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"tournament_entry_id"?: string | null
+                    "amount"?: number,"booking_id"?: string | null,"championship_entry_id"?: string | null,"club_id"?: string,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"created_at"?: string,"day_use_pass_id"?: string | null,"id"?: string,"method"?: Database["public"]['Enums']["payment_method"],"payer_id"?: string | null,"payer_position"?: number | null,"receipt_path"?: string | null,"rejection_reason"?: string | null,"reported_by"?: string | null,"status"?: Database["public"]['Enums']["payment_status"],"tournament_entry_id"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -830,6 +830,12 @@ isOneToOne: false
     },{
       foreignKeyName: "payments_reported_by_fkey"
       columns: ["reported_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payments_voided_by_fkey"
+      columns: ["voided_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -1651,7 +1657,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }[]
                           SetofOptions: {
         from: "*"
@@ -1677,7 +1685,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -1844,7 +1854,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2424,7 +2436,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2450,7 +2464,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2476,7 +2492,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2532,7 +2550,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2611,7 +2631,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2662,7 +2684,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2870,7 +2894,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2896,7 +2922,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2922,7 +2950,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2948,7 +2978,9 @@ isOneToOne: false
 "rejection_reason": string | null,
 "reported_by": string | null,
 "status": Database["public"]['Enums']["payment_status"],
-"tournament_entry_id": string | null
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -3437,6 +3469,34 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"void_desk_payment":
+{ Args: { "p_payment_id": string }; Returns: {
+              "amount": number,
+"booking_id": string | null,
+"championship_entry_id": string | null,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"day_use_pass_id": string | null,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"payer_id": string | null,
+"payer_position": number | null,
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"],
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "withdraw_championship_entry":
 { Args: { "p_entry_id": string }; Returns: {
               "category_id": string,
@@ -3464,7 +3524,7 @@ isOneToOne: false
       } }
           }
           Enums: {
-            "booking_source": "online"|"reception","booking_status": "confirmed"|"cancelled","championship_category_status": "open"|"cancelled"|"merged","championship_entry_status": "active"|"waiting"|"withdrawn"|"removed","championship_format": "groups_knockout"|"knockout"|"round_robin","championship_gender": "men"|"women"|"mixed"|"open","championship_match_status": "scheduled"|"playing"|"finished"|"walkover","championship_seeding": "ranking"|"manual","championship_stage": "group"|"knockout","championship_status": "draft"|"registration"|"closed"|"drawn"|"published"|"in_progress"|"finished"|"cancelled","club_color_mode": "system"|"dark"|"light","club_role": "admin"|"reception"|"player","day_band": "morning"|"afternoon"|"night","day_use_pass_status": "bought"|"inside"|"cancelled","dominant_hand": "right"|"left","email_status": "pending"|"sent"|"failed"|"skipped","gender": "male"|"female","match_status": "forming"|"confirmed"|"cancelled","match_type": "male"|"female"|"mixed","notification_kind": "slot_held"|"slot_free_now"|"championship_added"|"championship_promoted"|"championship_moved"|"championship_cancelled"|"championship_fixture"|"match_invite","occupancy_kind": "booking"|"recurring"|"tournament"|"block"|"match"|"day_use"|"hold"|"championship","payment_method": "cash"|"transfer"|"card","payment_status": "reported"|"confirmed"|"rejected"|"refunded","player_side": "drive"|"backhand"|"both","slot_hold_status": "active"|"claimed"|"declined"|"expired"|"released","slot_wait_status": "waiting"|"booked"|"expired"|"cancelled","tournament_status": "registration"|"closed"|"in_progress"|"finished"|"cancelled"
+            "booking_source": "online"|"reception","booking_status": "confirmed"|"cancelled","championship_category_status": "open"|"cancelled"|"merged","championship_entry_status": "active"|"waiting"|"withdrawn"|"removed","championship_format": "groups_knockout"|"knockout"|"round_robin","championship_gender": "men"|"women"|"mixed"|"open","championship_match_status": "scheduled"|"playing"|"finished"|"walkover","championship_seeding": "ranking"|"manual","championship_stage": "group"|"knockout","championship_status": "draft"|"registration"|"closed"|"drawn"|"published"|"in_progress"|"finished"|"cancelled","club_color_mode": "system"|"dark"|"light","club_role": "admin"|"reception"|"player","day_band": "morning"|"afternoon"|"night","day_use_pass_status": "bought"|"inside"|"cancelled","dominant_hand": "right"|"left","email_status": "pending"|"sent"|"failed"|"skipped","gender": "male"|"female","match_status": "forming"|"confirmed"|"cancelled","match_type": "male"|"female"|"mixed","notification_kind": "slot_held"|"slot_free_now"|"championship_added"|"championship_promoted"|"championship_moved"|"championship_cancelled"|"championship_fixture"|"match_invite","occupancy_kind": "booking"|"recurring"|"tournament"|"block"|"match"|"day_use"|"hold"|"championship","payment_method": "cash"|"transfer"|"card","payment_status": "reported"|"confirmed"|"rejected"|"refunded"|"voided","player_side": "drive"|"backhand"|"both","slot_hold_status": "active"|"claimed"|"declined"|"expired"|"released","slot_wait_status": "waiting"|"booked"|"expired"|"cancelled","tournament_status": "registration"|"closed"|"in_progress"|"finished"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -3580,7 +3640,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "booking_source": ["online", "reception"],"booking_status": ["confirmed", "cancelled"],"championship_category_status": ["open", "cancelled", "merged"],"championship_entry_status": ["active", "waiting", "withdrawn", "removed"],"championship_format": ["groups_knockout", "knockout", "round_robin"],"championship_gender": ["men", "women", "mixed", "open"],"championship_match_status": ["scheduled", "playing", "finished", "walkover"],"championship_seeding": ["ranking", "manual"],"championship_stage": ["group", "knockout"],"championship_status": ["draft", "registration", "closed", "drawn", "published", "in_progress", "finished", "cancelled"],"club_color_mode": ["system", "dark", "light"],"club_role": ["admin", "reception", "player"],"day_band": ["morning", "afternoon", "night"],"day_use_pass_status": ["bought", "inside", "cancelled"],"dominant_hand": ["right", "left"],"email_status": ["pending", "sent", "failed", "skipped"],"gender": ["male", "female"],"match_status": ["forming", "confirmed", "cancelled"],"match_type": ["male", "female", "mixed"],"notification_kind": ["slot_held", "slot_free_now", "championship_added", "championship_promoted", "championship_moved", "championship_cancelled", "championship_fixture", "match_invite"],"occupancy_kind": ["booking", "recurring", "tournament", "block", "match", "day_use", "hold", "championship"],"payment_method": ["cash", "transfer", "card"],"payment_status": ["reported", "confirmed", "rejected", "refunded"],"player_side": ["drive", "backhand", "both"],"slot_hold_status": ["active", "claimed", "declined", "expired", "released"],"slot_wait_status": ["waiting", "booked", "expired", "cancelled"],"tournament_status": ["registration", "closed", "in_progress", "finished", "cancelled"]
+            "booking_source": ["online", "reception"],"booking_status": ["confirmed", "cancelled"],"championship_category_status": ["open", "cancelled", "merged"],"championship_entry_status": ["active", "waiting", "withdrawn", "removed"],"championship_format": ["groups_knockout", "knockout", "round_robin"],"championship_gender": ["men", "women", "mixed", "open"],"championship_match_status": ["scheduled", "playing", "finished", "walkover"],"championship_seeding": ["ranking", "manual"],"championship_stage": ["group", "knockout"],"championship_status": ["draft", "registration", "closed", "drawn", "published", "in_progress", "finished", "cancelled"],"club_color_mode": ["system", "dark", "light"],"club_role": ["admin", "reception", "player"],"day_band": ["morning", "afternoon", "night"],"day_use_pass_status": ["bought", "inside", "cancelled"],"dominant_hand": ["right", "left"],"email_status": ["pending", "sent", "failed", "skipped"],"gender": ["male", "female"],"match_status": ["forming", "confirmed", "cancelled"],"match_type": ["male", "female", "mixed"],"notification_kind": ["slot_held", "slot_free_now", "championship_added", "championship_promoted", "championship_moved", "championship_cancelled", "championship_fixture", "match_invite"],"occupancy_kind": ["booking", "recurring", "tournament", "block", "match", "day_use", "hold", "championship"],"payment_method": ["cash", "transfer", "card"],"payment_status": ["reported", "confirmed", "rejected", "refunded", "voided"],"player_side": ["drive", "backhand", "both"],"slot_hold_status": ["active", "claimed", "declined", "expired", "released"],"slot_wait_status": ["waiting", "booked", "expired", "cancelled"],"tournament_status": ["registration", "closed", "in_progress", "finished", "cancelled"]
           }
         }
 } as const

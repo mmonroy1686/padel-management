@@ -105,7 +105,7 @@ export function TournamentBoard(props: TournamentBoardProps) {
 
       {signingUp ? (
         <section aria-labelledby="anotados" className="flex flex-col gap-2">
-          <h2 id="anotados" className="font-display text-2xl font-bold uppercase">
+          <h2 id="anotados" className="text-lg font-semibold">
             Anotados ({tournament.entries.length} de {tournament.maxPlayers})
           </h2>
           {tournament.entries.length > 0 ? (
@@ -152,14 +152,14 @@ export function TournamentBoard(props: TournamentBoardProps) {
       {played ? (
         <>
           <section aria-labelledby="ranking" className="flex flex-col gap-2">
-            <h2 id="ranking" className="font-display text-2xl font-bold uppercase">
+            <h2 id="ranking" className="text-lg font-semibold">
               {tournament.status === 'finished' ? 'Ranking final' : 'Ranking en vivo'}
             </h2>
             <Podium rows={props.ranking} finished={tournament.status === 'finished'} highlightEntryId={props.myEntryId} />
             <RankingTable rows={props.ranking} highlightEntryId={props.myEntryId} />
           </section>
           <section aria-labelledby="fixture" className="flex flex-col gap-2">
-            <h2 id="fixture" className="font-display text-2xl font-bold uppercase">
+            <h2 id="fixture" className="text-lg font-semibold">
               Fixture
             </h2>
             <FixtureList tournament={tournament} timezone={props.timezone} myEntryId={props.myEntryId} />

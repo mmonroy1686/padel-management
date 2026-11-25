@@ -44,10 +44,13 @@ export function ClubBoard({
   return (
     <section aria-labelledby="grilla" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="grilla" className="font-display text-2xl font-bold uppercase">
+        <h2 id="grilla" className="text-lg font-semibold">
           Grilla de canchas
         </h2>
-        <Legend variant="club" />
+        {/* On a phone each cell says its kind in words; the legend is for the full grid. */}
+        <div className="hidden md:block">
+          <Legend variant="club" />
+        </div>
       </div>
       {notice ? (
         <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
@@ -65,7 +68,7 @@ export function ClubBoard({
       <p className="text-sm text-fg-muted">Tocá una cancha libre para cargar una reserva, o una ocupada para ver el detalle.</p>
       {grid.outside.length > 0 ? (
         <div className="flex flex-col gap-1">
-          <h3 className="font-semibold">Fuera de la grilla</h3>
+          <h3 className="font-semibold">Fuera de horario</h3>
           <ul className="text-sm">
             {grid.outside.map((o) => (
               <li key={o.id}>

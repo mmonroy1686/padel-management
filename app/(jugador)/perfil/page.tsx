@@ -3,8 +3,8 @@ import { AvailabilityForm } from '@/components/profile/availability-form'
 import { PlayerProfileForm } from '@/components/profile/player-profile-form'
 import { PreferredCourtsForm } from '@/components/profile/preferred-courts-form'
 import { SubmitButton } from '@/components/ui/submit-button'
-import { Card } from '@/components/ui/card'
-import { ActionForm } from '@/components/ui/action-form'
+import { AutoSaveForm } from '@/components/ui/auto-save-form'
+import { PageSection } from '@/components/ui/page-section'
 import { saveAvailability, savePreferredCourts, saveProfile, setShowInClub, signOut } from '@/lib/actions/profile'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { availabilityKey } from '@/lib/domain/availability'
@@ -32,7 +32,8 @@ export default async function ProfilePage() {
         <h1 className="font-display text-4xl font-bold uppercase">{profile.display_name}</h1>
         <p className="text-fg-muted">{categoryLabel(membership.category, membership.category_validated)}</p>
       </div>
-      <Card>
+      <p className="text-sm text-fg-muted">Los cambios se guardan solos.</p>
+      <PageSection id="tus-datos" title="Tus datos">
         <PlayerProfileForm
           mode="profile"
           action={saveProfile}
@@ -45,26 +46,25 @@ export default async function ProfilePage() {
             isPublic: profile.is_public,
           }}
         />
-      </Card>
-      <Card className="flex flex-col gap-3">
-        <h2 className="font-display text-2xl font-bold uppercase">Cuándo solés poder jugar</h2>
-        <p className="text-sm text-fg-muted">Lo usamos para mostrarte partidos y sugerirte a otros. Nadie más lo ve.</p>
-        <AvailabilityForm
-          action={saveAvailability}
-          selected={availability.data.map((row) => availabilityKey(row.weekday, row.band))}
-        />
-      </Card>
-      <Card className="flex flex-col gap-3">
-        <h2 className="font-display text-2xl font-bold uppercase">Canchas preferidas</h2>
-        <PreferredCourtsForm
-          action={savePreferredCourts}
-          courts={courts.data}
-          selected={preferred.data.map((row) => row.court_id)}
-        />
-      </Card>
-      <Card className="flex flex-col gap-3">
-        <h2 className="font-display text-2xl font-bold uppercase">Ya están en el club</h2>
-        <ActionForm action={setShowInClub} submitLabel="Guardar" variant="secondary">
+      </PageSection>
+      {/* Optional, and long (21 boxes): closed until the player wants it. */}
+      <details className="group flex flex-col gap-3 border-t border-border pt-4">
+        <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3 text-lg font-semibold">
+          Preferencias de juego (opcional)
+          <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
+        </summary>
+        <div className="mt-3 flex flex-col gap-8">
+          <PageSection id="cuando-jugas" title="Cuándo solés poder jugar">
+            <p className="text-sm text-fg-muted">Lo usamos para mostrarte partidos y sugerirte a otros. Nadie más lo ve.</p>
+            <AvailabilityForm action={saveAvailability} selected={availability.data.map((row) => availabilityKey(row.weekday, row.band))} />
+          </PageSection>
+          <PageSection id="canchas-preferidas" title="Canchas preferidas">
+            <PreferredCourtsForm action={savePreferredCourts} courts={courts.data} selected={preferred.data.map((row) => row.court_id)} />
+          </PageSection>
+        </div>
+      </details>
+      <PageSection id="en-el-club" title="Ya están en el club">
+        <AutoSaveForm action={setShowInClub} label="«Ya están en el club»">
           <label className="flex min-h-11 items-center gap-3">
             <input type="checkbox" name="showInClub" defaultChecked={profile.show_in_club} className="size-5 accent-accent" />
             Aparecer en «Ya están en el club»
@@ -72,9 +72,9 @@ export default async function ProfilePage() {
           <p className="text-sm text-fg-muted">
             Cuando registrás tu ingreso de day use, los otros jugadores ven tu nombre en la lista del día.
           </p>
-        </ActionForm>
-      </Card>
-      <form action={signOut}>
+        </AutoSaveForm>
+      </PageSection>
+      <form action={signOut} className="border-t border-border pt-4">
         <SubmitButton label="Cerrar sesión" pendingLabel="Saliendo…" variant="secondary" />
       </form>
     </>

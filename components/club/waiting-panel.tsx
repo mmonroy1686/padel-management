@@ -6,7 +6,7 @@ import type { DayWait } from '@/lib/domain/waitlist'
 export function WaitingPanel({ waits }: { waits: DayWait[] }) {
   return (
     <section aria-labelledby="en-espera" className="flex flex-col gap-3">
-      <h2 id="en-espera" className="font-display text-2xl font-bold uppercase">
+      <h2 id="en-espera" className="text-lg font-semibold">
         En espera
       </h2>
       {waits.length === 0 ? (

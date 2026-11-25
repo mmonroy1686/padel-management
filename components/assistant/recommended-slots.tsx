@@ -8,7 +8,7 @@ export function RecommendedSlots({ items, onPick }: { items: { slot: BoardSlot; 
   if (items.length === 0) return null
   return (
     <section aria-labelledby="recomendados" className="flex flex-col gap-3">
-      <h2 id="recomendados" className="font-display text-2xl font-bold uppercase">
+      <h2 id="recomendados" className="text-lg font-semibold">
         Recomendados para armar
       </h2>
       <ul className="flex flex-col gap-2">

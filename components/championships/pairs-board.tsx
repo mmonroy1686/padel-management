@@ -47,7 +47,7 @@ export function PairsBoard({
   return (
     <section aria-labelledby="parejas" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="parejas" className="font-display text-2xl font-bold uppercase">
+        <h2 id="parejas" className="text-lg font-semibold">
           Parejas
         </h2>
         {editable && categories.length > 0 ? <Button onClick={() => setSheet({ kind: 'add' })}>Cargar pareja</Button> : null}

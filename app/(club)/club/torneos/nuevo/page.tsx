@@ -22,7 +22,7 @@ export default async function NewTournamentPage() {
   return (
     <>
       <BackLink href="/club/torneos">Volver a torneos</BackLink>
-      <h2 className="font-display text-2xl font-bold uppercase">Nuevo americano</h2>
+      <h2 className="text-lg font-semibold">Nuevo americano</h2>
       <Card>
         <NewTournamentForm
           courts={courts}

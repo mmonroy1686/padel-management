@@ -4,6 +4,8 @@ import {
   filterBoard,
   paymentsBoard,
   pendingCount,
+  splitDebts,
+  type BoardItem,
   type BoardColumn,
   type BoardFormat,
   type BoardInput,
@@ -119,12 +121,12 @@ describe('paymentsBoard', () => {
     ])
   })
 
-  it('shows what got done today, latest first, with the method and the time and no action', () => {
+  it('shows what got done today, latest first, with the method and the time; a desk charge can be voided', () => {
     const columns = paymentsBoard(input(), FORMAT)
     const collected = column(columns, 'collected')
     expect(collected.items.map((item) => [item.holder, item.done, item.action, item.when])).toEqual([
       ['Inés', { method: 'transfer', time: '15:30' }, undefined, ''],
-      ['Hugo', { method: 'cash', time: '14:10' }, undefined, 'día 2026-11-23'],
+      ['Hugo', { method: 'cash', time: '14:10' }, { type: 'void', fields: { paymentId: 'd1' } }, 'día 2026-11-23'],
     ])
     expect([collected.count, collected.total, collected.cash, collected.card]).toEqual([2, 750, 300, 0])
     expect(column(columns, 'unpaid').cash).toBeUndefined()
@@ -177,5 +179,37 @@ describe('pendingCount', () => {
     const columns = paymentsBoard(input(), FORMAT)
     expect(pendingCount(columns, 'collect')).toBe(6)
     expect(pendingCount(columns, 'giveBack')).toBe(1)
+  })
+})
+
+describe('splitDebts', () => {
+  const debt = (id: string, holder: string, at: number, amount = 1200): BoardItem => ({
+    id,
+    kind: 'booking',
+    holder,
+    what: 'Cancha 1',
+    when: '',
+    at,
+    amount,
+  })
+  const TODAY = 1_000_000
+
+  it('keeps today row by row, and groups a player with several older debts', () => {
+    const split = splitDebts(
+      [
+        debt('a', 'Sofía Cabrera', 100),
+        debt('b', 'Nicolás Rodríguez', 200),
+        debt('c', 'sofia cabrera', 300, 2000),
+        debt('d', 'Ana', TODAY + 10),
+      ],
+      TODAY,
+    )
+    expect(split.today.map((item) => item.id)).toEqual(['d'])
+    expect(split.older.map((item) => item.id)).toEqual(['b'])
+    expect(split.groups).toEqual([{ holder: 'Sofía Cabrera', items: [expect.objectContaining({ id: 'a' }), expect.objectContaining({ id: 'c' })], total: 3200 }])
+  })
+
+  it('has nothing to split when nothing is owed', () => {
+    expect(splitDebts([], TODAY)).toEqual({ today: [], older: [], groups: [] })
   })
 })

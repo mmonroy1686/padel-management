@@ -76,8 +76,9 @@ export function loyaltyOf(passes: LoyaltyPass[], rule: LoyaltyRule, today: Local
   return { stamps: left, earned: available + used, used, available, progress: left % rule.every }
 }
 
+// The gift at the end of the stamps row: "Gratis" for a full reward (a bare "-100%" read like a math answer).
 export function rewardLabel(percent: number): string {
-  return `-${percent}%`
+  return percent >= 100 ? 'Gratis' : `-${percent}%`
 }
 
 export function stampsText(loyalty: Loyalty, rule: LoyaltyRule): string {

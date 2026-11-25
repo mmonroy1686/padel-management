@@ -48,6 +48,6 @@ describe('PlayerProfileForm', () => {
     )
     expect(screen.getByLabelText('Otros jugadores pueden ver mi perfil')).not.toBeChecked()
     expect(screen.getByText(/el club la vuelve a validar/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Guardar cambios' })).not.toBeInTheDocument()
   })
 })

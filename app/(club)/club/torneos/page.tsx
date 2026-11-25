@@ -31,7 +31,7 @@ export default async function ClubTournamentsPage() {
     <>
       <section aria-labelledby="campeonatos" className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="campeonatos" className="font-display text-2xl font-bold uppercase">
+          <h2 id="campeonatos" className="text-lg font-semibold">
             Campeonatos
           </h2>
           <Link href="/club/torneos/campeonatos/nuevo" className={buttonClasses()}>
@@ -58,7 +58,7 @@ export default async function ClubTournamentsPage() {
 
       <section aria-labelledby="americanos" className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="americanos" className="font-display text-2xl font-bold uppercase">
+          <h2 id="americanos" className="text-lg font-semibold">
             Americanos
           </h2>
           <Link href="/club/torneos/nuevo" className={buttonClasses({ variant: 'secondary' })}>

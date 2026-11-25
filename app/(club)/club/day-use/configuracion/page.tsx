@@ -38,7 +38,7 @@ export default async function DayUseSettingsPage() {
   return (
     <>
       <BackLink href="/club/day-use">Volver a day use</BackLink>
-      <h2 className="font-display text-2xl font-bold uppercase">Configurar day use</h2>
+      <h2 className="text-lg font-semibold">Configurar day use</h2>
 
       {warnings.length > 0 ? (
         <section aria-labelledby="sin-bloquear" className="flex flex-col gap-2 rounded-2xl border border-danger p-4">

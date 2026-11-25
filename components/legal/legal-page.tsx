@@ -20,7 +20,7 @@ export function LegalPage({ document }: { document: LegalDocument }) {
       <p className="leading-relaxed">{withGaps(document.intro)}</p>
       {document.sections.map((section) => (
         <section key={section.title} className="flex flex-col gap-2">
-          <h2 className="font-display text-2xl font-bold uppercase">{section.title}</h2>
+          <h2 className="text-lg font-semibold">{section.title}</h2>
           {section.paragraphs.map((paragraph) => (
             <p key={paragraph} className="leading-relaxed">
               {withGaps(paragraph)}

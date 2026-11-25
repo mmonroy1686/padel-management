@@ -13,7 +13,7 @@ export default async function NewChampionshipPage() {
   return (
     <>
       <BackLink href="/club/torneos">Volver a torneos</BackLink>
-      <h2 className="font-display text-2xl font-bold uppercase">Nuevo campeonato</h2>
+      <h2 className="text-lg font-semibold">Nuevo campeonato</h2>
       <p className="text-fg-muted">
         Primero los datos. Después agregás los días de juego y las categorías, y abrís la inscripción.
       </p>

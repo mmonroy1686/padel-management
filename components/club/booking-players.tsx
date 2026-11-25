@@ -30,6 +30,7 @@ export function BookingPlayers({
   playerExtra,
   layout = 'list',
   canAddPlayers,
+  chargesOpen,
 }: {
   bookingId: string
   turn: TurnPlayers
@@ -41,11 +42,16 @@ export function BookingPlayers({
   layout?: PlayersLayout
   // "Completar jugadores" (canAddPlayers in lib/domain/club-home): someone missing and not ended yet.
   canAddPlayers: boolean
+  // The court layout (Inicio) keeps the charges behind one "Cobrar" per turn, so a screen of courts has one button
+  // each instead of five; true shows them at once (a row of Pendientes that was opened to charge).
+  chargesOpen?: boolean
 }) {
   const [charging, setCharging] = useState<number | 'rest' | null>(null)
   const [editing, setEditing] = useState(false)
   const [notice, setNotice] = useState<Notice | null>(null)
-  const canCharge = methods.cash || methods.transfer
+  const [open, setOpen] = useState(chargesOpen ?? layout === 'list')
+  const canPay = methods.cash || methods.transfer
+  const canCharge = canPay && open
 
   const succeed = (text: string) => {
     setCharging(null)
@@ -104,6 +110,11 @@ export function BookingPlayers({
           ))}
         </ul>
       )}
+      {canPay && !open && turn.restDue > 0 ? (
+        <Button variant="secondary" aria-expanded={false} onClick={() => setOpen(true)}>
+          Cobrar ({formatPrice(turn.restDue)})
+        </Button>
+      ) : null}
       {canAddPlayers ? (
         <Button
           variant="ghost"
@@ -127,7 +138,7 @@ export function BookingPlayers({
             onCancel={() => setCharging(null)}
           />
         ) : (
-          <Button variant="primary" onClick={() => startCharge('rest')}>
+          <Button variant={layout === 'court' ? 'secondary' : 'primary'} onClick={() => startCharge('rest')}>
             Cobrar todo lo que falta ({formatPrice(turn.restDue)})
           </Button>
         )

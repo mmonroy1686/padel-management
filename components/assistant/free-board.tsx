@@ -75,7 +75,7 @@ export function FreeBoard({
   const anyFree = board.rows.some((row) => row.cells.some((cell) => cell.state === 'free'))
   return (
     <section aria-labelledby="libres" className="flex flex-col gap-3">
-      <h2 id="libres" className="font-display text-2xl font-bold uppercase">
+      <h2 id="libres" className="text-lg font-semibold">
         Tablero de libres
       </h2>
       {anyFree ? null : <p className="rounded-xl border border-border p-4 text-fg-muted">No quedan turnos libres este día.</p>}

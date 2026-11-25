@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { Card } from '@/components/ui/card'
 import { Icon, type IconName } from '@/components/ui/icon'
 import {
   occupancyLine,
@@ -23,13 +22,13 @@ const LINK = 'inline-flex min-h-11 items-center font-semibold text-accent-ink un
 
 function DayCard({ id, icon, title, children }: { id: string; icon: IconName; title: string; children: ReactNode }) {
   return (
-    <Card role="article" aria-labelledby={id} className="flex flex-col gap-3">
-      <h3 id={id} className="flex items-center gap-2 font-display text-xl font-bold uppercase">
+    <article aria-labelledby={id} className="flex flex-col gap-3 border-t border-border pt-3">
+      <h3 id={id} className="flex items-center gap-2 font-semibold">
         <Icon name={icon} className="text-accent-ink" />
         {title}
       </h3>
       {children}
-    </Card>
+    </article>
   )
 }
 

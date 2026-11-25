@@ -59,7 +59,7 @@ export function EntriesManager({ tournament, deskMethods, actions }: { tournamen
 
   return (
     <section aria-labelledby="anotados" className="flex flex-col gap-3">
-      <h2 id="anotados" className="font-display text-2xl font-bold uppercase">
+      <h2 id="anotados" className="text-lg font-semibold">
         Anotados ({tournament.entries.length} de {tournament.maxPlayers})
       </h2>
       <DataTable

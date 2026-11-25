@@ -1,3 +1,4 @@
+import { showCourt } from './support/grid'
 import { expect, test, type Page } from '@playwright/test'
 import { addDays, localDateOf } from '../../lib/domain/time'
 import { clubRow, createMember } from './support/admin'
@@ -5,7 +6,8 @@ import { signInWithMagicLink } from './support/auth'
 import { bookFirstFreeSlot, reportTransferAs } from './support/booking'
 
 async function openFirstFreeSlot(page: Page): Promise<{ court: string; time: string }> {
-  const free = page.getByRole('button', { name: /^Cargar / }).first()
+  // On a phone only one court shows: the first free slot in view.
+  const free = page.getByRole('button', { name: /^Cargar / }).filter({ visible: true }).first()
   const [, court, time] = /^Cargar (.+), (\d\d:\d\d)$/.exec((await free.getAttribute('aria-label')) ?? '') ?? []
   await free.click()
   return { court, time }
@@ -22,6 +24,8 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
   // The booking is on the grid, with the transfer reported.
   await signInWithMagicLink(page, reception.email, `/club/grilla?dia=${day}`)
   const bookedCell = page.getByRole('button', { name: `${booked.courtName}, ${booked.time}: ${player.name}` })
+  // A phone shows one court at a time: the booking's.
+  await showCourt(page, booked.courtName)
   await expect(bookedCell).toContainText('Transferencia informada')
 
   // Confirm the payment in Cobros.
@@ -34,6 +38,7 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
   await expect(review.getByRole('status')).toContainText('confirm')
 
   await page.goto(`/club/grilla?dia=${day}`)
+  await showCourt(page, booked.courtName)
   await expect(bookedCell).toContainText('Pagada')
 
   // Block the first free slot.
@@ -56,9 +61,11 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
 
   // Live: a booking made elsewhere shows up without reloading the page.
   const other = await bookFirstFreeSlot(player, day)
+  await showCourt(page, other.courtName)
   await expect(page.getByRole('button', { name: `${other.courtName}, ${other.time}: ${player.name}` })).toBeVisible()
 
   // Cancel the player's booking: the slot is free again.
+  await showCourt(page, booked.courtName)
   await bookedCell.click()
   await page.getByRole('dialog', { name: player.name }).getByRole('button', { name: 'Cancelar reserva' }).click()
   await page.getByRole('dialog', { name: player.name }).getByRole('button', { name: '¿Seguro? Tocá de nuevo' }).click()

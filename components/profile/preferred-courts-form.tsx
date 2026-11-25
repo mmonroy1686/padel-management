@@ -1,6 +1,7 @@
 'use client'
 
-import { ActionForm, type FormAction } from '@/components/ui/action-form'
+import type { FormAction } from '@/components/ui/action-form'
+import { AutoSaveForm } from '@/components/ui/auto-save-form'
 
 export function PreferredCourtsForm({
   action,
@@ -13,7 +14,7 @@ export function PreferredCourtsForm({
 }) {
   const checked = new Set(selected)
   return (
-    <ActionForm action={action} submitLabel="Guardar canchas" variant="secondary">
+    <AutoSaveForm action={action} label="canchas preferidas">
       <fieldset className="flex flex-col gap-1">
         <legend className="sr-only">Canchas preferidas</legend>
         {courts.map((court) => (
@@ -29,6 +30,6 @@ export function PreferredCourtsForm({
           </label>
         ))}
       </fieldset>
-    </ActionForm>
+    </AutoSaveForm>
   )
 }

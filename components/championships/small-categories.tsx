@@ -13,7 +13,7 @@ export function SmallCategories({
 }) {
   return (
     <section aria-labelledby="pocas-parejas" className="flex flex-col gap-3 rounded-2xl border border-accent p-4">
-      <h2 id="pocas-parejas" className="font-display text-2xl font-bold uppercase">
+      <h2 id="pocas-parejas" className="text-lg font-semibold">
         Categorías con pocas parejas
       </h2>
       <p className="text-sm text-fg-muted">

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMember } from './support/admin'
+import { showCourt } from './support/grid'
 import { signInWithMagicLink } from './support/auth'
 import { insertPlayingBooking, insertRecentBooking, paymentsOf } from './support/club-home'
 
@@ -33,12 +34,17 @@ test('reception charges each player of the court in play from the Inicio', async
   await expect(players).toContainText('Jugador 4')
 
   // His share in cash.
+  // One "Cobrar" per turn opens its charges.
+  await card.getByRole('button', { name: 'Cobrar ($1.200)' }).click()
   await card.getByRole('button', { name: `Cobrar $300 a ${partner.name}` }).click()
   await card.getByRole('group', { name: `Cobrar $300 a ${partner.name}` }).getByRole('button', { name: 'Efectivo' }).click()
   await expect(card.getByRole('status')).toHaveText('Cobramos $300 en efectivo.')
   await expect(players.getByRole('listitem').filter({ hasText: partner.name })).toContainText('Pagó')
 
   // Everything left by transfer: the card is paid.
+  // The page refreshes after a charge: if the turn came back closed, open its charges again.
+  const reopen = card.getByRole('button', { name: 'Cobrar ($900)' })
+  if (await reopen.isVisible()) await reopen.click()
   await card.getByRole('button', { name: 'Cobrar todo lo que falta ($900)' }).click()
   await card.getByRole('group', { name: 'Cobrar todo lo que falta ($900)' }).getByRole('button', { name: 'Me transfirió' }).click()
   await expect(card.getByRole('status')).toHaveText('Cobramos $900 por transferencia.')
@@ -56,6 +62,7 @@ test('reception charges each player of the court in play from the Inicio', async
   // The Grilla shows the same booking paid, with the same players.
   await page.getByRole('link', { name: 'Grilla' }).click()
   const cell = page.getByRole('button', { name: `${playing.courtName}, ${playing.time}: ${holder.name}` })
+  await showCourt(page, playing.courtName)
   await expect(cell).toContainText('Pagada')
   await cell.click()
   const detail = page.getByRole('dialog', { name: holder.name })
@@ -80,6 +87,7 @@ test('a court that just ended stays in play while it owes, and leaves once it is
   await expect(page.getByRole('region', { name: 'Pendientes de cobro' })).not.toContainText(holder.name)
 
   // Everything in cash from the court: once paid, it leaves the Inicio.
+  await card.getByRole('button', { name: 'Cobrar ($1.200)' }).click()
   await card.getByRole('button', { name: 'Cobrar todo lo que falta ($1.200)' }).click()
   await card.getByRole('group', { name: 'Cobrar todo lo que falta ($1.200)' }).getByRole('button', { name: 'Efectivo' }).click()
   await expect(card).toHaveCount(0)

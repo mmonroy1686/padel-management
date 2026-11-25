@@ -45,8 +45,18 @@ function renderCourt(turn = turnOf()) {
 }
 
 describe('TurnCourt', () => {
-  it('draws four spots, each with the name and whether the player paid', () => {
+  it('keeps the charges behind one Cobrar per turn', async () => {
     renderCourt()
+    expect(screen.queryByRole('button', { name: 'Cobrar $300 a Ana Pérez' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cobrar todo lo que falta ($900)' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Cobrar ($900)' }))
+    expect(screen.getByRole('button', { name: 'Cobrar $300 a Ana Pérez' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Cobrar ($900)' })).not.toBeInTheDocument()
+  })
+
+  it('draws four spots, each with the name and whether the player paid', async () => {
+    renderCourt()
+    await userEvent.click(screen.getByRole('button', { name: 'Cobrar ($900)' }))
     const spots = within(screen.getByRole('list', { name: 'Jugadores' })).getAllByRole('listitem')
     expect(spots.map((spot) => spot.textContent)).toEqual([
       'Ana PérezCobrar $300',
@@ -61,6 +71,7 @@ describe('TurnCourt', () => {
 
   it('opens the confirmation under the court, and charges that share', async () => {
     const actions = renderCourt()
+    await userEvent.click(screen.getByRole('button', { name: 'Cobrar ($900)' }))
     await userEvent.click(screen.getByRole('button', { name: 'Cobrar $300 a Ana Pérez' }))
     const choice = screen.getByRole('group', { name: 'Cobrar $300 a Ana Pérez' })
     expect(screen.getByRole('list', { name: 'Jugadores' })).not.toContainElement(choice)

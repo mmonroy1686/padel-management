@@ -94,7 +94,7 @@ export function ChampionshipBoard(props: ChampionshipBoardProps) {
       </dl>
       {props.rules ? (
         <section aria-labelledby="reglamento" className="flex flex-col gap-2">
-          <h2 id="reglamento" className="font-display text-2xl font-bold uppercase">
+          <h2 id="reglamento" className="text-lg font-semibold">
             Reglamento
           </h2>
           <p className="whitespace-pre-line">{props.rules}</p>
@@ -103,7 +103,7 @@ export function ChampionshipBoard(props: ChampionshipBoardProps) {
 
       {props.entries.length > 0 ? (
         <section aria-labelledby="mis-inscripciones" className="flex flex-col gap-3">
-          <h2 id="mis-inscripciones" className="font-display text-2xl font-bold uppercase">
+          <h2 id="mis-inscripciones" className="text-lg font-semibold">
             Tus inscripciones
           </h2>
           <ul className="grid gap-3 md:grid-cols-2">
@@ -122,7 +122,7 @@ export function ChampionshipBoard(props: ChampionshipBoardProps) {
       ) : null}
 
       <section aria-labelledby="categorias" className="flex flex-col gap-3">
-        <h2 id="categorias" className="font-display text-2xl font-bold uppercase">
+        <h2 id="categorias" className="text-lg font-semibold">
           Categorías
         </h2>
         <ul className="grid gap-3 md:grid-cols-2">

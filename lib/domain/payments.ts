@@ -1,4 +1,5 @@
-export type PaymentStatus = 'reported' | 'confirmed' | 'rejected' | 'refunded'
+// voided: a desk charge taken back the same day (void_desk_payment); it never counts as paid.
+export type PaymentStatus = 'reported' | 'confirmed' | 'rejected' | 'refunded' | 'voided'
 export type PaymentState = 'paid' | 'reported' | 'pending' | 'refund_due' | 'none'
 export type PaymentLike = { status: PaymentStatus; amount: number }
 export type BookingLike = { price: number; status: 'confirmed' | 'cancelled' }

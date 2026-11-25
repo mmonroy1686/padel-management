@@ -12,7 +12,7 @@ export function MagicLinkForm({ next }: { next: string }) {
   if (state.status === 'sent') {
     return (
       <p role="status" className="text-lg">
-        Revisá tu email: te mandamos un enlace para entrar.
+        Revisá tu email: te mandamos un enlace para entrar. Si no llega en un minuto, mirá en spam o promociones.
       </p>
     )
   }

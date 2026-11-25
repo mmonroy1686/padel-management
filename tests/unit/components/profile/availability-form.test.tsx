@@ -13,18 +13,17 @@ describe('AvailabilityForm', () => {
     expect(screen.getAllByRole('checkbox')).toHaveLength(21)
   })
 
-  it('sends one key per checked box', async () => {
+  it('saves on its own when a box changes, one key per checked box', async () => {
     const action = vi.fn<FormAction>(async () => ({ status: 'ok', message: '' }))
     render(<AvailabilityForm action={action} selected={['4-night']} />)
     await userEvent.click(screen.getByRole('checkbox', { name: 'Sábado, mañana' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar horarios' }))
     await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
     expect(action.mock.calls[0][1].getAll('availability')).toEqual(['4-night', '6-morning'])
   })
 })
 
 describe('PreferredCourtsForm', () => {
-  it('sends the checked courts', async () => {
+  it('saves the checked courts on its own', async () => {
     const action = vi.fn<FormAction>(async () => ({ status: 'ok', message: '' }))
     render(
       <PreferredCourtsForm
@@ -34,8 +33,22 @@ describe('PreferredCourtsForm', () => {
       />,
     )
     await userEvent.click(screen.getByRole('checkbox', { name: 'Cancha 1' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar canchas' }))
     await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
     expect(action.mock.calls[0][1].getAll('courtIds')).toEqual(['c1', 'c2'])
+  })
+})
+
+describe('AvailabilityForm saving on its own', () => {
+  it('says it saved, and offers to retry when it fails', async () => {
+    const action = vi
+      .fn<FormAction>()
+      .mockResolvedValueOnce({ status: 'error', message: 'No pudimos guardar.' })
+      .mockResolvedValueOnce({ status: 'ok', message: '' })
+    render(<AvailabilityForm action={action} selected={[]} />)
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Lunes, noche' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos guardar.')
+    await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Guardado')
+    expect(action).toHaveBeenCalledTimes(2)
   })
 })

@@ -5,7 +5,9 @@ import { MyMatches } from '@/components/championships/my-matches'
 import { MatchCard } from '@/components/matches/match-card'
 import { buttonClasses } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Icon } from '@/components/ui/icon'
+import { HeroAction } from '@/components/ui/hero-action'
+import { EmptyLine, PageSection } from '@/components/ui/page-section'
+import { RowLink, RowList } from '@/components/ui/row-list'
 import { getClub, getViewer } from '@/lib/auth/viewer'
 import { loadDayGrid } from '@/lib/data/day'
 import { loadFreeCourts, loadMatches, loadPlayerContext } from '@/lib/data/matches'
@@ -18,7 +20,7 @@ import { joinStatus } from '@/lib/domain/match-join'
 import { riskOf } from '@/lib/domain/match-risk'
 import { isInMatch, statusLabel } from '@/lib/domain/matches'
 import { matchesForMe } from '@/lib/domain/matches-for-me'
-import { categoryLabel, firstName, incompleteHome, isProfileComplete, isStaffRole, SIDE_LABELS } from '@/lib/domain/profile'
+import { firstName, incompleteHome, isProfileComplete, isStaffRole } from '@/lib/domain/profile'
 import { addDays, localDateOf, zonedTime } from '@/lib/domain/time'
 import { openTournamentsText } from '@/lib/domain/tournaments'
 import { ClubSection } from '@/components/club-info/club-section'
@@ -88,123 +90,80 @@ export default async function HomePage() {
           declineAction={declineSlotHold}
         />
       ) : null}
-      <div>
-        <h1 className="font-display text-4xl font-bold uppercase">Hola, {firstName(profile.display_name)}</h1>
-        <p className="text-fg-muted">
-          {categoryLabel(membership.category, membership.category_validated)}.
-          {profile.side ? ` ${SIDE_LABELS[profile.side]}.` : ''}
-        </p>
-      </div>
-      {/* Two columns on wide screens: what you have booked on the left, what to do next on the right; then
-          the open matches across the page, two per row. */}
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-        <div className="flex flex-col gap-6">
-          <section aria-labelledby="tus-reservas" className="flex flex-col gap-3">
-            <h2 id="tus-reservas" className="font-display text-2xl font-bold uppercase">
-              Tus reservas
-            </h2>
+      <h1 className="font-display text-4xl font-bold uppercase">Hola, {firstName(profile.display_name)}</h1>
+      {/* The one thing Inicio is for, first: book a court. */}
+      <HeroAction href="/reservar" icon="calendar-plus" title="Reservar cancha" detail={freeTodayText(freeToday)} />
+      {/* Two columns on wide screens: what you have on the left, what to do next on the right. */}
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+        <div className="flex flex-col gap-8">
+          <PageSection id="tus-reservas" title="Tus reservas">
             {bookings.upcoming.length > 0 ? (
               <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">{bookings.upcoming.map(bookingCard)}</ul>
             ) : (
-              <p className="text-fg-muted">
-                No tenés reservas.{' '}
-                <Link href="/reservar" className="font-semibold text-accent-ink underline">
-                  Reservá una cancha
-                </Link>
-                .
-              </p>
+              <EmptyLine>No tenés reservas.</EmptyLine>
             )}
-          </section>
-          <WaitingCard waits={waitItems(waitlist.waits, waitlist.courts, today)} cancelAction={cancelSlotWait} />
-          {championshipMatches.length > 0 ? (
-            <Card className="flex flex-col gap-2">
-              <h2 className="font-display text-2xl font-bold uppercase">Mis partidos</h2>
-              <MyMatches matches={championshipMatches} />
-            </Card>
+            <WaitingCard waits={waitItems(waitlist.waits, waitlist.courts, today)} cancelAction={cancelSlotWait} />
+          </PageSection>
+          {myMatches.length > 0 || championshipMatches.length > 0 ? (
+            <PageSection id="tus-partidos" title="Tus partidos">
+              {myMatches.length > 0 ? (
+                <RowList label="Partidos abiertos en los que estás">
+                  {myMatches.map((match) => (
+                    <RowLink key={match.id} href={`/partidos/${match.id}`} title={whenText(match.startsAt)} detail={statusLabel(match)} />
+                  ))}
+                </RowList>
+              ) : null}
+              {championshipMatches.length > 0 ? <MyMatches matches={championshipMatches} /> : null}
+            </PageSection>
           ) : null}
-          <Card className="flex flex-col gap-2">
-            <h2 className="font-display text-2xl font-bold uppercase">Tu próximo partido</h2>
-            {myMatches.length > 0 ? (
-              <ul className="flex flex-col gap-2">
-                {myMatches.map((match) => (
+        </div>
+        <div className="flex flex-col gap-8">
+          <PageSection id="para-vos" title="Partidos para vos" more={forMe.length > 3 ? { href: '/partidos', label: 'Ver todos' } : undefined}>
+            {forMe.length > 0 ? (
+              <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
+                {forMe.slice(0, 3).map(({ match, reasons }) => (
                   <li key={match.id}>
-                    <Link
-                      href={`/partidos/${match.id}`}
-                      className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-border bg-bg px-3 hover:border-accent focus-visible:outline-2 focus-visible:outline-accent"
-                    >
-                      <span>
-                        <span className="block font-semibold">{whenText(match.startsAt)}</span>
-                        <span className="block text-sm text-fg-muted">{statusLabel(match)}</span>
-                      </span>
-                      <span aria-hidden="true" className="text-xl text-accent-ink">
-                        ›
-                      </span>
-                    </Link>
+                    <MatchCard
+                      match={match}
+                      viewerId={viewer.userId}
+                      whenText={whenText(match.startsAt)}
+                      status={joinStatus(match, context.player, { now, closeMinutes: club.match_close_minutes, busy: context.busy })}
+                      risk={riskOf(match, freeCourts.get(match.id) ?? [])}
+                      reasons={reasons}
+                    />
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-fg-muted">No estás anotado en ningún partido.</p>
+              <EmptyLine action={{ href: '/partidos', label: 'Armá uno' }}>Ahora no hay partidos armándose para tu categoría y lado.</EmptyLine>
             )}
-          </Card>
-          <Link
-            href="/torneos"
-            className="flex min-h-11 items-center gap-3 rounded-2xl border border-border bg-surface p-4 font-semibold hover:border-accent focus-visible:outline-2 focus-visible:outline-accent"
-          >
-            <Icon name="trophy" className="text-accent-ink" />
-            {openTournamentsText(openTournaments)}
-          </Link>
-        </div>
-        <div className="flex flex-col gap-6">
+          </PageSection>
           {dayUse ? <DayUseHomeCard home={dayUse} /> : null}
-          <Link href="/reservar" className={buttonClasses({ fullWidth: true })}>
-            {freeToday === 0 ? 'Reservar para otro día' : freeToday === 1 ? '1 turno libre hoy' : `${freeToday} turnos libres hoy`}
-          </Link>
+          <RowList label="Torneos">
+            <RowLink href="/torneos" icon="trophy" title={openTournamentsText(openTournaments)} />
+          </RowList>
         </div>
-        <section aria-labelledby="para-vos" className="flex flex-col gap-3 lg:col-span-2">
-          <h2 id="para-vos" className="font-display text-2xl font-bold uppercase">
-            Partidos para vos
-          </h2>
-          {forMe.length > 0 ? (
-            <ul className="grid gap-3 md:grid-cols-2">
-              {forMe.map(({ match, reasons }) => (
-                <li key={match.id}>
-                  <MatchCard
-                    match={match}
-                    viewerId={viewer.userId}
-                    whenText={whenText(match.startsAt)}
-                    status={joinStatus(match, context.player, { now, closeMinutes: club.match_close_minutes, busy: context.busy })}
-                    risk={riskOf(match, freeCourts.get(match.id) ?? [])}
-                    reasons={reasons}
-                  />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-fg-muted">
-              Ahora no hay partidos armándose para tu categoría y lado.{' '}
-              <Link href="/partidos" className="font-semibold text-accent-ink underline">
-                Armá uno
-              </Link>
-              .
-            </p>
-          )}
-        </section>
-        {bookings.past.length > 0 ? (
-          <details className="flex flex-col gap-3 lg:col-span-2">
-            <summary className="cursor-pointer font-display text-xl font-bold uppercase">Pasadas y canceladas</summary>
-            <ul className="mt-3 grid gap-3 md:grid-cols-2">{bookings.past.map(bookingCard)}</ul>
-          </details>
-        ) : null}
-        {isStaffRole(membership.role) ? (
-          <Link href="/club/inicio" className={buttonClasses({ variant: 'secondary', fullWidth: true, className: 'lg:col-span-2' })}>
-            Panel del club
-          </Link>
-        ) : null}
       </div>
+      {bookings.past.length > 0 ? (
+        <details className="flex flex-col gap-3">
+          <summary className="min-h-11 cursor-pointer content-center text-lg font-semibold">Pasadas y canceladas</summary>
+          <ul className="mt-3 grid gap-3 md:grid-cols-2">{bookings.past.map(bookingCard)}</ul>
+        </details>
+      ) : null}
+      {isStaffRole(membership.role) ? (
+        <Link href="/club/inicio" className={buttonClasses({ variant: 'secondary', fullWidth: true })}>
+          Panel del club
+        </Link>
+      ) : null}
       {clubInfo ? <ClubSection view={clubInfo} clubName={club.name} timezone={club.timezone} /> : null}
     </>
   )
+}
+
+// What the big "Reservar cancha" says under its title.
+function freeTodayText(free: number): string {
+  if (free === 0) return 'Hoy no quedan turnos: mirá otro día'
+  return free === 1 ? '1 turno libre hoy' : `${free} turnos libres hoy`
 }
 
 async function Landing({ club }: { club: Club }) {

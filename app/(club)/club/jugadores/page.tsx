@@ -12,7 +12,7 @@ export default async function PlayersPage() {
 
   return (
     <section aria-labelledby="jugadores" className="flex flex-col gap-4">
-      <h2 id="jugadores" className="font-display text-2xl font-bold uppercase">
+      <h2 id="jugadores" className="text-lg font-semibold">
         Jugadores
       </h2>
       <MembersList

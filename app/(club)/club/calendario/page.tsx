@@ -70,7 +70,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-2xl font-bold uppercase">
+        <h2 className="text-lg font-semibold">
           {view === 'mes' ? monthLabel(month) : `Semana del ${dayLongLabel(weeks[0][0])}`}
         </h2>
         <nav aria-label="Vista" className="flex gap-2">

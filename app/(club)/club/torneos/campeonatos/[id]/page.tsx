@@ -254,7 +254,7 @@ export default async function ManageChampionshipPage({
 
       {tab === 'hoy' ? (
         <section aria-labelledby="dia" className="flex flex-col gap-3">
-          <h2 id="dia" className="font-display text-2xl font-bold uppercase">
+          <h2 id="dia" className="text-lg font-semibold">
             Día del torneo
           </h2>
           {steps}
@@ -279,7 +279,7 @@ export default async function ManageChampionshipPage({
         <>
           {championship.status === 'closed' ? (
             <section aria-labelledby="cabezas" className="flex flex-col gap-3">
-              <h2 id="cabezas" className="font-display text-2xl font-bold uppercase">
+              <h2 id="cabezas" className="text-lg font-semibold">
                 Cabezas de serie
               </h2>
               <p className="text-sm text-fg-muted">
@@ -301,7 +301,7 @@ export default async function ManageChampionshipPage({
           {steps}
           {showsFixture ? (
             <section aria-labelledby="fixture" className="flex flex-col gap-3">
-              <h2 id="fixture" className="font-display text-2xl font-bold uppercase">
+              <h2 id="fixture" className="text-lg font-semibold">
                 Fixture
               </h2>
               {unplaced.length > 0 ? <UnplacedList items={unplaced} /> : null}
@@ -319,7 +319,7 @@ export default async function ManageChampionshipPage({
 
       {tab === 'zonas' ? (
         <section aria-labelledby="zonas" className="flex flex-col gap-3">
-          <h2 id="zonas" className="font-display text-2xl font-bold uppercase">
+          <h2 id="zonas" className="text-lg font-semibold">
             Zonas y llaves
           </h2>
           {zoneCategories.length > 1 ? (
@@ -416,7 +416,7 @@ export default async function ManageChampionshipPage({
           ) : null}
           {editable ? (
             <section aria-labelledby="datos" className="flex flex-col gap-3">
-              <h2 id="datos" className="font-display text-2xl font-bold uppercase">
+              <h2 id="datos" className="text-lg font-semibold">
                 Datos
               </h2>
               <div className="grid gap-3 lg:grid-cols-2">

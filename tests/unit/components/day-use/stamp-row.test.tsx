@@ -17,7 +17,7 @@ describe('StampRow', () => {
       'Sello 3: ganado',
       'Sello 4: falta',
       'Sello 5: falta',
-      'Recompensa -100%: por ganar',
+      'Recompensa Gratis: por ganar',
     ])
     expect(screen.getByText('3 de 5 sellos')).toBeInTheDocument()
   })
@@ -29,7 +29,7 @@ describe('StampRow', () => {
 
   it('lights the reward when there is one to use', () => {
     render(<StampRow loyalty={{ stamps: 5, earned: 1, used: 0, available: 1, progress: 0 }} rule={RULE} />)
-    expect(screen.getByRole('listitem', { name: 'Recompensa -100%: disponible' })).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { name: 'Recompensa Gratis: disponible' })).toBeInTheDocument()
     expect(screen.getByText('0 de 5 sellos · Tenés 1 recompensa')).toBeInTheDocument()
   })
 })

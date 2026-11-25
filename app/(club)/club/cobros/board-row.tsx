@@ -6,12 +6,13 @@ import { KIND_LABELS, METHOD_LABELS, type BoardItem } from '@/lib/domain/payment
 
 // One payment on the Cobros board, compact: who, how much and its button on one line; kind, what and when below; how
 // it came in (or why it was rejected) once done. A transfer to confirm links its receipt.
-export function BoardRow({ item, children }: { item: BoardItem; children?: ReactNode }) {
+// `below`: what opens under the row (how the player paid, or an error).
+export function BoardRow({ item, children, below }: { item: BoardItem; children?: ReactNode; below?: ReactNode }) {
   const detail = [KIND_LABELS[item.kind], item.what, item.when].filter(Boolean).join(' · ')
   return (
     <article aria-label={item.holder} className="flex flex-col gap-0.5 py-2.5">
       <div className="flex items-center gap-3">
-        <p className="min-w-0 flex-1 truncate font-semibold">{item.holder}</p>
+        <p className="min-w-0 flex-1 break-words font-semibold">{item.holder}</p>
         <p
           className={cn(
             'shrink-0 font-display text-xl font-bold tabular-nums',
@@ -59,6 +60,7 @@ export function BoardRow({ item, children }: { item: BoardItem; children?: React
           )}
         </p>
       ) : null}
+      {below}
     </article>
   )
 }

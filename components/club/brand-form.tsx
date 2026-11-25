@@ -32,6 +32,8 @@ export function BrandForm({ club, action }: BrandFormProps) {
   const [primaryText, setPrimaryText] = useState(club.brand_primary)
   const [backgroundText, setBackgroundText] = useState(club.brand_background)
   const [mode, setMode] = useState<ColorMode>(club.color_mode)
+  // One preview at a time (the two side by side took most of the page): the mode it shows in, switchable.
+  const [previewMode, setPreviewMode] = useState<ThemeMode>(club.color_mode === 'light' ? 'light' : 'dark')
   const primary = normalizeHex(primaryText)
   const background = normalizeHex(backgroundText)
   // An unfinished #RRGGBB previews as the saved color until it is complete.
@@ -99,9 +101,27 @@ export function BrandForm({ club, action }: BrandFormProps) {
         ))}
       </fieldset>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <Preview label="Oscuro" mode="dark" tokens={theme.dark} club={club} />
-        <Preview label="Claro" mode="light" tokens={theme.light} club={club} />
+      <div className="flex flex-col gap-3">
+        <div role="group" aria-label="Vista previa" className="inline-flex self-start rounded-full border border-border bg-surface p-1">
+          {(['dark', 'light'] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={previewMode === value}
+              onClick={() => setPreviewMode(value)}
+              className={`min-h-10 rounded-full px-4 text-sm font-semibold ${previewMode === value ? 'bg-bg text-fg shadow-sm' : 'text-fg-muted'}`}
+            >
+              {value === 'dark' ? 'Oscuro' : 'Claro'}
+            </button>
+          ))}
+        </div>
+        <div className="max-w-md">
+          {previewMode === 'dark' ? (
+            <Preview label="Oscuro" mode="dark" tokens={theme.dark} club={club} />
+          ) : (
+            <Preview label="Claro" mode="light" tokens={theme.light} club={club} />
+          )}
+        </div>
       </div>
       {notice ? (
         <p role="note" className="text-sm text-fg-muted">

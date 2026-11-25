@@ -11,18 +11,21 @@ import { courtHours, CourtTurnCard, type CourtListProps } from './court-card'
 export function PendingList({ turns, ...court }: Omit<CourtListProps, 'items'> & { turns: CourtTurn[] }) {
   const [open, setOpen] = useState<string | null>(null)
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="divide-y divide-border border-y border-border">
       {turns.map((turn) => {
         const hours = courtHours(turn, court.timezone)
         const isOpen = open === turn.id
         const holder = turn.isMatch || !turn.players[0] ? 'Partido abierto' : playerLabel(turn.players[0])
         return (
-          <li key={turn.id} className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-border bg-surface px-4 py-2">
-              <span className="font-semibold">{turn.courtName}</span>
-              <span className="text-sm text-fg-muted">{hours}</span>
-              <span className="min-w-0 flex-1 truncate">{holder}</span>
-              <span className="font-semibold text-accent-ink">Debe {formatPrice(turn.restDue)}</span>
+          <li key={turn.id} className="flex flex-col gap-2 py-2.5">
+            {/* The name whole (no truncating): it is how reception finds the person in front of them. */}
+            <div className="flex items-center gap-3">
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold">{holder}</span>
+                <span className="block text-sm text-fg-muted">
+                  {turn.courtName} · {hours} · <span className="font-semibold text-accent-ink">Debe {formatPrice(turn.restDue)}</span>
+                </span>
+              </span>
               <Button
                 variant={isOpen ? 'ghost' : 'secondary'}
                 aria-expanded={isOpen}
@@ -35,7 +38,7 @@ export function PendingList({ turns, ...court }: Omit<CourtListProps, 'items'> &
             </div>
             {isOpen ? (
               <div id={`pendiente-${turn.id}`}>
-                <CourtTurnCard turn={turn} {...court} />
+                <CourtTurnCard turn={turn} {...court} chargesOpen />
               </div>
             ) : null}
           </li>

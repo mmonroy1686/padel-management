@@ -169,6 +169,8 @@ order by w.week;
 --    cobros y pesos: los que siguen cobrados, por la semana en que se confirmaron. devueltos: por la semana en que se
 --    devolvieron (al devolver, la app pisa confirmed_at con ese momento), así que salen de su semana original y
 --    aparecen en esta. La plata que entró en una semana es pesos más los devueltos de semanas posteriores.
+--    anulados: cobros en efectivo o POS que recepción anuló el mismo día (se cobró a otro o mal el monto); no son
+--    plata que entró. Cuántos hay sirve para ver si la caja se equivoca seguido.
 with params as (select id as club_id, timezone as tz from public.clubs where slug = 'rustic'),
 weeks as (
   select ws::date as week, ws at time zone p.tz as from_ts, (ws + interval '7 days') at time zone p.tz as to_ts
@@ -181,16 +183,17 @@ select w.week as semana,
        count(*) filter (where p.status = 'confirmed') as cobros,
        coalesce(sum(p.amount) filter (where p.status = 'confirmed'), 0) as pesos,
        count(*) filter (where p.status = 'refunded') as devueltos,
-       coalesce(sum(p.amount) filter (where p.status = 'refunded'), 0) as pesos_devueltos
+       coalesce(sum(p.amount) filter (where p.status = 'refunded'), 0) as pesos_devueltos,
+       count(*) filter (where p.status = 'voided') as anulados
 from weeks w
 join public.payments p
-  on p.club_id = (select club_id from params) and p.status in ('confirmed', 'refunded')
+  on p.club_id = (select club_id from params) and p.status in ('confirmed', 'refunded', 'voided')
  and p.confirmed_at >= w.from_ts and p.confirmed_at < w.to_ts
 group by w.week, p.method
 order by w.week, p.method;
--- semana     | medio         | cobros | pesos  | devueltos | pesos_devueltos
--- 2026-11-16 | efectivo      |     36 |  52800 |         0 |               0
--- 2026-11-16 | transferencia |     12 |  19200 |         0 |               0
+-- semana     | medio         | cobros | pesos  | devueltos | pesos_devueltos | anulados
+-- 2026-11-16 | efectivo      |     36 |  52800 |         0 |               0 |        0
+-- 2026-11-16 | transferencia |     12 |  19200 |         0 |               0 |        0
 
 -- 7. Faltazos: reservas de cancha que recepción marcó «No vino», sobre las que ya empezaron esa semana. Los partidos
 --    abiertos no cuentan: ahí «No vino» no se marca.

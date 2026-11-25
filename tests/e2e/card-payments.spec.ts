@@ -56,8 +56,10 @@ test('the admin turns POS on and reception charges a booking with POS in Cobros'
   const deskPage = await deskContext.newPage()
   await signInWithMagicLink(deskPage, desk.email, '/club/cobros', NORTE)
   const unpaid = deskPage.getByRole('region', { name: 'Sin cobrar', exact: true }).getByRole('article', { name: player.name })
-  await expect(unpaid.getByRole('button', { name: 'Cobrar en efectivo' })).toBeVisible()
-  await unpaid.getByRole('button', { name: 'Cobrar con POS' }).click()
+  await unpaid.getByRole('button', { name: new RegExp(`^Cobrar .* a ${player.name}$`) }).click()
+  const how = unpaid.getByRole('group')
+  await expect(how.getByRole('button', { name: 'Efectivo' })).toBeVisible()
+  await how.getByRole('button', { name: 'POS' }).click()
 
   // Collected today, as POS, and not in the till's cash.
   const collected = deskPage.getByRole('region', { name: 'Cobrado hoy', exact: true })

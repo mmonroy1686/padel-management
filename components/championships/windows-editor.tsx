@@ -26,7 +26,7 @@ export function WindowsEditor({
 }) {
   return (
     <section aria-labelledby="dias-de-juego" className="flex flex-col gap-3">
-      <h2 id="dias-de-juego" className="font-display text-2xl font-bold uppercase">
+      <h2 id="dias-de-juego" className="text-lg font-semibold">
         Días de juego
       </h2>
       {windows.length > 0 ? (

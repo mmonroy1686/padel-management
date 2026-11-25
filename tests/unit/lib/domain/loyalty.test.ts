@@ -89,7 +89,8 @@ describe('texts', () => {
   })
 
   it('labels the reward and the progress', () => {
-    expect(rewardLabel(100)).toBe('-100%')
+    expect(rewardLabel(100)).toBe('Gratis')
+    expect(rewardLabel(50)).toBe('-50%')
     expect(stampsText({ ...NO_LOYALTY, progress: 3 }, RULE)).toBe('3 de 5 sellos')
   })
 

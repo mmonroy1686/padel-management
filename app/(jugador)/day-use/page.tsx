@@ -53,14 +53,14 @@ export default async function DayUsePage({ searchParams }: { searchParams: Searc
       </div>
       {rule.enabled ? (
         <Card className="flex flex-col gap-3">
-          <h2 className="font-display text-2xl font-bold uppercase">Tus sellos</h2>
+          <h2 className="text-lg font-semibold">Tus sellos</h2>
           <StampRow loyalty={loyalty} rule={rule} />
           <p className="text-sm text-fg-muted">{loyaltyRuleText(rule)}</p>
         </Card>
       ) : null}
       {mine.length > 0 ? (
         <section aria-labelledby="tus-pases" className="flex flex-col gap-2">
-          <h2 id="tus-pases" className="font-display text-2xl font-bold uppercase">
+          <h2 id="tus-pases" className="text-lg font-semibold">
             Tus pases
           </h2>
           <ul className="flex flex-col gap-2">

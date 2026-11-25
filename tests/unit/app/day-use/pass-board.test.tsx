@@ -57,7 +57,7 @@ describe('PassBoard', () => {
       payment: { state: 'paid', due: 0, canReportTransfer: false, rejectionReason: null },
     })
     expect(screen.getByText('Sin costo: usaste tu recompensa.')).toBeInTheDocument()
-    expect(screen.getByText('$0 (-100% con tu recompensa)')).toBeInTheDocument()
+    expect(screen.getByText('$0 (Gratis con tu recompensa)')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Ya transferí' })).not.toBeInTheDocument()
   })
 
