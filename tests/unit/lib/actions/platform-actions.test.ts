@@ -11,7 +11,7 @@ vi.mock('@/lib/actions/revalidate', () => ({ revalidateBookings }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ rpc }) }))
 vi.mock('@/lib/auth/request-origin', () => ({ requestOrigin: async () => origin.value }))
 
-const { createClub, resendAdminInvitation } = await import('@/app/plataforma/actions')
+const { createClub, renameClub, resendAdminInvitation } = await import('@/app/plataforma/actions')
 const { errorMessage } = await import('@/lib/domain/errors')
 const IDLE = { status: 'idle' as const }
 
@@ -67,6 +67,35 @@ describe('createClub without a domain', () => {
       message: 'Para crear clubes hace falta el dominio (NEXT_PUBLIC_ROOT_DOMAIN): cada club vive en su subdominio.',
     })
     expect(rpc).not.toHaveBeenCalled()
+  })
+})
+
+describe('renameClub', () => {
+  const clubId = 'a0000000-0000-0000-0000-000000000001'
+
+  it('moves the club to its new address', async () => {
+    rpc.mockResolvedValueOnce({ data: { slug: 'norte', name: 'Club Demo' }, error: null })
+    expect(await renameClub(IDLE, form({ clubId, slug: ' Norte ' }))).toEqual({
+      status: 'ok',
+      message: 'Listo: Club Demo ahora está en http://norte.localhost:3000.',
+    })
+    expect(rpc).toHaveBeenCalledWith('rename_club', { p_club_id: clubId, p_slug: 'norte' })
+    expect(revalidateBookings).toHaveBeenCalled()
+  })
+
+  it('explains a malformed slug before the database, and a reserved one from it', async () => {
+    expect(await renameClub(IDLE, form({ clubId, slug: 'con espacios' }))).toEqual({
+      status: 'error',
+      message: errorMessage('invalid_slug'),
+    })
+    expect(await renameClub(IDLE, form({ clubId: 'nope', slug: 'norte' }))).toEqual({
+      status: 'error',
+      message: errorMessage('invalid_input'),
+    })
+    expect(rpc).not.toHaveBeenCalled()
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'slug_reserved' } })
+    expect(await renameClub(IDLE, form({ clubId, slug: 'www' }))).toEqual({ status: 'error', message: errorMessage('slug_reserved') })
+    expect(revalidateBookings).not.toHaveBeenCalled()
   })
 })
 

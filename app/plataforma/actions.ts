@@ -6,7 +6,7 @@ import { requestOrigin } from '@/lib/auth/request-origin'
 import { clubDomainSuffix, clubUrl } from '@/lib/club/host'
 import { errorMessage } from '@/lib/domain/errors'
 import { readUuid } from '@/lib/domain/input'
-import { parseNewClubForm } from '@/lib/domain/platform'
+import { parseNewClubForm, parseRenameClubForm } from '@/lib/domain/platform'
 import { createClient } from '@/lib/supabase/server'
 
 // /plataforma. create_club and resend_admin_invitation check the platform admin. revalidateBookings refreshes the app
@@ -32,6 +32,17 @@ export async function createClub(_previous: ActionState, form: FormData): Promis
   revalidateBookings()
   const url = clubUrl(data.slug, process.env, origin)
   return ok(`Listo: ${data.name} está en ${url}. Le mandamos la invitación a ${adminEmail}; también puede entrar en ${url}/invitacion con ese email.`)
+}
+
+// The club moves to another subdomain (rename_club checks the platform admin and the slug).
+export async function renameClub(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = parseRenameClubForm(form)
+  if (!parsed.ok) return failed(parsed.message)
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('rename_club', { p_club_id: parsed.value.clubId, p_slug: parsed.value.slug })
+  if (error || !data) return failed(errorMessage(error?.message))
+  revalidateBookings()
+  return ok(`Listo: ${data.name} ahora está en ${clubUrl(data.slug, process.env, await requestOrigin())}.`)
 }
 
 export async function resendAdminInvitation(_previous: ActionState, form: FormData): Promise<ActionState> {

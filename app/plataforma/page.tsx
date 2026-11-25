@@ -4,12 +4,13 @@ import { notFound, redirect } from 'next/navigation'
 import { NewClubForm } from '@/components/platform/new-club-form'
 import { ActionForm } from '@/components/ui/action-form'
 import { Card } from '@/components/ui/card'
+import { Field, inputClasses } from '@/components/ui/field'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { getViewer } from '@/lib/auth/viewer'
 import { clubDomainSuffix, clubUrl } from '@/lib/club/host'
 import { isPlatformAdmin, loadPlatformClubs } from '@/lib/data/platform'
 import { clubSummary, isPlatformHost } from '@/lib/domain/platform'
-import { createClub, resendAdminInvitation } from './actions'
+import { createClub, renameClub, resendAdminInvitation } from './actions'
 
 export const metadata: Metadata = { title: 'Plataforma', robots: { index: false } }
 
@@ -63,6 +64,21 @@ export default async function PlatformPage() {
                   <a href={url} className="break-all text-sm underline underline-offset-4">
                     {url}
                   </a>
+                  {domain ? (
+                    <details className="text-sm">
+                      <summary className="cursor-pointer py-2 underline underline-offset-4">Cambiar dirección</summary>
+                      <ActionForm action={renameClub} submitLabel="Cambiar dirección" pendingLabel="Cambiando…"
+                        variant="secondary" size="sm" accessibleLabel={`Cambiar la dirección de ${club.name}`}>
+                        <input type="hidden" name="clubId" value={club.id} />
+                        <Field label="Dirección nueva" htmlFor={`slug-${club.id}`}
+                          hint={`Los links, invitaciones y apps instaladas con ${club.slug}${domain} dejan de andar.`}>
+                          <input id={`slug-${club.id}`} name="slug" required maxLength={40} defaultValue={club.slug}
+                            autoCapitalize="none" autoComplete="off" aria-describedby={`slug-${club.id}-hint`}
+                            className={inputClasses} />
+                        </Field>
+                      </ActionForm>
+                    </details>
+                  ) : null}
                   {club.adminInvitationExpiresAt && club.staff === 0 ? (
                     <ActionForm action={resendAdminInvitation} submitLabel="Reenviar invitación" pendingLabel="Reenviando…"
                       variant="secondary" size="sm" accessibleLabel={`Reenviar la invitación del admin de ${club.name}`}>
