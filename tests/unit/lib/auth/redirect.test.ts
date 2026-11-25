@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getSiteUrl, originFromHeaders, safeNextPath, strayAuthCodeRedirect, callbackError } from '@/lib/auth/redirect'
+import { callbackError, getSiteUrl, landingAfterSignIn, originFromHeaders, safeNextPath, strayAuthCodeRedirect } from '@/lib/auth/redirect'
 
 describe('safeNextPath', () => {
   it.each(['/', '/reservar', '/partidos?fecha=2026-10-01'])('keeps the internal path %s', (path) => {
@@ -96,5 +96,18 @@ describe('callbackError', () => {
     expect(callbackError('pkce_code_verifier_not_found')).toBe('otro-navegador')
     expect(callbackError('otp_expired')).toBe('callback')
     expect(callbackError(undefined)).toBe('callback')
+  })
+})
+
+describe('landingAfterSignIn', () => {
+  it('sends the staff to the panel when they asked for no page', () => {
+    expect(landingAfterSignIn('/', 'admin')).toBe('/club/inicio')
+    expect(landingAfterSignIn('/', 'reception')).toBe('/club/inicio')
+  })
+
+  it('keeps players, people with no club yet and any page someone asked for', () => {
+    expect(landingAfterSignIn('/', 'player')).toBe('/')
+    expect(landingAfterSignIn('/', null)).toBe('/')
+    expect(landingAfterSignIn('/reservar', 'admin')).toBe('/reservar')
   })
 })

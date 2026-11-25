@@ -196,3 +196,14 @@ Aparece solo después de reservar o de armar un partido, no después de anotarse
     5. Jugadores (club) sigue siendo una pila de tarjetas.
   - Detector: 2 avisos, los dos falsos positivos (la red dibujada de la cancha y el crédito del mapa de Leaflet).
 - **`DESIGN.md` todavía no se escribió:** conviene escribirlo después de la segunda vuelta, para que documente el sistema terminado.
+
+## Segunda vuelta (rama `feat/ux-v2-ronda2`)
+
+### El staff entra al panel (25/11)
+
+- Pedido de Miguel: el admin, al entrar, va al panel y no a la pantalla del jugador. Lo extendí a recepción, que también entra a trabajar.
+- `landingAfterSignIn` (`lib/auth/redirect.ts`): si después del enlace mágico (o de Google) el destino es `/` y la persona es admin o recepción del club de ese subdominio, va a `/club/inicio`. Un destino pedido a propósito (`?next=/reservar`) se respeta, y los jugadores siguen yendo a su Inicio.
+- Solo cambia el momento de entrar. Desde el panel, «Ir a la app de jugadores» sigue llevando a `/`, así que el staff que también juega llega a su Inicio.
+- Tests:
+  - Vitest de `landingAfterSignIn`;
+  - e2e `sign-in-landing.spec.ts`: admin y recepción llegan al panel, la jugadora a su Inicio, y el admin con `?next=/reservar` llega a Reservar.
