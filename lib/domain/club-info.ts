@@ -242,6 +242,22 @@ export function clubInfoView(club: ClubInfoClub, photoUrls: string[]): ClubInfoV
   }
 }
 
+export type MapTiles = { url: string; attribution: string }
+
+export const OPENSTREETMAP_TILES: MapTiles = {
+  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+}
+
+// Where the map images come from: NEXT_PUBLIC_MAP_TILES_URL and NEXT_PUBLIC_MAP_ATTRIBUTION (README, «Mapa del
+// club»). Without them, or with a URL that is not an https tile template, OpenStreetMap's public servers: fine for
+// development and the pilot, not for a commercial app with traffic.
+export function mapTiles(env: { url?: string; attribution?: string }): MapTiles {
+  const url = env.url?.trim() ?? ''
+  if (!url.startsWith('https://') || !['{z}', '{x}', '{y}'].every((part) => url.includes(part))) return OPENSTREETMAP_TILES
+  return { url, attribution: env.attribution?.trim() ?? '' }
+}
+
 // Nominatim (OpenStreetMap's search), one request per click of «Buscar en el mapa», narrowed to the club's country.
 export function nominatimUrl(query: string, timezone: string): string {
   const params = new URLSearchParams({ q: query, format: 'jsonv2', limit: '1' })

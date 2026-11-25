@@ -4,7 +4,10 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useEffect, useMemo } from 'react'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
-import type { LatLng } from '@/lib/domain/club-info'
+import { type LatLng, mapTiles } from '@/lib/domain/club-info'
+
+// Spelled out so Next inlines them in the browser bundle.
+const TILES = mapTiles({ url: process.env.NEXT_PUBLIC_MAP_TILES_URL, attribution: process.env.NEXT_PUBLIC_MAP_ATTRIBUTION })
 
 export type ClubMapProps = {
   pin: LatLng | null
@@ -36,7 +39,7 @@ function PickOnClick({ onPick }: { onPick: (point: LatLng) => void }) {
   return null
 }
 
-// OpenStreetMap through Leaflet, no key. edit: tapping the map or dragging the pin moves it. view: only shows it,
+// Leaflet with the configured tiles (OpenStreetMap by default, no key). edit: tapping the map or dragging the pin moves it. view: only shows it,
 // without wheel zoom or one-finger drag, so scrolling Inicio does not move the map by accident.
 export default function ClubMap({ pin, fallback, mode, label, onPick }: ClubMapProps) {
   const editing = mode === 'edit'
@@ -60,11 +63,7 @@ export default function ClubMap({ pin, fallback, mode, label, onPick }: ClubMapP
         dragging={editing || !L.Browser.mobile}
         className={editing ? 'h-72 w-full' : 'h-48 w-full'}
       >
-        <TileLayer
-          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          maxZoom={19}
-        />
+        <TileLayer url={TILES.url} attribution={TILES.attribution} maxZoom={19} />
         <Recenter pin={pin} />
         {editing && onPick ? <PickOnClick onPick={onPick} /> : null}
         {pin ? (

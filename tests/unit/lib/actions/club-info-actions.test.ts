@@ -85,6 +85,11 @@ describe('club photos', () => {
     expect(remove).toHaveBeenCalledWith([`${CLUB}/photo-9.jpg`])
   })
 
+  it('says so when the file never got uploaded', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'photo_missing' } })
+    expect(await addClubPhoto(`${CLUB}/photo-2.jpg`)).toEqual({ status: 'error', message: errorMessage('photo_missing') })
+  })
+
   it('keeps the file of a photo already added when a retry repeats it', async () => {
     rpc.mockResolvedValueOnce({ data: null, error: { message: 'duplicate key value', code: '23505' } })
     expect(await addClubPhoto(`${CLUB}/photo-1.jpg`)).toMatchObject({ status: 'error' })

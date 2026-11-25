@@ -4,7 +4,9 @@ import {
   directionsUrl,
   isGoogleMapsUrl,
   mapsCoordinates,
+  mapTiles,
   nominatimPoint,
+  OPENSTREETMAP_TILES,
   nominatimUrl,
   parseClubInfoForm,
   readInstagram,
@@ -180,6 +182,21 @@ describe('clubInfoView', () => {
       'https://instagram.com/rustic',
       'mailto:hola@rustic.uy',
     ])
+  })
+})
+
+describe('mapTiles', () => {
+  it('is OpenStreetMap without the variables or with a URL that is not a tile template', () => {
+    expect(mapTiles({})).toEqual(OPENSTREETMAP_TILES)
+    expect(mapTiles({ url: 'http://tiles.example/{z}/{x}/{y}.png', attribution: 'X' })).toEqual(OPENSTREETMAP_TILES)
+    expect(mapTiles({ url: 'https://tiles.example/map.png', attribution: 'X' })).toEqual(OPENSTREETMAP_TILES)
+  })
+
+  it('uses the configured provider and its attribution', () => {
+    expect(mapTiles({ url: ' https://tiles.example/{z}/{x}/{y}.png?key=k ', attribution: '© Example' })).toEqual({
+      url: 'https://tiles.example/{z}/{x}/{y}.png?key=k',
+      attribution: '© Example',
+    })
   })
 })
 
