@@ -15,11 +15,13 @@ type FileFieldProps = {
   buttonLabel?: string
   // Called once the person picked: a form that uploads on pick (the logo) submits from here.
   onPick?: () => void
+  // compact: a small button and no file name next to it (a photo that uploads on pick shows itself instead).
+  compact?: boolean
 }
 
 // A file picker in Spanish: the browser's own one reads "Choose File / No file chosen" in English on
 // many phones. The native input stays (forms and tests read it); the button opens it.
-export function FileField({ id, name, label, accept, inputRef, ariaRequired, multiple, buttonLabel = 'Elegir archivo', onPick }: FileFieldProps) {
+export function FileField({ id, name, label, accept, inputRef, ariaRequired, multiple, buttonLabel = 'Elegir archivo', onPick, compact = false }: FileFieldProps) {
   const [fileName, setFileName] = useState<string | null>(null)
   return (
     <div className="flex flex-col gap-2">
@@ -27,12 +29,14 @@ export function FileField({ id, name, label, accept, inputRef, ariaRequired, mul
         {label}
       </label>
       <div className="flex min-w-0 items-center gap-3">
-        <Button variant="secondary" onClick={() => inputRef.current?.click()}>
+        <Button variant="secondary" size={compact ? 'sm' : 'md'} onClick={() => inputRef.current?.click()}>
           {buttonLabel}
         </Button>
-        <span className="min-w-0 truncate text-sm text-fg-muted" aria-live="polite">
-          {fileName ?? 'Ningún archivo elegido'}
-        </span>
+        {compact ? null : (
+          <span className="min-w-0 truncate text-sm text-fg-muted" aria-live="polite">
+            {fileName ?? 'Ningún archivo elegido'}
+          </span>
+        )}
       </div>
       <input
         ref={inputRef}

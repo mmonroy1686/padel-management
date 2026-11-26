@@ -47,6 +47,7 @@ export function AvatarForm({ userId, name, profile, saveAction, removeAction, up
             accept={AVATAR_TYPES.join(',')}
             inputRef={fileInput}
             onPick={() => form.current?.requestSubmit()}
+            compact
           />
         </form>
         {hasPhoto ? (
