@@ -21,6 +21,7 @@ export default async function PlayersPage() {
         canChangeRoles={viewer.membership.role === 'admin'}
         validateAction={validateCategory}
         roleAction={setMemberRole}
+        timezone={viewer.club.timezone}
       />
     </section>
   )

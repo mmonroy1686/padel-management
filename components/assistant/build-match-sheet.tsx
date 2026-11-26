@@ -2,6 +2,7 @@
 
 import { useActionState, useMemo, useState } from 'react'
 import { InviteList } from '@/components/assistant/invite-list'
+import type { PlayerContact } from '@/lib/domain/contact'
 import { ReasonChips } from '@/components/assistant/reason-chips'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ export function BuildMatchSheet({
   siteUrl,
   createAction,
   inviteAction,
+  whatsapp = {},
   onClose,
 }: {
   slot: BoardSlot
@@ -29,6 +31,7 @@ export function BuildMatchSheet({
   siteUrl: string
   createAction: CreateMatchAction
   inviteAction: InviteAction
+  whatsapp?: Record<string, PlayerContact>
   onClose: () => void
 }) {
   const { proposal } = slot
@@ -51,6 +54,8 @@ export function BuildMatchSheet({
           <InviteList
             matchId={matchId}
             candidates={candidates}
+            whatsapp={whatsapp}
+            timezone={timezone}
             message={`🎾 ${matchLine({ courtName: slot.courtName, startsAt: slot.startsAt, ...choice }, timezone)}\nSumate acá: ${siteUrl}/partidos/${matchId}`}
             inviteAction={inviteAction}
           />

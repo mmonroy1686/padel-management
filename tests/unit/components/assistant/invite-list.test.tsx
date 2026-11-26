@@ -38,6 +38,21 @@ describe('InviteList', () => {
     expect(href).toContain(encodeURIComponent('https://rustic.app/partidos/m9'))
   })
 
+  it('opens the chat of a player who accepted WhatsApp; the rest share the text without a recipient', () => {
+    render(
+      <InviteList
+        matchId="m9"
+        candidates={CANDIDATES}
+        message={MESSAGE}
+        inviteAction={vi.fn<InviteAction>()}
+        whatsapp={{ b: { phone: '099123456', whatsappConsent: true } }}
+        timezone="America/Montevideo"
+      />,
+    )
+    expect(screen.getByRole('link', { name: 'WhatsApp a Bruno Díaz' }).getAttribute('href')).toMatch(/^https:\/\/wa\.me\/59899123456\?text=/)
+    expect(screen.getByRole('link', { name: 'WhatsApp a Hugo Paz' }).getAttribute('href')).not.toMatch(/wa\.me\/598/)
+  })
+
   it('says why an invitation failed', async () => {
     const inviteAction = vi.fn<InviteAction>(async () => ({ ok: false, message: 'El partido ya no está abierto.' }))
     render(<InviteList matchId="m9" candidates={CANDIDATES} message={MESSAGE} inviteAction={inviteAction} />)

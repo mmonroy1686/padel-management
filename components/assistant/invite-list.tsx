@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 import { ReasonChips } from '@/components/assistant/reason-chips'
 import { Button, buttonClasses } from '@/components/ui/button'
 import type { InviteAction } from '@/lib/actions/result'
+import { playerWhatsappUrl, type PlayerContact } from '@/lib/domain/contact'
 import { whatsappUrl } from '@/lib/domain/match-share'
 import { inviteText } from '@/lib/domain/match-suggestions'
 import type { CandidateView } from '@/lib/domain/slot-planner'
@@ -26,11 +27,16 @@ export function InviteList({
   candidates,
   message,
   inviteAction,
+  whatsapp = {},
+  timezone = 'America/Montevideo',
 }: {
   matchId: string
   candidates: CandidateView[]
   message: string
   inviteAction: InviteAction
+  // Who accepted WhatsApp: their own chat, with the invitation written; the rest share the text without a recipient.
+  whatsapp?: Record<string, PlayerContact>
+  timezone?: string
 }) {
   const [invited, setInvited] = useState<ReadonlySet<string>>(new Set())
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null)
@@ -77,7 +83,10 @@ export function InviteList({
                 </Button>
               )}
               <a
-                href={whatsappUrl(inviteText(candidate.name, message))}
+                href={
+                  playerWhatsappUrl(whatsapp[candidate.playerId] ?? null, timezone, inviteText(candidate.name, message)) ??
+                  whatsappUrl(inviteText(candidate.name, message))
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`WhatsApp a ${candidate.name}`}

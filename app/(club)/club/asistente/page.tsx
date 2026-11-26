@@ -12,6 +12,7 @@ import { flyerLayout, flyerText } from '@/lib/domain/free-slots-flyer'
 import { isLocalDate } from '@/lib/domain/input'
 import { addDays, localDateOf } from '@/lib/domain/time'
 import { createStaffMatch, inviteToMatch } from './actions'
+import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = { title: 'Asistente' }
 
@@ -27,7 +28,15 @@ export default async function AssistantPage({ searchParams }: { searchParams: Se
   const date = isLocalDate(dia) && dia >= today ? dia : today
   const days = Array.from({ length: 7 }, (_, index) => addDays(today, index))
 
-  const { grid, board } = await loadAssistantDay(club, date, viewer, now)
+  const [{ grid, board }, contacts] = await Promise.all([
+    loadAssistantDay(club, date, viewer, now),
+    (await createClient()).rpc('club_member_contacts', { p_club_id: club.id }),
+  ])
+  if (contacts.error) throw contacts.error
+  // Only who accepted WhatsApp: "WhatsApp a X" opens their chat; the rest share the text without a recipient.
+  const whatsapp = Object.fromEntries(
+    contacts.data.filter((row) => row.whatsapp_consent && row.phone).map((row) => [row.user_id, { phone: row.phone, whatsappConsent: true }]),
+  )
   const siteUrl = (await requestOrigin())
   const recommended = recommendedSlots(board, now, club.match_close_minutes).map((slot) => ({
     slot,
@@ -51,6 +60,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Se
             siteUrl={siteUrl}
             createAction={createStaffMatch}
             inviteAction={inviteToMatch}
+            whatsapp={whatsapp}
           />
         </div>
         <FlyerShare

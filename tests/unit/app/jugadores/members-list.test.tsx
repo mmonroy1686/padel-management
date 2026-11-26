@@ -6,9 +6,27 @@ import type { FormAction } from '@/components/ui/action-form'
 import type { MemberView } from '@/lib/domain/members'
 
 const MEMBERS: MemberView[] = [
-  { userId: 'u1', name: 'Martín Pérez', role: 'player', category: 5, validated: true },
-  { userId: 'u2', name: 'Ana López', role: 'player', category: 6, validated: false },
-  { userId: 'admin', name: 'Dani Admin', role: 'admin', category: null, validated: false },
+  {
+    userId: 'u1',
+    name: 'Martín Pérez',
+    role: 'player',
+    category: 5,
+    validated: true,
+    avatar: null,
+    email: 'martin@mail.test',
+    contact: { phone: '099123456', whatsappConsent: true },
+  },
+  {
+    userId: 'u2',
+    name: 'Ana López',
+    role: 'player',
+    category: 6,
+    validated: false,
+    avatar: null,
+    email: 'ana@mail.test',
+    contact: { phone: '098765432', whatsappConsent: false },
+  },
+  { userId: 'admin', name: 'Dani Admin', role: 'admin', category: null, validated: false, avatar: null, email: null, contact: null },
 ]
 
 function renderList(canChangeRoles: boolean) {
@@ -21,6 +39,7 @@ function renderList(canChangeRoles: boolean) {
       canChangeRoles={canChangeRoles}
       validateAction={validateAction}
       roleAction={roleAction}
+      timezone="America/Montevideo"
     />,
   )
   return { validateAction, roleAction }
@@ -72,5 +91,22 @@ describe('MembersList', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
     await userEvent.click(within(rowOf('Dani Admin')).getByRole('button', { name: 'Editar a Dani Admin' }))
     expect(screen.queryByRole('button', { name: 'Cambiar rol' })).not.toBeInTheDocument()
+  })
+
+  it("shows each member's email and WhatsApp, and opens the chat only with their consent", async () => {
+    renderList(true)
+    await userEvent.click(screen.getByRole('button', { name: 'Editar a Martín Pérez' }))
+    const sheet = screen.getByRole('dialog', { name: 'Martín Pérez' })
+    expect(sheet).toHaveTextContent('martin@mail.test')
+    expect(sheet).toHaveTextContent('099 123 456')
+    expect(within(sheet).getByRole('link', { name: 'WhatsApp a Martín Pérez' })).toHaveAttribute('href', 'https://wa.me/59899123456?text=Hola%20Mart%C3%ADn')
+  })
+
+  it('says when a member did not accept WhatsApp messages', async () => {
+    renderList(true)
+    await userEvent.click(screen.getByRole('button', { name: 'Editar a Ana López' }))
+    const sheet = screen.getByRole('dialog', { name: 'Ana López' })
+    expect(sheet).toHaveTextContent('No aceptó mensajes por WhatsApp')
+    expect(within(sheet).queryByRole('link', { name: /WhatsApp/ })).not.toBeInTheDocument()
   })
 })

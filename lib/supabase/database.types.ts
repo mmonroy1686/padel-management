@@ -1853,6 +1853,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"club_member_contacts":
+{ Args: { "p_club_id": string }; Returns: {
+              "email": string,"phone": string,"user_id": string,"whatsapp_consent": boolean
+            }[]
+                           },
 "club_staff":
 { Args: { "p_club_id": string }; Returns: {
               "display_name": string,"email": string,"role": Database["public"]['Enums']["club_role"],"user_id": string
