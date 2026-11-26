@@ -207,3 +207,49 @@ Aparece solo después de reservar o de armar un partido, no después de anotarse
 - Tests:
   - Vitest de `landingAfterSignIn`;
   - e2e `sign-in-landing.spec.ts`: admin y recepción llegan al panel, la jugadora a su Inicio, y el admin con `?next=/reservar` llega a Reservar.
+
+### Críticas 3 a 7 y lo que cambió (25–26/11)
+
+El puntaje de `/impeccable critique` (dos evaluaciones aisladas: revisión de diseño y detector) fue 26 → 26 → 27 → 28 → 28 → 28. Los informes guardados están en `.impeccable/critique/`. El detector nunca encontró problemas reales; sus dos avisos son falsos positivos (la red de `turn-court.tsx` y el crédito de Leaflet).
+
+Lo que se hizo, por pantalla:
+- **Inicio del club:**
+  - una fila por turno con un solo botón;
+  - buscador «Cobrar a…»;
+  - «+N deudas más · $X en Cobros», que lleva a Cobros filtrado;
+  - barras de tiempo y de ocupación en tinta.
+- **Cobros:**
+  - una entrada por persona, con las deudas de campeonato en pareja dentro de cada jugador;
+  - «Cobrar» todo lo de una persona en un paso;
+  - transferencias plegadas, con «Marcar todas»;
+  - conteo en personas y totales en una línea;
+  - `?q=` para llegar buscando a alguien.
+- **Barra de cobro** (`ChargeReceipt`):
+  - fija abajo, en Cobros y en el Inicio;
+  - «Deshacer» de 30 s (decisión de Miguel), todo o nada con la RPC nueva `void_desk_payments`;
+  - se va sola al vencer y deja espacio al final.
+- **Jugador:**
+  - el botón grande y Reservar llevan al próximo día con lugar;
+  - chips con los próximos turnos que abren la hoja de reserva (`?turno=`);
+  - «Tus reservas» solo si hay algo;
+  - «El club» plegado;
+  - Partidos por día y «Cancha a confirmar».
+- **Club:**
+  - Ajustes como índice, con «Club» en `/club/ajustes/club` y Monitoreo solo para el admin de la plataforma;
+  - Jugadores y Day use en filas (`DataTable phone="rows"`);
+  - la barra de recepción con Day use en lugar de Jugadores (decisión de Miguel).
+- **Color:**
+  - el color del club, que cada club elige, una vez por pantalla;
+  - «elegido» en tinta invertida (`SELECTED`);
+  - acciones de fila con el botón `outline`.
+
+La Grilla del club sigue con una cancha por vez en el celular, por decisión de Miguel.
+
+Miguel decidió parar la UI en 28 y escribir `DESIGN.md`. Lo que la crítica pide para el 30 son cambios de fondo, pendientes para después del piloto:
+- un solo «Cobrar» por persona también en el Inicio;
+- cobrar varias deudas en una sola operación de la base (devolviendo los ids de los pagos para el Deshacer);
+- el color del club en lo que es plata, no en «Ver» ni en «Anular»;
+- pausar el tiempo del Deshacer;
+- acortar «El día» en el Inicio del club.
+
+`DESIGN.md` (raíz) y `.impeccable/design.json` documentan el sistema: la imagen «El mostrador del club», tono sobrio y preciso, y las reglas One Voice, Ink Selection, Information Is Not Action, One Shout y Flat Desk.

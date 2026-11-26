@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-26T16:10:00Z",
+  "title": "Design System: Rustic Pádel",
+  "extensions": {
+    "colorMeta": {
+      "club-primary": { "role": "primary", "displayName": "Color del club (Rustic: ámbar)", "canonical": "var(--accent)", "tonalRamp": ["#3D2800", "#5C3D00", "#8A5A00", "#B87A00", "#E39A0B", "#FCB021", "#FDCB6B", "#FEE7B8"] },
+      "club-primary-ink-light": { "role": "primary", "displayName": "Tinta del club sobre claro", "canonical": "var(--accent-ink)" },
+      "court-blue": { "role": "secondary", "displayName": "Azul cancha", "canonical": "#025995", "tonalRamp": ["#011A2C", "#012C4A", "#02406B", "#025995", "#1F77B4", "#4DA3DB", "#8EC5EA", "#D2E8F6"] },
+      "night": { "role": "neutral", "displayName": "Verde noche", "canonical": "#021716", "tonalRamp": ["#010B0B", "#021716", "#0A2624", "#1E3A38", "#3C5A58", "#6E8786", "#B8C4C3", "#E6ECEB"] },
+      "day-surface": { "role": "neutral", "displayName": "Superficie de día", "canonical": "#F1F4F4" },
+      "danger-on-day": { "role": "error", "displayName": "Peligro", "canonical": "#B42318" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Título de cada pantalla y montos grandes; Barlow Condensed en mayúsculas." },
+      "headline": { "displayName": "Headline", "purpose": "Botón principal y fechas de tarjetas; condensada en mayúsculas." },
+      "title": { "displayName": "Title", "purpose": "Títulos de sección en minúscula normal." },
+      "body": { "displayName": "Body", "purpose": "Todo lo que se lee; 16px mínimo en campos." },
+      "label": { "displayName": "Label", "purpose": "Campos, acciones de fila y detalle de filas." }
+    },
+    "shadows": [
+      { "name": "floating", "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", "purpose": "Solo lo que flota sobre la lista: la barra de cobro y las hojas." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Respuesta de botones (150ms) y entradas." },
+      { "name": "ease-drawer", "value": "cubic-bezier(0.32, 0.72, 0, 1)", "purpose": "Hojas que suben desde abajo (320ms, salen en 200ms)." },
+      { "name": "press", "value": "scale(0.97)", "purpose": "Botones al presionar; se omite con prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "48rem" },
+      { "name": "lg", "value": "64rem" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "La acción que vinimos a hacer; una por pantalla, en el color del club.",
+      "html": "<button class=\"ds-btn-primary\">Reservar cancha</button>",
+      "css": ".ds-btn-primary { min-height: 44px; padding: 0 20px; border: none; border-radius: 12px; background: var(--accent, #FCB021); color: var(--on-accent, #000); font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-size: 1.125rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; cursor: pointer; transition: filter 150ms cubic-bezier(0.23,1,0.32,1), transform 150ms cubic-bezier(0.23,1,0.32,1); } .ds-btn-primary:hover { filter: brightness(1.08); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #FCB021); outline-offset: 2px; }"
+    },
+    {
+      "name": "Acción de fila",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Cobrar, Sumarme, Revisar en cada fila de una lista: borde neutro, el color del club solo al pasar.",
+      "html": "<button class=\"ds-btn-outline\">Cobrar</button>",
+      "css": ".ds-btn-outline { min-height: 44px; padding: 0 12px; border: 2px solid var(--border, #D5DCDB); border-radius: 12px; background: transparent; color: var(--fg, #021716); font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-size: 1rem; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: border-color 150ms ease; } .ds-btn-outline:hover { border-color: var(--accent, #FCB021); } .ds-btn-outline:focus-visible { outline: 2px solid var(--accent, #FCB021); outline-offset: 2px; }"
+    },
+    {
+      "name": "Chips de días",
+      "kind": "chip",
+      "refersTo": "chip-selected",
+      "description": "Elegido en tinta invertida, nunca en el color del club.",
+      "html": "<div class=\"ds-chips\"><a class=\"ds-chip ds-chip-on\" aria-current=\"date\">Hoy</a><a class=\"ds-chip\">Mañana</a><a class=\"ds-chip\">sáb 28</a></div>",
+      "css": ".ds-chips { display: flex; gap: 8px; } .ds-chip { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--border, #D5DCDB); border-radius: 9999px; background: var(--surface, #F1F4F4); color: var(--fg, #021716); font-family: 'Barlow', sans-serif; font-weight: 600; text-decoration: none; } .ds-chip-on { background: var(--fg, #021716); border-color: var(--fg, #021716); color: var(--bg, #fff); }"
+    },
+    {
+      "name": "Fila de lista",
+      "kind": "card",
+      "description": "Una persona o un turno por fila: nombre completo, detalle en gris, una acción a la derecha.",
+      "html": "<ul class=\"ds-rows\"><li class=\"ds-row\"><span class=\"ds-row-main\"><b>Florencia Díaz</b><small>4 deudas · incluye hoy</small></span><b class=\"ds-amount\">$1.650</b><button class=\"ds-row-btn\">Cobrar</button></li></ul>",
+      "css": ".ds-rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border, #D5DCDB); border-bottom: 1px solid var(--border, #D5DCDB); } .ds-row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 0; font-family: 'Barlow', sans-serif; color: var(--fg, #021716); } .ds-row + .ds-row { border-top: 1px solid var(--border, #D5DCDB); } .ds-row-main { display: flex; flex-direction: column; flex: 1; min-width: 0; } .ds-row-main small { color: var(--fg-muted, #4A5857); font-size: 0.875rem; } .ds-amount { font-family: 'Barlow Condensed', sans-serif; font-size: 1.25rem; } .ds-row-btn { min-height: 44px; padding: 0 12px; border: 2px solid var(--border, #D5DCDB); border-radius: 12px; background: transparent; color: inherit; font-weight: 700; text-transform: uppercase; }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Etiqueta visible arriba; foco con contorno en el color del club.",
+      "html": "<label class=\"ds-field\"><span>Nombre</span><input class=\"ds-input\" value=\"Rustic Pádel\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 4px; font-family: 'Barlow', sans-serif; font-size: 0.875rem; font-weight: 600; color: var(--fg, #021716); } .ds-input { min-height: 44px; padding: 0 16px; border: 1px solid var(--border, #D5DCDB); border-radius: 12px; background: var(--bg, #fff); color: var(--fg, #021716); font-size: 1rem; font-weight: 400; } .ds-input:focus-visible { outline: 2px solid var(--accent, #FCB021); outline-offset: 0; }"
+    },
+    {
+      "name": "La cancha dibujada",
+      "kind": "custom",
+      "refersTo": "court-block",
+      "description": "Cuatro lugares con la red al medio; 'Falta' con borde punteado en el color del club.",
+      "html": "<ul class=\"ds-court\"><li class=\"ds-spot\"><b>Bruno</b><small>Drive</small></li><li class=\"ds-spot ds-free\"><b>Falta</b><small>Revés</small></li><li class=\"ds-spot ds-free\"><b>Falta</b><small>Drive</small></li><li class=\"ds-spot ds-free\"><b>Falta</b><small>Revés</small></li></ul>",
+      "css": ".ds-court { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 20px 8px; max-width: 220px; margin: 0; padding: 8px; list-style: none; border-radius: 16px; background: #025995; color: #fff; font-family: 'Barlow', sans-serif; } .ds-court::before { content: ''; position: absolute; left: 8px; right: 8px; top: 50%; border-top: 2px solid #fff; } .ds-spot { display: flex; flex-direction: column; gap: 2px; min-height: 64px; padding: 8px; border: 1px solid #fff; border-radius: 12px; font-size: 0.875rem; } .ds-spot small { opacity: 0.85; } .ds-free { border: 2px dashed var(--accent, #FCB021); color: var(--accent, #FCB021); background: rgb(0 0 0 / 0.25); }"
+    },
+    {
+      "name": "Barra de cobro",
+      "kind": "custom",
+      "description": "Fija abajo tras un cobro: la frase con monto, forma y persona, Deshacer (30 s) y cerrar.",
+      "html": "<div class=\"ds-receipt\"><span class=\"ds-check\">✓</span><p>Cobramos $4.800 en efectivo a Nicolás Rodríguez.</p><button class=\"ds-undo\">Deshacer</button></div>",
+      "css": ".ds-receipt { display: flex; align-items: center; gap: 12px; max-width: 576px; padding: 12px; border: 1px solid var(--border, #D5DCDB); border-radius: 16px; background: var(--surface, #F1F4F4); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); font-family: 'Barlow', sans-serif; color: var(--fg, #021716); } .ds-receipt p { flex: 1; margin: 0; font-size: 0.875rem; font-weight: 600; } .ds-check { color: var(--court-ink, #025995); font-weight: 700; } .ds-undo { min-height: 44px; padding: 0 12px; border: 2px solid var(--accent, #FCB021); border-radius: 12px; background: color-mix(in srgb, var(--accent, #FCB021) 12%, transparent); color: var(--fg, #021716); font-weight: 600; font-size: 0.875rem; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El mostrador del club",
+    "overview": "Todo se diseña para quien atiende con gente esperando, y para el jugador que reserva con el celular en la mano entre dos cosas. Cada pantalla tiene una sola acción principal y la plata siempre a la vista, escrita dentro de la frase. El color del club aparece solo donde hay que actuar. El tono es sobrio y preciso: una herramienta de trabajo que se siente del club por los detalles, no por la decoración. La app es multi-club: cada club elige su color principal y su fondo en Ajustes → Club, y la app arma el resto corrigiendo lo que haga falta para que se lea.",
+    "keyCharacteristics": [
+      "Un solo uso del color del club por pantalla: la acción que vinimos a hacer.",
+      "Filas antes que tarjetas; una acción por fila.",
+      "\"Elegido\" en tinta invertida, nunca en el color del club.",
+      "Voseo rioplatense y montos dentro de las frases.",
+      "Mobile primero: todo se toca con el pulgar (44px), nada se desliza de costado salvo las tiras de días."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "El color del club se usa una vez por pantalla, en la acción que vinimos a hacer. Las acciones de fila (Cobrar, Sumarme, Revisar) van con borde neutro; el color vuelve en la elección que abren (Efectivo / POS).", "section": "colors" },
+      { "name": "The Ink Selection Rule", "body": "Lo elegido en un conjunto (día, filtro, carril, cancha, sección de Ajustes) se marca con tinta invertida (SELECTED: fondo fg, texto bg). El color del club nunca significa \"elegido\".", "section": "colors" },
+      { "name": "The Information Is Not Action Rule", "body": "Barras de tiempo, de ocupación y de cupo van en tinta (fg-muted sobre border). Que el tiempo pase es información, no algo para hacer.", "section": "colors" },
+      { "name": "The One Shout Rule", "body": "Mayúsculas condensadas solo para el título de la pantalla y su botón principal. Las secciones van en minúscula normal; si todo grita, nada se oye.", "section": "typography" },
+      { "name": "The Flat Desk Rule", "body": "Nada tiene sombra en reposo. Si algo flota sobre el contenido (hoja, barra de cobro), lleva sombra; si no flota, no.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar los tokens (accent, accent-ink, fg, border, SELECTED) y nunca un color escrito: cada club cambia el suyo.",
+      "Do poner una sola acción en el color del club por pantalla (The One Voice Rule).",
+      "Do mostrar listas como filas con divisor, con una acción por fila y el nombre completo (no cortarlo: es como recepción encuentra a la persona).",
+      "Do escribir el monto dentro de la frase: \"Cobrar $300 a Paula\", \"Debe $1.200\".",
+      "Do plegar lo que no se usa ahora (deudas agrupadas, transferencias, «El club») y abrirlo en el lugar.",
+      "Do dar 44px a todo lo tocable y respetar prefers-reduced-motion."
+    ],
+    "donts": [
+      "Don't usar el color del club para marcar lo elegido, el tiempo, la ocupación ni la navegación.",
+      "Don't apilar tarjetas con etiquetas en mayúscula (QUIÉN / CÓDIGO / ESTADO) en el celular: filas.",
+      "Don't poner títulos de sección en mayúsculas condensadas (The One Shout Rule).",
+      "Don't agregar sombras a cosas que no flotan (The Flat Desk Rule).",
+      "Don't usar emoji como íconos ni mezclar estilos de íconos."
+    ]
+  }
+}
