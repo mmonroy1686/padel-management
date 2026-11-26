@@ -192,6 +192,15 @@ export function countFree(rows: GridRow[]): number {
   return rows.reduce((total, row) => total + row.cells.filter((cell) => cell.state === 'free').length, 0)
 }
 
+// The earliest free cell of a day (the first row with one, then the first court): what "Próximo libre" names.
+export function firstFree(rows: GridRow[]): { time: string; courtName: string } | null {
+  for (const row of rows) {
+    const cell = row.cells.find((candidate) => candidate.state === 'free')
+    if (cell) return { time: row.slot.label, courtName: cell.court.name }
+  }
+  return null
+}
+
 export function dayStats(grid: DayGrid): { occupancyPercent: number; revenue: number } {
   const cells = grid.rows.flatMap((row) => row.cells)
   if (cells.length === 0) return { occupancyPercent: 0, revenue: 0 }

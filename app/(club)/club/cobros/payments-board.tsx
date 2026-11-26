@@ -49,6 +49,8 @@ const SUMMARY: { key: ColumnKey; label: string; unit: [string, string]; tone: st
 
 // Done columns show the latest few; the rest is one tap away, so the page ends.
 const DONE_SHOWN = 5
+// Sin cobrar shows the first players (today's first); the search finds anyone else, and "Ver los N" lists them all.
+const DEBTS_SHOWN = 8
 
 // How long "Deshacer" stays after a charge.
 const UNDO_MS = 10_000
@@ -286,16 +288,25 @@ function Rows({ items, limit, action }: { items: BoardItem[]; limit?: number; ac
 // Sin cobrar: one entry per player (today and older days together), whoever owes from today first.
 function UnpaidList({ items, todayFrom, action }: { items: BoardItem[]; todayFrom: number; action: (item: BoardItem) => ReactNode }) {
   const groups = debtsByPlayer(items, todayFrom)
+  const [all, setAll] = useState(false)
+  const visible = all ? groups : groups.slice(0, DEBTS_SHOWN)
   return (
-    <ul aria-label="Deudas por jugador" className="flex flex-col divide-y divide-border border-y border-border">
-      {groups.map((group) =>
-        group.items.length === 1 ? (
-          <li key={group.items[0].id}>{action(group.items[0])}</li>
-        ) : (
-          <DebtGroupRow key={group.holder} group={group} action={action} />
-        ),
-      )}
-    </ul>
+    <>
+      <ul aria-label="Deudas por jugador" className="flex flex-col divide-y divide-border border-y border-border">
+        {visible.map((group) =>
+          group.items.length === 1 ? (
+            <li key={group.items[0].id}>{action(group.items[0])}</li>
+          ) : (
+            <DebtGroupRow key={group.holder} group={group} action={action} />
+          ),
+        )}
+      </ul>
+      {visible.length < groups.length ? (
+        <button type="button" onClick={() => setAll(true)} className="min-h-11 self-start text-sm font-semibold text-accent-ink underline underline-offset-4">
+          Ver los {groups.length}
+        </button>
+      ) : null}
+    </>
   )
 }
 
