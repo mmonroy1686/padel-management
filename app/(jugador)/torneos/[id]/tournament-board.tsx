@@ -1,5 +1,6 @@
 'use client'
 
+import { BrandIcon } from '@/components/ui/brand-icon'
 import { Notice } from '@/components/ui/notice'
 import { useCallback, useState } from 'react'
 import { PaymentBadge } from '@/components/booking/payment-badge'
@@ -137,6 +138,7 @@ export function TournamentBoard(props: TournamentBoardProps) {
         {status.ok ? <Button onClick={() => setSheet('join')}>{status.text}</Button> : null}
         {tournament.status === 'registration' ? (
           <Button variant="secondary" onClick={() => setSheet('share')}>
+            <BrandIcon name="whatsapp" />
             Compartir en WhatsApp
           </Button>
         ) : null}

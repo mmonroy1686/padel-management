@@ -1,5 +1,6 @@
 'use client'
 
+import { BrandIcon } from '@/components/ui/brand-icon'
 import { Notice } from '@/components/ui/notice'
 import { useCallback, useState, type ReactNode } from 'react'
 import { JoinSheet } from '@/components/matches/join-sheet'
@@ -113,7 +114,10 @@ export function MatchBoard(props: MatchBoardProps) {
         </details>
       ) : null}
       <div className="flex flex-wrap items-center gap-2">
-        {forming ? <Button onClick={() => setSheet('share')}>Compartir en WhatsApp</Button> : null}
+        {forming ? <Button onClick={() => setSheet('share')}>
+            <BrandIcon name="whatsapp" />
+            Compartir en WhatsApp
+          </Button> : null}
         {leave?.allowed ? (
           <Button variant="ghost" onClick={() => setSheet('leave')}>
             Salir del partido

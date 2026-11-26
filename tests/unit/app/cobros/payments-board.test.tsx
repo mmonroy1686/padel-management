@@ -186,6 +186,58 @@ describe('PaymentsBoard, for the desk', () => {
     expect(confirmMany.mock.calls[0][1].getAll('paymentId')).toEqual(['t1', 't2'])
     expect(await screen.findByRole('status')).toHaveTextContent('2 transferencias confirmadas.')
   })
+
+  it('marks every transfer with one tap, and unmarks them the same way', async () => {
+    const confirmMany = vi.fn<FormAction>(async () => ({ status: 'ok', message: 'Listo.' }))
+    const columns = paymentsBoard(
+      {
+        ...INPUT,
+        transfers: ['Ana', 'Bruno', 'Carla'].map((holder, index) => ({
+          id: `t${index}`,
+          kind: 'booking' as const,
+          amount: 1000,
+          holder,
+          startsAt: at('2026-11-20T23:00:00Z'),
+          courtName: 'Cancha 1',
+          receiptUrl: null,
+        })),
+      },
+      { when: () => '', time: () => '', deskMethods: ['cash'] },
+    )
+    render(<PaymentsBoard columns={columns} actions={{ ...baseActions(), confirmMany }} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Ver las 3 transferencias' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Marcar todas (3)' }))
+    expect(screen.getByRole('checkbox', { name: 'Marcar la transferencia de Carla' })).toBeChecked()
+    // One left out: back to "Marcar todas", half checked.
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Marcar la transferencia de Bruno' }))
+    expect(screen.getByRole('checkbox', { name: 'Marcar todas (3)' })).toHaveProperty('indeterminate', true)
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar las marcadas (2)' }))
+    await waitFor(() => expect(confirmMany).toHaveBeenCalledTimes(1))
+    expect(confirmMany.mock.calls[0][1].getAll('paymentId')).toEqual(['t0', 't2'])
+  })
+
+  it('unmarks them all from the same box', async () => {
+    const columns = paymentsBoard(
+      {
+        ...INPUT,
+        transfers: ['Ana', 'Bruno'].map((holder, index) => ({
+          id: `t${index}`,
+          kind: 'booking' as const,
+          amount: 1000,
+          holder,
+          startsAt: at('2026-11-20T23:00:00Z'),
+          courtName: 'Cancha 1',
+          receiptUrl: null,
+        })),
+      },
+      { when: () => '', time: () => '', deskMethods: ['cash'] },
+    )
+    render(<PaymentsBoard columns={columns} actions={{ ...baseActions(), confirmMany: vi.fn<FormAction>() }} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Ver las 2 transferencias' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Marcar todas (2)' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Desmarcar todas' }))
+    expect(screen.queryByRole('button', { name: /^Confirmar las marcadas/ })).not.toBeInTheDocument()
+  })
 })
 
 describe('PaymentsBoard, taking a charge back', () => {

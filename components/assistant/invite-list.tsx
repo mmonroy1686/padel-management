@@ -1,5 +1,6 @@
 'use client'
 
+import { BrandIcon } from '@/components/ui/brand-icon'
 import { useState, useTransition } from 'react'
 import { ReasonChips } from '@/components/assistant/reason-chips'
 import { Button, buttonClasses } from '@/components/ui/button'
@@ -82,6 +83,7 @@ export function InviteList({
                 aria-label={`WhatsApp a ${candidate.name}`}
                 className={buttonClasses({ variant: 'secondary', size: 'sm' })}
               >
+                <BrandIcon name="whatsapp" className="size-4" />
                 WhatsApp
               </a>
             </div>

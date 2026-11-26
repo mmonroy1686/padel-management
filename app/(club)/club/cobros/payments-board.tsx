@@ -78,8 +78,12 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
   const [transfersOpen, setTransfersOpen] = useState(false)
   useEffect(() => {
     if (window.location.hash !== '#transferencias') return
-    setTransfersOpen(true)
-    requestAnimationFrame(() => document.getElementById('column-transfers')?.scrollIntoView({ block: 'start' }))
+    // Read after hydration (the server has no hash): open on the next frame, then bring it into view.
+    const frame = requestAnimationFrame(() => {
+      setTransfersOpen(true)
+      requestAnimationFrame(() => document.getElementById('column-transfers')?.scrollIntoView({ block: 'start' }))
+    })
+    return () => cancelAnimationFrame(frame)
   }, [])
 
   // A tile opens its lane and brings its column into view (a click commits before the next frame).
@@ -348,8 +352,24 @@ function TransferList({
       return next
     })
 
+  const all = marked.size === items.length
+  const toggleAll = () => setMarked(all ? new Set() : new Set(items.map((item) => item.id)))
+
   return (
     <div className="flex flex-col gap-3">
+      {/* Checked in the bank all at once: one tap marks them all, then unmark the odd one out. */}
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 font-semibold">
+        <input
+          type="checkbox"
+          checked={all}
+          ref={(box) => {
+            if (box) box.indeterminate = marked.size > 0 && !all
+          }}
+          onChange={toggleAll}
+          className="size-5 shrink-0 accent-[var(--accent)]"
+        />
+        {all ? 'Desmarcar todas' : `Marcar todas (${items.length})`}
+      </label>
       <ul className="flex flex-col divide-y divide-border border-y border-border">
         {items.map((item) => (
           <li key={item.id} className="flex items-center gap-3">
@@ -365,7 +385,8 @@ function TransferList({
         ))}
       </ul>
       {marked.size > 0 ? (
-        <form action={formAction} className="flex flex-col gap-2">
+        // Stays in reach over a long queue: above the phone's bottom bar, at the bottom of the screen elsewhere.
+        <form action={formAction} className="sticky bottom-24 z-10 flex flex-col gap-2 rounded-2xl bg-bg/95 py-2 md:bottom-4">
           {[...marked].map((id) => (
             <input key={id} type="hidden" name="paymentId" value={id} />
           ))}

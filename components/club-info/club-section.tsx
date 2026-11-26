@@ -1,3 +1,4 @@
+import { BrandIcon } from '@/components/ui/brand-icon'
 import { buttonClasses } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Icon } from '@/components/ui/icon'
@@ -20,6 +21,7 @@ export function ClubSection({ view, clubName, timezone }: { view: ClubInfoView; 
               <a key={contact.kind} href={contact.href} target={contact.kind === 'email' ? undefined : '_blank'} rel="noopener noreferrer"
                 aria-label={`${contact.label}: ${contact.detail}`}
                 className={buttonClasses({ variant: index === 0 && contact.kind === 'whatsapp' ? 'primary' : 'secondary' })}>
+                {contact.kind === 'email' ? <Icon name="mail" /> : <BrandIcon name={contact.kind} />}
                 {contact.label}
               </a>
             ))}

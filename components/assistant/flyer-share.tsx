@@ -1,5 +1,6 @@
 'use client'
 
+import { BrandIcon } from '@/components/ui/brand-icon'
 import { useState } from 'react'
 import { Button, buttonClasses } from '@/components/ui/button'
 import { whatsappUrl } from '@/lib/domain/match-share'
@@ -70,6 +71,7 @@ export function FlyerShare({ imageUrl, fileName, text }: { imageUrl: string; fil
           Copiar texto
         </Button>
         <a href={whatsappUrl(text)} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: 'secondary' })}>
+          <BrandIcon name="whatsapp" />
           Abrir WhatsApp
         </a>
       </div>
