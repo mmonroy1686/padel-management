@@ -1,7 +1,7 @@
 ---
 feature: perfil-jugador
 type: plan
-status: in-progress
+status: done
 date: 2026-11-26
 branch: feat/perfil-jugador
 references: ./design.md
@@ -25,15 +25,16 @@ Nota: `profiles` hoy tiene `grant update` a nivel de tabla. Pasa a permisos por 
 
 ## Acceptance criteria
 
-- [ ] El teléfono y el consentimiento solo los leen el propio jugador y el staff de un club donde es miembro.
-- [ ] No se puede aceptar sin teléfono; la fecha del consentimiento se guarda y se borra al retirarlo.
-- [ ] El panel ofrece el chat de WhatsApp solo con consentimiento.
-- [ ] La foto se ve con esta prioridad: subida, después Google, después iniciales. Quitarla no hace volver la de Google.
-- [ ] El email se ve en Perfil, y en la hoja de Jugadores para el staff.
-- [ ] Pasan pgTAP, Vitest, Playwright y el build.
+- [x] El teléfono y el consentimiento solo los leen el propio jugador y el staff de un club donde es miembro.
+- [x] No se puede aceptar sin teléfono; la fecha del consentimiento se guarda y se borra al retirarlo.
+- [x] El panel ofrece el chat de WhatsApp solo con consentimiento.
+- [x] La foto se ve con esta prioridad: subida, después Google, después iniciales. Quitarla no hace volver la de Google.
+- [x] El email se ve en Perfil, y en la hoja de Jugadores para el staff.
+- [x] Pasan pgTAP, Vitest, Playwright y el build.
 
 ## Plan revisions
 
 (append-only)
 
 - **v1 (2026-11-26)**: initial plan.
+- **v2 (2026-11-26)**: el email del staff sale de la RPC nueva `club_member_contacts`; el WhatsApp del Asistente usa la misma.

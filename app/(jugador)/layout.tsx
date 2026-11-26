@@ -5,6 +5,8 @@ import { NotificationBell } from '@/components/waitlist/notification-bell'
 import { getClub, getViewer } from '@/lib/auth/viewer'
 import { countUnreadNotifications } from '@/lib/data/waitlist'
 import { LegalLinks } from '@/components/legal/legal-links'
+import Link from 'next/link'
+import { Avatar } from '@/components/ui/avatar'
 
 const PLAYER_TABS: TabItem[] = [
   { href: '/', label: 'Inicio', icon: 'home' },
@@ -20,7 +22,21 @@ export default async function PlayerLayout({ children }: { children: React.React
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col md:max-w-3xl lg:max-w-5xl">
-      <ClubHeader club={club}>{viewer ? <NotificationBell unread={unread} /> : null}</ClubHeader>
+      <ClubHeader club={club}>
+        {viewer ? (
+          <div className="flex items-center gap-1">
+            <NotificationBell unread={unread} />
+            {/* The player's photo (or initials), next to the bell: their Perfil. */}
+            <Link
+              href="/perfil"
+              aria-label="Tu perfil"
+              className="inline-flex size-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <Avatar name={viewer.profile.display_name} profile={viewer.profile} size="sm" />
+            </Link>
+          </div>
+        ) : null}
+      </ClubHeader>
       {viewer ? <LiveNotifications userId={viewer.userId} /> : null}
       <main className="flex flex-1 flex-col gap-6 px-4 pt-5 md:px-6">{children}</main>
       {/* Above the bottom tabs, which cover the last 7rem. */}
