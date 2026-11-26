@@ -48,7 +48,7 @@ describe('unpaidChampionshipEntries', () => {
       ]),
     ]
     expect(unpaidChampionshipEntries(rows, NOW, TIMEZONE)).toEqual([
-      { entryId: 'owes', holder: 'Ana y Pedro', startsAt: new Date('2026-10-03T11:00:00Z'), what: 'Campeonato Primavera · 6ta Libre', due: 1500 },
+      { entryId: 'owes', holder: 'Ana y Pedro', players: ['Ana', 'Pedro'], startsAt: new Date('2026-10-03T11:00:00Z'), what: 'Primavera · 6ta Libre', due: 1500 },
     ])
   })
 
@@ -70,8 +70,8 @@ describe('championshipRefunds', () => {
       championship([entry({ id: 'cancelled', payments: [{ id: 'p4', status: 'confirmed', amount: 2000 }] })], { id: 'ch2', name: 'Invierno', status: 'cancelled' }),
     ]
     expect(championshipRefunds(rows, TIMEZONE)).toEqual([
-      { paymentId: 'p1', holder: 'Ana y Pedro', startsAt: new Date('2026-10-03T11:00:00Z'), courtName: 'Campeonato Primavera · 6ta Libre', amount: 2000 },
-      { paymentId: 'p4', holder: 'Ana y Pedro', startsAt: new Date('2026-10-03T11:00:00Z'), courtName: 'Campeonato Invierno · 6ta Libre', amount: 2000 },
+      { paymentId: 'p1', holder: 'Ana y Pedro', startsAt: new Date('2026-10-03T11:00:00Z'), courtName: 'Primavera · 6ta Libre', amount: 2000 },
+      { paymentId: 'p4', holder: 'Ana y Pedro', startsAt: new Date('2026-10-03T11:00:00Z'), courtName: 'Invierno · 6ta Libre', amount: 2000 },
     ])
   })
 })

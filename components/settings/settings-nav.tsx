@@ -2,33 +2,49 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import type { ReactNode } from 'react'
 import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/cn'
-import { currentSection, SETTINGS_SECTIONS } from '@/lib/club/settings-sections'
+import { currentSection, visibleSections } from '@/lib/club/settings-sections'
 
-// Ajustes' own menu: a sidebar that stays in view on a wide screen, the same links as buttons that wrap above the
-// content on a phone, two per row (no sideways scroll). The current section has aria-current and a filled style.
-export function SettingsNav() {
+// Ajustes around a section: on a wide screen a sidebar with every section that stays in view; on a phone one link back
+// to the index ("‹ Ajustes") instead of nine tiles above every form. The index itself (/club/ajustes) is already the
+// menu, so it goes without either.
+export function SettingsFrame({ children, platformAdmin = false }: { children: ReactNode; platformAdmin?: boolean }) {
   const pathname = usePathname()
   const current = currentSection(pathname)
+  if (!current) return <div className="flex min-w-0 max-w-3xl flex-col gap-8">{children}</div>
   return (
-    <nav aria-label="Secciones de ajustes" className="md:sticky md:top-4 md:self-start">
-      <ul className="grid grid-cols-2 gap-2 md:flex md:flex-col md:gap-1">
-        {SETTINGS_SECTIONS.map((section) => {
-          const active = section.href === current?.href
+    <div className="grid gap-4 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
+      <Link href="/club/ajustes" className="inline-flex min-h-11 items-center gap-1 self-start font-semibold text-accent-ink md:hidden">
+        <Icon name="chevron-right" className="size-4 rotate-180" />
+        Ajustes
+      </Link>
+      <SettingsNav currentHref={current.href} platformAdmin={platformAdmin} />
+      <div className="flex min-w-0 max-w-3xl flex-col gap-8">{children}</div>
+    </div>
+  )
+}
+
+// The sidebar (wide screens): the current section has aria-current and a filled style.
+export function SettingsNav({ currentHref, platformAdmin = false }: { currentHref: string; platformAdmin?: boolean }) {
+  return (
+    <nav aria-label="Secciones de ajustes" className="hidden md:sticky md:top-4 md:block md:self-start">
+      <ul className="flex flex-col gap-1">
+        {visibleSections(platformAdmin).map((section) => {
+          const active = section.href === currentHref
           return (
             <li key={section.href}>
               <Link
                 href={section.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors',
+                  'flex min-h-11 w-full items-center gap-2 rounded-xl px-4 font-semibold transition-colors',
                   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                  'w-full max-md:border max-md:border-border md:px-4 md:text-base',
-                  active ? 'bg-accent text-on-accent max-md:border-accent' : 'text-fg hover:bg-surface',
+                  active ? 'bg-fg text-bg' : 'text-fg hover:bg-surface',
                 )}
               >
-                <Icon name={section.icon} className={active ? 'text-on-accent' : 'text-accent-ink'} />
+                <Icon name={section.icon} className={active ? 'text-bg' : 'text-accent-ink'} />
                 {section.label}
               </Link>
             </li>

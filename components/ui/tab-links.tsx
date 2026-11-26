@@ -1,3 +1,4 @@
+import { SELECTED } from '@/components/ui/button'
 import Link from 'next/link'
 import { cn } from '@/lib/cn'
 
@@ -16,7 +17,7 @@ export function TabLinks({ label, items, current }: { label: string; items: TabL
               aria-current={item.key === current ? 'page' : undefined}
               className={cn(
                 'inline-flex min-h-11 items-center rounded-full border px-4 font-semibold focus-visible:outline-2 focus-visible:outline-accent',
-                item.key === current ? 'border-accent bg-accent text-on-accent' : 'border-border hover:border-accent',
+                item.key === current ? SELECTED : 'border-border hover:border-accent',
               )}
             >
               {item.label}

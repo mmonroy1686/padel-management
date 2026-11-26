@@ -1,3 +1,4 @@
+import { BrandIcon } from '@/components/ui/brand-icon'
 import { buttonClasses } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 import { whatsappUrl } from '@/lib/domain/match-share'
@@ -41,6 +42,7 @@ export function SuggestionsList({ suggestions, shareText }: { suggestions: Sugge
                 aria-label={`Invitar a ${suggestion.name} por WhatsApp`}
                 className={buttonClasses({ variant: 'secondary' })}
               >
+                <BrandIcon name="whatsapp" />
                 Invitar por WhatsApp
               </a>
             </li>

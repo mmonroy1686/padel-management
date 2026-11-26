@@ -12,14 +12,18 @@ export type DataColumn = {
   align?: 'start' | 'end'
   // Actions columns: the header stays for screen readers, phones show no label next to the cell.
   hideLabel?: boolean
+  // Left out on a phone (phone="rows"): what the row already says another way.
+  phoneHidden?: boolean
 }
 export type DataFilter = { key: string; label: string; options: { value: string; label: string }[] }
 export type DataRow = TableRow<Record<string, ReactNode>>
 
 const PAGE_SIZES = [20, 50, 100]
 
-// The club's long lists as a table: search, filters, sorting by column and pages. On a phone each
-// row stacks as a small card with the column names, so nothing scrolls sideways.
+// The club's long lists as a table: search, filters, sorting by column and pages. Nothing scrolls sideways on a
+// phone: each row stacks as a small card with the column names (phone="cards"), or, for a list of people, as a plain
+// row with a line between them (phone="rows"): the first column on top, the rest in one quiet line, the actions at
+// its end.
 export function DataTable({
   caption,
   columns,
@@ -30,6 +34,7 @@ export function DataTable({
   initialSort,
   pageSize: initialPageSize = 20,
   emptyText,
+  phone = 'cards',
 }: {
   caption: string
   columns: DataColumn[]
@@ -41,7 +46,11 @@ export function DataTable({
   initialSort?: SortState
   pageSize?: number
   emptyText: string
+  phone?: 'cards' | 'rows'
 }) {
+  const rowsOnPhone = phone === 'rows'
+  // Where each column sits among the ones a phone shows: the first on top, a dot before the rest of the line.
+  const phonePlace = new Map(columns.filter((column) => !column.phoneHidden).map((column, place) => [column.key, place]))
   const id = useId()
   const [query, setQuery] = useState('')
   const [chosen, setChosen] = useState<Record<string, string>>({})
@@ -155,21 +164,36 @@ export function DataTable({
                 })}
               </tr>
             </thead>
-            <tbody className="max-md:flex max-md:flex-col max-md:gap-2">
+            <tbody className={cn('max-md:flex max-md:flex-col', rowsOnPhone ? 'max-md:divide-y max-md:divide-border max-md:border-y max-md:border-border' : 'max-md:gap-2')}>
               {shown.rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="hover:bg-surface max-md:flex max-md:flex-col max-md:gap-1 max-md:rounded-2xl max-md:border max-md:border-border max-md:bg-surface max-md:p-3"
+                  className={cn(
+                    'hover:bg-surface',
+                    rowsOnPhone
+                      ? 'max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-2 max-md:py-2.5'
+                      : 'max-md:flex max-md:flex-col max-md:gap-1 max-md:rounded-2xl max-md:border max-md:border-border max-md:bg-surface max-md:p-3',
+                  )}
                 >
                   {columns.map((column) => (
                     <td
                       key={column.key}
                       className={cn(
-                        'border-b border-border px-3 py-2 align-middle max-md:flex max-md:items-center max-md:justify-between max-md:gap-3 max-md:border-0 max-md:p-0',
+                        'border-b border-border px-3 py-2 align-middle max-md:border-0 max-md:p-0',
                         column.align === 'end' && 'text-right tabular-nums',
+                        rowsOnPhone && column.phoneHidden && 'max-md:hidden',
+                        !rowsOnPhone
+                          ? 'max-md:flex max-md:items-center max-md:justify-between max-md:gap-3'
+                          : phonePlace.get(column.key) === 0
+                            ? 'max-md:basis-full'
+                            : column.hideLabel
+                              ? 'max-md:ml-auto'
+                              : (phonePlace.get(column.key) ?? 0) > 1
+                                ? "max-md:text-sm max-md:text-fg-muted max-md:before:mr-2 max-md:before:content-['·']"
+                                : 'max-md:text-sm max-md:text-fg-muted',
                       )}
                     >
-                      {column.hideLabel ? null : (
+                      {column.hideLabel || rowsOnPhone ? null : (
                         <span aria-hidden="true" className="text-xs font-semibold uppercase tracking-wide text-fg-muted md:hidden">
                           {column.label}
                         </span>

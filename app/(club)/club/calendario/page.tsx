@@ -1,3 +1,4 @@
+import { SELECTED } from '@/components/ui/button'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { RecurringOverview } from '@/components/club/recurring-overview'
@@ -77,14 +78,14 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
           <Link
             href={`/club/calendario?vista=mes&mes=${month}`}
             aria-current={view === 'mes' ? 'page' : undefined}
-            className={cn(TOGGLE, view === 'mes' ? 'border-accent bg-accent text-on-accent' : 'border-border')}
+            className={cn(TOGGLE, view === 'mes' ? SELECTED : 'border-border')}
           >
             Mes
           </Link>
           <Link
             href={`/club/calendario?vista=semana&dia=${anchor}`}
             aria-current={view === 'semana' ? 'page' : undefined}
-            className={cn(TOGGLE, view === 'semana' ? 'border-accent bg-accent text-on-accent' : 'border-border')}
+            className={cn(TOGGLE, view === 'semana' ? SELECTED : 'border-border')}
           >
             Semana
           </Link>

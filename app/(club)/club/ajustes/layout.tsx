@@ -1,14 +1,10 @@
-import { SettingsNav } from '@/components/settings/settings-nav'
+import { SettingsFrame } from '@/components/settings/settings-nav'
 import { requireAdmin } from '@/lib/auth/viewer'
+import { isPlatformAdmin } from '@/lib/data/platform'
 
-// Ajustes, admins only: the section menu at the side (on top on a phone) and the section's screen next to it. Each page
-// checks the role again (layouts do not re-run on every navigation).
+// Ajustes, admins only: the index at /club/ajustes, each section on its own screen inside SettingsFrame (a sidebar on
+// a wide screen, "‹ Ajustes" on a phone). Each page checks the role again (layouts do not re-run on every navigation).
 export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin('/club/ajustes')
-  return (
-    <div className="grid gap-6 md:grid-cols-[13rem_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
-      <SettingsNav />
-      <div className="flex min-w-0 max-w-3xl flex-col gap-8">{children}</div>
-    </div>
-  )
+  return <SettingsFrame platformAdmin={await isPlatformAdmin()}>{children}</SettingsFrame>
 }

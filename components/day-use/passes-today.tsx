@@ -18,8 +18,8 @@ import { SellSheet, type SellOffer } from './sell-sheet'
 
 const COLUMNS: DataColumn[] = [
   { key: 'holder', label: 'Quién', sortable: true },
-  { key: 'code', label: 'Código', sortable: true },
-  { key: 'product', label: 'Pase', sortable: true },
+  { key: 'code', label: 'Código', sortable: true, phoneHidden: true },
+  { key: 'product', label: 'Pase', sortable: true, phoneHidden: true },
   { key: 'status', label: 'Estado', sortable: true },
   { key: 'payment', label: 'Pago' },
   { key: 'actions', label: 'Acciones', hideLabel: true },
@@ -27,7 +27,8 @@ const COLUMNS: DataColumn[] = [
 
 // Design: "Hoy". The passes of a day (today unless reception picks another) in a table with a search
 // by name or code and a status filter; "Gestionar" opens the pass with its actions. And the sale at
-// the desk.
+// the desk. On a phone each pass is one row (the name with its code, then its state and payment), so checking people
+// in is a glance down a list, not a scroll through cards.
 export function PassesToday({
   passes,
   today,
@@ -65,9 +66,12 @@ export function PassesToday({
       filters: { status: pass.status },
       cells: {
         holder: (
-          <span className="font-semibold">
-            {pass.holder}
-            {pass.isGuest ? <span className="font-normal text-fg-muted"> (sin cuenta)</span> : null}
+          <span className="flex flex-col">
+            <span className="font-semibold">
+              {pass.holder}
+              {pass.isGuest ? <span className="font-normal text-fg-muted"> (sin cuenta)</span> : null}
+            </span>
+            <span className="text-sm text-fg-muted tabular-nums md:hidden">{pass.code}</span>
           </span>
         ),
         code: <span className="tabular-nums">{pass.code}</span>,
@@ -121,6 +125,7 @@ export function PassesToday({
           },
         ]}
         emptyText={`Todavía no hay pases ${forDay === 'de hoy' ? 'para hoy' : forDay}.`}
+        phone="rows"
       />
       <BottomSheet open={managed !== null} onClose={() => setManaging(null)} title={managed?.holder ?? ''}>
         {managed ? (

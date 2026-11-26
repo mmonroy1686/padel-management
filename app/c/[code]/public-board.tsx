@@ -1,5 +1,6 @@
 'use client'
 
+import { SELECTED } from '@/components/ui/button'
 import { useState } from 'react'
 import { BracketTree } from '@/components/championships/bracket-tree'
 import { MatchCard } from '@/components/championships/match-card'
@@ -72,7 +73,7 @@ export function PublicBoard({
               onClick={() => setSelected(item.id)}
               className={cn(
                 'min-h-11 shrink-0 rounded-full border px-4 font-semibold focus-visible:outline-2 focus-visible:outline-accent',
-                item.id === category?.id ? 'border-accent bg-accent text-on-accent' : 'border-border',
+                item.id === category?.id ? SELECTED : 'border-border',
               )}
             >
               {item.name}

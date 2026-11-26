@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { ClubLogo } from '@/components/brand/club-logo'
 import { MatchCourt } from '@/components/matches/match-court'
-import { ActionForm, type FormAction } from '@/components/ui/action-form'
+import type { FormAction } from '@/components/ui/action-form'
+import { AutoSaveForm } from '@/components/ui/auto-save-form'
 import { Button } from '@/components/ui/button'
 import { Field, inputClasses } from '@/components/ui/field'
 import { adjustmentNotice, COLOR_MODE_LABELS, COLOR_MODES, DEFAULT_BRAND, normalizeHex } from '@/lib/domain/club-brand'
@@ -40,10 +41,18 @@ export function BrandForm({ club, action }: BrandFormProps) {
   const theme = clubTheme({ primary: primary ?? club.brand_primary, background: background ?? club.brand_background })
   const notice = adjustmentNotice(theme.adjusted, mode)
 
+  // The brand saves itself like the rest of Ajustes (no "Guardar marca"); going back to the original colors saves
+  // them too, once the fields show them.
+  const resetButton = useRef<HTMLButtonElement>(null)
+  const [resets, setResets] = useState(0)
+  useEffect(() => {
+    if (resets > 0) resetButton.current?.form?.requestSubmit()
+  }, [resets])
   const reset = () => {
     setPrimaryText(DEFAULT_BRAND.primary)
     setBackgroundText(DEFAULT_BRAND.background)
     setMode(DEFAULT_BRAND.mode)
+    setResets((count) => count + 1)
   }
 
   const colorField = (
@@ -69,6 +78,10 @@ export function BrandForm({ club, action }: BrandFormProps) {
           value={text}
           onChange={(event) => setText(event.target.value)}
           maxLength={7}
+          required
+          // A half-typed color is not saved: the field says so and the saved one stays.
+          pattern="#?[0-9A-Fa-f]{6}"
+          title="Un color como #FCB021"
           spellCheck={false}
           autoComplete="off"
           aria-invalid={value === null || undefined}
@@ -79,7 +92,7 @@ export function BrandForm({ club, action }: BrandFormProps) {
   )
 
   return (
-    <ActionForm action={action} submitLabel="Guardar marca">
+    <AutoSaveForm action={action} label="la marca del club" className="gap-4">
       <div className="grid gap-3 md:grid-cols-2">
         {colorField('brand-primary', 'primary', 'Color principal', primaryText, setPrimaryText, primary)}
         {colorField('brand-background', 'background', 'Color de fondo', backgroundText, setBackgroundText, background)}
@@ -102,18 +115,22 @@ export function BrandForm({ club, action }: BrandFormProps) {
       </fieldset>
 
       <div className="flex flex-col gap-3">
-        <div role="group" aria-label="Vista previa" className="inline-flex self-start rounded-full border border-border bg-surface p-1">
+        {/* Only what the preview shows, not a fourth mode: labelled so. */}
+        <div className="flex items-center gap-3">
+        <span id="vista-previa" className="text-sm font-semibold">Vista previa</span>
+        <div role="group" aria-labelledby="vista-previa" className="inline-flex self-start rounded-full border border-border bg-surface p-1">
           {(['dark', 'light'] as const).map((value) => (
             <button
               key={value}
               type="button"
               aria-pressed={previewMode === value}
               onClick={() => setPreviewMode(value)}
-              className={`min-h-10 rounded-full px-4 text-sm font-semibold ${previewMode === value ? 'bg-bg text-fg shadow-sm' : 'text-fg-muted'}`}
+              className={`min-h-10 rounded-full px-4 text-sm font-semibold ${previewMode === value ? 'bg-fg text-bg' : 'text-fg-muted'}`}
             >
               {value === 'dark' ? 'Oscuro' : 'Claro'}
             </button>
           ))}
+        </div>
         </div>
         <div className="max-w-md">
           {previewMode === 'dark' ? (
@@ -128,10 +145,10 @@ export function BrandForm({ club, action }: BrandFormProps) {
           {notice}
         </p>
       ) : null}
-      <Button type="button" variant="ghost" onClick={reset}>
+      <Button ref={resetButton} type="button" variant="ghost" onClick={reset}>
         Volver a los colores originales
       </Button>
-    </ActionForm>
+    </AutoSaveForm>
   )
 }
 

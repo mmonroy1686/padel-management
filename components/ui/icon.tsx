@@ -3,6 +3,12 @@ import { cn } from '@/lib/cn'
 
 // Line icons drawn on a 24px grid; they take the text color.
 const PATHS = {
+  mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </>
+  ),
   home: (
     <>
       <path d="M3 10.5 12 3l9 7.5" />

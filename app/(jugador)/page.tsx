@@ -10,12 +10,14 @@ import { EmptyLine, PageSection } from '@/components/ui/page-section'
 import { RowLink, RowList } from '@/components/ui/row-list'
 import { getClub, getViewer } from '@/lib/auth/viewer'
 import { loadDayGrid } from '@/lib/data/day'
+import { loadNextFree } from '@/lib/data/next-free'
 import { loadFreeCourts, loadMatches, loadPlayerContext } from '@/lib/data/matches'
 import { loadMyBookings } from '@/lib/data/my-bookings'
 import { loadMyChampionshipMatches } from '@/lib/data/championship-fixture'
 import { loadTournaments } from '@/lib/data/tournaments'
 import { dayLabel, timeIn } from '@/lib/domain/format'
-import { countFree } from '@/lib/domain/grid'
+import { countFree, nextFreeCells, slotParam } from '@/lib/domain/grid'
+import { freeTodayText } from '@/lib/domain/next-free'
 import { joinStatus } from '@/lib/domain/match-join'
 import { riskOf } from '@/lib/domain/match-risk'
 import { isInMatch, statusLabel } from '@/lib/domain/matches'
@@ -60,6 +62,10 @@ export default async function HomePage() {
     loadClubInfo(club),
   ])
   const freeToday = countFree(grid.rows)
+  const quickSlots = nextFreeCells(grid.rows, 3)
+  const today = localDateOf(now, club.timezone)
+  // A full today points at the next day with room instead of a dead end.
+  const nextFree = freeToday === 0 ? await loadNextFree(club, viewer.userId, today, addDays(today, 6), now) : null
   const forMe = matchesForMe(
     matches.filter((match) => match.status === 'forming'),
     context.player,
@@ -68,7 +74,6 @@ export default async function HomePage() {
   const myMatches = matches.filter((match) => isInMatch(match, viewer.userId)).slice(0, 3)
   const freeCourts = await loadFreeCourts(club, forMe.map((item) => item.match))
   const openTournaments = tournaments.filter((tournament) => tournament.status === 'registration' && tournament.startsAt > now).length
-  const today = localDateOf(now, club.timezone)
   const whenText = (start: Date) => `${dayLabel(localDateOf(start, club.timezone), today)} ${timeIn(start, club.timezone)}`
   const transfer = { details: club.transfer_details, receiptRequired: club.transfer_receipt_required }
   const bookingCard = (booking: (typeof bookings.upcoming)[number]) => (
@@ -92,18 +97,41 @@ export default async function HomePage() {
       ) : null}
       <h1 className="font-display text-4xl font-bold uppercase">Hola, {firstName(profile.display_name)}</h1>
       {/* The one thing Inicio is for, first: book a court. */}
-      <HeroAction href="/reservar" icon="calendar-plus" title="Reservar cancha" detail={freeTodayText(freeToday)} />
+      <HeroAction
+        href={nextFree ? `/reservar?dia=${nextFree.date}` : '/reservar'}
+        icon="calendar-plus"
+        title="Reservar cancha"
+        detail={freeTodayText(freeToday, nextFree, today)}
+      />
+      {/* The next free slots of today, one tap from their booking sheet. */}
+      {quickSlots.length > 0 ? (
+        <ul aria-label="Próximos turnos libres de hoy" className="-mt-2 flex flex-wrap gap-2">
+          {quickSlots.map((cell) => (
+            <li key={slotParam(cell)}>
+              <Link
+                href={`/reservar?dia=${today}&turno=${encodeURIComponent(slotParam(cell))}`}
+                aria-label={`Reservar ${cell.courtName} a las ${cell.time}`}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border bg-surface px-4 font-semibold hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                <span className="tabular-nums">{cell.time}</span>
+                <span className="text-sm font-normal text-fg-muted">{cell.courtName}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {/* Two columns on wide screens: what you have on the left, what to do next on the right. */}
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-8">
-          <PageSection id="tus-reservas" title="Tus reservas">
-            {bookings.upcoming.length > 0 ? (
-              <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">{bookings.upcoming.map(bookingCard)}</ul>
-            ) : (
-              <EmptyLine>No tenés reservas.</EmptyLine>
-            )}
-            <WaitingCard waits={waitItems(waitlist.waits, waitlist.courts, today)} cancelAction={cancelSlotWait} />
-          </PageSection>
+          {/* Only when there is something: with nothing booked, the button on top already says what to do. */}
+          {bookings.upcoming.length > 0 || waitlist.waits.length > 0 ? (
+            <PageSection id="tus-reservas" title="Tus reservas">
+              {bookings.upcoming.length > 0 ? (
+                <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">{bookings.upcoming.map(bookingCard)}</ul>
+              ) : null}
+              <WaitingCard waits={waitItems(waitlist.waits, waitlist.courts, today)} cancelAction={cancelSlotWait} />
+            </PageSection>
+          ) : null}
           {myMatches.length > 0 || championshipMatches.length > 0 ? (
             <PageSection id="tus-partidos" title="Tus partidos">
               {myMatches.length > 0 ? (
@@ -155,16 +183,11 @@ export default async function HomePage() {
           Panel del club
         </Link>
       ) : null}
-      {clubInfo ? <ClubSection view={clubInfo} clubName={club.name} timezone={club.timezone} /> : null}
+      {clubInfo ? <ClubSection view={clubInfo} clubName={club.name} timezone={club.timezone} folded /> : null}
     </>
   )
 }
 
-// What the big "Reservar cancha" says under its title.
-function freeTodayText(free: number): string {
-  if (free === 0) return 'Hoy no quedan turnos: mirá otro día'
-  return free === 1 ? '1 turno libre hoy' : `${free} turnos libres hoy`
-}
 
 async function Landing({ club }: { club: Club }) {
   const clubInfo = await loadClubInfo(club)

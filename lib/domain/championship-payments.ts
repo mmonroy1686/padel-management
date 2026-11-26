@@ -19,7 +19,8 @@ export type OverviewChampionship = {
   windows: { on_date: string; from_time: string }[]
   categories: { id: string; name: string; price: number; status: CategoryStatus; entries: OverviewChampionshipEntry[] }[]
 }
-export type UnpaidChampionshipItem = { entryId: string; holder: string; startsAt: Date; what: string; due: number }
+// players: the pair's two names, so Cobros can show the debt with each of them.
+export type UnpaidChampionshipItem = { entryId: string; holder: string; players: string[]; startsAt: Date; what: string; due: number }
 
 // The start of the first day of play, on the club's clock; null without days.
 export function overviewStartsAt(championship: Pick<OverviewChampionship, 'windows'>, timezone: string): Date | null {
@@ -28,7 +29,9 @@ export function overviewStartsAt(championship: Pick<OverviewChampionship, 'windo
 }
 
 const pairOf = (entry: OverviewChampionshipEntry) => `${entry.player1?.name ?? 'Jugador'} y ${entry.player2?.name ?? 'Jugador'}`
-const whatOf = (championship: OverviewChampionship, category: { name: string }) => `Campeonato ${championship.name} · ${category.name}`
+// Cobros already says "Campeonato" next to it.
+const whatOf = (championship: OverviewChampionship, category: { name: string }) => `${championship.name} · ${category.name}`
+const playersOf = (entry: OverviewChampionshipEntry) => [entry.player1?.name, entry.player2?.name].filter((name): name is string => Boolean(name))
 
 // Pairs with a place in championships that already started (not cancelled) that still owe and have no
 // transfer waiting for review. Before it starts, reception charges from the championship page.
@@ -40,7 +43,16 @@ export function unpaidChampionshipEntries(rows: OverviewChampionship[], now: Dat
       category.entries.flatMap((entry) => {
         const payments: PaymentLike[] = entry.payments
         if (entry.status !== 'active' || paymentState({ price: category.price, status: 'confirmed' }, payments) !== 'pending') return []
-        return [{ entryId: entry.id, holder: pairOf(entry), startsAt, what: whatOf(championship, category), due: amountDue(category.price, payments) }]
+        return [
+          {
+            entryId: entry.id,
+            holder: pairOf(entry),
+            players: playersOf(entry),
+            startsAt,
+            what: whatOf(championship, category),
+            due: amountDue(category.price, payments),
+          },
+        ]
       }),
     )
   })

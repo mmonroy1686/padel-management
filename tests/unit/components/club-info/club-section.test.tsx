@@ -15,6 +15,7 @@ const FULL: ClubInfoView = {
   directions: 'https://maps.app.goo.gl/x',
   contacts: [
     { kind: 'whatsapp', label: 'WhatsApp', href: 'https://wa.me/59892369558?text=Hola', detail: '092 369 558' },
+    { kind: 'instagram', label: 'Instagram', href: 'https://instagram.com/rusticpadel', detail: '@rusticpadel' },
     { kind: 'email', label: 'Email', href: 'mailto:hola@rustic.uy', detail: 'hola@rustic.uy' },
   ],
   amenities: ['Bar', 'Wifi'],
@@ -28,6 +29,10 @@ describe('ClubSection', () => {
     expect(screen.getByRole('region', { name: 'Mapa de Rustic' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'WhatsApp: 092 369 558' })).toHaveAttribute('href', 'https://wa.me/59892369558?text=Hola')
     expect(screen.getByRole('link', { name: 'Email: hola@rustic.uy' })).toHaveAttribute('href', 'mailto:hola@rustic.uy')
+    // Each button carries its app's mark.
+    expect(screen.getByRole('link', { name: 'WhatsApp: 092 369 558' }).querySelector('[data-brand="whatsapp"]')).not.toBeNull()
+    expect(screen.getByRole('link', { name: 'Instagram: @rusticpadel' }).querySelector('[data-brand="instagram"]')).not.toBeNull()
+    expect(screen.getByRole('link', { name: 'Email: hola@rustic.uy' }).querySelector('[data-icon="mail"]')).not.toBeNull()
     expect(screen.getByRole('link', { name: 'Email: hola@rustic.uy' })).not.toHaveAttribute('target')
     expect(screen.getByRole('link', { name: 'Cómo llegar' })).toHaveAttribute('href', 'https://maps.app.goo.gl/x')
     expect(within(screen.getByRole('list', { name: 'Servicios' })).getAllByRole('listitem').map((item) => item.textContent)).toEqual(['Bar', 'Wifi'])

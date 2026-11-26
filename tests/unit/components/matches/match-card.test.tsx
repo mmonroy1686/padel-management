@@ -20,7 +20,8 @@ describe('MatchCard', () => {
     expect(screen.getByText(/\$400 por persona/)).toBeInTheDocument()
     expect(screen.getByText('Faltan 3: 1 de drive y 2 de revés')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Sumarme de revés' })).toHaveAttribute('href', '/partidos/m1?sumarme=2')
-    expect(screen.getByRole('link', { name: 'Detalle' })).toHaveAttribute('href', '/partidos/m1')
+    // The whole card opens the match: «Ver partido» is stretched over it.
+    expect(screen.getByRole('link', { name: 'Ver partido' })).toHaveAttribute('href', '/partidos/m1')
   })
 
   it('says why the viewer cannot join, the court risk and the reasons it is shown', () => {
@@ -30,11 +31,15 @@ describe('MatchCard', () => {
         viewerId="me"
         whenText="jue 1 20:00"
         status={{ ok: false, text: 'Es un partido femenino.' }}
-        risk={{ level: 'bad', text: 'No quedan canchas libres a esa hora. Si nadie libera una, el partido se cae.' }}
+        risk={{
+          level: 'bad',
+          text: 'No quedan canchas libres a esa hora. Si nadie libera una, el partido se cae.',
+          short: 'No quedan canchas libres: puede caerse',
+        }}
       />,
     )
     expect(screen.getByText('Es un partido femenino.')).toBeInTheDocument()
-    expect(screen.getByRole('note')).toHaveTextContent('No quedan canchas libres')
+    expect(screen.getByRole('note')).toHaveTextContent('No quedan canchas libres: puede caerse')
     expect(screen.getByRole('link', { name: 'Ver partido' })).toBeInTheDocument()
 
     rerender(

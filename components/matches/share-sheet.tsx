@@ -1,5 +1,6 @@
 'use client'
 
+import { BrandIcon } from '@/components/ui/brand-icon'
 import { useState } from 'react'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button, buttonClasses } from '@/components/ui/button'
@@ -33,6 +34,7 @@ export function ShareSheet({ text, onClose }: { text: string; onClose: () => voi
         <div className="flex flex-wrap gap-2">
           <Button onClick={copy}>Copiar mensaje</Button>
           <a href={whatsappUrl(text)} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: 'secondary' })}>
+            <BrandIcon name="whatsapp" />
             Abrir WhatsApp
           </a>
         </div>

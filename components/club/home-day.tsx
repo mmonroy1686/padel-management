@@ -57,9 +57,10 @@ export function HomeDay({
           aria-valuemax={100}
           aria-valuenow={occupancy.percent}
           aria-valuetext={line}
-          className="h-2 overflow-hidden rounded-full bg-bg"
+          className="h-2 overflow-hidden rounded-full bg-border"
         >
-          <div className="h-full rounded-full bg-accent" style={{ width: `${occupancy.percent}%` }} />
+          {/* Ink, not amber: how full the day is is information, not something to do. */}
+          <div className="h-full rounded-full bg-fg-muted" style={{ width: `${occupancy.percent}%` }} />
         </div>
         <p className="font-semibold">{line}</p>
         {occupancy.slots.length > 0 ? (
@@ -80,12 +81,14 @@ export function HomeDay({
 
       <DayCard id="dia-avisos" icon="alert" title="Avisos">
         {alerts.length > 0 ? (
-          <ul className="flex flex-col gap-1">
+          // Rows with a chevron, in ink: four underlined links in the club's color all asked for attention at once.
+          <ul className="flex flex-col divide-y divide-border">
             {alerts.map((alert) => (
-              <li key={alert.text} className="flex items-center gap-2">
-                <Icon name={ALERT_ICONS[alert.kind]} className="text-accent-ink" />
-                <Link href={alert.href} className={LINK}>
-                  {alert.text}
+              <li key={alert.text}>
+                <Link href={alert.href} className="flex min-h-12 items-center gap-2 font-semibold">
+                  <Icon name={ALERT_ICONS[alert.kind]} className="text-fg-muted" />
+                  <span className="min-w-0 flex-1">{alert.text}</span>
+                  <Icon name="chevron-right" className="size-5 text-fg-muted" />
                 </Link>
               </li>
             ))}

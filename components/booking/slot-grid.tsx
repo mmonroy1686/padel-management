@@ -53,7 +53,7 @@ export function SlotGrid({ courts, rows, variant, onSelect, onWait, waited, time
               onClick={() => setShownCourt(index)}
               className={cn(
                 'min-h-10 whitespace-nowrap rounded-full px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-accent',
-                index === shownCourt ? 'bg-bg text-fg shadow-sm' : 'text-fg-muted',
+                index === shownCourt ? 'bg-fg text-bg' : 'text-fg-muted',
               )}
             >
               {court.name}
@@ -191,8 +191,8 @@ function PlayerCell({
         onClick={() => onWait(cell)}
         className={cn(CELL, CELL_STYLES.taken, FOCUS, 'hover:text-fg')}
       >
+        {/* Tappable for the waiting list, without saying "Avisame" in every taken cell: the hint is under the grid. */}
         <span>Ocupada</span>
-        <span className="text-xs font-semibold text-accent-ink">Avisame</span>
       </button>
     )
   }

@@ -4,7 +4,9 @@ import {
   filterBoard,
   paymentsBoard,
   pendingCount,
-  splitDebts,
+  debtsByName,
+  debtsByPlayer,
+  otherDebts,
   type BoardItem,
   type BoardColumn,
   type BoardFormat,
@@ -28,7 +30,7 @@ function input(overrides: Partial<BoardInput> = {}): BoardInput {
     unpaid: [{ bookingId: 'b1', holder: 'Martina', startsAt: at('2026-11-21T23:00:00Z'), courtName: 'Cancha 2', due: 1200, payerId: 'u1' }],
     unpaidEntries: [{ entryId: 'e1', holder: 'Diego', startsAt: at('2026-11-18T21:00:00Z'), tournamentName: 'Relámpago', due: 500 }],
     unpaidPasses: [{ passId: 'p1', holder: 'Carla Ruiz', startsAt: at('2026-11-22T17:00:00Z'), productName: 'Day use pádel', due: 450 }],
-    unpaidChampionships: [{ entryId: 'c1', holder: 'Eva y Flor', startsAt: at('2026-11-15T11:00:00Z'), what: 'Campeonato Primavera · 6ta', due: 2000 }],
+    unpaidChampionships: [{ entryId: 'c1', holder: 'Eva y Flor', players: ['Eva', 'Flor'], startsAt: at('2026-11-15T11:00:00Z'), what: 'Campeonato Primavera · 6ta', due: 2000 }],
     refunds: [{ paymentId: 'r1', kind: 'booking', holder: 'Gabi', startsAt: at('2026-11-24T23:00:00Z'), courtName: 'Cancha 3', amount: 800 }],
     doneToday: {
       confirmed: [
@@ -83,7 +85,7 @@ describe('paymentsBoard', () => {
     const unpaid = column(paymentsBoard(input(), FORMAT), 'unpaid')
     expect(unpaid.items.map((item) => [item.holder, item.kind, item.what])).toEqual([
       ['Eva y Flor', 'championship', 'Campeonato Primavera · 6ta'],
-      ['Diego', 'tournament', 'Torneo Relámpago'],
+      ['Diego', 'tournament', 'Relámpago'],
       ['Martina', 'booking', 'Cancha 2'],
       ['Carla Ruiz', 'day_use', 'Day use pádel'],
     ])
@@ -182,7 +184,7 @@ describe('pendingCount', () => {
   })
 })
 
-describe('splitDebts', () => {
+describe('debtsByPlayer', () => {
   const debt = (id: string, holder: string, at: number, amount = 1200): BoardItem => ({
     id,
     kind: 'booking',
@@ -194,22 +196,62 @@ describe('splitDebts', () => {
   })
   const TODAY = 1_000_000
 
-  it('keeps today row by row, and groups a player with several older debts', () => {
-    const split = splitDebts(
+  it('one entry per player, today and older together; whoever owes from today first', () => {
+    const groups = debtsByPlayer(
       [
         debt('a', 'Sofía Cabrera', 100),
         debt('b', 'Nicolás Rodríguez', 200),
         debt('c', 'sofia cabrera', 300, 2000),
-        debt('d', 'Ana', TODAY + 10),
+        debt('d', 'Ana', TODAY + 20),
+        debt('e', 'Nicolás Rodríguez', TODAY + 10),
       ],
       TODAY,
     )
-    expect(split.today.map((item) => item.id)).toEqual(['d'])
-    expect(split.older.map((item) => item.id)).toEqual(['b'])
-    expect(split.groups).toEqual([{ holder: 'Sofía Cabrera', items: [expect.objectContaining({ id: 'a' }), expect.objectContaining({ id: 'c' })], total: 3200 }])
+    expect(groups.map((group) => [group.holder, group.items.map((item) => item.id), group.total, group.today])).toEqual([
+      ['Nicolás Rodríguez', ['b', 'e'], 2400, true],
+      ['Ana', ['d'], 1200, true],
+      ['Sofía Cabrera', ['a', 'c'], 3200, false],
+    ])
   })
 
-  it('has nothing to split when nothing is owed', () => {
-    expect(splitDebts([], TODAY)).toEqual({ today: [], older: [], groups: [] })
+  it('puts a championship pair debt with each player who owes something else, once otherwise', () => {
+    const pair = (id: string, players: string[], at: number) => ({ ...debt(id, players.join(' y '), at, 2000), kind: 'championship' as const, players })
+    const groups = debtsByPlayer(
+      [debt('a', 'Nicolás Rodríguez', 100), pair('p', ['Martín Suárez', 'Nicolás Rodríguez'], 50), pair('q', ['Ana', 'Bea'], 70)],
+      TODAY,
+    )
+    expect(groups.map((group) => [group.holder, group.items.map((item) => item.id), group.total])).toEqual([
+      ['Nicolás Rodríguez', ['p', 'a'], 3200],
+      ['Ana y Bea', ['q'], 2000],
+    ])
+  })
+
+  it('has nothing to group when nothing is owed', () => {
+    expect(debtsByPlayer([], TODAY)).toEqual([])
+  })
+})
+
+describe('debtsByName and otherDebts', () => {
+  const charge = (id: string, holder: string, bookingId: string | null, amount: number, players?: string[]): BoardItem => ({
+    id,
+    kind: bookingId ? 'booking' : 'championship',
+    holder,
+    what: '',
+    when: '',
+    at: 0,
+    amount,
+    ...(players ? { players } : {}),
+    action: { type: 'charge', fields: bookingId ? { bookingId } : { entryId: id }, methods: ['cash'] },
+  })
+
+  it("counts a person's debts beyond the turn in front of reception, pair debts included", () => {
+    const byName = debtsByName([
+      charge('a', 'Florencia Díaz', 'b-today', 400),
+      charge('b', 'Florencia Díaz', 'b-old', 1200),
+      charge('c', 'Florencia Díaz y Ana', null, 2000, ['Florencia Díaz', 'Ana']),
+    ])
+    expect(otherDebts(byName, 'florencia diaz', 'b-today')).toEqual({ count: 2, total: 3200 })
+    expect(otherDebts(byName, 'Ana', 'b-x')).toEqual({ count: 1, total: 2000 })
+    expect(otherDebts(byName, 'Nadie', 'b-x')).toEqual({ count: 0, total: 0 })
   })
 })

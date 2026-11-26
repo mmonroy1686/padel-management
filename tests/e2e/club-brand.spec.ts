@@ -26,15 +26,15 @@ test('marca del club: the admin picks a red, saves, and the grid and the public 
   if (coded.error) throw coded.error
 
   try {
-    await signInWithMagicLink(page, admin.email, '/club/ajustes')
+    await signInWithMagicLink(page, admin.email, '/club/ajustes/club')
     await expect(page.getByRole('heading', { name: 'Marca del club' })).toBeVisible()
     expect(await accentOf(page)).toBe('#FCB021')
 
     const primary = page.getByLabel('Color principal', { exact: true })
     await primary.fill('#e11d48')
     await expect(page.getByRole('region', { name: 'Vista previa en modo oscuro' })).toHaveAttribute('style', /--accent: ?#E11D48/)
-    await page.getByRole('button', { name: 'Guardar marca' }).click()
-    await expect(page.getByRole('status')).toContainText('Marca guardada.')
+    // It saves itself a moment after the color changes.
+    await expect(page.getByRole('status').filter({ hasText: 'Guardado' })).toBeVisible()
 
     await page.goto('/club/grilla')
     expect(await accentOf(page)).toBe('#E11D48')

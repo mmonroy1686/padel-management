@@ -1,7 +1,8 @@
 import { errorMessage } from '@/lib/domain/errors'
 
 // What a Server Action returns to its form: shown in place, without closing the sheet.
-export type ActionState = { status: 'idle' | 'ok' | 'error'; message?: string }
+// paymentIds: a desk charge says which payments it made, so the screen can offer "Deshacer" (void_desk_payment).
+export type ActionState = { status: 'idle' | 'ok' | 'error'; message?: string; paymentIds?: string[] }
 
 export const IDLE: ActionState = { status: 'idle' }
 

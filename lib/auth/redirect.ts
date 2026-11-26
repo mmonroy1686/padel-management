@@ -52,3 +52,10 @@ export type CallbackError = 'otro-navegador' | 'callback'
 export function callbackError(code: string | undefined): CallbackError {
   return code === 'pkce_code_verifier_not_found' ? 'otro-navegador' : 'callback'
 }
+
+// Where someone lands after signing in. The club's staff (admin and reception) go to the panel instead of the
+// players' Inicio when they did not ask for a page: they come to work. A page they asked for (?next=…) wins.
+export function landingAfterSignIn(next: string, role: 'player' | 'reception' | 'admin' | null): string {
+  if (next !== '/') return next
+  return role === 'admin' || role === 'reception' ? '/club/inicio' : next
+}

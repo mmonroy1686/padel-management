@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { currentSection, sectionOf, SETTINGS_SECTIONS } from '@/lib/club/settings-sections'
+import { currentSection, sectionOf, SETTINGS_SECTIONS, visibleSections } from '@/lib/club/settings-sections'
 
 describe('settings sections', () => {
   it('groups Ajustes from the club to what it charges, monitoring last', () => {
@@ -16,10 +16,16 @@ describe('settings sections', () => {
     ])
   })
 
-  it('knows where you are, with the first one only on its own page', () => {
-    expect(currentSection('/club/ajustes')?.label).toBe('Club')
+  it('knows where you are; the index itself is no section', () => {
+    expect(currentSection('/club/ajustes')).toBeUndefined()
+    expect(currentSection('/club/ajustes/club')?.label).toBe('Club')
     expect(currentSection('/club/ajustes/pagos')?.label).toBe('Pagos')
     expect(currentSection('/club/ajustes/otra')).toBeUndefined()
+  })
+
+  it('shows Monitoreo only to the platform admin', () => {
+    expect(visibleSections(false).map((section) => section.label)).not.toContain('Monitoreo')
+    expect(visibleSections(true).map((section) => section.label)).toContain('Monitoreo')
   })
 
   it('finds a section by its link', () => {

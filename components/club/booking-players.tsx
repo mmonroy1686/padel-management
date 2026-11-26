@@ -8,10 +8,12 @@ import { chargeLabel, playerLabel, type PlayerShare, type TurnPlayers } from '@/
 import { formatPrice } from '@/lib/domain/format'
 import type { MemberOption } from '@/lib/domain/members'
 import { ChargeChoice, type PayMethods } from './charge-choice'
+import { useChargeReceipt } from './charge-receipt'
 import { PlayersSheet } from './players-sheet'
 import { TurnCourt } from './turn-court'
 
-export type PlayersActions = { chargeShare: FormAction; chargeRest: FormAction; savePlayers: FormAction }
+// voidPayment: "Deshacer" right after a cash or POS charge (the Inicio); takes every paymentId of the form at once.
+export type PlayersActions = { chargeShare: FormAction; chargeRest: FormAction; savePlayers: FormAction; voidPayment?: FormAction }
 // list: a row per player (the Grilla). court: the four players drawn on a court (the Inicio).
 export type PlayersLayout = 'list' | 'court'
 
@@ -53,11 +55,17 @@ export function BookingPlayers({
   const canPay = methods.cash || methods.transfer
   const canCharge = canPay && open
 
-  const succeed = (text: string) => {
+  const receipt = useChargeReceipt()
+  const succeed = (text: string, paymentIds?: string[]) => {
     setCharging(null)
     setEditing(false)
     if (onDone) onDone(text)
-    else setNotice({ tone: 'ok', text })
+    else if (receipt && paymentIds) {
+      // A charge on the Inicio: the receipt at the bottom of the screen, with "Deshacer" for a cash or POS one.
+      setNotice(null)
+      const voidable = actions.voidPayment && paymentIds.length > 0
+      receipt.show(text, 'ok', voidable && actions.voidPayment ? { paymentIds, action: actions.voidPayment, label: 'Deshacer el cobro' } : null)
+    } else setNotice({ tone: 'ok', text })
   }
   const fail = (text: string) => {
     setCharging(null)

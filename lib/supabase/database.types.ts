@@ -3497,6 +3497,34 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"void_desk_payments":
+{ Args: { "p_payment_ids": (string)[] }; Returns: {
+              "amount": number,
+"booking_id": string | null,
+"championship_entry_id": string | null,
+"club_id": string,
+"confirmed_at": string | null,
+"confirmed_by": string | null,
+"created_at": string,
+"day_use_pass_id": string | null,
+"id": string,
+"method": Database["public"]['Enums']["payment_method"],
+"payer_id": string | null,
+"payer_position": number | null,
+"receipt_path": string | null,
+"rejection_reason": string | null,
+"reported_by": string | null,
+"status": Database["public"]['Enums']["payment_status"],
+"tournament_entry_id": string | null,
+"voided_at": string | null,
+"voided_by": string | null
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "payments"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "withdraw_championship_entry":
 { Args: { "p_entry_id": string }; Returns: {
               "category_id": string,

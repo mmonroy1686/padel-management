@@ -8,7 +8,8 @@ import { METHOD_HOW } from '@/lib/domain/payments'
 import { readEnum, readInt, readText, readUuid } from '@/lib/domain/input'
 import { createClient } from '@/lib/supabase/server'
 
-// The players and charges of a booking, from the Inicio and from the Grilla. The rules live in Postgres
+// The players and charges of a booking, from the Inicio and from the Grilla. A cash or POS charge returns the payments
+// it made (paymentIds), for "Deshacer"; a transfer cannot be voided at the desk, so it returns none. The rules live in Postgres
 // (set_booking_players, charge_booking_share, charge_booking_rest); these only read the form.
 
 const METHODS = ['cash', 'transfer', 'card'] as const
@@ -35,7 +36,7 @@ export async function chargeShare(_previous: ActionState, form: FormData): Promi
   })
   revalidateBookings()
   if (error) return staffError(error.message, 'Ya estaba pagado.')
-  return ok(`Cobramos ${formatPrice(data?.amount ?? 0)} ${METHOD_HOW[method]}.`)
+  return { ...ok(`Cobramos ${formatPrice(data?.amount ?? 0)} ${METHOD_HOW[method]}.`), paymentIds: method !== 'transfer' && data?.id ? [data.id] : [] }
 }
 
 // "Cobrar todo lo que falta".
@@ -47,7 +48,7 @@ export async function chargeRest(_previous: ActionState, form: FormData): Promis
   revalidateBookings()
   if (error) return staffError(error.message, 'Ya estaba pagado.')
   const amount = (data ?? []).reduce((sum, payment) => sum + payment.amount, 0)
-  return ok(`Cobramos ${formatPrice(amount)} ${METHOD_HOW[method]}.`)
+  return { ...ok(`Cobramos ${formatPrice(amount)} ${METHOD_HOW[method]}.`), paymentIds: method !== 'transfer' ? (data ?? []).map((payment) => payment.id) : [] }
 }
 
 type PlayerInput = { position: number; player_id: string } | { position: number; name: string }

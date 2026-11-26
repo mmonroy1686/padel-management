@@ -63,6 +63,8 @@ export type BoardItem = {
   at: number
   amount: number
   action?: ItemAction
+  // A championship pair's debt: both names, so it shows with each player who owes something else too.
+  players?: string[]
   // Done columns only: how the money moved and at what time; `rejection` (the reason) when it was turned down.
   done?: { method: PaymentMethod; time: string; rejection?: string }
 }
@@ -150,7 +152,8 @@ export function paymentsBoard(input: BoardInput, format: BoardFormat): BoardColu
         id: item.entryId,
         kind: 'tournament',
         holder: item.holder,
-        what: `Torneo ${item.tournamentName}`,
+        // Cobros already says "Torneo" next to it.
+        what: item.tournamentName,
         amount: item.due,
         ...played(item.startsAt),
         ...cash({ entryId: item.entryId, amount: String(item.due) }),
@@ -168,6 +171,7 @@ export function paymentsBoard(input: BoardInput, format: BoardFormat): BoardColu
         id: item.entryId,
         kind: 'championship',
         holder: item.holder,
+        players: item.players,
         what: item.what,
         amount: item.due,
         ...played(item.startsAt),
@@ -231,24 +235,58 @@ export function pendingCount(columns: BoardColumn[], lane: LaneKey): number {
   return columns.filter((column) => column.lane === lane && !column.done).reduce((sum, column) => sum + column.count, 0)
 }
 
-// Sin cobrar, the way reception reads it: what was played today, row by row; what is older, one group per player
-// ("Sofía Cabrera · 2 deudas · $3.200") so the same name does not fill the column. A player with a single older debt
-// stays a plain row: a group of one only adds a tap.
-export type DebtGroup = { holder: string; items: BoardItem[]; total: number }
-export type SplitDebts = { today: BoardItem[]; older: BoardItem[]; groups: DebtGroup[] }
+// Sin cobrar, the way reception reads it: one entry per player, today and older days together, so the same name
+// shows once ("Sofía Cabrera · 3 deudas · $3.600"). A championship pair's debt goes inside the entry of each of
+// its players who owes something else (either can pay it; charged once, it leaves both); a pair debt with nobody else
+// to join stays its own entry. Whoever owes from today comes first, in the order they played; then the rest, the
+// oldest debt first. A single debt is a plain row: a group of one only adds a tap.
+export type DebtGroup = { holder: string; items: BoardItem[]; total: number; today: boolean }
 
-export function splitDebts(items: BoardItem[], todayFrom: number): SplitDebts {
-  const today = items.filter((item) => item.at >= todayFrom)
+export function debtsByPlayer(items: BoardItem[], todayFrom: number): DebtGroup[] {
+  const sorted = [...items].sort(oldestFirst)
   const byHolder = new Map<string, BoardItem[]>()
-  for (const item of items.filter((candidate) => candidate.at < todayFrom)) {
-    const key = normalizeText(item.holder)
-    byHolder.set(key, [...(byHolder.get(key) ?? []), item])
+  const add = (key: string, item: BoardItem) => byHolder.set(key, [...(byHolder.get(key) ?? []), item])
+  for (const item of sorted.filter((candidate) => !candidate.players)) add(normalizeText(item.holder), item)
+  for (const item of sorted.filter((candidate) => candidate.players)) {
+    const owners = (item.players ?? []).map(normalizeText).filter((key) => byHolder.has(key))
+    if (owners.length === 0) add(normalizeText(item.holder), item)
+    for (const key of owners) add(key, item)
   }
-  const older: BoardItem[] = []
-  const groups: DebtGroup[] = []
-  for (const list of byHolder.values()) {
-    if (list.length === 1) older.push(list[0])
-    else groups.push({ holder: list[0].holder, items: list, total: totalsOf(list, (item) => item.amount).total })
+  const groups = [...byHolder.values()].map((list) => {
+    const own = list.find((item) => !item.players) ?? list[0]
+    const ordered = [...list].sort(oldestFirst)
+    return {
+      holder: own.holder,
+      items: ordered,
+      total: totalsOf(ordered, (item) => item.amount).total,
+      today: ordered.some((item) => item.at >= todayFrom),
+    }
+  })
+  const firstToday = (group: DebtGroup) => group.items.find((item) => item.at >= todayFrom)?.at ?? 0
+  return [
+    ...groups.filter((group) => group.today).sort((a, b) => firstToday(a) - firstToday(b)),
+    ...groups.filter((group) => !group.today).sort((a, b) => a.items[0].at - b.items[0].at),
+  ]
+}
+
+// What each person owes, for the club Inicio: by name (accents and case aside), each debt with the booking it belongs
+// to (null for a tournament, a pass or a championship), so a turn's row can tell "+3 deudas más" apart from its own.
+export type PersonDebt = { bookingId: string | null; amount: number }
+
+export function debtsByName(items: BoardItem[]): Record<string, PersonDebt[]> {
+  const byName: Record<string, PersonDebt[]> = {}
+  for (const item of items) {
+    const debt = { bookingId: item.action?.type === 'charge' ? (item.action.fields.bookingId ?? null) : null, amount: item.amount }
+    for (const name of item.players ?? [item.holder]) {
+      const key = normalizeText(name)
+      byName[key] = [...(byName[key] ?? []), debt]
+    }
   }
-  return { today, older: older.sort(oldestFirst), groups: groups.sort((a, b) => a.items[0].at - b.items[0].at) }
+  return byName
+}
+
+// The debts of a person other than the turn in front of reception: what Inicio would let walk out.
+export function otherDebts(byName: Record<string, PersonDebt[]>, name: string, bookingId: string): { count: number; total: number } {
+  const others = (byName[normalizeText(name)] ?? []).filter((debt) => debt.bookingId !== bookingId)
+  return { count: others.length, total: others.reduce((sum, debt) => sum + debt.amount, 0) }
 }

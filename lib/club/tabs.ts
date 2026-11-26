@@ -17,11 +17,11 @@ export function clubTabs(role: Role): TabItem[] {
 }
 
 // On a phone: four sections in the bottom bar, the rest behind «Más». What reception does all day (Inicio, Grilla,
-// Cobros) is always there; the fourth is Ajustes for the admin and Jugadores for reception (design ux-v2, Miguel's
-// call on 25/11).
+// Cobros) is always there; the fourth is Ajustes for the admin (Miguel's call on 25/11) and Day use for reception,
+// who sells passes at the desk (third critique, Miguel's call on 26/11; Jugadores moved to «Más»).
 export function clubBarTabs(role: Role): TabItem[] {
   const all = clubTabs(role)
-  const fourth = role === 'admin' ? '/club/ajustes' : '/club/jugadores'
+  const fourth = role === 'admin' ? '/club/ajustes' : '/club/day-use'
   return ['/club/inicio', '/club/grilla', '/club/cobros', fourth].map((href) => all.find((tab) => tab.href === href)!)
 }
 

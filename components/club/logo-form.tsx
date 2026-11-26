@@ -4,7 +4,6 @@ import { useActionState, useRef } from 'react'
 import { ClubLogo } from '@/components/brand/club-logo'
 import { Button } from '@/components/ui/button'
 import { FileField } from '@/components/ui/file-field'
-import { SubmitButton } from '@/components/ui/submit-button'
 import { failed, IDLE, type ActionState } from '@/lib/actions/result'
 import { LOGO_TYPES } from '@/lib/domain/club-logo'
 import { uploadClubLogo } from '@/lib/storage/club-logo'
@@ -17,9 +16,11 @@ export type LogoFormProps = {
   upload?: (clubId: string, file: File) => Promise<UploadResult>
 }
 
-// Ajustes → Logo: the file goes from the browser to Storage, then the club points at it.
+// Ajustes → Logo: picking the file is saving it (one step, like the forms that save themselves): it goes from the
+// browser to Storage, then the club points at it.
 export function LogoForm({ club, saveAction, removeAction, upload = uploadClubLogo }: LogoFormProps) {
   const fileInput = useRef<HTMLInputElement>(null)
+  const form = useRef<HTMLFormElement>(null)
   const [state, formAction, pending] = useActionState(async (): Promise<ActionState> => {
     // input.files, not FormData: file inputs serialize differently between environments.
     const file = fileInput.current?.files?.[0]
@@ -40,9 +41,21 @@ export function LogoForm({ club, saveAction, removeAction, upload = uploadClubLo
           transparente.
         </p>
       </div>
-      <form action={formAction} className="flex flex-col gap-3">
-        <FileField id="club-logo" name="logo" label="Archivo del logo" accept={LOGO_TYPES.join(',')} inputRef={fileInput} />
-        <SubmitButton label="Guardar logo" pendingLabel="Subiendo…" pending={pending} />
+      <form ref={form} action={formAction} className="flex flex-col gap-3">
+        <FileField
+          id="club-logo"
+          name="logo"
+          label="Archivo del logo"
+          buttonLabel={club.logo_path ? 'Cambiar logo' : 'Elegir logo'}
+          accept={LOGO_TYPES.join(',')}
+          inputRef={fileInput}
+          onPick={() => form.current?.requestSubmit()}
+        />
+        {pending ? (
+          <p role="status" className="text-sm text-fg-muted">
+            Subiendo el logo…
+          </p>
+        ) : null}
       </form>
       {club.logo_path ? (
         <form action={removeFormAction}>
@@ -56,7 +69,7 @@ export function LogoForm({ club, saveAction, removeAction, upload = uploadClubLo
           {outcome.message}
         </p>
       ) : null}
-      {outcome.status === 'ok' ? (
+      {outcome.status === 'ok' && !pending ? (
         <p role="status" className="text-sm">
           {outcome.message}
         </p>

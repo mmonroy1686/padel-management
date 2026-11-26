@@ -5,6 +5,8 @@ import { signInWithMagicLink } from './support/auth'
 import { bookFirstFreeSlot, reportTransferAs } from './support/booking'
 import { insertRecentBooking } from './support/club-home'
 
+const OPEN_TRANSFERS = /^Ver (la transferencia|las \d+ transferencias)$/
+
 test('reception charges cash, confirms a transfer and rejects another on the board', async ({ page }) => {
   const club = await clubRow()
   const debtor = await createMember({ name: 'Paula Tablero E2E', prefix: 'tablero-deudora' })
@@ -37,7 +39,9 @@ test('reception charges cash, confirms a transfer and rejects another on the boa
   await debt.getByRole('group').getByRole('button', { name: 'Efectivo' }).click()
   await expect(column('Cobrado hoy').getByRole('article', { name: debtor.name })).toHaveCount(1)
 
-  // A reported transfer: confirmed in its sheet, it leaves Por confirmar for Cobrado hoy.
+  // A reported transfer: confirmed in its sheet, it leaves Por confirmar for Cobrado hoy. The queue is folded into one
+  // line until it is opened.
+  await column('Por confirmar').getByRole('button', { name: OPEN_TRANSFERS }).click()
   await column('Por confirmar').getByRole('button', { name: `Revisar la transferencia de ${payer.name}` }).click()
   const review = page.getByRole('dialog', { name: `Transferencia de ${payer.name}` })
   await review.getByRole('button', { name: 'Confirmar' }).click()

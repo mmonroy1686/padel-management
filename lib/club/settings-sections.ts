@@ -1,11 +1,12 @@
 import type { IconName } from '@/components/ui/icon'
 
-export type SettingsSection = { href: string; label: string; icon: IconName; description: string }
+// platformOnly: a tool for whoever runs the platform (the developer), not for the club's admin.
+export type SettingsSection = { href: string; label: string; icon: IconName; description: string; platformOnly?: true }
 
 // Ajustes, one screen per group so an admin finds a setting without scrolling through all of them. The order goes from
 // who the club is to how it runs and what it charges.
 export const SETTINGS_SECTIONS: SettingsSection[] = [
-  { href: '/club/ajustes', label: 'Club', icon: 'palette', description: 'Nombre, logo y colores.' },
+  { href: '/club/ajustes/club', label: 'Club', icon: 'palette', description: 'Nombre, logo y colores.' },
   {
     href: '/club/ajustes/datos',
     label: 'Datos del club',
@@ -23,14 +24,23 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   { href: '/club/ajustes/sellos', label: 'Sellos', icon: 'ticket', description: 'La recompensa por venir al day use.' },
   { href: '/club/ajustes/flyer', label: 'Flyer', icon: 'image', description: 'WhatsApp y fondo del flyer de turnos libres.' },
   { href: '/club/ajustes/staff', label: 'Staff', icon: 'users', description: 'Quién maneja el club: invitar, roles y accesos.' },
-  { href: '/club/ajustes/monitoreo', label: 'Monitoreo', icon: 'alert', description: 'Probar que los errores llegan a Sentry.' },
+  {
+    href: '/club/ajustes/monitoreo',
+    label: 'Monitoreo',
+    icon: 'alert',
+    description: 'Probar que los errores llegan a Sentry.',
+    platformOnly: true,
+  },
 ]
 
-// The section of a path: exact for the first one (/club/ajustes), so it does not light up on every other section.
+// The sections a viewer sees: Monitoreo only for a platform admin.
+export function visibleSections(platformAdmin: boolean): SettingsSection[] {
+  return SETTINGS_SECTIONS.filter((section) => platformAdmin || !section.platformOnly)
+}
+
+// The section of a path (none on /club/ajustes itself: the index).
 export function currentSection(pathname: string): SettingsSection | undefined {
-  return SETTINGS_SECTIONS.find((section) =>
-    section.href === '/club/ajustes' ? pathname === section.href : pathname === section.href || pathname.startsWith(`${section.href}/`),
-  )
+  return SETTINGS_SECTIONS.find((section) => pathname === section.href || pathname.startsWith(`${section.href}/`))
 }
 
 export function sectionOf(href: string): SettingsSection {

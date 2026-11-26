@@ -2,16 +2,19 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { CourtList } from '@/components/club/court-card'
 import { HomeDay } from '@/components/club/home-day'
-import { PendingList } from '@/components/club/pending-list'
 import { TransfersCard } from '@/components/club/transfers-card'
+import { TurnRows, TurnSearchBox, TurnSearchProvider } from '@/components/club/turn-rows'
+import { ChargeReceiptProvider } from '@/components/club/charge-receipt'
+import { voidPayments } from '../cobros/actions'
 import { Card } from '@/components/ui/card'
 import { AutoRefresh } from '@/components/live/auto-refresh'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { chargeRest, chargeShare, saveBookingPlayers } from '@/lib/actions/booking-charges'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadClubHome } from '@/lib/data/club-home'
+import { loadPaymentsOverview } from '@/lib/data/payments'
+import { debtsByName, paymentsBoard } from '@/lib/domain/payments-board'
 import { loadSetupState } from '@/lib/data/club-setup'
 import { loadMemberOptions } from '@/lib/data/members'
 import { homeSections } from '@/lib/domain/club-home'
@@ -31,9 +34,10 @@ function HomeSection({ id, title, children }: { id: string; title: string; child
   )
 }
 
-// Reception's and the admin's first screen: transfers to review, the courts in play (and the ones that just ended
-// and still owe), what comes next, what is still owed today and the day. It renders again when an occupancy changes
-// (Realtime) and every minute, so bookings move from Próximos to En cancha and to Pendientes on their own.
+// Reception's and the admin's first screen, as rows: the courts in play (and the ones that just ended and still
+// owe), what comes next, and what is still owed today (transfers to review on top), then the day. One button per
+// turn opens its court. It renders again when an occupancy changes (Realtime) and every minute, so bookings move
+// from Próximos to En cancha and to Pendientes on their own.
 // A new club (setup not finished): its admin goes to the setup assistant the first time, and Inicio says how to come
 // back to it; reception reads that the admin is setting it up.
 function SetupNotice({ state, admin }: { state: { activeCourts: number; priceRules: number }; admin: boolean }) {
@@ -69,28 +73,37 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
   }
   const setupNotice = setup ? <SetupNotice state={setup} admin={viewer.membership.role === 'admin'} /> : null
   const now = new Date()
-  const [home, members] = await Promise.all([loadClubHome(club, viewer.userId, now), loadMemberOptions(club.id)])
+  const [home, members, overview] = await Promise.all([
+    loadClubHome(club, viewer.userId, now),
+    loadMemberOptions(club.id),
+    loadPaymentsOverview(club, now),
+  ])
+  // Everything each person owes (the same as Cobros' Sin cobrar), for "+3 deudas más" on a turn.
+  const unpaid = paymentsBoard(overview, { when: () => '', time: () => '', deskMethods: ['cash'] }).find((column) => column.key === 'unpaid')?.items ?? []
   const { playing, recent, upcoming, pending, next } = homeSections(home.items, now)
   const inPlay = [...playing, ...recent]
   const list = {
     timezone: club.timezone,
     methods: { cash: club.accepts_cash, transfer: club.accepts_transfer, card: club.accepts_card },
     members,
-    actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers },
+    actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers, voidPayment: voidPayments },
+    debts: debtsByName(unpaid),
     now,
   }
 
   return (
-    <>
+    <ChargeReceiptProvider>
+      <TurnSearchProvider>
       <LiveOccupancy clubId={club.id} />
       <AutoRefresh seconds={60} />
 
       {setupNotice}
-      {home.transfers ? <TransfersCard summary={home.transfers} /> : null}
+      {/* The desk's first question is who is in front of it: one search over the three blocks of turns. */}
+      <TurnSearchBox />
 
       <HomeSection id="en-cancha" title="En cancha ahora">
         {inPlay.length > 0 ? (
-          <CourtList items={inPlay} {...list} />
+          <TurnRows items={inPlay} {...list} />
         ) : (
           <p className="text-fg-muted">
             No hay canchas en juego ahora.
@@ -101,15 +114,16 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
 
       <HomeSection id="proximos" title="Próximos">
         {upcoming.length > 0 ? (
-          <CourtList items={upcoming} {...list} />
+          <TurnRows items={upcoming} {...list} />
         ) : (
           <p className="text-fg-muted">No empieza nada en la próxima hora y media.</p>
         )}
       </HomeSection>
 
       <HomeSection id="pendientes" title="Pendientes de cobro">
+        {home.transfers ? <TransfersCard summary={home.transfers} /> : null}
         {pending.length > 0 ? (
-          <PendingList turns={pending} {...list} />
+          <TurnRows items={pending} {...list} />
         ) : (
           <p className="text-fg-muted">Lo jugado hoy está cobrado.</p>
         )}
@@ -123,6 +137,7 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
           timezone={club.timezone}
         />
       </HomeSection>
-    </>
+      </TurnSearchProvider>
+    </ChargeReceiptProvider>
   )
 }

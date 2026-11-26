@@ -91,7 +91,8 @@ export function RecurringOverview({
                       <li key={item.id}>
                         <Link
                           href={`/club/grilla?dia=${nextOccurrence(item.weekday, today)}`}
-                          className="flex flex-col gap-0.5 rounded-xl bg-accent p-2 text-on-accent hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                          // Neutral: a fixed slot is information, not an action; amber is kept for the dates that need one.
+                          className="flex flex-col gap-0.5 rounded-xl border border-border bg-bg p-2 text-fg hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                         >
                           <span className="font-display text-xl font-bold tabular-nums">{item.startTime}</span>
                           <span className="text-xs font-semibold">{item.courtName}</span>

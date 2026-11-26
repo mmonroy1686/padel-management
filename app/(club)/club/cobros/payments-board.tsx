@@ -2,22 +2,22 @@
 
 import { useActionState, useEffect, useState, type ReactNode } from 'react'
 import { ChargeChoice } from '@/components/club/charge-choice'
+import { ChargeReceipt, UNDO_MS } from '@/components/club/charge-receipt'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { buttonClasses } from '@/components/ui/button'
 import { inputClasses } from '@/components/ui/field'
-import { Notice } from '@/components/ui/notice'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { IDLE, type ActionState } from '@/lib/actions/result'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/domain/format'
-import type { DeskMethod } from '@/lib/domain/payments'
+import { DESK_METHODS, type DeskMethod } from '@/lib/domain/payments'
 import {
   filterBoard,
   KIND_LABELS,
   LANES,
   pendingCount,
-  splitDebts,
+  debtsByPlayer,
   type BoardColumn,
   type BoardItem,
   type ColumnKey,
@@ -35,79 +35,107 @@ export type BoardActions = {
   reject: FormAction
   // "Confirmar las marcadas": several transfers at once.
   confirmMany?: FormAction
-  // "Anular" / "Deshacer": a cash or POS charge of today, taken back.
+  // "Anular": a cash or POS charge of today, taken back.
   void?: FormAction
+  // "Deshacer": every payment a charge just made, voided together or not at all.
+  voidMany?: FormAction
 }
 
-// The tiles on top: what is owed, waiting, in and to give back, always in sight.
-const SUMMARY: { key: ColumnKey; label: string; unit: [string, string]; tone: string }[] = [
-  { key: 'unpaid', label: 'Sin cobrar', unit: ['deuda', 'deudas'], tone: 'text-accent-ink' },
-  { key: 'transfers', label: 'Por confirmar', unit: ['transferencia', 'transferencias'], tone: 'text-accent-ink' },
-  { key: 'collected', label: 'Cobrado hoy', unit: ['pago', 'pagos'], tone: 'text-court-ink' },
-  { key: 'refunds', label: 'A devolver', unit: ['pago', 'pagos'], tone: 'text-danger' },
+// The line on top: what is owed, waiting, in and to give back, in money, always in sight; a tap opens its list.
+const SUMMARY: { key: ColumnKey; label: string; tone: string }[] = [
+  { key: 'unpaid', label: 'Sin cobrar', tone: 'text-accent-ink' },
+  { key: 'transfers', label: 'Por confirmar', tone: 'text-accent-ink' },
+  { key: 'collected', label: 'Cobrado hoy', tone: 'text-court-ink' },
+  { key: 'refunds', label: 'A devolver', tone: 'text-danger' },
 ]
 
 // Done columns show the latest few; the rest is one tap away, so the page ends.
 const DONE_SHOWN = 5
+// Sin cobrar shows the first players (today's first); the search finds anyone else, and "Ver los N" lists them all.
+const DEBTS_SHOWN = 8
 
-// How long "Deshacer" stays after a charge.
-const UNDO_MS = 10_000
 
 const plural = (count: number, [one, many]: [string, string]) => `${count} ${count === 1 ? one : many}`
+const PEOPLE: [string, string] = ['persona', 'personas']
 
-// What moved through the till, and by POS when there was any.
-const tillText = (column: BoardColumn) =>
-  `${formatPrice(column.cash ?? 0)} en efectivo${column.card ? ` · ${formatPrice(column.card)} por POS` : ''}`
-
-// Cobros, for reception with someone waiting at the desk: the search first ("Cobrar a…"), then what is owed today
-// row by row and older debts one group per player, the transfers to confirm (one by one or the marked ones at
-// once), and what got done today as a short list. One lane at a time (Cobrar or Devolver). Charging asks how the
+// Cobros, for reception with someone waiting at the desk: the search first ("Cobrar a…"), then what is owed, one
+// entry per player (whoever owes from today first), the transfers to confirm folded into one line (then one by one
+// or the marked ones at once), and what got done today as a short list. One lane at a time (Cobrar or Devolver). Charging asks how the
 // player paid, the same step as on Inicio.
-// `todayFrom`: the club's midnight (ms), where Sin cobrar splits today from older debts.
-export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: BoardColumn[]; actions: BoardActions; todayFrom?: number }) {
+// `todayFrom`: the club's midnight (ms): players who owe from today go first in Sin cobrar.
+// `initialQuery`: who to look for on arrival (Inicio's "+3 deudas más" and its search send the name).
+export function PaymentsBoard({
+  columns,
+  actions,
+  todayFrom = 0,
+  initialQuery = '',
+}: {
+  columns: BoardColumn[]
+  actions: BoardActions
+  todayFrom?: number
+  initialQuery?: string
+}) {
   const [lane, setLane] = useState<LaneKey>('collect')
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [kind, setKind] = useState<MoneyKind | ''>('')
   const [notice, setNotice] = useState<string | null>(null)
   // A copy of the transfer, so the sheet keeps its outcome after the page refreshes without it.
   const [reviewing, setReviewing] = useState<TransferView | null>(null)
   const shown = filterBoard(columns, { query, kind })
   const filtering = query.trim() !== '' || kind !== ''
+  // Por confirmar is back-office work: folded into one line until reception opens it (its tile, or Inicio's link to
+  // #transferencias), so the debts of the people at the desk stay on top. A search shows the matches unfolded.
+  const [transfersOpen, setTransfersOpen] = useState(false)
+  useEffect(() => {
+    if (window.location.hash !== '#transferencias') return
+    // Read after hydration (the server has no hash): open on the next frame, then bring it into view.
+    const frame = requestAnimationFrame(() => {
+      setTransfersOpen(true)
+      requestAnimationFrame(() => document.getElementById('column-transfers')?.scrollIntoView({ block: 'start' }))
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [])
 
   // A tile opens its lane and brings its column into view (a click commits before the next frame).
   const goTo = (column: BoardColumn) => {
     setLane(column.lane)
+    if (column.key === 'transfers') setTransfersOpen(true)
     requestAnimationFrame(() => document.getElementById(`column-${column.key}`)?.scrollIntoView({ block: 'start' }))
   }
-  // The charge just made, for "Deshacer" for a few seconds: once the page refreshes it is the newest row of Cobrado hoy
-  // with the same player and amount.
-  const [lastCharge, setLastCharge] = useState<{ holder: string; amount: number; at: number } | null>(null)
+  // The charge just made (one debt, or everything a person owed), for "Deshacer" for a few seconds: once the page
+  // refreshes each one is a recent row of Cobrado hoy with the same holder and amount.
+  const [lastCharge, setLastCharge] = useState<{ who: string; entries: { holder: string; amount: number }[]; at: number } | null>(null)
   useEffect(() => {
     if (!lastCharge) return
     const timer = window.setTimeout(() => setLastCharge(null), UNDO_MS)
     return () => window.clearTimeout(timer)
   }, [lastCharge])
-  const undoable = lastCharge
-    ? columns
-        .find((column) => column.key === 'collected')
-        ?.items.find(
-          (item) =>
-            item.action?.type === 'void' && item.holder === lastCharge.holder && item.amount === lastCharge.amount && item.at >= lastCharge.at - 60_000,
-        )
-    : undefined
-  const charged = (message: string, item: BoardItem) => {
+  const undoable = lastCharge ? undoablePayments(columns, lastCharge.entries, lastCharge.at) : []
+  const charged = (message: string, items: BoardItem[], who: string) => {
     setNotice(message)
-    setLastCharge({ holder: item.holder, amount: item.amount, at: Date.now() })
+    setLastCharge({ who, entries: items.map((item) => ({ holder: item.holder, amount: item.amount })), at: Date.now() })
   }
   const done = (message: string) => {
     setNotice(message)
     setLastCharge(null)
   }
-  const rowAction = (item: BoardItem) => <RowAction item={item} actions={actions} onReview={setReviewing} onDone={done} onCharged={charged} />
+  const rowAction = (item: BoardItem) => (
+    <RowAction item={item} actions={actions} onReview={setReviewing} onDone={done} onCharged={(message) => charged(message, [item], item.holder)} />
+  )
+  const chargeAll = (group: DebtGroup, open: boolean, setOpen: (open: boolean) => void) => (
+    <ChargeAll
+      group={group}
+      actions={actions}
+      open={open}
+      setOpen={setOpen}
+      onCharged={(message) => charged(message, group.items, group.holder)}
+      onError={setNotice}
+    />
+  )
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex gap-2">
         <input
           type="search"
           aria-label="Buscar por nombre o cancha"
@@ -120,7 +148,7 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
           aria-label="Tipo"
           value={kind}
           onChange={(event) => setKind(event.target.value as MoneyKind | '')}
-          className={cn(inputClasses, 'sm:w-48')}
+          className={cn(inputClasses, 'w-32 shrink-0 sm:w-48')}
         >
           <option value="">Todos</option>
           {(Object.keys(KIND_LABELS) as MoneyKind[]).map((option) => (
@@ -131,16 +159,8 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
         </select>
       </div>
 
-      {notice ? (
-        <div className="flex flex-col gap-2">
-          <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
-          {undoable?.action?.type === 'void' && actions.void ? (
-            <RowForm action={actions.void} fields={undoable.action.fields} label="Deshacer" accessibleLabel={`Deshacer el cobro a ${undoable.holder}`} onDone={done} />
-          ) : null}
-        </div>
-      ) : null}
 
-      <nav aria-label="Resumen de cobros" className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <nav aria-label="Resumen de cobros" className="grid grid-cols-4 gap-1">
         {SUMMARY.map((tile) => {
           const column = columns.find((item) => item.key === tile.key)
           if (!column) return null
@@ -149,20 +169,11 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
               key={tile.key}
               type="button"
               onClick={() => goTo(column)}
-              className="flex min-h-11 flex-col items-start rounded-xl px-3 py-2 text-left hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
+              className="flex min-h-11 flex-col items-start rounded-xl px-2 py-1.5 text-left hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
             >
-              <span className="text-sm text-fg-muted">{tile.label}</span>
-              <span className={cn('text-lg font-semibold tabular-nums', column.count > 0 ? tile.tone : 'text-fg-muted')}>
+              <span className="text-xs leading-tight text-fg-muted">{tile.label}</span>
+              <span className={cn('font-semibold tabular-nums', column.count > 0 ? tile.tone : 'text-fg-muted')}>
                 {formatPrice(column.total)}
-              </span>
-              <span className="text-xs text-fg-muted tabular-nums">
-                {column.cash !== undefined && column.count > 0
-                  ? tillText(column)
-                  : column.count > 0
-                    ? plural(column.count, tile.unit)
-                    : column.done
-                      ? 'Nada todavía'
-                      : 'Al día'}
               </span>
             </button>
           )
@@ -181,10 +192,11 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
             onClick={() => setLane(item.key)}
             className={cn(
               'min-h-10 rounded-full px-5 font-semibold focus-visible:outline-2 focus-visible:outline-accent',
-              lane === item.key ? 'bg-bg text-fg shadow-sm' : 'text-fg-muted',
+              lane === item.key ? 'bg-fg text-bg' : 'text-fg-muted',
             )}
           >
-            {item.title} <span className="tabular-nums">{pendingCount(shown, item.key)}</span>
+            {/* Cobrar is the default; Devolver says how many wait, so a refund is not forgotten. */}
+            {item.key === 'giveBack' && pendingCount(shown, item.key) > 0 ? `${item.title} ${pendingCount(shown, item.key)}` : item.title}
           </button>
         ))}
       </div>
@@ -197,9 +209,24 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
         {shown
           .filter((column) => column.lane === lane)
           .map((column) => (
-            <ColumnView key={column.key} column={column} filtering={filtering}>
+            <ColumnView
+              key={column.key}
+              column={column}
+              filtering={filtering}
+              // Sin cobrar counts people, the unit of its list (one entry per person).
+              count={column.key === 'unpaid' && !filtering ? plural(debtsByPlayer(column.items, todayFrom).length, PEOPLE) : String(column.count)}
+            >
               {column.key === 'unpaid' && !filtering ? (
-                <UnpaidList items={column.items} todayFrom={todayFrom} action={rowAction} />
+                <UnpaidList items={column.items} todayFrom={todayFrom} action={rowAction} chargeAll={chargeAll} />
+              ) : column.key === 'transfers' && !transfersOpen && !filtering ? (
+                <button
+                  type="button"
+                  aria-expanded={false}
+                  onClick={() => setTransfersOpen(true)}
+                  className={buttonClasses({ variant: 'secondary', fullWidth: true })}
+                >
+                  {column.items.length === 1 ? 'Ver la transferencia' : `Ver las ${column.items.length} transferencias`}
+                </button>
               ) : column.key === 'transfers' && actions.confirmMany && column.items.length > 1 ? (
                 <TransferList items={column.items} confirmMany={actions.confirmMany} onDone={setNotice} action={rowAction} />
               ) : (
@@ -208,6 +235,21 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
             </ColumnView>
           ))}
       </section>
+
+      {/* Fixed at the bottom of the screen, where reception is looking after charging a row far down the list. Last in the board: its room goes at the end. */}
+      {notice ? (
+        <ChargeReceipt
+          key={`${notice}-${lastCharge?.at ?? 0}`}
+          message={notice}
+          undo={
+            lastCharge && undoable.length === lastCharge.entries.length && actions.voidMany
+              ? { paymentIds: undoable, action: actions.voidMany, label: `Deshacer el cobro a ${lastCharge.who}` }
+              : null
+          }
+          onDismiss={() => setNotice(null)}
+          onUndone={done}
+        />
+      ) : null}
 
       <BottomSheet open={reviewing !== null} onClose={() => setReviewing(null)} title={reviewing ? `Transferencia de ${reviewing.holder}` : ''}>
         {reviewing ? (
@@ -218,7 +260,7 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
   )
 }
 
-function ColumnView({ column, filtering, children }: { column: BoardColumn; filtering: boolean; children: ReactNode }) {
+function ColumnView({ column, filtering, count, children }: { column: BoardColumn; filtering: boolean; count: string; children: ReactNode }) {
   const titleId = `column-${column.key}`
   return (
     <section aria-labelledby={titleId} className="flex min-w-0 scroll-mt-4 flex-col">
@@ -227,7 +269,7 @@ function ColumnView({ column, filtering, children }: { column: BoardColumn; filt
           {column.title}
         </h2>
         <span className="text-sm font-semibold text-fg-muted tabular-nums">
-          {column.count} · {formatPrice(column.total)}
+          {count} · {formatPrice(column.total)}
         </span>
       </header>
       {column.cash !== undefined && column.count > 0 ? (
@@ -261,39 +303,58 @@ function Rows({ items, limit, action }: { items: BoardItem[]; limit?: number; ac
   )
 }
 
-// Sin cobrar: today first, then older debts, one group per player who owes more than once.
-function UnpaidList({ items, todayFrom, action }: { items: BoardItem[]; todayFrom: number; action: (item: BoardItem) => ReactNode }) {
-  const { today, older, groups } = splitDebts(items, todayFrom)
+// Sin cobrar: one entry per player (today and older days together), whoever owes from today first.
+function UnpaidList({
+  items,
+  todayFrom,
+  action,
+  chargeAll,
+}: {
+  items: BoardItem[]
+  todayFrom: number
+  action: (item: BoardItem) => ReactNode
+  chargeAll: ChargeAllSlot
+}) {
+  const groups = debtsByPlayer(items, todayFrom)
+  const [all, setAll] = useState(false)
+  const visible = all ? groups : groups.slice(0, DEBTS_SHOWN)
   return (
-    <div className="flex flex-col gap-4">
-      {today.length > 0 ? <Rows items={today} action={action} /> : <p className="text-sm text-fg-muted">Hoy nadie debe nada.</p>}
-      {older.length > 0 || groups.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold text-fg-muted">De días anteriores</h3>
-          {groups.length > 0 ? (
-            <ul aria-label="Deudas por jugador" className="flex flex-col divide-y divide-border border-y border-border">
-              {groups.map((group) => (
-                <DebtGroupRow key={group.holder} group={group} action={action} />
-              ))}
-            </ul>
-          ) : null}
-          {older.length > 0 ? <Rows items={older} action={action} /> : null}
-        </div>
+    <>
+      <ul aria-label="Deudas por jugador" className="flex flex-col divide-y divide-border border-y border-border">
+        {visible.map((group) =>
+          group.items.length === 1 ? (
+            <li key={group.items[0].id}>{action(group.items[0])}</li>
+          ) : (
+            <DebtGroupRow key={group.holder} group={group} action={action} chargeAll={chargeAll} />
+          ),
+        )}
+      </ul>
+      {visible.length < groups.length ? (
+        <button type="button" onClick={() => setAll(true)} className="min-h-11 self-start text-sm font-semibold text-accent-ink underline underline-offset-4">
+          Ver las {groups.length} personas
+        </button>
       ) : null}
-    </div>
+    </>
   )
 }
 
-function DebtGroupRow({ group, action }: { group: DebtGroup; action: (item: BoardItem) => ReactNode }) {
+// What draws "Cobrar todo" for a group: the button in its row while closed, the payment choice under it once open.
+type ChargeAllSlot = (group: DebtGroup, open: boolean, setOpen: (open: boolean) => void) => ReactNode
+
+function DebtGroupRow({ group, action, chargeAll }: { group: DebtGroup; action: (item: BoardItem) => ReactNode; chargeAll: ChargeAllSlot }) {
+  const [charging, setCharging] = useState(false)
   return (
-    <li>
+    <li className="flex flex-col gap-2">
       <details className="group">
         <summary className="flex min-h-14 cursor-pointer items-center gap-3 py-2.5">
           <span className="min-w-0 flex-1">
             <span className="block font-semibold">{group.holder}</span>
-            <span className="block text-sm text-fg-muted">{group.items.length} deudas</span>
+            <span className="block text-sm text-fg-muted">
+              {group.items.length} deudas{group.today ? " · incluye hoy" : ""}
+            </span>
           </span>
           <span className="font-display text-xl font-bold tabular-nums">{formatPrice(group.total)}</span>
+          {charging ? null : chargeAll(group, false, setCharging)}
           <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
         </summary>
         <ul className="flex flex-col divide-y divide-border border-t border-border pl-3">
@@ -302,7 +363,112 @@ function DebtGroupRow({ group, action }: { group: DebtGroup; action: (item: Boar
           ))}
         </ul>
       </details>
+      {charging ? <div className="pb-2">{chargeAll(group, true, setCharging)}</div> : null}
     </li>
+  )
+}
+
+// The rows of Cobrado hoy that a charge just made (same holder and amount, within the last minute), each matched once:
+// what "Deshacer" takes back. Fewer than charged: not refreshed yet, so no Deshacer.
+function undoablePayments(columns: BoardColumn[], entries: { holder: string; amount: number }[], at: number): string[] {
+  const collected = columns.find((column) => column.key === 'collected')?.items ?? []
+  const taken = new Set<string>()
+  for (const entry of entries) {
+    const match = collected.find(
+      (item) =>
+        !taken.has(item.id) &&
+        item.action?.type === 'void' &&
+        item.holder === entry.holder &&
+        item.amount === entry.amount &&
+        item.at >= at - 60_000,
+    )
+    if (match?.action?.type === 'void') taken.add(match.action.fields.paymentId ?? match.id)
+  }
+  return [...taken]
+}
+
+// "Cobrar $4.800" on a person who owes several things: one way to pay and one confirm for all of it, instead of
+// opening the group and charging each debt while the queue waits. Each debt goes through its own Server Action (the
+// rules stay those of a single charge), one after the other; if one fails, the ones before it stay charged and the
+// message says what is left. Only the desk methods every debt accepts.
+function ChargeAll({
+  group,
+  actions,
+  open,
+  setOpen,
+  onCharged,
+  onError,
+}: {
+  group: DebtGroup
+  actions: BoardActions
+  open: boolean
+  setOpen: (open: boolean) => void
+  onCharged: (message: string) => void
+  onError: (message: string) => void
+}) {
+  const [pending, setPending] = useState(false)
+  const charges = group.items.flatMap((item) => (item.action?.type === 'charge' ? [{ item, action: item.action }] : []))
+  if (charges.length !== group.items.length) return null
+  const methods = DESK_METHODS.filter((method) => charges.every((charge) => charge.action.methods.includes(method)))
+  if (methods.length === 0) return null
+  const title = `Cobrar ${formatPrice(group.total)} a ${group.holder}`
+
+  const pay = async (method: DeskMethod) => {
+    setPending(true)
+    let paid = 0
+    for (const { item, action } of charges) {
+      const data = new FormData()
+      for (const [name, value] of Object.entries(action.fields)) data.set(name, value)
+      data.set('method', method)
+      const result = await actions.cash[item.kind](IDLE, data)
+      if (result?.status === 'error') {
+        setPending(false)
+        setOpen(false)
+        onError(
+          paid > 0
+            ? `Cobramos ${formatPrice(paid)} a ${group.holder}; faltó ${formatPrice(group.total - paid)}: ${result.message ?? 'no se pudo cobrar'}.`
+            : (result.message ?? 'No pudimos cobrar.'),
+        )
+        return
+      }
+      paid += item.amount
+    }
+    setPending(false)
+    setOpen(false)
+    onCharged(`Cobramos ${formatPrice(group.total)} ${method === 'cash' ? 'en efectivo' : 'por POS'} a ${group.holder}.`)
+  }
+
+  if (!open) {
+    return (
+      // In the row's summary: it opens the payment choice without folding the group open or shut.
+      <button
+        type="button"
+        aria-label={title}
+        onClick={(event) => {
+          event.preventDefault()
+          setOpen(true)
+        }}
+        className={buttonClasses({ variant: 'outline', className: ROW_BUTTON })}
+      >
+        Cobrar
+      </button>
+    )
+  }
+  return (
+    <div role="group" aria-label={title} className="flex flex-col gap-2 rounded-xl border border-accent bg-surface p-3">
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="text-sm text-fg-muted">{group.items.length} deudas: {group.items.map((item) => `${item.what} ${formatPrice(item.amount)}`).join(' · ')}</p>
+      <div className="flex flex-wrap gap-2">
+        {methods.map((method) => (
+          <button key={method} type="button" disabled={pending} aria-busy={pending || undefined} onClick={() => pay(method)} className={buttonClasses({ size: 'sm' })}>
+            {pending ? 'Cobrando…' : method === 'cash' ? 'Efectivo' : 'POS'}
+          </button>
+        ))}
+        <button type="button" disabled={pending} onClick={() => setOpen(false)} className={buttonClasses({ variant: 'ghost', size: 'sm' })}>
+          Volver
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -335,8 +501,24 @@ function TransferList({
       return next
     })
 
+  const all = marked.size === items.length
+  const toggleAll = () => setMarked(all ? new Set() : new Set(items.map((item) => item.id)))
+
   return (
     <div className="flex flex-col gap-3">
+      {/* Checked in the bank all at once: one tap marks them all, then unmark the odd one out. */}
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 font-semibold">
+        <input
+          type="checkbox"
+          checked={all}
+          ref={(box) => {
+            if (box) box.indeterminate = marked.size > 0 && !all
+          }}
+          onChange={toggleAll}
+          className="size-5 shrink-0 accent-[var(--accent)]"
+        />
+        {all ? 'Desmarcar todas' : `Marcar todas (${items.length})`}
+      </label>
       <ul className="flex flex-col divide-y divide-border border-y border-border">
         {items.map((item) => (
           <li key={item.id} className="flex items-center gap-3">
@@ -352,7 +534,8 @@ function TransferList({
         ))}
       </ul>
       {marked.size > 0 ? (
-        <form action={formAction} className="flex flex-col gap-2">
+        // Stays in reach over a long queue: above the phone's bottom bar, at the bottom of the screen elsewhere.
+        <form action={formAction} className="sticky bottom-24 z-10 flex flex-col gap-2 rounded-2xl bg-bg/95 py-2 md:bottom-4">
           {[...marked].map((id) => (
             <input key={id} type="hidden" name="paymentId" value={id} />
           ))}
@@ -395,7 +578,8 @@ function RowAction({
             pendingLabel="Anulando…"
             confirmLabel="¿Anular? Tocá de nuevo"
             accessibleLabel={`Anular el cobro a ${item.holder}`}
-            variant="danger"
+            // Quiet: a day of normal charges should not look dangerous; the second tap still guards it.
+            variant="ghost"
             size="sm"
             onDone={onDone}
             className="shrink-0"
@@ -417,7 +601,7 @@ function RowAction({
           onClick={() =>
             onReview({ id: item.id, amount: item.amount, holder: item.holder, when: item.when, courtName: item.what, receiptUrl: action.receiptUrl })
           }
-          className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+          className={buttonClasses({ variant: 'outline', className: ROW_BUTTON })}
         >
           Revisar
         </button>
@@ -484,7 +668,7 @@ function ChargeRow({
             setError(null)
             setOpen(true)
           }}
-          className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+          className={buttonClasses({ variant: 'outline', className: ROW_BUTTON })}
         >
           Cobrar
         </button>
@@ -523,7 +707,7 @@ function RowForm({
         aria-label={accessibleLabel}
         disabled={pending}
         aria-busy={pending || undefined}
-        className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+        className={buttonClasses({ variant: 'outline', className: ROW_BUTTON })}
       >
         {pending ? 'Guardando…' : label}
       </button>

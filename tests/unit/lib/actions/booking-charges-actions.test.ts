@@ -4,7 +4,7 @@ import { INVALID_INPUT } from '@/lib/actions/result'
 // Server Actions are reachable by any POST: bad input must stop before any RPC.
 type RpcResult = { data: unknown; error: { message: string } | null }
 const rpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<RpcResult>>(async () => ({
-  data: { amount: 300 },
+  data: { id: 'pay-1', amount: 300 },
   error: null,
 }))
 
@@ -34,15 +34,20 @@ describe('chargeShare', () => {
     expect(await chargeShare(IDLE, form({ bookingId: BOOKING, position: '2', method: 'cash' }))).toEqual({
       status: 'ok',
       message: 'Cobramos $300 en efectivo.',
+      // What it made, for "Deshacer".
+      paymentIds: ['pay-1'],
     })
     expect(rpc).toHaveBeenCalledWith('charge_booking_share', { p_booking_id: BOOKING, p_position: 2, p_method: 'cash' })
     expect(await chargeShare(IDLE, form({ bookingId: BOOKING, position: '1', method: 'transfer' }))).toEqual({
       status: 'ok',
       message: 'Cobramos $300 por transferencia.',
+      // A transfer cannot be voided at the desk.
+      paymentIds: [],
     })
     expect(await chargeShare(IDLE, form({ bookingId: BOOKING, position: '3', method: 'card' }))).toEqual({
       status: 'ok',
       message: 'Cobramos $300 con POS.',
+      paymentIds: ['pay-1'],
     })
     expect(rpc).toHaveBeenCalledWith('charge_booking_share', { p_booking_id: BOOKING, p_position: 3, p_method: 'card' })
   })
@@ -74,6 +79,7 @@ describe('chargeRest', () => {
     expect(await chargeRest(IDLE, form({ bookingId: BOOKING, method: 'transfer' }))).toEqual({
       status: 'ok',
       message: 'Cobramos $802 por transferencia.',
+      paymentIds: [],
     })
     expect(rpc).toHaveBeenCalledWith('charge_booking_rest', { p_booking_id: BOOKING, p_method: 'transfer' })
   })
