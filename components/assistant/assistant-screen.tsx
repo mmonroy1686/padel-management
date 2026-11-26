@@ -6,6 +6,7 @@ import { FreeBoard } from '@/components/assistant/free-board'
 import { RecommendedSlots } from '@/components/assistant/recommended-slots'
 import type { CreateMatchAction, InviteAction } from '@/lib/actions/result'
 import type { AssistantBoard, BoardSlot } from '@/lib/domain/assistant-board'
+import type { PlayerContact } from '@/lib/domain/contact'
 
 // The recommendations and the board open the same sheet. The sheet keeps its slot while the page refreshes
 // after creating or inviting.
@@ -17,6 +18,7 @@ export function AssistantScreen({
   siteUrl,
   createAction,
   inviteAction,
+  whatsapp,
 }: {
   board: AssistantBoard
   recommended: { slot: BoardSlot; text: string }[]
@@ -25,6 +27,8 @@ export function AssistantScreen({
   siteUrl: string
   createAction: CreateMatchAction
   inviteAction: InviteAction
+  // The WhatsApp of the members who accepted it, by player.
+  whatsapp: Record<string, PlayerContact>
 }) {
   const [picked, setPicked] = useState<BoardSlot | null>(null)
   return (
@@ -39,6 +43,7 @@ export function AssistantScreen({
           siteUrl={siteUrl}
           createAction={createAction}
           inviteAction={inviteAction}
+          whatsapp={whatsapp}
           onClose={() => setPicked(null)}
         />
       ) : null}

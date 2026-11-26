@@ -15,7 +15,15 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(new URL(landingAfterSignIn(next, await roleInClub(supabase)), origin))
+    if (!error) {
+      // A player who never chose a photo gets the one of their Google account (read from auth.users, server side).
+      // Best effort: signing in never fails over a photo.
+      await supabase.rpc('sync_google_avatar').then(
+        () => undefined,
+        () => undefined,
+      )
+      return NextResponse.redirect(new URL(landingAfterSignIn(next, await roleInClub(supabase)), origin))
+    }
     reason = callbackError(error.code)
   }
 

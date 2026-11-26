@@ -32,7 +32,7 @@ const { bookSlot } = await import('@/app/(jugador)/reservar/actions')
 const { cancelMyBooking, reportTransfer } = await import('@/app/(jugador)/reservas/actions')
 const { cancelMatch, endSeries, loadSlot, markNoShow, recordCash, removeFromMatch } = await import('@/app/(club)/club/grilla/actions')
 const { addPricingRule, deleteCourt, updateBookingSettings, updatePaymentSettings } = await import('@/app/(club)/club/ajustes/actions')
-const { saveAvailability, savePreferredCourts, saveProfile } = await import('@/lib/actions/profile')
+const { removeAvatar, saveAvailability, saveAvatar, saveContact, savePreferredCourts, saveProfile } = await import('@/lib/actions/profile')
 const { createMatch, joinMatch, leaveMatch } = await import('@/app/(jugador)/partidos/actions')
 const { errorMessage } = await import('@/lib/domain/errors')
 
@@ -178,6 +178,33 @@ describe('saveProfile', () => {
       p_category: 5,
     })
     expect(redirect).toHaveBeenCalledWith('/')
+  })
+
+  it('on the welcome, also saves the WhatsApp when there is one, and stops on a wrong number', async () => {
+    expect(await saveProfile(IDLE, form({ ...valid, phone: '12' }))).toEqual({ status: 'error', message: 'Revisá el número: por ejemplo 099 123 456.' })
+    expect(rpc).not.toHaveBeenCalled()
+    await expect(saveProfile(IDLE, form({ ...valid, phone: '099 123 456', whatsappConsent: 'on', next: '/' }))).rejects.toThrow('NEXT_REDIRECT')
+    expect(rpc).toHaveBeenCalledWith('save_player_contact', { p_phone: '099123456', p_consent: true })
+    rpc.mockClear()
+    await expect(saveProfile(IDLE, form({ ...valid, phone: '', next: '/' }))).rejects.toThrow('NEXT_REDIRECT')
+    expect(rpc).not.toHaveBeenCalledWith('save_player_contact', expect.anything())
+  })
+})
+
+describe("the player's contact and photo", () => {
+  it('saves the WhatsApp normalized, and refuses consent without a number before any RPC', async () => {
+    expect(await saveContact(IDLE, form({ phone: '', whatsappConsent: 'on' }))).toMatchObject({ status: 'error' })
+    expect(rpc).not.toHaveBeenCalled()
+    expect(await saveContact(IDLE, form({ phone: '+598 99 123 456', whatsappConsent: 'on' }))).toEqual({ status: 'ok', message: 'Guardamos tu WhatsApp.' })
+    expect(rpc).toHaveBeenCalledWith('save_player_contact', { p_phone: '099123456', p_consent: true })
+  })
+
+  it('points the profile at an uploaded photo, or back to the initials', async () => {
+    expect(await saveAvatar('u1/avatar-1.jpg')).toEqual({ status: 'ok', message: 'Guardamos tu foto.' })
+    expect(rpc).toHaveBeenCalledWith('set_profile_avatar', { p_path: 'u1/avatar-1.jpg' })
+    expect(await saveAvatar('x'.repeat(201))).toEqual(INVALID_INPUT)
+    expect(await removeAvatar()).toEqual({ status: 'ok', message: 'Quitamos tu foto.' })
+    expect(rpc.mock.calls.at(-1)?.[0]).toBe('clear_profile_avatar')
   })
 })
 
