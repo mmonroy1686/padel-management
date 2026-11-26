@@ -270,9 +270,9 @@ body {
 }
 
 /* Wide screens: a full-width button stops at a comfortable size instead of crossing the page, except
-   inside a sheet, where it still fills the dialog. */
+   inside a sheet or a narrow form card ([data-fill-buttons]), where it still lines up with the fields. */
 @media (min-width: 48rem) {
-  .button-block:not([role='dialog'] *) {
+  .button-block:not([role='dialog'] *, [data-fill-buttons] *) {
     width: auto;
     min-width: 16rem;
     align-self: flex-start;

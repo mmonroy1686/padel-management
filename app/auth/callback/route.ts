@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { findClub } from '@/lib/auth/viewer'
+import { roleInClub } from '@/lib/auth/role-in-club'
 import { callbackError, landingAfterSignIn, originFromHeaders, safeNextPath } from '@/lib/auth/redirect'
 import { createClient } from '@/lib/supabase/server'
 
@@ -32,12 +32,4 @@ export async function GET(request: NextRequest) {
   signIn.searchParams.set('error', reason)
   signIn.searchParams.set('next', next)
   return NextResponse.redirect(signIn)
-}
-
-// The signed-in person's role in this host's club (null: not a member yet, or no club on this host).
-async function roleInClub(supabase: Awaited<ReturnType<typeof createClient>>): Promise<'player' | 'reception' | 'admin' | null> {
-  const [{ data: auth }, club] = await Promise.all([supabase.auth.getUser(), findClub()])
-  if (!auth.user || !club) return null
-  const { data } = await supabase.from('club_members').select('role').eq('club_id', club.id).eq('user_id', auth.user.id).maybeSingle()
-  return data?.role ?? null
 }

@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="es">
+  <body style="margin:0;padding:24px;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#111111;">
+    <div style="max-width:420px;margin:0 auto;background:#ffffff;border-radius:12px;padding:28px;">
+      <p style="margin:0 0 16px;font-size:16px;">Tu código para entrar:</p>
+      <p id="sign-in-code" style="margin:0 0 20px;font-size:36px;font-weight:bold;letter-spacing:8px;">{{ .Token }}</p>
+      <p style="margin:0 0 24px;font-size:14px;color:#444444;">Escribilo en la pantalla de Ingresar. Vence en una hora y sirve una sola vez.</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#444444;">O tocá este enlace desde este mismo teléfono:</p>
+      <p style="margin:0 0 24px;"><a href="{{ .ConfirmationURL }}" style="color:#111111;font-weight:bold;">Entrar</a></p>
+      <p style="margin:0;font-size:12px;color:#666666;">Si no pediste entrar, ignorá este mail.</p>
+    </div>
+  </body>
+</html>

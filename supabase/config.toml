@@ -242,6 +242,16 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# The sign-in mails carry the 6-digit code and the link (Ingresar accepts either). Production: paste the same HTML in
+# Supabase → Authentication → Email Templates (Magic Link and Confirm signup).
+[auth.email.template.magic_link]
+subject = "Tu código para entrar"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.confirmation]
+subject = "Tu código para entrar"
+content_path = "./supabase/templates/confirmation.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
