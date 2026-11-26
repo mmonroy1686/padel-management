@@ -39,12 +39,12 @@ export type BoardActions = {
   void?: FormAction
 }
 
-// The tiles on top: what is owed, waiting, in and to give back, always in sight.
-const SUMMARY: { key: ColumnKey; label: string; unit: [string, string]; tone: string }[] = [
-  { key: 'unpaid', label: 'Sin cobrar', unit: ['deuda', 'deudas'], tone: 'text-accent-ink' },
-  { key: 'transfers', label: 'Por confirmar', unit: ['transferencia', 'transferencias'], tone: 'text-accent-ink' },
-  { key: 'collected', label: 'Cobrado hoy', unit: ['pago', 'pagos'], tone: 'text-court-ink' },
-  { key: 'refunds', label: 'A devolver', unit: ['pago', 'pagos'], tone: 'text-danger' },
+// The line on top: what is owed, waiting, in and to give back, in money, always in sight; a tap opens its list.
+const SUMMARY: { key: ColumnKey; label: string; tone: string }[] = [
+  { key: 'unpaid', label: 'Sin cobrar', tone: 'text-accent-ink' },
+  { key: 'transfers', label: 'Por confirmar', tone: 'text-accent-ink' },
+  { key: 'collected', label: 'Cobrado hoy', tone: 'text-court-ink' },
+  { key: 'refunds', label: 'A devolver', tone: 'text-danger' },
 ]
 
 // Done columns show the latest few; the rest is one tap away, so the page ends.
@@ -54,19 +54,27 @@ const DEBTS_SHOWN = 8
 
 
 const plural = (count: number, [one, many]: [string, string]) => `${count} ${count === 1 ? one : many}`
-
-// What moved through the till, and by POS when there was any.
-const tillText = (column: BoardColumn) =>
-  `${formatPrice(column.cash ?? 0)} en efectivo${column.card ? ` · ${formatPrice(column.card)} por POS` : ''}`
+const PEOPLE: [string, string] = ['persona', 'personas']
 
 // Cobros, for reception with someone waiting at the desk: the search first ("Cobrar a…"), then what is owed, one
 // entry per player (whoever owes from today first), the transfers to confirm folded into one line (then one by one
 // or the marked ones at once), and what got done today as a short list. One lane at a time (Cobrar or Devolver). Charging asks how the
 // player paid, the same step as on Inicio.
 // `todayFrom`: the club's midnight (ms): players who owe from today go first in Sin cobrar.
-export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: BoardColumn[]; actions: BoardActions; todayFrom?: number }) {
+// `initialQuery`: who to look for on arrival (Inicio's "+3 deudas más" and its search send the name).
+export function PaymentsBoard({
+  columns,
+  actions,
+  todayFrom = 0,
+  initialQuery = '',
+}: {
+  columns: BoardColumn[]
+  actions: BoardActions
+  todayFrom?: number
+  initialQuery?: string
+}) {
   const [lane, setLane] = useState<LaneKey>('collect')
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [kind, setKind] = useState<MoneyKind | ''>('')
   const [notice, setNotice] = useState<string | null>(null)
   // A copy of the transfer, so the sheet keeps its outcome after the page refreshes without it.
@@ -125,7 +133,7 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex gap-2">
         <input
           type="search"
           aria-label="Buscar por nombre o cancha"
@@ -138,7 +146,7 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
           aria-label="Tipo"
           value={kind}
           onChange={(event) => setKind(event.target.value as MoneyKind | '')}
-          className={cn(inputClasses, 'sm:w-48')}
+          className={cn(inputClasses, 'w-32 shrink-0 sm:w-48')}
         >
           <option value="">Todos</option>
           {(Object.keys(KIND_LABELS) as MoneyKind[]).map((option) => (
@@ -164,7 +172,7 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
         />
       ) : null}
 
-      <nav aria-label="Resumen de cobros" className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <nav aria-label="Resumen de cobros" className="grid grid-cols-4 gap-1">
         {SUMMARY.map((tile) => {
           const column = columns.find((item) => item.key === tile.key)
           if (!column) return null
@@ -173,20 +181,11 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
               key={tile.key}
               type="button"
               onClick={() => goTo(column)}
-              className="flex min-h-11 flex-col items-start rounded-xl px-3 py-2 text-left hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
+              className="flex min-h-11 flex-col items-start rounded-xl px-2 py-1.5 text-left hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
             >
-              <span className="text-sm text-fg-muted">{tile.label}</span>
-              <span className={cn('text-lg font-semibold tabular-nums', column.count > 0 ? tile.tone : 'text-fg-muted')}>
+              <span className="text-xs leading-tight text-fg-muted">{tile.label}</span>
+              <span className={cn('font-semibold tabular-nums', column.count > 0 ? tile.tone : 'text-fg-muted')}>
                 {formatPrice(column.total)}
-              </span>
-              <span className="text-xs text-fg-muted tabular-nums">
-                {column.cash !== undefined && column.count > 0
-                  ? tillText(column)
-                  : column.count > 0
-                    ? plural(column.count, tile.unit)
-                    : column.done
-                      ? 'Nada todavía'
-                      : 'Al día'}
               </span>
             </button>
           )
@@ -208,7 +207,8 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
               lane === item.key ? 'bg-fg text-bg' : 'text-fg-muted',
             )}
           >
-            {item.title} <span className="tabular-nums">{pendingCount(shown, item.key)}</span>
+            {/* Cobrar is the default; Devolver says how many wait, so a refund is not forgotten. */}
+            {item.key === 'giveBack' && pendingCount(shown, item.key) > 0 ? `${item.title} ${pendingCount(shown, item.key)}` : item.title}
           </button>
         ))}
       </div>
@@ -221,7 +221,13 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
         {shown
           .filter((column) => column.lane === lane)
           .map((column) => (
-            <ColumnView key={column.key} column={column} filtering={filtering}>
+            <ColumnView
+              key={column.key}
+              column={column}
+              filtering={filtering}
+              // Sin cobrar counts people, the unit of its list (one entry per person).
+              count={column.key === 'unpaid' && !filtering ? plural(debtsByPlayer(column.items, todayFrom).length, PEOPLE) : String(column.count)}
+            >
               {column.key === 'unpaid' && !filtering ? (
                 <UnpaidList items={column.items} todayFrom={todayFrom} action={rowAction} chargeAll={chargeAll} />
               ) : column.key === 'transfers' && !transfersOpen && !filtering ? (
@@ -251,7 +257,7 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
   )
 }
 
-function ColumnView({ column, filtering, children }: { column: BoardColumn; filtering: boolean; children: ReactNode }) {
+function ColumnView({ column, filtering, count, children }: { column: BoardColumn; filtering: boolean; count: string; children: ReactNode }) {
   const titleId = `column-${column.key}`
   return (
     <section aria-labelledby={titleId} className="flex min-w-0 scroll-mt-4 flex-col">
@@ -260,7 +266,7 @@ function ColumnView({ column, filtering, children }: { column: BoardColumn; filt
           {column.title}
         </h2>
         <span className="text-sm font-semibold text-fg-muted tabular-nums">
-          {column.count} · {formatPrice(column.total)}
+          {count} · {formatPrice(column.total)}
         </span>
       </header>
       {column.cash !== undefined && column.count > 0 ? (
@@ -322,7 +328,7 @@ function UnpaidList({
       </ul>
       {visible.length < groups.length ? (
         <button type="button" onClick={() => setAll(true)} className="min-h-11 self-start text-sm font-semibold text-accent-ink underline underline-offset-4">
-          Ver los {groups.length}
+          Ver las {groups.length} personas
         </button>
       ) : null}
     </>

@@ -4,6 +4,7 @@ import { Icon, type IconName } from '@/components/ui/icon'
 import { canAddPlayers, timeLeft, turnLabel, type CourtEvent, type CourtItem, type CourtTurn } from '@/lib/domain/club-home'
 import { timeIn } from '@/lib/domain/format'
 import type { MemberOption } from '@/lib/domain/members'
+import type { PersonDebt } from '@/lib/domain/payments-board'
 import { BookingPlayers, type PlayersActions } from './booking-players'
 import type { PayMethods } from './charge-choice'
 
@@ -16,6 +17,8 @@ export type CourtListProps = {
   actions: PlayersActions
   // Each card says, from it, how much is left, when it starts or how long ago it ended.
   now: Date
+  // What each person owes in Cobros (debtsByName), so a row can say "+3 deudas más".
+  debts?: Record<string, PersonDebt[]>
 }
 
 const EVENT_ICONS: Partial<Record<CourtEvent['occupancyKind'], IconName>> = {

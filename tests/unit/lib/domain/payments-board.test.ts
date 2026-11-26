@@ -4,7 +4,9 @@ import {
   filterBoard,
   paymentsBoard,
   pendingCount,
+  debtsByName,
   debtsByPlayer,
+  otherDebts,
   type BoardItem,
   type BoardColumn,
   type BoardFormat,
@@ -226,5 +228,30 @@ describe('debtsByPlayer', () => {
 
   it('has nothing to group when nothing is owed', () => {
     expect(debtsByPlayer([], TODAY)).toEqual([])
+  })
+})
+
+describe('debtsByName and otherDebts', () => {
+  const charge = (id: string, holder: string, bookingId: string | null, amount: number, players?: string[]): BoardItem => ({
+    id,
+    kind: bookingId ? 'booking' : 'championship',
+    holder,
+    what: '',
+    when: '',
+    at: 0,
+    amount,
+    ...(players ? { players } : {}),
+    action: { type: 'charge', fields: bookingId ? { bookingId } : { entryId: id }, methods: ['cash'] },
+  })
+
+  it("counts a person's debts beyond the turn in front of reception, pair debts included", () => {
+    const byName = debtsByName([
+      charge('a', 'Florencia Díaz', 'b-today', 400),
+      charge('b', 'Florencia Díaz', 'b-old', 1200),
+      charge('c', 'Florencia Díaz y Ana', null, 2000, ['Florencia Díaz', 'Ana']),
+    ])
+    expect(otherDebts(byName, 'florencia diaz', 'b-today')).toEqual({ count: 2, total: 3200 })
+    expect(otherDebts(byName, 'Ana', 'b-x')).toEqual({ count: 1, total: 2000 })
+    expect(otherDebts(byName, 'Nadie', 'b-x')).toEqual({ count: 0, total: 0 })
   })
 })

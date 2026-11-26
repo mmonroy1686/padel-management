@@ -6,8 +6,9 @@ import { buttonClasses } from '@/components/ui/button'
 import { Icon } from '@/components/ui/icon'
 import { IDLE } from '@/lib/actions/result'
 
-// How long "Deshacer" stays after a charge.
-export const UNDO_MS = 10_000
+// How long "Deshacer" stays after a charge: long enough for the mistake to show (the customer reaching for a card),
+// Miguel's call on 26/11. After it, "Anular" in Cobrado hoy still takes a charge back.
+export const UNDO_MS = 30_000
 
 export type ChargeUndo = {
   // The payments the charge made; voided one by one (void_desk_payment).
@@ -18,7 +19,7 @@ export type ChargeUndo = {
 }
 
 // What a charge at the desk says, where reception is looking: a bar fixed at the bottom of the screen (above the
-// phone's bottom bar), not at the top of a long list the charged row scrolled away from. "Deshacer" stays for ten
+// phone's bottom bar), not at the top of a long list the charged row scrolled away from. "Deshacer" stays for thirty
 // seconds (a cash charge picked as POS, the wrong person); the message stays until it is closed or replaced.
 export function ChargeReceipt({
   message,

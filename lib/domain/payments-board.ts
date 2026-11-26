@@ -268,3 +268,25 @@ export function debtsByPlayer(items: BoardItem[], todayFrom: number): DebtGroup[
     ...groups.filter((group) => !group.today).sort((a, b) => a.items[0].at - b.items[0].at),
   ]
 }
+
+// What each person owes, for the club Inicio: by name (accents and case aside), each debt with the booking it belongs
+// to (null for a tournament, a pass or a championship), so a turn's row can tell "+3 deudas más" apart from its own.
+export type PersonDebt = { bookingId: string | null; amount: number }
+
+export function debtsByName(items: BoardItem[]): Record<string, PersonDebt[]> {
+  const byName: Record<string, PersonDebt[]> = {}
+  for (const item of items) {
+    const debt = { bookingId: item.action?.type === 'charge' ? (item.action.fields.bookingId ?? null) : null, amount: item.amount }
+    for (const name of item.players ?? [item.holder]) {
+      const key = normalizeText(name)
+      byName[key] = [...(byName[key] ?? []), debt]
+    }
+  }
+  return byName
+}
+
+// The debts of a person other than the turn in front of reception: what Inicio would let walk out.
+export function otherDebts(byName: Record<string, PersonDebt[]>, name: string, bookingId: string): { count: number; total: number } {
+  const others = (byName[normalizeText(name)] ?? []).filter((debt) => debt.bookingId !== bookingId)
+  return { count: others.length, total: others.reduce((sum, debt) => sum + debt.amount, 0) }
+}

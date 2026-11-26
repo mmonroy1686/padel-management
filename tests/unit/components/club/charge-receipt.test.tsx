@@ -22,7 +22,7 @@ describe('ChargeReceipt', () => {
     expect(action.mock.calls.map((call) => call[1].get('paymentId'))).toEqual(['p1', 'p2'])
   })
 
-  it('offers "Deshacer" for ten seconds only', () => {
+  it('offers "Deshacer" for a while only', () => {
     vi.useFakeTimers()
     try {
       render(

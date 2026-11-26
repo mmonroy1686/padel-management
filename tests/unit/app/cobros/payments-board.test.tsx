@@ -55,14 +55,13 @@ describe('PaymentsBoard', () => {
     renderBoard()
     const summary = screen.getByRole('navigation', { name: 'Resumen de cobros' })
     expect(within(summary).getByRole('button', { name: /Sin cobrar/ })).toHaveTextContent('$1.650')
-    expect(within(summary).getByRole('button', { name: /Sin cobrar/ })).toHaveTextContent('2 deudas')
-    expect(within(summary).getByRole('button', { name: /Cobrado hoy/ })).toHaveTextContent('$300 en efectivo')
+    expect(within(summary).getByRole('button', { name: /Cobrado hoy/ })).toHaveTextContent('$300')
     expect(within(summary).getByRole('button', { name: /A devolver/ })).toHaveTextContent('$800')
   })
 
   it('shows the Cobrar lane with its columns, the rejected transfer with its reason', () => {
     renderBoard()
-    expect(within(column('Sin cobrar')).getByText('2 · $1.650')).toBeInTheDocument()
+    expect(within(column('Sin cobrar')).getByText('2 personas · $1.650')).toBeInTheDocument()
     // Por confirmar is folded into one line, with its count and money in the header.
     expect(within(column('Por confirmar')).getByText('1 · $1.600')).toBeInTheDocument()
     expect(within(column('Por confirmar')).queryByRole('article')).not.toBeInTheDocument()
@@ -105,7 +104,7 @@ describe('PaymentsBoard', () => {
 
   it('switches lanes with the toggles, each with what is left to do, and a tile opens its lane', async () => {
     renderBoard()
-    const collect = screen.getByRole('button', { name: 'Cobrar 3' })
+    const collect = screen.getByRole('button', { name: 'Cobrar' })
     const giveBack = screen.getByRole('button', { name: 'Devolver 1' })
     expect(collect).toHaveAttribute('aria-pressed', 'true')
     await userEvent.click(giveBack)
@@ -182,6 +181,13 @@ describe('PaymentsBoard, for the desk', () => {
       ['b2', 'cash'],
     ])
     expect(await screen.findByText('Cobramos $2.000 en efectivo a Sofía.')).toBeInTheDocument()
+  })
+
+  it('arrives already looking for someone (from Inicio)', () => {
+    render(<PaymentsBoard columns={COLUMNS} actions={baseActions()} initialQuery="Carla" />)
+    expect(screen.getByRole('searchbox', { name: 'Buscar por nombre o cancha' })).toHaveValue('Carla')
+    expect(within(column('Sin cobrar')).getByRole('article', { name: 'Carla Ruiz' })).toBeInTheDocument()
+    expect(within(column('Sin cobrar')).queryByRole('article', { name: 'Martina' })).not.toBeInTheDocument()
   })
 
   it('confirms the marked transfers at once', async () => {

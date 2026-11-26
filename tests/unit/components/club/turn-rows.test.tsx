@@ -117,4 +117,20 @@ describe('TurnRows', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar a quién cobrar en Inicio' }), 'zzz')
     expect(screen.getByText('Nadie coincide acá.')).toBeInTheDocument()
   })
+
+  it('says when the person owes more than this turn, and takes reception to all of it', () => {
+    const action = vi.fn<FormAction>(async () => ({ status: 'ok', message: 'Listo.' }))
+    render(
+      <TurnRows
+        items={items}
+        timezone={TIMEZONE}
+        methods={{ cash: true, transfer: true, card: false }}
+        members={[]}
+        actions={{ chargeShare: action, chargeRest: action, savePlayers: action }}
+        now={at('11:30')}
+        debts={{ rodriguez: [{ bookingId: 'b1', amount: 1200 }, { bookingId: 'old', amount: 900 }, { bookingId: null, amount: 450 }] }}
+      />,
+    )
+    expect(screen.getAllByRole('link', { name: '+2 deudas más · $1.350 en Cobros' })[0]).toHaveAttribute('href', '/club/cobros?q=Rodr%C3%ADguez')
+  })
 })

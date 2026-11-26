@@ -13,6 +13,8 @@ import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { chargeRest, chargeShare, saveBookingPlayers } from '@/lib/actions/booking-charges'
 import { requireStaff } from '@/lib/auth/viewer'
 import { loadClubHome } from '@/lib/data/club-home'
+import { loadPaymentsOverview } from '@/lib/data/payments'
+import { debtsByName, paymentsBoard } from '@/lib/domain/payments-board'
 import { loadSetupState } from '@/lib/data/club-setup'
 import { loadMemberOptions } from '@/lib/data/members'
 import { homeSections } from '@/lib/domain/club-home'
@@ -71,7 +73,13 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
   }
   const setupNotice = setup ? <SetupNotice state={setup} admin={viewer.membership.role === 'admin'} /> : null
   const now = new Date()
-  const [home, members] = await Promise.all([loadClubHome(club, viewer.userId, now), loadMemberOptions(club.id)])
+  const [home, members, overview] = await Promise.all([
+    loadClubHome(club, viewer.userId, now),
+    loadMemberOptions(club.id),
+    loadPaymentsOverview(club, now),
+  ])
+  // Everything each person owes (the same as Cobros' Sin cobrar), for "+3 deudas más" on a turn.
+  const unpaid = paymentsBoard(overview, { when: () => '', time: () => '', deskMethods: ['cash'] }).find((column) => column.key === 'unpaid')?.items ?? []
   const { playing, recent, upcoming, pending, next } = homeSections(home.items, now)
   const inPlay = [...playing, ...recent]
   const list = {
@@ -79,6 +87,7 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
     methods: { cash: club.accepts_cash, transfer: club.accepts_transfer, card: club.accepts_card },
     members,
     actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers, voidPayment },
+    debts: debtsByName(unpaid),
     now,
   }
 

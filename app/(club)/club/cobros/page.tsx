@@ -14,8 +14,11 @@ import { PaymentsBoard } from './payments-board'
 
 export const metadata: Metadata = { title: 'Cobros' }
 
-export default async function PaymentsPage() {
+type SearchParams = Promise<{ q?: string }>
+
+export default async function PaymentsPage({ searchParams }: { searchParams: SearchParams }) {
   const viewer = await requireStaff('/club/cobros')
+  const { q } = await searchParams
   const { club } = viewer
   const columns = paymentsBoard(await loadPaymentsOverview(club), {
     when: (start) => `${dayLongLabel(localDateOf(start, club.timezone))}, ${timeIn(start, club.timezone)}`,
@@ -27,6 +30,7 @@ export default async function PaymentsPage() {
     <PaymentsBoard
       columns={columns}
       todayFrom={clubDayRange(new Date(), club.timezone).from.getTime()}
+      initialQuery={typeof q === 'string' ? q.slice(0, 80) : ''}
       actions={{
         cash: { booking: recordCash, tournament: recordTournamentCash, day_use: recordPassCash, championship: recordChampionshipCash },
         refund: refundPayment,

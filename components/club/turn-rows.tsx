@@ -2,7 +2,9 @@
 
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import { inputClasses } from '@/components/ui/field'
+import Link from 'next/link'
 import { normalizeText } from '@/lib/domain/members'
+import { otherDebts } from '@/lib/domain/payments-board'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 import { playerLabel, timeLeft, turnLabel, type CourtTurn } from '@/lib/domain/club-home'
@@ -52,6 +54,9 @@ function TurnRow({
   const holder = turn.isMatch || !turn.players[0] ? 'Partido abierto' : playerLabel(turn.players[0])
   const verb = owes ? 'Cobrar' : 'Ver'
   const progress = playing ? timeLeft(turn, court.now) : null
+  // The person in front of reception may owe more than this turn: say so, and take them to all of it.
+  const holderName = turn.isMatch ? null : (turn.players[0]?.name ?? null)
+  const more = holderName && court.debts ? otherDebts(court.debts, holderName, turn.bookingId) : { count: 0, total: 0 }
   return (
     <li className="flex flex-col gap-2 py-2.5">
       {/* The name whole (no truncating): it is how reception finds the person in front of them. */}
@@ -72,6 +77,14 @@ function TurnRow({
               </>
             ) : null}
           </span>
+          {more.count > 0 && holderName ? (
+            <Link
+              href={`/club/cobros?q=${encodeURIComponent(holderName)}`}
+              className="relative z-10 mt-0.5 inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink underline underline-offset-4"
+            >
+              +{more.count === 1 ? '1 deuda más' : `${more.count} deudas más`} · {formatPrice(more.total)} en Cobros
+            </Link>
+          ) : null}
           {progress ? (
             // Ink, not amber: time going by is information; amber is for what is owed.
             <span aria-hidden className="mt-1.5 block h-1 overflow-hidden rounded-full bg-border">
@@ -115,14 +128,23 @@ export function TurnSearchProvider({ children }: { children: ReactNode }) {
 export function TurnSearchBox() {
   const search = useContext(SearchContext)
   if (!search) return null
+  const query = search.query.trim()
   return (
-    <input
-      type="search"
-      aria-label="Buscar a quién cobrar en Inicio"
-      placeholder="Cobrar a… (nombre o cancha)"
-      value={search.query}
-      onChange={(event) => search.setQuery(event.target.value)}
-      className={cn(inputClasses, 'min-h-12 text-lg')}
-    />
+    <div className="flex flex-col gap-1">
+      <input
+        type="search"
+        aria-label="Buscar a quién cobrar en Inicio"
+        placeholder="Cobrar a… (nombre o cancha)"
+        value={search.query}
+        onChange={(event) => search.setQuery(event.target.value)}
+        className={cn(inputClasses, 'min-h-12 text-lg')}
+      />
+      {/* Inicio searches today's turns; everything a person owes (older days, passes, tournaments) is in Cobros. */}
+      {query ? (
+        <Link href={`/club/cobros?q=${encodeURIComponent(query)}`} className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-accent-ink underline underline-offset-4">
+          Buscar «{query}» en Cobros (todo lo que debe)
+        </Link>
+      ) : null}
+    </div>
   )
 }
