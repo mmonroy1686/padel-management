@@ -64,7 +64,7 @@ export function MatchCard({ match, viewerId, whenText, status, risk, reasons = [
       )}
       {risk ? (
         <p role="note" className={cn('flex items-center gap-2 text-sm', risk.level === 'bad' ? 'font-semibold text-accent-ink' : 'text-fg-muted')}>
-          <Icon name="alert" className="size-4" />
+          {risk.level === 'bad' ? <Icon name="alert" className="size-4" /> : null}
           {risk.short}
         </p>
       ) : null}

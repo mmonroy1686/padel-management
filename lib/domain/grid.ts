@@ -192,13 +192,29 @@ export function countFree(rows: GridRow[]): number {
   return rows.reduce((total, row) => total + row.cells.filter((cell) => cell.state === 'free').length, 0)
 }
 
+export type FreeCell = { courtId: string; courtName: string; time: string }
+
+// The next free slots of a day, one per time (the first court free at it), earliest first: the chips under
+// "Reservar cancha" on Inicio.
+export function nextFreeCells(rows: GridRow[], limit: number): FreeCell[] {
+  const cells: FreeCell[] = []
+  for (const row of rows) {
+    if (cells.length >= limit) break
+    const cell = row.cells.find((candidate) => candidate.state === 'free')
+    if (cell) cells.push({ courtId: cell.court.id, courtName: cell.court.name, time: row.slot.label })
+  }
+  return cells
+}
+
 // The earliest free cell of a day (the first row with one, then the first court): what "Próximo libre" names.
 export function firstFree(rows: GridRow[]): { time: string; courtName: string } | null {
-  for (const row of rows) {
-    const cell = row.cells.find((candidate) => candidate.state === 'free')
-    if (cell) return { time: row.slot.label, courtName: cell.court.name }
-  }
-  return null
+  const [cell] = nextFreeCells(rows, 1)
+  return cell ? { time: cell.time, courtName: cell.courtName } : null
+}
+
+// "/reservar?dia=…&turno=court-1@18:30": Reservar opens with that slot's booking sheet.
+export function slotParam(cell: Pick<FreeCell, 'courtId' | 'time'>): string {
+  return `${cell.courtId}@${cell.time}`
 }
 
 export function dayStats(grid: DayGrid): { occupancyPercent: number; revenue: number } {

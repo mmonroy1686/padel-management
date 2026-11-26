@@ -18,7 +18,8 @@ export function riskOf(match: Match, free: string[]): Risk | null {
     return {
       level: 'warn',
       text: `La ${name} ya se reservó. Si el partido se completa, se asigna otra cancha libre (${left}).`,
-      short: `La ${name} ya se reservó: se juega en otra libre`,
+      // Nothing for the player to worry about: the club gives it another court.
+      short: 'Cancha a confirmar',
     }
   }
   if (!match.allowOtherCourt && free.length > 0) {

@@ -11,7 +11,7 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { IDLE, type ActionState } from '@/lib/actions/result'
 import { cn } from '@/lib/cn'
 import { formatPrice } from '@/lib/domain/format'
-import type { DeskMethod } from '@/lib/domain/payments'
+import { DESK_METHODS, type DeskMethod } from '@/lib/domain/payments'
 import {
   filterBoard,
   KIND_LABELS,
@@ -94,31 +94,36 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
     if (column.key === 'transfers') setTransfersOpen(true)
     requestAnimationFrame(() => document.getElementById(`column-${column.key}`)?.scrollIntoView({ block: 'start' }))
   }
-  // The charge just made, for "Deshacer" for a few seconds: once the page refreshes it is the newest row of Cobrado hoy
-  // with the same player and amount.
-  const [lastCharge, setLastCharge] = useState<{ holder: string; amount: number; at: number } | null>(null)
+  // The charge just made (one debt, or everything a person owed), for "Deshacer" for a few seconds: once the page
+  // refreshes each one is a recent row of Cobrado hoy with the same holder and amount.
+  const [lastCharge, setLastCharge] = useState<{ who: string; entries: { holder: string; amount: number }[]; at: number } | null>(null)
   useEffect(() => {
     if (!lastCharge) return
     const timer = window.setTimeout(() => setLastCharge(null), UNDO_MS)
     return () => window.clearTimeout(timer)
   }, [lastCharge])
-  const undoable = lastCharge
-    ? columns
-        .find((column) => column.key === 'collected')
-        ?.items.find(
-          (item) =>
-            item.action?.type === 'void' && item.holder === lastCharge.holder && item.amount === lastCharge.amount && item.at >= lastCharge.at - 60_000,
-        )
-    : undefined
-  const charged = (message: string, item: BoardItem) => {
+  const undoable = lastCharge ? undoablePayments(columns, lastCharge.entries, lastCharge.at) : []
+  const charged = (message: string, items: BoardItem[], who: string) => {
     setNotice(message)
-    setLastCharge({ holder: item.holder, amount: item.amount, at: Date.now() })
+    setLastCharge({ who, entries: items.map((item) => ({ holder: item.holder, amount: item.amount })), at: Date.now() })
   }
   const done = (message: string) => {
     setNotice(message)
     setLastCharge(null)
   }
-  const rowAction = (item: BoardItem) => <RowAction item={item} actions={actions} onReview={setReviewing} onDone={done} onCharged={charged} />
+  const rowAction = (item: BoardItem) => (
+    <RowAction item={item} actions={actions} onReview={setReviewing} onDone={done} onCharged={(message) => charged(message, [item], item.holder)} />
+  )
+  const chargeAll = (group: DebtGroup, open: boolean, setOpen: (open: boolean) => void) => (
+    <ChargeAll
+      group={group}
+      actions={actions}
+      open={open}
+      setOpen={setOpen}
+      onCharged={(message) => charged(message, group.items, group.holder)}
+      onError={setNotice}
+    />
+  )
 
   return (
     <div className="flex flex-col gap-5">
@@ -149,8 +154,8 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
       {notice ? (
         <div className="flex flex-col gap-2">
           <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
-          {undoable?.action?.type === 'void' && actions.void ? (
-            <RowForm action={actions.void} fields={undoable.action.fields} label="Deshacer" accessibleLabel={`Deshacer el cobro a ${undoable.holder}`} onDone={done} />
+          {lastCharge && undoable.length === lastCharge.entries.length && actions.void ? (
+            <UndoCharges voidAction={actions.void} paymentIds={undoable} who={lastCharge.who} onDone={done} />
           ) : null}
         </div>
       ) : null}
@@ -196,7 +201,7 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
             onClick={() => setLane(item.key)}
             className={cn(
               'min-h-10 rounded-full px-5 font-semibold focus-visible:outline-2 focus-visible:outline-accent',
-              lane === item.key ? 'bg-bg text-fg shadow-sm' : 'text-fg-muted',
+              lane === item.key ? 'bg-fg text-bg' : 'text-fg-muted',
             )}
           >
             {item.title} <span className="tabular-nums">{pendingCount(shown, item.key)}</span>
@@ -214,7 +219,7 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
           .map((column) => (
             <ColumnView key={column.key} column={column} filtering={filtering}>
               {column.key === 'unpaid' && !filtering ? (
-                <UnpaidList items={column.items} todayFrom={todayFrom} action={rowAction} />
+                <UnpaidList items={column.items} todayFrom={todayFrom} action={rowAction} chargeAll={chargeAll} />
               ) : column.key === 'transfers' && !transfersOpen && !filtering ? (
                 <button
                   type="button"
@@ -286,7 +291,17 @@ function Rows({ items, limit, action }: { items: BoardItem[]; limit?: number; ac
 }
 
 // Sin cobrar: one entry per player (today and older days together), whoever owes from today first.
-function UnpaidList({ items, todayFrom, action }: { items: BoardItem[]; todayFrom: number; action: (item: BoardItem) => ReactNode }) {
+function UnpaidList({
+  items,
+  todayFrom,
+  action,
+  chargeAll,
+}: {
+  items: BoardItem[]
+  todayFrom: number
+  action: (item: BoardItem) => ReactNode
+  chargeAll: ChargeAllSlot
+}) {
   const groups = debtsByPlayer(items, todayFrom)
   const [all, setAll] = useState(false)
   const visible = all ? groups : groups.slice(0, DEBTS_SHOWN)
@@ -297,7 +312,7 @@ function UnpaidList({ items, todayFrom, action }: { items: BoardItem[]; todayFro
           group.items.length === 1 ? (
             <li key={group.items[0].id}>{action(group.items[0])}</li>
           ) : (
-            <DebtGroupRow key={group.holder} group={group} action={action} />
+            <DebtGroupRow key={group.holder} group={group} action={action} chargeAll={chargeAll} />
           ),
         )}
       </ul>
@@ -310,9 +325,13 @@ function UnpaidList({ items, todayFrom, action }: { items: BoardItem[]; todayFro
   )
 }
 
-function DebtGroupRow({ group, action }: { group: DebtGroup; action: (item: BoardItem) => ReactNode }) {
+// What draws "Cobrar todo" for a group: the button in its row while closed, the payment choice under it once open.
+type ChargeAllSlot = (group: DebtGroup, open: boolean, setOpen: (open: boolean) => void) => ReactNode
+
+function DebtGroupRow({ group, action, chargeAll }: { group: DebtGroup; action: (item: BoardItem) => ReactNode; chargeAll: ChargeAllSlot }) {
+  const [charging, setCharging] = useState(false)
   return (
-    <li>
+    <li className="flex flex-col gap-2">
       <details className="group">
         <summary className="flex min-h-14 cursor-pointer items-center gap-3 py-2.5">
           <span className="min-w-0 flex-1">
@@ -322,6 +341,7 @@ function DebtGroupRow({ group, action }: { group: DebtGroup; action: (item: Boar
             </span>
           </span>
           <span className="font-display text-xl font-bold tabular-nums">{formatPrice(group.total)}</span>
+          {charging ? null : chargeAll(group, false, setCharging)}
           <span aria-hidden="true" className="text-fg-muted transition-transform group-open:rotate-90">›</span>
         </summary>
         <ul className="flex flex-col divide-y divide-border border-t border-border pl-3">
@@ -330,7 +350,155 @@ function DebtGroupRow({ group, action }: { group: DebtGroup; action: (item: Boar
           ))}
         </ul>
       </details>
+      {charging ? <div className="pb-2">{chargeAll(group, true, setCharging)}</div> : null}
     </li>
+  )
+}
+
+// The rows of Cobrado hoy that a charge just made (same holder and amount, within the last minute), each matched once:
+// what "Deshacer" takes back. Fewer than charged: not refreshed yet, so no Deshacer.
+function undoablePayments(columns: BoardColumn[], entries: { holder: string; amount: number }[], at: number): string[] {
+  const collected = columns.find((column) => column.key === 'collected')?.items ?? []
+  const taken = new Set<string>()
+  for (const entry of entries) {
+    const match = collected.find(
+      (item) =>
+        !taken.has(item.id) &&
+        item.action?.type === 'void' &&
+        item.holder === entry.holder &&
+        item.amount === entry.amount &&
+        item.at >= at - 60_000,
+    )
+    if (match?.action?.type === 'void') taken.add(match.action.fields.paymentId ?? match.id)
+  }
+  return [...taken]
+}
+
+// "Deshacer" after a charge: voids each payment it made (one, or everything a person paid at once).
+function UndoCharges({ voidAction, paymentIds, who, onDone }: { voidAction: FormAction; paymentIds: string[]; who: string; onDone: (message: string) => void }) {
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const undo = async () => {
+    setPending(true)
+    setError(null)
+    let last = ''
+    for (const paymentId of paymentIds) {
+      const data = new FormData()
+      data.set('paymentId', paymentId)
+      const result = await voidAction(IDLE, data)
+      if (result?.status === 'error') {
+        setPending(false)
+        setError(result.message ?? 'No pudimos deshacer el cobro.')
+        return
+      }
+      last = result?.message ?? last
+    }
+    setPending(false)
+    onDone(paymentIds.length === 1 ? last : `Cobros anulados (${paymentIds.length}).`)
+  }
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <button
+        type="button"
+        aria-label={`Deshacer el cobro a ${who}`}
+        disabled={pending}
+        aria-busy={pending || undefined}
+        onClick={undo}
+        className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+      >
+        {pending ? 'Deshaciendo…' : 'Deshacer'}
+      </button>
+      {error ? (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+// "Cobrar $4.800" on a person who owes several things: one way to pay and one confirm for all of it, instead of
+// opening the group and charging each debt while the queue waits. Each debt goes through its own Server Action (the
+// rules stay those of a single charge), one after the other; if one fails, the ones before it stay charged and the
+// message says what is left. Only the desk methods every debt accepts.
+function ChargeAll({
+  group,
+  actions,
+  open,
+  setOpen,
+  onCharged,
+  onError,
+}: {
+  group: DebtGroup
+  actions: BoardActions
+  open: boolean
+  setOpen: (open: boolean) => void
+  onCharged: (message: string) => void
+  onError: (message: string) => void
+}) {
+  const [pending, setPending] = useState(false)
+  const charges = group.items.flatMap((item) => (item.action?.type === 'charge' ? [{ item, action: item.action }] : []))
+  if (charges.length !== group.items.length) return null
+  const methods = DESK_METHODS.filter((method) => charges.every((charge) => charge.action.methods.includes(method)))
+  if (methods.length === 0) return null
+  const title = `Cobrar ${formatPrice(group.total)} a ${group.holder}`
+
+  const pay = async (method: DeskMethod) => {
+    setPending(true)
+    let paid = 0
+    for (const { item, action } of charges) {
+      const data = new FormData()
+      for (const [name, value] of Object.entries(action.fields)) data.set(name, value)
+      data.set('method', method)
+      const result = await actions.cash[item.kind](IDLE, data)
+      if (result?.status === 'error') {
+        setPending(false)
+        setOpen(false)
+        onError(
+          paid > 0
+            ? `Cobramos ${formatPrice(paid)} a ${group.holder}; faltó ${formatPrice(group.total - paid)}: ${result.message ?? 'no se pudo cobrar'}.`
+            : (result.message ?? 'No pudimos cobrar.'),
+        )
+        return
+      }
+      paid += item.amount
+    }
+    setPending(false)
+    setOpen(false)
+    onCharged(`Cobramos ${formatPrice(group.total)} ${method === 'cash' ? 'en efectivo' : 'por POS'} a ${group.holder}.`)
+  }
+
+  if (!open) {
+    return (
+      // In the row's summary: it opens the payment choice without folding the group open or shut.
+      <button
+        type="button"
+        aria-label={title}
+        onClick={(event) => {
+          event.preventDefault()
+          setOpen(true)
+        }}
+        className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+      >
+        Cobrar
+      </button>
+    )
+  }
+  return (
+    <div role="group" aria-label={title} className="flex flex-col gap-2 rounded-xl border border-accent bg-surface p-3">
+      <p className="text-sm font-semibold">{title}</p>
+      <p className="text-sm text-fg-muted">{group.items.length} deudas: {group.items.map((item) => `${item.what} ${formatPrice(item.amount)}`).join(' · ')}</p>
+      <div className="flex flex-wrap gap-2">
+        {methods.map((method) => (
+          <button key={method} type="button" disabled={pending} aria-busy={pending || undefined} onClick={() => pay(method)} className={buttonClasses({ size: 'sm' })}>
+            {pending ? 'Cobrando…' : method === 'cash' ? 'Efectivo' : 'POS'}
+          </button>
+        ))}
+        <button type="button" disabled={pending} onClick={() => setOpen(false)} className={buttonClasses({ variant: 'ghost', size: 'sm' })}>
+          Volver
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -440,7 +608,8 @@ function RowAction({
             pendingLabel="Anulando…"
             confirmLabel="¿Anular? Tocá de nuevo"
             accessibleLabel={`Anular el cobro a ${item.holder}`}
-            variant="danger"
+            // Quiet: a day of normal charges should not look dangerous; the second tap still guards it.
+            variant="ghost"
             size="sm"
             onDone={onDone}
             className="shrink-0"

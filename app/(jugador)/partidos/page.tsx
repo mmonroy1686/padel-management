@@ -44,8 +44,9 @@ export default async function MatchesPage({ searchParams }: { searchParams: Sear
   const joinContext = { now, closeMinutes: club.match_close_minutes, busy: context.busy }
   const cards = matches.map((match) => ({ match, status: joinStatus(match, context.player, joinContext) }))
   const shown = showAll ? cards : cards.filter(({ match, status }) => status.ok || isInMatch(match, viewer.userId))
-  const whenText = (match: Match) =>
-    `${dayLabel(localDateOf(match.startsAt, club.timezone), today)} ${timeIn(match.startsAt, club.timezone)}`
+  const whenText = (match: Match) => timeIn(match.startsAt, club.timezone)
+  // One heading per day (Hoy, Mañana, sáb 28), the matches under it by time: the list reads like a calendar.
+  const days = groupByDay(shown, (item) => localDateOf(item.match.startsAt, club.timezone))
 
   return (
     <>
@@ -66,19 +67,28 @@ export default async function MatchesPage({ searchParams }: { searchParams: Sear
         </Link>
       </nav>
       {shown.length > 0 ? (
-        <ul className="grid gap-3 md:grid-cols-2">
-          {shown.map(({ match, status }) => (
-            <li key={match.id}>
-              <MatchCard
-                match={match}
-                viewerId={viewer.userId}
-                whenText={whenText(match)}
-                status={status}
-                risk={riskOf(match, freeCourts.get(match.id) ?? [])}
-              />
-            </li>
+        <div className="flex flex-col gap-6">
+          {days.map(({ day, items }) => (
+            <section key={day} aria-labelledby={`dia-${day}`} className="flex flex-col gap-3">
+              <h2 id={`dia-${day}`} className="text-lg font-semibold first-letter:uppercase">
+                {dayLabel(day, today)}
+              </h2>
+              <ul className="grid gap-3 md:grid-cols-2">
+                {items.map(({ match, status }) => (
+                  <li key={match.id}>
+                    <MatchCard
+                      match={match}
+                      viewerId={viewer.userId}
+                      whenText={whenText(match)}
+                      status={status}
+                      risk={riskOf(match, freeCourts.get(match.id) ?? [])}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       ) : (
         <p className="rounded-xl border border-border p-4 text-fg-muted">
           No hay partidos armándose para tu categoría y lado. Armá uno y compartilo en el grupo del club.
@@ -86,4 +96,16 @@ export default async function MatchesPage({ searchParams }: { searchParams: Sear
       )}
     </>
   )
+}
+
+// Items grouped by their day, keeping the order they came in (matches come sorted by start).
+function groupByDay<T>(items: T[], dayOf: (item: T) => string): { day: string; items: T[] }[] {
+  const days: { day: string; items: T[] }[] = []
+  for (const item of items) {
+    const day = dayOf(item)
+    const last = days.at(-1)
+    if (last?.day === day) last.items.push(item)
+    else days.push({ day, items: [item] })
+  }
+  return days
 }

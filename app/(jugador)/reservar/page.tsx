@@ -22,12 +22,12 @@ import { waitItems, waitRangeOptions } from '@/lib/domain/waitlist'
 
 export const metadata: Metadata = { title: 'Reservar' }
 
-type SearchParams = Promise<{ dia?: string; lleno?: string }>
+type SearchParams = Promise<{ dia?: string; lleno?: string; turno?: string }>
 
 export default async function ReservarPage({ searchParams }: { searchParams: SearchParams }) {
   const viewer = await requirePlayer('/reservar')
   const { club } = viewer
-  const { dia, lleno } = await searchParams
+  const { dia, lleno, turno } = await searchParams
   const now = new Date()
   const today = localDateOf(now, club.timezone)
   const days = Array.from({ length: 7 }, (_, index) => addDays(today, index))
@@ -69,6 +69,7 @@ export default async function ReservarPage({ searchParams }: { searchParams: Sea
         dayWaits={waitlist.waits.filter((wait) => wait.date === date)}
         waitAction={createSlotWait}
         cancelWaitAction={cancelSlotWait}
+        openSlot={turno}
         full={nextFree === undefined ? undefined : nextFree ? { href: `/reservar?dia=${nextFree.date}`, label: nextFreeLabel(nextFree, today) } : null}
       />
     </>

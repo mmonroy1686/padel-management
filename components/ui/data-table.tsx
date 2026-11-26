@@ -12,6 +12,8 @@ export type DataColumn = {
   align?: 'start' | 'end'
   // Actions columns: the header stays for screen readers, phones show no label next to the cell.
   hideLabel?: boolean
+  // Left out on a phone (phone="rows"): what the row already says another way.
+  phoneHidden?: boolean
 }
 export type DataFilter = { key: string; label: string; options: { value: string; label: string }[] }
 export type DataRow = TableRow<Record<string, ReactNode>>
@@ -47,6 +49,8 @@ export function DataTable({
   phone?: 'cards' | 'rows'
 }) {
   const rowsOnPhone = phone === 'rows'
+  // Where each column sits among the ones a phone shows: the first on top, a dot before the rest of the line.
+  const phonePlace = new Map(columns.filter((column) => !column.phoneHidden).map((column, place) => [column.key, place]))
   const id = useId()
   const [query, setQuery] = useState('')
   const [chosen, setChosen] = useState<Record<string, string>>({})
@@ -171,19 +175,20 @@ export function DataTable({
                       : 'max-md:flex max-md:flex-col max-md:gap-1 max-md:rounded-2xl max-md:border max-md:border-border max-md:bg-surface max-md:p-3',
                   )}
                 >
-                  {columns.map((column, index) => (
+                  {columns.map((column) => (
                     <td
                       key={column.key}
                       className={cn(
                         'border-b border-border px-3 py-2 align-middle max-md:border-0 max-md:p-0',
                         column.align === 'end' && 'text-right tabular-nums',
+                        rowsOnPhone && column.phoneHidden && 'max-md:hidden',
                         !rowsOnPhone
                           ? 'max-md:flex max-md:items-center max-md:justify-between max-md:gap-3'
-                          : index === 0
+                          : phonePlace.get(column.key) === 0
                             ? 'max-md:basis-full'
                             : column.hideLabel
                               ? 'max-md:ml-auto'
-                              : index > 1
+                              : (phonePlace.get(column.key) ?? 0) > 1
                                 ? "max-md:text-sm max-md:text-fg-muted max-md:before:mr-2 max-md:before:content-['·']"
                                 : 'max-md:text-sm max-md:text-fg-muted',
                       )}

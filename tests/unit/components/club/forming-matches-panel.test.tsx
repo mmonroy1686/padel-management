@@ -26,7 +26,7 @@ describe('FormingMatchesPanel', () => {
   it('says the court risk as a note, in words', () => {
     render(
       <FormingMatchesPanel
-        items={[{ match: makeMatch(), timeText: '20:00', risk: { level: 'warn', text: 'La Cancha 1 ya se reservó.', short: 'La Cancha 1 ya se reservó: se juega en otra libre' } }]}
+        items={[{ match: makeMatch(), timeText: '20:00', risk: { level: 'warn', text: 'La Cancha 1 ya se reservó.', short: 'Cancha a confirmar' } }]}
         actions={actions()}
       />,
     )

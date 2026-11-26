@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { blockEnd, blockEndOptions, continuesAbove, countFree, dayStats, firstFree, holderName, KIND_LABELS, rowsCovered, toOccupancy, visibleRows } from '@/lib/domain/grid'
+import { blockEnd, blockEndOptions, continuesAbove, countFree, dayStats, firstFree, nextFreeCells, slotParam, holderName, KIND_LABELS, rowsCovered, toOccupancy, visibleRows } from '@/lib/domain/grid'
 import { at, booking, makeGrid, occupancy } from '../../fixtures/grid'
 import { makeMatch } from '../../fixtures/matches'
 
@@ -78,6 +78,17 @@ describe('firstFree', () => {
     const taken = makeGrid({ occupancies: [occupancy('o1', 'court-1', '08:00', '09:30')] })
     expect(firstFree(taken.rows)).toEqual({ time: '08:00', courtName: 'Cancha 2' })
     expect(firstFree([])).toBeNull()
+  })
+})
+
+describe('nextFreeCells', () => {
+  it('lists the next free slots, one per time, earliest first', () => {
+    const grid = makeGrid({ occupancies: [occupancy('o1', 'court-1', '08:00', '09:30')] })
+    expect(nextFreeCells(grid.rows, 2)).toEqual([
+      { courtId: 'court-2', courtName: 'Cancha 2', time: '08:00' },
+      { courtId: 'court-1', courtName: 'Cancha 1', time: '09:30' },
+    ])
+    expect(slotParam({ courtId: 'court-2', time: '08:00' })).toBe('court-2@08:00')
   })
 })
 

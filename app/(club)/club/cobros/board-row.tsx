@@ -8,7 +8,9 @@ import { KIND_LABELS, METHOD_LABELS, type BoardItem } from '@/lib/domain/payment
 // it came in (or why it was rejected) once done. A transfer to confirm links its receipt.
 // `below`: what opens under the row (how the player paid, or an error).
 export function BoardRow({ item, children, below }: { item: BoardItem; children?: ReactNode; below?: ReactNode }) {
-  const detail = [KIND_LABELS[item.kind], item.what, item.when].filter(Boolean).join(' · ')
+  // The kind, unless what follows already starts with it ("Day use pádel", not "Day use · Day use pádel").
+  const kind = KIND_LABELS[item.kind]
+  const detail = [item.what.toLowerCase().startsWith(kind.toLowerCase()) ? null : kind, item.what, item.when].filter(Boolean).join(' · ')
   return (
     <article aria-label={item.holder} className="flex flex-col gap-0.5 py-2.5">
       <div className="flex items-center gap-3">

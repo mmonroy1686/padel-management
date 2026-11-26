@@ -52,7 +52,8 @@ function Cell({
       type="button"
       onClick={() => onPick(slot)}
       aria-label={`Armar partido · ${courtName} · ${label}${demand ? ` · ${demand}` : ''}`}
-      className={`${CHIP} flex-col items-start border-2 border-accent bg-surface text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
+      // A neutral outline: eleven amber boxes drowned the flyer's own action.
+      className={`${CHIP} flex-col items-start border border-fg-muted bg-surface text-left hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
     >
       <span className="font-semibold">{label}</span>
       {demand ? <span className="text-sm text-fg-muted">{demand}</span> : null}

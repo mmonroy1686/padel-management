@@ -20,7 +20,7 @@ describe('riskOf', () => {
     expect(riskOf(makeMatch(), ['court-2'])).toEqual({
       level: 'warn',
       text: 'La Cancha 1 ya se reservó. Si el partido se completa, se asigna otra cancha libre (queda 1).',
-      short: 'La Cancha 1 ya se reservó: se juega en otra libre',
+      short: 'Cancha a confirmar',
     })
   })
 

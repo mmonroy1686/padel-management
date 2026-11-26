@@ -13,7 +13,7 @@ import type { FormAction } from '@/components/ui/action-form'
 import { DayWaitsNote } from '@/components/waitlist/day-waits-note'
 import { WaitSheet, type WaitInitial } from '@/components/waitlist/wait-sheet'
 import { cn } from '@/lib/cn'
-import { visibleRows, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
+import { slotParam, visibleRows, type Court, type GridCell, type GridRow } from '@/lib/domain/grid'
 import type { MatchFormOptions } from '@/lib/domain/matches'
 import type { LocalDate } from '@/lib/domain/time'
 import { slotEndLabel, waitCovers, waitRangeText, type TimeOption, type Wait, type WaitItem } from '@/lib/domain/waitlist'
@@ -35,6 +35,7 @@ export function ReservarBoard({
   waitAction,
   cancelWaitAction,
   full,
+  openSlot,
 }: {
   courts: Court[]
   rows: GridRow[]
@@ -56,8 +57,13 @@ export function ReservarBoard({
   // A day with nothing free: the way to the next day with room (null when nothing is free all week). Undefined: the
   // day has room.
   full?: { href: string; label: string } | null
+  // "court-1@18:30" (slotParam): a slot chosen on Inicio, its booking sheet open on arrival if it is still free.
+  openSlot?: string
 }) {
-  const [choice, setChoice] = useState<BookingChoice | null>(null)
+  const [choice, setChoice] = useState<BookingChoice | null>(() => {
+    const cell = rows.flatMap((row) => row.cells).find((candidate) => slotParam({ courtId: candidate.court.id, time: candidate.slot.label }) === openSlot)
+    return cell ? choiceOf(cell) : null
+  })
   const [onlyFree, setOnlyFree] = useState(false)
   const [showPast, setShowPast] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -89,15 +95,10 @@ export function ReservarBoard({
   const shown = visibleRows(rows, { onlyFree, showPast })
 
   function select(cell: GridCell) {
-    if (cell.state !== 'free' || cell.price === null) return
+    const next = choiceOf(cell)
+    if (!next) return
     setNotice(null)
-    setChoice({
-      courtId: cell.court.id,
-      courtName: cell.court.name,
-      startsAt: cell.slot.startsAt.toISOString(),
-      timeLabel: cell.slot.label,
-      price: cell.price,
-    })
+    setChoice(next)
   }
 
   function openWait(initial: WaitInitial | null) {
@@ -197,4 +198,10 @@ export function ReservarBoard({
       />
     </div>
   )
+}
+
+// A free slot with a price, as the booking sheet takes it; null for anything else.
+function choiceOf(cell: GridCell): BookingChoice | null {
+  if (cell.state !== 'free' || cell.price === null) return null
+  return { courtId: cell.court.id, courtName: cell.court.name, startsAt: cell.slot.startsAt.toISOString(), timeLabel: cell.slot.label, price: cell.price }
 }

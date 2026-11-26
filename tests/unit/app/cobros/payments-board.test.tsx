@@ -163,6 +163,27 @@ describe('PaymentsBoard, for the desk', () => {
     expect(groups).toHaveTextContent('$2.000')
   })
 
+  it('charges everything a person owes at once, each debt through its own action', async () => {
+    const actions = baseActions()
+    const columns = paymentsBoard(
+      {
+        ...INPUT,
+        unpaid: [debt('b1', 'Sofía', '2026-11-20T23:00:00Z'), debt('b2', 'Sofía', '2026-11-25T14:00:00Z')],
+        unpaidPasses: [],
+      },
+      { when: () => '', time: () => '', deskMethods: ['cash'] },
+    )
+    render(<PaymentsBoard columns={columns} todayFrom={at('2026-11-25T03:00:00Z').getTime()} actions={actions} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Cobrar $2.000 a Sofía' }))
+    await userEvent.click(within(screen.getByRole('group', { name: 'Cobrar $2.000 a Sofía' })).getByRole('button', { name: 'Efectivo' }))
+    await waitFor(() => expect(actions.cash.booking).toHaveBeenCalledTimes(2))
+    expect(actions.cash.booking.mock.calls.map((call) => [call[1].get('bookingId'), call[1].get('method')])).toEqual([
+      ['b1', 'cash'],
+      ['b2', 'cash'],
+    ])
+    expect(await screen.findByText('Cobramos $2.000 en efectivo a Sofía.')).toBeInTheDocument()
+  })
+
   it('confirms the marked transfers at once', async () => {
     const confirmMany = vi.fn<FormAction>(async () => ({ status: 'ok', message: '2 transferencias confirmadas.' }))
     const columns = paymentsBoard(

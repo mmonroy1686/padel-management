@@ -125,7 +125,7 @@ export function BrandForm({ club, action }: BrandFormProps) {
               type="button"
               aria-pressed={previewMode === value}
               onClick={() => setPreviewMode(value)}
-              className={`min-h-10 rounded-full px-4 text-sm font-semibold ${previewMode === value ? 'bg-bg text-fg shadow-sm' : 'text-fg-muted'}`}
+              className={`min-h-10 rounded-full px-4 text-sm font-semibold ${previewMode === value ? 'bg-fg text-bg' : 'text-fg-muted'}`}
             >
               {value === 'dark' ? 'Oscuro' : 'Claro'}
             </button>

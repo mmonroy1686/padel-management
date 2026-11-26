@@ -54,15 +54,15 @@ test('the admin loads the club info and a player sees it at the end of Inicio', 
   expect(saved).toMatchObject({ phone: '092369558', address: 'Av. Italia 1234', amenities: ['bar'] })
   expect(saved.latitude).not.toBeNull()
 
-  // The player, on her own phone: «El club» at the end of Inicio.
+  // The player, on her own phone: «El club» at the end of Inicio, folded into one line she opens.
   const playerContext = await browser.newContext()
   await playerContext.route('https://tile.openstreetmap.org/**', (route) =>
     route.fulfill({ status: 200, contentType: 'image/png', body: RECEIPT_PNG }),
   )
   const playerPage = await playerContext.newPage()
   await signInWithMagicLink(playerPage, player.email, '/', NORTE)
-  const section = playerPage.getByRole('region', { name: 'El club' })
-  await section.scrollIntoViewIfNeeded()
+  const section = playerPage.locator('details').filter({ hasText: 'Contacto, cómo llegar, horarios y servicios' })
+  await section.locator('summary').click()
   await expect(section.getByRole('img', { name: 'Foto 1 de Pádel Norte' })).toBeVisible()
   await expect(section.getByRole('region', { name: 'Mapa de Pádel Norte' }).locator('.leaflet-container')).toBeVisible()
   await expect(section.getByRole('link', { name: 'WhatsApp: 092 369 558' })).toHaveAttribute('href', /^https:\/\/wa\.me\/59892369558\?text=/)
