@@ -38,7 +38,7 @@ describe('ChargeChoice', () => {
     const group = screen.getByRole('group', { name: 'Cobrar $300 a Bruno' })
     expect(group).toHaveTextContent('Cobrar $300 a Bruno')
     await userEvent.click(screen.getByRole('button', { name: 'Efectivo' }))
-    await waitFor(() => expect(onDone).toHaveBeenCalledWith('Cobramos $300 en efectivo.'))
+    await waitFor(() => expect(onDone).toHaveBeenCalledWith('Cobramos $300 en efectivo.', undefined))
     expect(Object.fromEntries(action.mock.calls[0][1].entries())).toEqual({
       bookingId: 'b1',
       position: '2',

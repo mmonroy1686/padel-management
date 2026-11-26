@@ -2,11 +2,11 @@
 
 import { useActionState, useEffect, useState, type ReactNode } from 'react'
 import { ChargeChoice } from '@/components/club/charge-choice'
+import { ChargeReceipt, UNDO_MS } from '@/components/club/charge-receipt'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { buttonClasses } from '@/components/ui/button'
 import { inputClasses } from '@/components/ui/field'
-import { Notice } from '@/components/ui/notice'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { IDLE, type ActionState } from '@/lib/actions/result'
 import { cn } from '@/lib/cn'
@@ -52,8 +52,6 @@ const DONE_SHOWN = 5
 // Sin cobrar shows the first players (today's first); the search finds anyone else, and "Ver los N" lists them all.
 const DEBTS_SHOWN = 8
 
-// How long "Deshacer" stays after a charge.
-const UNDO_MS = 10_000
 
 const plural = (count: number, [one, many]: [string, string]) => `${count} ${count === 1 ? one : many}`
 
@@ -151,13 +149,19 @@ export function PaymentsBoard({ columns, actions, todayFrom = 0 }: { columns: Bo
         </select>
       </div>
 
+      {/* Fixed at the bottom of the screen, where reception is looking after charging a row far down the list. */}
       {notice ? (
-        <div className="flex flex-col gap-2">
-          <Notice onDismiss={() => setNotice(null)}>{notice}</Notice>
-          {lastCharge && undoable.length === lastCharge.entries.length && actions.void ? (
-            <UndoCharges voidAction={actions.void} paymentIds={undoable} who={lastCharge.who} onDone={done} />
-          ) : null}
-        </div>
+        <ChargeReceipt
+          key={`${notice}-${lastCharge?.at ?? 0}`}
+          message={notice}
+          undo={
+            lastCharge && undoable.length === lastCharge.entries.length && actions.void
+              ? { paymentIds: undoable, action: actions.void, label: `Deshacer el cobro a ${lastCharge.who}` }
+              : null
+          }
+          onDismiss={() => setNotice(null)}
+          onUndone={done}
+        />
       ) : null}
 
       <nav aria-label="Resumen de cobros" className="grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -372,49 +376,6 @@ function undoablePayments(columns: BoardColumn[], entries: { holder: string; amo
     if (match?.action?.type === 'void') taken.add(match.action.fields.paymentId ?? match.id)
   }
   return [...taken]
-}
-
-// "Deshacer" after a charge: voids each payment it made (one, or everything a person paid at once).
-function UndoCharges({ voidAction, paymentIds, who, onDone }: { voidAction: FormAction; paymentIds: string[]; who: string; onDone: (message: string) => void }) {
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const undo = async () => {
-    setPending(true)
-    setError(null)
-    let last = ''
-    for (const paymentId of paymentIds) {
-      const data = new FormData()
-      data.set('paymentId', paymentId)
-      const result = await voidAction(IDLE, data)
-      if (result?.status === 'error') {
-        setPending(false)
-        setError(result.message ?? 'No pudimos deshacer el cobro.')
-        return
-      }
-      last = result?.message ?? last
-    }
-    setPending(false)
-    onDone(paymentIds.length === 1 ? last : `Cobros anulados (${paymentIds.length}).`)
-  }
-  return (
-    <div className="flex flex-col items-start gap-1">
-      <button
-        type="button"
-        aria-label={`Deshacer el cobro a ${who}`}
-        disabled={pending}
-        aria-busy={pending || undefined}
-        onClick={undo}
-        className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
-      >
-        {pending ? 'Deshaciendo…' : 'Deshacer'}
-      </button>
-      {error ? (
-        <p role="alert" className="text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-    </div>
-  )
 }
 
 // "Cobrar $4.800" on a person who owes several things: one way to pay and one confirm for all of it, instead of

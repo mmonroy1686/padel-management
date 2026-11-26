@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { TurnRows } from '@/components/club/turn-rows'
+import { TurnRows, TurnSearchBox, TurnSearchProvider } from '@/components/club/turn-rows'
 import type { FormAction } from '@/components/ui/action-form'
 import { courtItems } from '@/lib/domain/club-home'
 import { at, COURTS, occupancy, TIMEZONE } from '../../fixtures/grid'
@@ -93,5 +93,28 @@ describe('TurnRows', () => {
     const cup = screen.getByRole('link', { name: 'Cancha 2 · Copa de la Casa' })
     expect(cup).toHaveAttribute('href', '/club/torneos/t1')
     expect(screen.getByText('14:00 a 15:30')).toBeInTheDocument()
+  })
+
+  it('the Inicio search narrows the turns to the person at the desk', async () => {
+    const action = vi.fn<FormAction>(async () => ({ status: 'ok', message: 'Listo.' }))
+    render(
+      <TurnSearchProvider>
+        <TurnSearchBox />
+        <TurnRows
+          items={items}
+          timezone={TIMEZONE}
+          methods={{ cash: true, transfer: true, card: false }}
+          members={[]}
+          actions={{ chargeShare: action, chargeRest: action, savePlayers: action }}
+          now={at('11:30')}
+        />
+      </TurnSearchProvider>,
+    )
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar a quién cobrar en Inicio' }), 'rodriguez')
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
+    expect(screen.getAllByRole('listitem').every((item) => item.textContent?.includes('Rodríguez'))).toBe(true)
+    await userEvent.clear(screen.getByRole('searchbox', { name: 'Buscar a quién cobrar en Inicio' }))
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar a quién cobrar en Inicio' }), 'zzz')
+    expect(screen.getByText('Nadie coincide acá.')).toBeInTheDocument()
   })
 })

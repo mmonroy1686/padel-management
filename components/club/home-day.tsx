@@ -57,9 +57,10 @@ export function HomeDay({
           aria-valuemax={100}
           aria-valuenow={occupancy.percent}
           aria-valuetext={line}
-          className="h-2 overflow-hidden rounded-full bg-bg"
+          className="h-2 overflow-hidden rounded-full bg-border"
         >
-          <div className="h-full rounded-full bg-accent" style={{ width: `${occupancy.percent}%` }} />
+          {/* Ink, not amber: how full the day is is information, not something to do. */}
+          <div className="h-full rounded-full bg-fg-muted" style={{ width: `${occupancy.percent}%` }} />
         </div>
         <p className="font-semibold">{line}</p>
         {occupancy.slots.length > 0 ? (

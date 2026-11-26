@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { HomeDay } from '@/components/club/home-day'
 import { TransfersCard } from '@/components/club/transfers-card'
-import { TurnRows } from '@/components/club/turn-rows'
+import { TurnRows, TurnSearchBox, TurnSearchProvider } from '@/components/club/turn-rows'
+import { ChargeReceiptProvider } from '@/components/club/charge-receipt'
+import { voidPayment } from '../cobros/actions'
 import { Card } from '@/components/ui/card'
 import { AutoRefresh } from '@/components/live/auto-refresh'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
@@ -76,16 +78,19 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
     timezone: club.timezone,
     methods: { cash: club.accepts_cash, transfer: club.accepts_transfer, card: club.accepts_card },
     members,
-    actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers },
+    actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers, voidPayment },
     now,
   }
 
   return (
-    <>
+    <ChargeReceiptProvider>
+      <TurnSearchProvider>
       <LiveOccupancy clubId={club.id} />
       <AutoRefresh seconds={60} />
 
       {setupNotice}
+      {/* The desk's first question is who is in front of it: one search over the three blocks of turns. */}
+      <TurnSearchBox />
 
       <HomeSection id="en-cancha" title="En cancha ahora">
         {inPlay.length > 0 ? (
@@ -123,6 +128,7 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
           timezone={club.timezone}
         />
       </HomeSection>
-    </>
+      </TurnSearchProvider>
+    </ChargeReceiptProvider>
   )
 }

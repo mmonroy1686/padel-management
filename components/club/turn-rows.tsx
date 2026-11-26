@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
+import { inputClasses } from '@/components/ui/field'
+import { normalizeText } from '@/lib/domain/members'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 import { playerLabel, timeLeft, turnLabel, type CourtTurn } from '@/lib/domain/club-home'
@@ -11,8 +13,11 @@ import { courtHours, CourtTurnCard, EventRow, type CourtListProps } from './cour
 // starts, when it ended) and what it owes. One button per row: «Cobrar» when it owes, «Ver» otherwise. It opens the
 // court of that turn right under its row (players, each share, Completar jugadores). Blocks, tournaments and day use
 // are a quiet row with their icon.
-export function TurnRows({ items, ...court }: CourtListProps) {
+export function TurnRows({ items: all, ...court }: CourtListProps) {
   const [open, setOpen] = useState<string | null>(null)
+  const query = normalizeText(useContext(SearchContext)?.query ?? '').trim()
+  const items = query ? all.filter((item) => normalizeText(searchTextOf(item)).includes(query)) : all
+  if (query && items.length === 0) return <p className="text-sm text-fg-muted">Nadie coincide acá.</p>
   return (
     <ul className="divide-y divide-border border-y border-border">
       {items.map((item) =>
@@ -68,8 +73,9 @@ function TurnRow({
             ) : null}
           </span>
           {progress ? (
-            <span aria-hidden className="mt-1.5 block h-1 overflow-hidden rounded-full bg-bg">
-              <span className="block h-full rounded-full bg-accent" style={{ width: `${progress.percentDone}%` }} />
+            // Ink, not amber: time going by is information; amber is for what is owed.
+            <span aria-hidden className="mt-1.5 block h-1 overflow-hidden rounded-full bg-border">
+              <span className="block h-full rounded-full bg-fg-muted" style={{ width: `${progress.percentDone}%` }} />
             </span>
           ) : null}
         </span>
@@ -89,5 +95,34 @@ function TurnRow({
         </div>
       ) : null}
     </li>
+  )
+}
+
+// Who a turn is for, in every way reception may say it: the players' names, the court, an event's label.
+function searchTextOf(item: CourtListProps['items'][number]): string {
+  if (item.kind !== 'turn') return `${item.courtName} ${item.label}`
+  return [item.courtName, ...item.players.map((player) => player.name ?? '')].join(' ')
+}
+
+const SearchContext = createContext<{ query: string; setQuery: (query: string) => void } | null>(null)
+
+// The Inicio's search: one box that narrows En cancha ahora, Próximos and Pendientes de cobro at once.
+export function TurnSearchProvider({ children }: { children: ReactNode }) {
+  const [query, setQuery] = useState('')
+  return <SearchContext.Provider value={{ query, setQuery }}>{children}</SearchContext.Provider>
+}
+
+export function TurnSearchBox() {
+  const search = useContext(SearchContext)
+  if (!search) return null
+  return (
+    <input
+      type="search"
+      aria-label="Buscar a quién cobrar en Inicio"
+      placeholder="Cobrar a… (nombre o cancha)"
+      value={search.query}
+      onChange={(event) => search.setQuery(event.target.value)}
+      className={cn(inputClasses, 'min-h-12 text-lg')}
+    />
   )
 }

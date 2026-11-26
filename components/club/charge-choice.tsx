@@ -23,14 +23,15 @@ export function ChargeChoice({
   fields: Record<string, string>
   action: FormAction
   methods: PayMethods
-  onDone: (message: string) => void
+  // paymentIds: what the charge made, for "Deshacer".
+  onDone: (message: string, paymentIds?: string[]) => void
   onError: (message: string) => void
   onCancel: () => void
 }) {
   const [, formAction, pending] = useActionState(async (previous: ActionState, formData: FormData) => {
     // A Server Action that redirects does not come back with a state.
     const result = (await action(previous, formData)) ?? previous
-    if (result.status === 'ok') onDone(result.message ?? '')
+    if (result.status === 'ok') onDone(result.message ?? '', result.paymentIds)
     if (result.status === 'error') onError(result.message ?? '')
     return result
   }, IDLE)

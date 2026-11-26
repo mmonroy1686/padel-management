@@ -39,21 +39,32 @@ test('reception charges each player of the court in play from the Inicio', async
   // His share in cash.
   await card.getByRole('button', { name: `Cobrar $300 a ${partner.name}` }).click()
   await card.getByRole('group', { name: `Cobrar $300 a ${partner.name}` }).getByRole('button', { name: 'Efectivo' }).click()
-  await expect(card.getByRole('status')).toHaveText('Cobramos $300 en efectivo.')
+  // The receipt sits at the bottom of the screen, with Deshacer: take it back, then charge it again.
+  const receipt = page.getByRole('status').filter({ hasText: 'Cobramos $300 en efectivo.' })
+  await expect(receipt).toBeVisible()
+  await page.getByRole('button', { name: 'Deshacer el cobro' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Cobro anulado' })).toBeVisible()
+  await card.getByRole('button', { name: `Cobrar $300 a ${partner.name}` }).click()
+  await card.getByRole('group', { name: `Cobrar $300 a ${partner.name}` }).getByRole('button', { name: 'Efectivo' }).click()
+  await expect(receipt).toBeVisible()
   await expect(players.getByRole('listitem').filter({ hasText: partner.name })).toContainText('Pagó')
 
   // Everything left by transfer: the card is paid.
   await card.getByRole('button', { name: 'Cobrar todo lo que falta ($900)' }).click()
   await card.getByRole('group', { name: 'Cobrar todo lo que falta ($900)' }).getByRole('button', { name: 'Me transfirió' }).click()
-  await expect(card.getByRole('status')).toHaveText('Cobramos $900 por transferencia.')
+  await expect(page.getByRole('status').filter({ hasText: 'Cobramos $900 por transferencia.' })).toBeVisible()
   await expect(players.getByText('Pagó ✓', { exact: true })).toHaveCount(4)
   await expect(card.getByRole('button', { name: /^Cobrar/ })).toHaveCount(0)
 
   // Both are confirmed payments, the transfer without a receipt: Cobros has nothing to confirm for them.
-  expect(await paymentsOf(playing.bookingId)).toEqual([
-    { method: 'cash', amount: 300, status: 'confirmed', payer_position: 2, receipt_path: null },
-    { method: 'transfer', amount: 900, status: 'confirmed', payer_position: null, receipt_path: null },
-  ])
+  // The one taken back stays, voided.
+  expect(await paymentsOf(playing.bookingId)).toEqual(
+    expect.arrayContaining([
+      { method: 'cash', amount: 300, status: 'voided', payer_position: 2, receipt_path: null },
+      { method: 'cash', amount: 300, status: 'confirmed', payer_position: 2, receipt_path: null },
+      { method: 'transfer', amount: 900, status: 'confirmed', payer_position: null, receipt_path: null },
+    ]),
+  )
   await page.getByRole('link', { name: 'Cobros', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Por confirmar', exact: true })).not.toContainText(holder.name)
 
