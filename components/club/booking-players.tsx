@@ -12,7 +12,7 @@ import { useChargeReceipt } from './charge-receipt'
 import { PlayersSheet } from './players-sheet'
 import { TurnCourt } from './turn-court'
 
-// voidPayment: "Deshacer" right after a cash or POS charge (the Inicio).
+// voidPayment: "Deshacer" right after a cash or POS charge (the Inicio); takes every paymentId of the form at once.
 export type PlayersActions = { chargeShare: FormAction; chargeRest: FormAction; savePlayers: FormAction; voidPayment?: FormAction }
 // list: a row per player (the Grilla). court: the four players drawn on a court (the Inicio).
 export type PlayersLayout = 'list' | 'court'

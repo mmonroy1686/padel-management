@@ -74,7 +74,7 @@ export function MatchCard({ match, viewerId, whenText, status, risk, reasons = [
           <Icon name="chevron-right" className="size-4" />
         </Link>
         {status.ok && joinSide ? (
-          <Link href={`${href}?sumarme=${status.position}`} className={buttonClasses({ variant: 'secondary', className: 'relative z-10' })}>
+          <Link href={`${href}?sumarme=${status.position}`} className={buttonClasses({ variant: 'outline', className: 'relative z-10' })}>
             Sumarme de {SLOT_SIDE_WORDS[joinSide]}
           </Link>
         ) : null}

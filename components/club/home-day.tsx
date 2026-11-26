@@ -81,12 +81,14 @@ export function HomeDay({
 
       <DayCard id="dia-avisos" icon="alert" title="Avisos">
         {alerts.length > 0 ? (
-          <ul className="flex flex-col gap-1">
+          // Rows with a chevron, in ink: four underlined links in the club's color all asked for attention at once.
+          <ul className="flex flex-col divide-y divide-border">
             {alerts.map((alert) => (
-              <li key={alert.text} className="flex items-center gap-2">
-                <Icon name={ALERT_ICONS[alert.kind]} className="text-accent-ink" />
-                <Link href={alert.href} className={LINK}>
-                  {alert.text}
+              <li key={alert.text}>
+                <Link href={alert.href} className="flex min-h-12 items-center gap-2 font-semibold">
+                  <Icon name={ALERT_ICONS[alert.kind]} className="text-fg-muted" />
+                  <span className="min-w-0 flex-1">{alert.text}</span>
+                  <Icon name="chevron-right" className="size-5 text-fg-muted" />
                 </Link>
               </li>
             ))}

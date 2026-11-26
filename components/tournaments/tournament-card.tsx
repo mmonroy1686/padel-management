@@ -47,7 +47,7 @@ export function TournamentCard({ tournament, whenText, status }: { tournament: T
           <Icon name="chevron-right" className="size-4" />
         </Link>
         {status.ok ? (
-          <Link href={`${href}?anotarme=1`} className={buttonClasses({ variant: 'secondary', className: 'relative z-10' })}>
+          <Link href={`${href}?anotarme=1`} className={buttonClasses({ variant: 'outline', className: 'relative z-10' })}>
             {status.text}
           </Link>
         ) : null}

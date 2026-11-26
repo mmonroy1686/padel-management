@@ -6,7 +6,7 @@ import { HomeDay } from '@/components/club/home-day'
 import { TransfersCard } from '@/components/club/transfers-card'
 import { TurnRows, TurnSearchBox, TurnSearchProvider } from '@/components/club/turn-rows'
 import { ChargeReceiptProvider } from '@/components/club/charge-receipt'
-import { voidPayment } from '../cobros/actions'
+import { voidPayments } from '../cobros/actions'
 import { Card } from '@/components/ui/card'
 import { AutoRefresh } from '@/components/live/auto-refresh'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
@@ -86,7 +86,7 @@ export default async function ClubHomePage({ searchParams }: { searchParams: Sea
     timezone: club.timezone,
     methods: { cash: club.accepts_cash, transfer: club.accepts_transfer, card: club.accepts_card },
     members,
-    actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers, voidPayment },
+    actions: { chargeShare, chargeRest, savePlayers: saveBookingPlayers, voidPayment: voidPayments },
     debts: debtsByName(unpaid),
     now,
   }

@@ -35,8 +35,10 @@ export type BoardActions = {
   reject: FormAction
   // "Confirmar las marcadas": several transfers at once.
   confirmMany?: FormAction
-  // "Anular" / "Deshacer": a cash or POS charge of today, taken back.
+  // "Anular": a cash or POS charge of today, taken back.
   void?: FormAction
+  // "Deshacer": every payment a charge just made, voided together or not at all.
+  voidMany?: FormAction
 }
 
 // The line on top: what is owed, waiting, in and to give back, in money, always in sight; a tap opens its list.
@@ -157,20 +159,6 @@ export function PaymentsBoard({
         </select>
       </div>
 
-      {/* Fixed at the bottom of the screen, where reception is looking after charging a row far down the list. */}
-      {notice ? (
-        <ChargeReceipt
-          key={`${notice}-${lastCharge?.at ?? 0}`}
-          message={notice}
-          undo={
-            lastCharge && undoable.length === lastCharge.entries.length && actions.void
-              ? { paymentIds: undoable, action: actions.void, label: `Deshacer el cobro a ${lastCharge.who}` }
-              : null
-          }
-          onDismiss={() => setNotice(null)}
-          onUndone={done}
-        />
-      ) : null}
 
       <nav aria-label="Resumen de cobros" className="grid grid-cols-4 gap-1">
         {SUMMARY.map((tile) => {
@@ -247,6 +235,21 @@ export function PaymentsBoard({
             </ColumnView>
           ))}
       </section>
+
+      {/* Fixed at the bottom of the screen, where reception is looking after charging a row far down the list. Last in the board: its room goes at the end. */}
+      {notice ? (
+        <ChargeReceipt
+          key={`${notice}-${lastCharge?.at ?? 0}`}
+          message={notice}
+          undo={
+            lastCharge && undoable.length === lastCharge.entries.length && actions.voidMany
+              ? { paymentIds: undoable, action: actions.voidMany, label: `Deshacer el cobro a ${lastCharge.who}` }
+              : null
+          }
+          onDismiss={() => setNotice(null)}
+          onUndone={done}
+        />
+      ) : null}
 
       <BottomSheet open={reviewing !== null} onClose={() => setReviewing(null)} title={reviewing ? `Transferencia de ${reviewing.holder}` : ''}>
         {reviewing ? (
@@ -445,7 +448,7 @@ function ChargeAll({
           event.preventDefault()
           setOpen(true)
         }}
-        className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+        className={buttonClasses({ variant: 'outline', className: ROW_BUTTON })}
       >
         Cobrar
       </button>
@@ -598,7 +601,7 @@ function RowAction({
           onClick={() =>
             onReview({ id: item.id, amount: item.amount, holder: item.holder, when: item.when, courtName: item.what, receiptUrl: action.receiptUrl })
           }
-          className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+          className={buttonClasses({ variant: 'outline', className: ROW_BUTTON })}
         >
           Revisar
         </button>
@@ -665,7 +668,7 @@ function ChargeRow({
             setError(null)
             setOpen(true)
           }}
-          className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+          className={buttonClasses({ variant: 'outline', className: ROW_BUTTON })}
         >
           Cobrar
         </button>
@@ -704,7 +707,7 @@ function RowForm({
         aria-label={accessibleLabel}
         disabled={pending}
         aria-busy={pending || undefined}
-        className={buttonClasses({ variant: 'secondary', className: ROW_BUTTON })}
+        className={buttonClasses({ variant: 'outline', className: ROW_BUTTON })}
       >
         {pending ? 'Guardando…' : label}
       </button>

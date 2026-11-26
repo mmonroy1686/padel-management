@@ -9,7 +9,7 @@ vi.mock('server-only', () => ({}))
 vi.mock('@/lib/actions/revalidate', () => ({ revalidateBookings }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ rpc }) }))
 
-const { confirmPayments, voidPayment } = await import('@/app/(club)/club/cobros/actions')
+const { confirmPayments, voidPayment, voidPayments } = await import('@/app/(club)/club/cobros/actions')
 const IDLE = { status: 'idle' as const }
 const T1 = 'a0000000-0000-0000-0000-000000000001'
 const T2 = 'a0000000-0000-0000-0000-000000000002'
@@ -63,5 +63,24 @@ describe('voidPayment', () => {
     const data = new FormData()
     data.set('paymentId', T1)
     expect(await voidPayment(IDLE, data)).toMatchObject({ status: 'error' })
+  })
+})
+
+describe('voidPayments', () => {
+  it('takes every payment of a charge back in one call (void_desk_payments)', async () => {
+    expect(await voidPayments(IDLE, form([T1, T2, T1]))).toEqual({
+      status: 'ok',
+      message: 'Cobros anulados (2). Vuelven a figurar como deuda.',
+    })
+    expect(rpc).toHaveBeenCalledTimes(1)
+    expect(rpc).toHaveBeenCalledWith('void_desk_payments', { p_payment_ids: [T1, T2] })
+  })
+
+  it('refuses no ids or a bad one, and says why when the database refuses', async () => {
+    expect(await voidPayments(IDLE, form([]))).toMatchObject({ status: 'error' })
+    expect(await voidPayments(IDLE, form(['x']))).toMatchObject({ status: 'error' })
+    expect(rpc).not.toHaveBeenCalled()
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'invalid_state' } })
+    expect(await voidPayments(IDLE, form([T1]))).toMatchObject({ status: 'error' })
   })
 })

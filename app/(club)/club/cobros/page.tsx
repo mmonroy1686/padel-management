@@ -9,7 +9,7 @@ import { recordCash } from '../grilla/actions'
 import { recordPassCash } from '../day-use/actions'
 import { recordChampionshipCash } from '../torneos/campeonatos/actions'
 import { recordTournamentCash } from '../torneos/actions'
-import { confirmPayment, confirmPayments, refundPayment, rejectPayment, voidPayment } from './actions'
+import { confirmPayment, confirmPayments, refundPayment, rejectPayment, voidPayment, voidPayments } from './actions'
 import { PaymentsBoard } from './payments-board'
 
 export const metadata: Metadata = { title: 'Cobros' }
@@ -38,6 +38,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Sea
         reject: rejectPayment,
         confirmMany: confirmPayments,
         void: voidPayment,
+        voidMany: voidPayments,
       }}
     />
   )

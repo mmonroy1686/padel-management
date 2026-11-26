@@ -44,10 +44,10 @@ function ClubDetails({ view, clubName, timezone }: { view: ClubInfoView; clubNam
       <Card className="flex flex-col gap-4">
         {view.contacts.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {view.contacts.map((contact, index) => (
+            {view.contacts.map((contact) => (
               <a key={contact.kind} href={contact.href} target={contact.kind === 'email' ? undefined : '_blank'} rel="noopener noreferrer"
                 aria-label={`${contact.label}: ${contact.detail}`}
-                className={buttonClasses({ variant: index === 0 && contact.kind === 'whatsapp' ? 'primary' : 'secondary' })}>
+                className={buttonClasses({ variant: 'secondary' })}>
                 {contact.kind === 'email' ? <Icon name="mail" /> : <BrandIcon name={contact.kind} />}
                 {contact.label}
               </a>

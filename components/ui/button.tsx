@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, Ref } from 'react'
 import { cn } from '@/lib/cn'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 // md: the screen's actions, in the display font. sm: actions inside a row or a card, in body text; still 44px tall.
 export type ButtonSize = 'md' | 'sm'
 type ButtonStyle = { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; className?: string }
@@ -21,6 +21,9 @@ const VARIANTS: Record<ButtonVariant, string> = {
   // is fg, not accent-ink: accent-ink sits near 4.5:1 and a tint would push it under; fg stays above 5.8:1 on a
   // 20% tint for every palette.
   secondary: 'border-2 border-accent bg-accent/12 text-fg hover:bg-accent/20',
+  // The action of a row in a list (Cobrar, Sumarme, Revisar): an ink border, so ten rows do not spend the club's
+  // color; it shows on hover and on the one action of the screen.
+  outline: 'border-2 border-border text-fg hover:border-accent',
   ghost: 'text-accent-ink hover:bg-surface',
   danger: 'border border-danger text-danger hover:bg-surface',
 }

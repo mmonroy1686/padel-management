@@ -93,7 +93,7 @@ function TurnRow({
           ) : null}
         </span>
         <Button
-          variant={open ? 'ghost' : owes ? 'secondary' : 'ghost'}
+          variant={open ? 'ghost' : owes ? 'outline' : 'ghost'}
           aria-expanded={open}
           aria-controls={`turno-${turn.id}`}
           aria-label={`${open ? 'Cerrar' : verb} ${turn.courtName}, ${hours}`}

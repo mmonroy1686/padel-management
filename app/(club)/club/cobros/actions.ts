@@ -24,6 +24,17 @@ export async function voidPayment(_previous: ActionState, form: FormData): Promi
   return fromRpc(error, 'Cobro anulado. Vuelve a figurar como deuda.')
 }
 
+// "Deshacer" after charging several debts at once: every payment it made, voided together or not at all
+// (void_desk_payments, one transaction).
+export async function voidPayments(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const ids = [...new Set(form.getAll('paymentId'))].map(String)
+  if (ids.length === 0 || ids.length > 50 || ids.some((id) => !UUID.test(id))) return INVALID_INPUT
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('void_desk_payments', { p_payment_ids: ids })
+  revalidateBookings()
+  return fromRpc(error, ids.length === 1 ? 'Cobro anulado. Vuelve a figurar como deuda.' : `Cobros anulados (${ids.length}). Vuelven a figurar como deuda.`)
+}
+
 // "Confirmar las marcadas": the same confirm_payment, one transfer at a time. One that fails (someone else just
 // rejected it) does not stop the rest; the message says how many went through.
 export async function confirmPayments(_previous: ActionState, form: FormData): Promise<ActionState> {

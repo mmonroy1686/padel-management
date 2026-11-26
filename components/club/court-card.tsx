@@ -36,16 +36,18 @@ export function courtHours(item: Pick<CourtItem, 'startsAt' | 'endsAt'>, timezon
 export function EventRow({ event, hours }: { event: CourtEvent; hours: string }) {
   const name = `${event.courtName} · ${event.label}`
   return (
-    <div className="flex min-h-14 flex-wrap items-center gap-3 py-2">
-      <Icon name={EVENT_ICONS[event.occupancyKind] ?? 'clock'} className="text-accent-ink" />
+    // A plain row (ink text, a chevron when it opens something), not an underlined link in the club's color.
+    <div className="relative flex min-h-14 flex-wrap items-center gap-3 py-2">
+      <Icon name={EVENT_ICONS[event.occupancyKind] ?? 'clock'} className="text-fg-muted" />
       {event.href ? (
-        <Link href={event.href} className="inline-flex min-h-11 items-center font-semibold text-accent-ink underline">
+        <Link href={event.href} className="inline-flex min-h-11 items-center font-semibold after:absolute after:inset-0 after:content-['']">
           {name}
         </Link>
       ) : (
         <span className="font-semibold">{name}</span>
       )}
       <span className="ml-auto text-sm text-fg-muted">{hours}</span>
+      {event.href ? <Icon name="chevron-right" className="size-5 text-fg-muted" /> : null}
     </div>
   )
 }
