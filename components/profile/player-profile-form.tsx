@@ -112,7 +112,20 @@ export function PlayerProfileForm({
         </p>
       ) : null}
       {onboarding ? (
-        <input type="hidden" name="isPublic" value="on" />
+        <>
+          <input type="hidden" name="isPublic" value="on" />
+          {/* Optional on the welcome too: Perfil has the same two fields (ContactForm). */}
+          <Field label="Tu WhatsApp (opcional)" htmlFor="phone" hint="Por ejemplo 099 123 456.">
+            <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={30} aria-describedby="phone-hint" className={inputClasses} />
+          </Field>
+          <label className="flex min-h-11 items-start gap-3">
+            <input type="checkbox" name="whatsappConsent" className="mt-0.5 size-5 shrink-0 accent-accent" />
+            <span className="flex flex-col gap-1">
+              <span>Acepto que el club me escriba por WhatsApp</span>
+              <span className="text-sm text-fg-muted">Para invitarte a partidos y avisarte de tus reservas. Lo podés sacar cuando quieras.</span>
+            </span>
+          </label>
+        </>
       ) : (
         <label className="flex min-h-11 items-center gap-3">
           <input type="checkbox" name="isPublic" defaultChecked={initial.isPublic} className="size-5 accent-accent" />

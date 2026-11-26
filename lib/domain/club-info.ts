@@ -89,11 +89,15 @@ export function countryCode(timezone: string): string | null {
   return COUNTRIES[timezone]?.iso ?? null
 }
 
-// The club's chat: the phone is saved local (092369558); wa.me wants it international, so the leading 0 becomes the
-// country's code.
-export function whatsappUrl(phone: string, timezone: string, clubName: string): string {
+// A phone saved local (092369558) as wa.me wants it, international: the leading 0 becomes the country's code.
+export function internationalPhone(phone: string, timezone: string): string {
   const calling = COUNTRIES[timezone]?.calling
-  const international = calling && phone.startsWith('0') ? `${calling}${phone.slice(1)}` : phone
+  return calling && phone.startsWith('0') ? `${calling}${phone.slice(1)}` : phone
+}
+
+// The club's chat.
+export function whatsappUrl(phone: string, timezone: string, clubName: string): string {
+  const international = internationalPhone(phone, timezone)
   const text = `Hola, les escribo desde la app de ${clubName}.`
   return `https://wa.me/${international}?text=${encodeURIComponent(text)}`
 }
