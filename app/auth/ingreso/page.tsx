@@ -45,7 +45,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
         </p>
       ) : null}
 
-      <Card className="flex flex-col gap-4">
+      <Card className="flex flex-col gap-4 sm:p-6" data-fill-buttons>
         <form action={signInWithGoogle}>
           <input type="hidden" name="next" value={nextPath} />
           <SubmitButton label="Seguir con Google" pendingLabel="Abriendo Google…" icon={<GoogleMark />} />
