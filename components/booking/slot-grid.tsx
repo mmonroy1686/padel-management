@@ -191,8 +191,8 @@ function PlayerCell({
         onClick={() => onWait(cell)}
         className={cn(CELL, CELL_STYLES.taken, FOCUS, 'hover:text-fg')}
       >
+        {/* Tappable for the waiting list, without saying "Avisame" in every taken cell: the hint is under the grid. */}
         <span>Ocupada</span>
-        <span className="text-xs font-semibold text-accent-ink">Avisame</span>
       </button>
     )
   }

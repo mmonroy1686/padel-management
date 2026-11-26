@@ -20,7 +20,7 @@ export function ChampionshipCard({
 }) {
   const categories = openCategories(championship)
   return (
-    <Card className="flex h-full flex-col gap-3">
+    <Card className="relative flex h-full flex-col gap-3 hover:border-accent">
       {posterUrl ? (
         // A plain img, as on the championship's page: the poster comes from Storage at its own size.
         // eslint-disable-next-line @next/next/no-img-element
@@ -43,7 +43,15 @@ export function ChampionshipCard({
       <p className="text-sm">
         {categories.length > 0 ? categories.map((category) => category.name).join(' · ') : 'Sin categorías todavía'}
       </p>
-      <Link href={href} className={buttonClasses({ variant: primary ? 'primary' : 'secondary', fullWidth: true, className: 'mt-auto' })}>
+      {/* Stretched over the card: the whole card opens the championship. */}
+      <Link
+        href={href}
+        className={buttonClasses({
+          variant: primary ? 'primary' : 'secondary',
+          fullWidth: true,
+          className: "mt-auto after:absolute after:inset-0 after:rounded-2xl after:content-['']",
+        })}
+      >
         {actionLabel}
       </Link>
     </Card>

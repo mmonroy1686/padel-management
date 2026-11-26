@@ -8,7 +8,6 @@ import { Legend } from '@/components/booking/legend'
 import { SlotGrid } from '@/components/booking/slot-grid'
 import { CreateMatchSheet, type MatchFormInitial } from '@/components/matches/create-match-sheet'
 import type { FormAction } from '@/components/ui/action-form'
-import { Button } from '@/components/ui/button'
 import { DayWaitsNote } from '@/components/waitlist/day-waits-note'
 import { WaitSheet, type WaitInitial } from '@/components/waitlist/wait-sheet'
 import { cn } from '@/lib/cn'
@@ -147,11 +146,13 @@ export function ReservarBoard({
         <p className="rounded-xl border border-border p-4 text-fg-muted">No quedan horarios libres este día. Probá con otro día.</p>
       )}
       <div className="flex flex-col gap-2">
-        <Button variant="secondary" fullWidth onClick={() => openWait(null)}>
-          Avisame si se libera
-        </Button>
+        {/* Under the grid and quiet: the screen's action is booking a free slot. */}
         <p className="text-sm text-fg-muted">
-          ¿No encontrás lugar? Anotate y, si se libera un turno, te lo guardamos unos minutos. También podés tocar una cancha ocupada.
+          ¿No encontrás lugar? Tocá una cancha ocupada o{' '}
+          <button type="button" onClick={() => openWait(null)} className="-my-3 py-3 font-semibold text-accent-ink underline underline-offset-4">
+            avisame si se libera
+          </button>
+          : si se libera un turno, te lo guardamos unos minutos.
         </p>
       </div>
       <BookingSheet

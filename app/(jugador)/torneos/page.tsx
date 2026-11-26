@@ -60,7 +60,6 @@ export default async function TournamentsPage() {
                     posterUrl={championshipPosterUrl(getSupabaseEnv().url, championship.posterPath)}
                     href={`/campeonatos/${championship.id}`}
                     actionLabel={open ? 'Ver categorías y anotarme' : 'Ver campeonato'}
-                    primary={open}
                   />
                 </li>
               )

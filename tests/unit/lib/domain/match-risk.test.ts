@@ -20,6 +20,7 @@ describe('riskOf', () => {
     expect(riskOf(makeMatch(), ['court-2'])).toEqual({
       level: 'warn',
       text: 'La Cancha 1 ya se reservó. Si el partido se completa, se asigna otra cancha libre (queda 1).',
+      short: 'La Cancha 1 ya se reservó: se juega en otra libre',
     })
   })
 
@@ -27,10 +28,12 @@ describe('riskOf', () => {
     expect(riskOf(makeMatch(), [])).toEqual({
       level: 'bad',
       text: 'No quedan canchas libres a esa hora. Si nadie libera una, el partido se cae.',
+      short: 'No quedan canchas libres: puede caerse',
     })
     expect(riskOf(makeMatch({ allowOtherCourt: false }), ['court-2'])).toEqual({
       level: 'bad',
       text: 'La Cancha 1 ya se reservó y el partido no acepta otra cancha. Si nadie la libera, el partido se cae.',
+      short: 'La Cancha 1 ya se reservó: puede caerse',
     })
   })
 
