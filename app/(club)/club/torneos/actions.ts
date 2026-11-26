@@ -50,6 +50,7 @@ export async function createTournament(_previous: ActionState, form: FormData): 
     p_category_max: input.categoryMax,
     p_type: input.type,
     p_price: input.price,
+    p_format: input.format,
   })
   if (error) return fromRpc(error, '')
   revalidateBookings()
@@ -92,14 +93,39 @@ export async function cancelTournament(_previous: ActionState, form: FormData): 
   )
 }
 
+// With fixed pairs the guest can come in as the partner of someone looking for one.
 export async function addGuest(_previous: ActionState, form: FormData): Promise<ActionState> {
   const name = readText(form, 'guestName', { maxLength: 60 })
   if (!name) return INVALID_INPUT
+  const rawPartner = form.get('partnerEntryId')
+  const partnerEntryId = rawPartner ? readUuid(form, 'partnerEntryId') : null
+  if (rawPartner && !partnerEntryId) return INVALID_INPUT
   return onTournament(
     form,
-    (supabase, id) => supabase.rpc('add_tournament_guest', { p_tournament_id: id, p_name: name }),
-    'Invitado agregado.',
+    (supabase, id) =>
+      supabase.rpc('add_tournament_guest', {
+        p_tournament_id: id,
+        p_name: name,
+        ...(partnerEntryId ? { p_partner_entry_id: partnerEntryId } : {}),
+      }),
+    partnerEntryId ? 'Invitado agregado como pareja.' : 'Invitado agregado.',
   )
+}
+
+export async function pairEntries(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const entryId = readUuid(form, 'entryId')
+  const partnerEntryId = readUuid(form, 'partnerEntryId')
+  if (!entryId || !partnerEntryId) return INVALID_INPUT
+  return run(
+    (supabase) => supabase.rpc('pair_tournament_entries', { p_entry_a: entryId, p_entry_b: partnerEntryId }),
+    'Listo, ya son pareja. Les avisamos.',
+  )
+}
+
+export async function splitPair(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const entryId = readUuid(form, 'entryId')
+  if (!entryId) return INVALID_INPUT
+  return run((supabase) => supabase.rpc('split_tournament_pair', { p_entry_id: entryId }), 'Separados: los dos buscan pareja.')
 }
 
 export async function removeEntry(_previous: ActionState, form: FormData): Promise<ActionState> {

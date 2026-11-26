@@ -10,9 +10,9 @@ import { makeEntries, makeGame, makeTournament } from '../../fixtures/tournament
 const ok = async () => ({ status: 'ok' as const, message: 'Listo.' })
 const paid = (status: 'confirmed' | 'reported') => [{ status, amount: 400, rejection_reason: null, created_at: '2026-09-30T12:00:00Z' }]
 const ENTRIES: TournamentEntry[] = [
-  { id: 'e1', playerId: 'p1', name: 'Ana', isGuest: false, payments: [] },
-  { id: 'e2', playerId: null, name: 'Pepe', isGuest: true, payments: paid('confirmed') },
-  { id: 'e3', playerId: 'p3', name: 'Bruno', isGuest: false, payments: paid('reported') },
+  { id: 'e1', playerId: 'p1', name: 'Ana', isGuest: false, payments: [], pairId: null },
+  { id: 'e2', playerId: null, name: 'Pepe', isGuest: true, payments: paid('confirmed'), pairId: null },
+  { id: 'e3', playerId: 'p3', name: 'Bruno', isGuest: false, payments: paid('reported'), pairId: null },
 ]
 
 function entryActions(): EntryActions {

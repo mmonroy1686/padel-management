@@ -5,10 +5,12 @@ import {
   type ChampionshipNotificationKind,
 } from './championship-notifications'
 import { MATCH_INVITE_KIND, matchInviteText, readMatchInviteData, type MatchInviteKind } from './match-invite-notifications'
+import { readTournamentPairData, TOURNAMENT_PAIR_KIND, tournamentPairText, type TournamentPairKind } from './tournament-pair-notifications'
 import { notificationText, readNotificationData, type NotificationKind as WaitlistNotificationKind } from './waitlist'
 
-// Every aviso the app shows in /avisos and mails: the waitlist's, the championships' and the club's invitations.
-export type NotificationKind = WaitlistNotificationKind | ChampionshipNotificationKind | MatchInviteKind
+// Every aviso the app shows in /avisos and mails: the waitlist's, the championships', the club's invitations and the
+// americanos' pairs.
+export type NotificationKind = WaitlistNotificationKind | ChampionshipNotificationKind | MatchInviteKind | TournamentPairKind
 export type NotificationContent = { title: string; body: string; button: string; reason: string }
 export type NotificationRow = {
   id: string
@@ -31,6 +33,11 @@ export function notificationContent(kind: NotificationKind, data: unknown, timez
       button: 'Ver el partido',
       reason: 'te escribimos porque el club te invitó a un partido.',
     }
+  }
+  if (kind === TOURNAMENT_PAIR_KIND) {
+    const read = readTournamentPairData(data)
+    if (!read) return null
+    return { ...tournamentPairText(read), button: 'Ver el torneo', reason: 'te escribimos por tu pareja en un americano.' }
   }
   if (isChampionshipNotificationKind(kind)) {
     const read = readChampionshipNotificationData(data)
@@ -55,6 +62,10 @@ export function isNotificationStale(kind: NotificationKind, data: unknown, now: 
   if (kind === MATCH_INVITE_KIND) {
     const read = readMatchInviteData(data)
     return !read || read.startsAt.getTime() <= now.getTime()
+  }
+  if (kind === TOURNAMENT_PAIR_KIND) {
+    const read = readTournamentPairData(data)
+    return !read || (read.startsAt !== null && read.startsAt.getTime() <= now.getTime())
   }
   if (isChampionshipNotificationKind(kind)) {
     const read = readChampionshipNotificationData(data)

@@ -15,10 +15,12 @@ import { dayLongLabel, formatPrice, timeIn } from '@/lib/domain/format'
 import { isUuid } from '@/lib/domain/input'
 import { categoryRangeLabel, MATCH_TYPE_LABELS } from '@/lib/domain/matches'
 import { localDateOf } from '@/lib/domain/time'
-import { ranking } from '@/lib/domain/tournament-ranking'
+import { tournamentRanking } from '@/lib/domain/tournament-ranking'
 import { courtsText, formatText, spotsLabel, TOURNAMENT_STATUS_LABELS } from '@/lib/domain/tournaments'
 import {
   addGuest,
+  pairEntries,
+  splitPair,
   cancelTournament,
   closeRegistration,
   finishTournament,
@@ -44,7 +46,7 @@ export default async function ManageTournamentPage({ params }: { params: Params 
   const when = `${dayLongLabel(localDateOf(tournament.startsAt, club.timezone))}, ${timeIn(tournament.startsAt, club.timezone)} a ${timeIn(tournament.endsAt, club.timezone)}`
   const played = tournament.status === 'in_progress' || tournament.status === 'finished'
 
-  const rows = ranking(tournament.entries, tournament.games, tournament.pointsPerGame)
+  const rows = tournamentRanking(tournament)
   return (
     <>
       <LiveOccupancy clubId={club.id} />
@@ -85,7 +87,7 @@ export default async function ManageTournamentPage({ params }: { params: Params 
       <EntriesManager
         tournament={tournament}
         deskMethods={deskMethods(club)}
-        actions={{ cash: recordTournamentCash, remove: removeEntry, addGuest }}
+        actions={{ cash: recordTournamentCash, remove: removeEntry, addGuest, pair: pairEntries, split: splitPair }}
       />
     </>
   )

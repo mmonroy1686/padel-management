@@ -239,6 +239,35 @@ if (nextMonthTournament) {
   }
 }
 
+// Fixed pairs, registration open: two pairs signed up together and two players looking for a partner.
+let pairsTournament = null
+for (const [days, time] of [[8, '18:30'], [9, '18:30'], [7, '14:00'], [10, '14:00']]) {
+  pairsTournament = await tryRpc(reception, 'create_tournament', {
+    p_name: 'Americano de parejas fijas',
+    p_starts_at: at(days, time).toISOString(),
+    p_court_ids: [court(0).id, court(1).id],
+    p_max_players: 8,
+    p_points_per_game: 24,
+    p_round_minutes: 20,
+    p_rounds: 3,
+    p_category_min: 1,
+    p_category_max: 8,
+    p_type: 'mixed',
+    p_price: 400,
+    p_format: 'fixed_pairs',
+  }, { quiet: true })
+  if (pairsTournament) break
+}
+if (pairsTournament) {
+  tournaments.push('Americano de parejas fijas (inscripción abierta)')
+  for (const [key, partner] of [['nicolas', 'mariana'], ['federico', 'paula']]) {
+    await tryRpc(people[key].client, 'join_tournament_pair', { p_tournament_id: pairsTournament.id, p_partner_id: people[partner].id })
+  }
+  for (const key of ['andrea', 'martin']) {
+    await tryRpc(people[key].client, 'join_tournament', { p_tournament_id: pairsTournament.id })
+  }
+}
+
 // Today after the championship if it still fits before closing, otherwise tomorrow; started with some results.
 const playDay = futureSlot(0, '20:00') ? 0 : 1
 const liveTournament = await tryRpc(reception, 'create_tournament', {

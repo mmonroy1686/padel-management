@@ -1118,13 +1118,13 @@ isOneToOne: false
                   ]
                 },"tournament_entries": {
                   Row: {
-                    "club_id": string,"created_at": string,"created_by": string | null,"guest_name": string | null,"id": string,"player_id": string | null,"removed_at": string | null,"removed_by": string | null,"tournament_id": string
+                    "club_id": string,"created_at": string,"created_by": string | null,"guest_name": string | null,"id": string,"pair_id": string | null,"player_id": string | null,"removed_at": string | null,"removed_by": string | null,"tournament_id": string
                   }
                   Insert: {
-                    "club_id": string,"created_at"?: string,"created_by"?: string | null,"guest_name"?: string | null,"id"?: string,"player_id"?: string | null,"removed_at"?: string | null,"removed_by"?: string | null,"tournament_id": string
+                    "club_id": string,"created_at"?: string,"created_by"?: string | null,"guest_name"?: string | null,"id"?: string,"pair_id"?: string | null,"player_id"?: string | null,"removed_at"?: string | null,"removed_by"?: string | null,"tournament_id": string
                   }
                   Update: {
-                    "club_id"?: string,"created_at"?: string,"created_by"?: string | null,"guest_name"?: string | null,"id"?: string,"player_id"?: string | null,"removed_at"?: string | null,"removed_by"?: string | null,"tournament_id"?: string
+                    "club_id"?: string,"created_at"?: string,"created_by"?: string | null,"guest_name"?: string | null,"id"?: string,"pair_id"?: string | null,"player_id"?: string | null,"removed_at"?: string | null,"removed_by"?: string | null,"tournament_id"?: string
                   }
                   Relationships: [
                     {
@@ -1210,13 +1210,13 @@ isOneToOne: false
                   ]
                 },"tournaments": {
                   Row: {
-                    "cancelled_at": string | null,"category_max": number,"category_min": number,"club_id": string,"court_ids": (string)[],"created_at": string,"created_by": string | null,"ends_at": string | null,"id": string,"match_type": Database["public"]['Enums']["match_type"],"max_players": number,"name": string,"period": unknown,"points_per_game": number,"price": number,"round_minutes": number,"rounds": number,"starts_at": string | null,"status": Database["public"]['Enums']["tournament_status"]
+                    "cancelled_at": string | null,"category_max": number,"category_min": number,"club_id": string,"court_ids": (string)[],"created_at": string,"created_by": string | null,"ends_at": string | null,"format": Database["public"]['Enums']["tournament_format"],"id": string,"match_type": Database["public"]['Enums']["match_type"],"max_players": number,"name": string,"period": unknown,"points_per_game": number,"price": number,"round_minutes": number,"rounds": number,"starts_at": string | null,"status": Database["public"]['Enums']["tournament_status"]
                   }
                   Insert: {
-                    "cancelled_at"?: string | null,"category_max": number,"category_min": number,"club_id": string,"court_ids": (string)[],"created_at"?: string,"created_by"?: string | null,"ends_at"?: never,"id"?: string,"match_type": Database["public"]['Enums']["match_type"],"max_players": number,"name": string,"period": unknown,"points_per_game"?: number,"price": number,"round_minutes"?: number,"rounds"?: number,"starts_at"?: never,"status"?: Database["public"]['Enums']["tournament_status"]
+                    "cancelled_at"?: string | null,"category_max": number,"category_min": number,"club_id": string,"court_ids": (string)[],"created_at"?: string,"created_by"?: string | null,"ends_at"?: never,"format"?: Database["public"]['Enums']["tournament_format"],"id"?: string,"match_type": Database["public"]['Enums']["match_type"],"max_players": number,"name": string,"period": unknown,"points_per_game"?: number,"price": number,"round_minutes"?: number,"rounds"?: number,"starts_at"?: never,"status"?: Database["public"]['Enums']["tournament_status"]
                   }
                   Update: {
-                    "cancelled_at"?: string | null,"category_max"?: number,"category_min"?: number,"club_id"?: string,"court_ids"?: (string)[],"created_at"?: string,"created_by"?: string | null,"ends_at"?: never,"id"?: string,"match_type"?: Database["public"]['Enums']["match_type"],"max_players"?: number,"name"?: string,"period"?: unknown,"points_per_game"?: number,"price"?: number,"round_minutes"?: number,"rounds"?: number,"starts_at"?: never,"status"?: Database["public"]['Enums']["tournament_status"]
+                    "cancelled_at"?: string | null,"category_max"?: number,"category_min"?: number,"club_id"?: string,"court_ids"?: (string)[],"created_at"?: string,"created_by"?: string | null,"ends_at"?: never,"format"?: Database["public"]['Enums']["tournament_format"],"id"?: string,"match_type"?: Database["public"]['Enums']["match_type"],"max_players"?: number,"name"?: string,"period"?: unknown,"points_per_game"?: number,"price"?: number,"round_minutes"?: number,"rounds"?: number,"starts_at"?: never,"status"?: Database["public"]['Enums']["tournament_status"]
                   }
                   Relationships: [
                     {
@@ -1316,12 +1316,13 @@ isOneToOne: false
 { Args: { "p_club_id": string,"p_path": string }; Returns: string
                            },
 "add_tournament_guest":
-{ Args: { "p_name": string,"p_tournament_id": string }; Returns: {
+{ Args: { "p_name": string,"p_partner_entry_id"?: string,"p_tournament_id": string }; Returns: {
               "club_id": string,
 "created_at": string,
 "created_by": string | null,
 "guest_name": string | null,
 "id": string,
+"pair_id": string | null,
 "player_id": string | null,
 "removed_at": string | null,
 "removed_by": string | null,
@@ -1630,6 +1631,7 @@ isOneToOne: false
 "created_at": string,
 "created_by": string | null,
 "ends_at": string | null,
+"format": Database["public"]['Enums']["tournament_format"],
 "id": string,
 "match_type": Database["public"]['Enums']["match_type"],
 "max_players": number,
@@ -1835,6 +1837,7 @@ isOneToOne: false
 "created_at": string,
 "created_by": string | null,
 "ends_at": string | null,
+"format": Database["public"]['Enums']["tournament_format"],
 "id": string,
 "match_type": Database["public"]['Enums']["match_type"],
 "max_players": number,
@@ -2020,7 +2023,7 @@ isOneToOne: false
         isSetofReturn: false
       } },
 "create_tournament":
-{ Args: { "p_category_max": number,"p_category_min": number,"p_court_ids": (string)[],"p_max_players": number,"p_name": string,"p_points_per_game": number,"p_price": number,"p_round_minutes": number,"p_rounds": number,"p_starts_at": string,"p_type": Database["public"]['Enums']["match_type"] }; Returns: {
+{ Args: { "p_category_max": number,"p_category_min": number,"p_court_ids": (string)[],"p_format"?: Database["public"]['Enums']["tournament_format"],"p_max_players": number,"p_name": string,"p_points_per_game": number,"p_price": number,"p_round_minutes": number,"p_rounds": number,"p_starts_at": string,"p_type": Database["public"]['Enums']["match_type"] }; Returns: {
               "cancelled_at": string | null,
 "category_max": number,
 "category_min": number,
@@ -2029,6 +2032,7 @@ isOneToOne: false
 "created_at": string,
 "created_by": string | null,
 "ends_at": string | null,
+"format": Database["public"]['Enums']["tournament_format"],
 "id": string,
 "match_type": Database["public"]['Enums']["match_type"],
 "max_players": number,
@@ -2171,6 +2175,7 @@ isOneToOne: false
 "created_at": string,
 "created_by": string | null,
 "ends_at": string | null,
+"format": Database["public"]['Enums']["tournament_format"],
 "id": string,
 "match_type": Database["public"]['Enums']["match_type"],
 "max_players": number,
@@ -2252,6 +2257,26 @@ isOneToOne: false
 "created_by": string | null,
 "guest_name": string | null,
 "id": string,
+"pair_id": string | null,
+"player_id": string | null,
+"removed_at": string | null,
+"removed_by": string | null,
+"tournament_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "tournament_entries"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"join_tournament_pair":
+{ Args: { "p_partner_id": string,"p_tournament_id": string }; Returns: {
+              "club_id": string,
+"created_at": string,
+"created_by": string | null,
+"guest_name": string | null,
+"id": string,
+"pair_id": string | null,
 "player_id": string | null,
 "removed_at": string | null,
 "removed_by": string | null,
@@ -2297,6 +2322,7 @@ isOneToOne: false
 "created_by": string | null,
 "guest_name": string | null,
 "id": string,
+"pair_id": string | null,
 "player_id": string | null,
 "removed_at": string | null,
 "removed_by": string | null,
@@ -2411,6 +2437,25 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "championships"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"pair_tournament_entries":
+{ Args: { "p_entry_a": string,"p_entry_b": string }; Returns: {
+              "club_id": string,
+"created_at": string,
+"created_by": string | null,
+"guest_name": string | null,
+"id": string,
+"pair_id": string | null,
+"player_id": string | null,
+"removed_at": string | null,
+"removed_by": string | null,
+"tournament_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "tournament_entries"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -2820,6 +2865,7 @@ isOneToOne: false
 "created_by": string | null,
 "guest_name": string | null,
 "id": string,
+"pair_id": string | null,
 "player_id": string | null,
 "removed_at": string | null,
 "removed_by": string | null,
@@ -2885,6 +2931,7 @@ isOneToOne: false
 "created_at": string,
 "created_by": string | null,
 "ends_at": string | null,
+"format": Database["public"]['Enums']["tournament_format"],
 "id": string,
 "match_type": Database["public"]['Enums']["match_type"],
 "max_players": number,
@@ -3355,6 +3402,25 @@ isOneToOne: false
               "category": number,"display_name": string,"gender": Database["public"]['Enums']["gender"],"player_id": string,"prefers_court": boolean,"score": number,"side": Database["public"]['Enums']["player_side"],"times_played": number,"usually_free": boolean
             }[]
                            },
+"split_tournament_pair":
+{ Args: { "p_entry_id": string }; Returns: {
+              "club_id": string,
+"created_at": string,
+"created_by": string | null,
+"guest_name": string | null,
+"id": string,
+"pair_id": string | null,
+"player_id": string | null,
+"removed_at": string | null,
+"removed_by": string | null,
+"tournament_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "tournament_entries"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "staff_book":
 { Args: { "p_court_id": string,"p_guest_name"?: string,"p_player_id"?: string,"p_starts_at": string }; Returns: {
               "cancelled_at": string | null,
@@ -3451,6 +3517,7 @@ isOneToOne: false
 "created_at": string,
 "created_by": string | null,
 "ends_at": string | null,
+"format": Database["public"]['Enums']["tournament_format"],
 "id": string,
 "match_type": Database["public"]['Enums']["match_type"],
 "max_players": number,
@@ -3599,7 +3666,7 @@ isOneToOne: false
       } }
           }
           Enums: {
-            "avatar_source": "upload"|"google"|"none","booking_source": "online"|"reception","booking_status": "confirmed"|"cancelled","championship_category_status": "open"|"cancelled"|"merged","championship_entry_status": "active"|"waiting"|"withdrawn"|"removed","championship_format": "groups_knockout"|"knockout"|"round_robin","championship_gender": "men"|"women"|"mixed"|"open","championship_match_status": "scheduled"|"playing"|"finished"|"walkover","championship_seeding": "ranking"|"manual","championship_stage": "group"|"knockout","championship_status": "draft"|"registration"|"closed"|"drawn"|"published"|"in_progress"|"finished"|"cancelled","club_color_mode": "system"|"dark"|"light","club_role": "admin"|"reception"|"player","day_band": "morning"|"afternoon"|"night","day_use_pass_status": "bought"|"inside"|"cancelled","dominant_hand": "right"|"left","email_status": "pending"|"sent"|"failed"|"skipped","gender": "male"|"female","match_status": "forming"|"confirmed"|"cancelled","match_type": "male"|"female"|"mixed","notification_kind": "slot_held"|"slot_free_now"|"championship_added"|"championship_promoted"|"championship_moved"|"championship_cancelled"|"championship_fixture"|"match_invite","occupancy_kind": "booking"|"recurring"|"tournament"|"block"|"match"|"day_use"|"hold"|"championship","payment_method": "cash"|"transfer"|"card","payment_status": "reported"|"confirmed"|"rejected"|"refunded"|"voided","player_side": "drive"|"backhand"|"both","slot_hold_status": "active"|"claimed"|"declined"|"expired"|"released","slot_wait_status": "waiting"|"booked"|"expired"|"cancelled","tournament_status": "registration"|"closed"|"in_progress"|"finished"|"cancelled"
+            "avatar_source": "upload"|"google"|"none","booking_source": "online"|"reception","booking_status": "confirmed"|"cancelled","championship_category_status": "open"|"cancelled"|"merged","championship_entry_status": "active"|"waiting"|"withdrawn"|"removed","championship_format": "groups_knockout"|"knockout"|"round_robin","championship_gender": "men"|"women"|"mixed"|"open","championship_match_status": "scheduled"|"playing"|"finished"|"walkover","championship_seeding": "ranking"|"manual","championship_stage": "group"|"knockout","championship_status": "draft"|"registration"|"closed"|"drawn"|"published"|"in_progress"|"finished"|"cancelled","club_color_mode": "system"|"dark"|"light","club_role": "admin"|"reception"|"player","day_band": "morning"|"afternoon"|"night","day_use_pass_status": "bought"|"inside"|"cancelled","dominant_hand": "right"|"left","email_status": "pending"|"sent"|"failed"|"skipped","gender": "male"|"female","match_status": "forming"|"confirmed"|"cancelled","match_type": "male"|"female"|"mixed","notification_kind": "slot_held"|"slot_free_now"|"championship_added"|"championship_promoted"|"championship_moved"|"championship_cancelled"|"championship_fixture"|"match_invite"|"tournament_pair","occupancy_kind": "booking"|"recurring"|"tournament"|"block"|"match"|"day_use"|"hold"|"championship","payment_method": "cash"|"transfer"|"card","payment_status": "reported"|"confirmed"|"rejected"|"refunded"|"voided","player_side": "drive"|"backhand"|"both","slot_hold_status": "active"|"claimed"|"declined"|"expired"|"released","slot_wait_status": "waiting"|"booked"|"expired"|"cancelled","tournament_format": "rotating"|"fixed_pairs","tournament_status": "registration"|"closed"|"in_progress"|"finished"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -3715,7 +3782,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "avatar_source": ["upload", "google", "none"],"booking_source": ["online", "reception"],"booking_status": ["confirmed", "cancelled"],"championship_category_status": ["open", "cancelled", "merged"],"championship_entry_status": ["active", "waiting", "withdrawn", "removed"],"championship_format": ["groups_knockout", "knockout", "round_robin"],"championship_gender": ["men", "women", "mixed", "open"],"championship_match_status": ["scheduled", "playing", "finished", "walkover"],"championship_seeding": ["ranking", "manual"],"championship_stage": ["group", "knockout"],"championship_status": ["draft", "registration", "closed", "drawn", "published", "in_progress", "finished", "cancelled"],"club_color_mode": ["system", "dark", "light"],"club_role": ["admin", "reception", "player"],"day_band": ["morning", "afternoon", "night"],"day_use_pass_status": ["bought", "inside", "cancelled"],"dominant_hand": ["right", "left"],"email_status": ["pending", "sent", "failed", "skipped"],"gender": ["male", "female"],"match_status": ["forming", "confirmed", "cancelled"],"match_type": ["male", "female", "mixed"],"notification_kind": ["slot_held", "slot_free_now", "championship_added", "championship_promoted", "championship_moved", "championship_cancelled", "championship_fixture", "match_invite"],"occupancy_kind": ["booking", "recurring", "tournament", "block", "match", "day_use", "hold", "championship"],"payment_method": ["cash", "transfer", "card"],"payment_status": ["reported", "confirmed", "rejected", "refunded", "voided"],"player_side": ["drive", "backhand", "both"],"slot_hold_status": ["active", "claimed", "declined", "expired", "released"],"slot_wait_status": ["waiting", "booked", "expired", "cancelled"],"tournament_status": ["registration", "closed", "in_progress", "finished", "cancelled"]
+            "avatar_source": ["upload", "google", "none"],"booking_source": ["online", "reception"],"booking_status": ["confirmed", "cancelled"],"championship_category_status": ["open", "cancelled", "merged"],"championship_entry_status": ["active", "waiting", "withdrawn", "removed"],"championship_format": ["groups_knockout", "knockout", "round_robin"],"championship_gender": ["men", "women", "mixed", "open"],"championship_match_status": ["scheduled", "playing", "finished", "walkover"],"championship_seeding": ["ranking", "manual"],"championship_stage": ["group", "knockout"],"championship_status": ["draft", "registration", "closed", "drawn", "published", "in_progress", "finished", "cancelled"],"club_color_mode": ["system", "dark", "light"],"club_role": ["admin", "reception", "player"],"day_band": ["morning", "afternoon", "night"],"day_use_pass_status": ["bought", "inside", "cancelled"],"dominant_hand": ["right", "left"],"email_status": ["pending", "sent", "failed", "skipped"],"gender": ["male", "female"],"match_status": ["forming", "confirmed", "cancelled"],"match_type": ["male", "female", "mixed"],"notification_kind": ["slot_held", "slot_free_now", "championship_added", "championship_promoted", "championship_moved", "championship_cancelled", "championship_fixture", "match_invite", "tournament_pair"],"occupancy_kind": ["booking", "recurring", "tournament", "block", "match", "day_use", "hold", "championship"],"payment_method": ["cash", "transfer", "card"],"payment_status": ["reported", "confirmed", "rejected", "refunded", "voided"],"player_side": ["drive", "backhand", "both"],"slot_hold_status": ["active", "claimed", "declined", "expired", "released"],"slot_wait_status": ["waiting", "booked", "expired", "cancelled"],"tournament_format": ["rotating", "fixed_pairs"],"tournament_status": ["registration", "closed", "in_progress", "finished", "cancelled"]
           }
         }
 } as const

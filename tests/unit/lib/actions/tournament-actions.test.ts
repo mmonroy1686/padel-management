@@ -78,6 +78,7 @@ describe('createTournament', () => {
       p_category_max: 6,
       p_type: 'mixed',
       p_price: 400,
+      p_format: 'rotating',
     })
   })
 
@@ -141,5 +142,39 @@ describe('tournament actions', () => {
       status: 'error',
       message: errorMessage('not_enough_players'),
     })
+  })
+})
+
+describe('fixed pairs actions', () => {
+  const OTHER = '66666666-6666-6666-6666-666666666666'
+
+  it('signs up with a partner, or looking for one', async () => {
+    expect(await player.joinTournament(IDLE, form({ tournamentId: ID, pairing: 'partner' }))).toEqual({
+      status: 'error',
+      message: 'Elegí a tu compañero.',
+    })
+    expect(rpc).not.toHaveBeenCalled()
+    const withPartner = await player.joinTournament(IDLE, form({ tournamentId: ID, pairing: 'partner', partnerId: OTHER }))
+    expect(withPartner).toMatchObject({ status: 'ok', message: expect.stringMatching(/Le avisamos a tu compañero/) })
+    const seeking = await player.joinTournament(IDLE, form({ tournamentId: ID, pairing: 'seeking', partnerId: OTHER }))
+    expect(seeking).toMatchObject({ status: 'ok', message: expect.stringMatching(/buscando pareja/) })
+    expect(rpc.mock.calls).toEqual([
+      ['join_tournament_pair', { p_tournament_id: ID, p_partner_id: OTHER }],
+      ['join_tournament', { p_tournament_id: ID }],
+    ])
+  })
+
+  it('reception pairs, splits and adds a guest as a partner', async () => {
+    expect(await club.pairEntries(IDLE, form({ entryId: ID, partnerEntryId: 'x' }))).toEqual(INVALID_INPUT)
+    expect(await club.addGuest(IDLE, form({ tournamentId: ID, guestName: 'Pepe', partnerEntryId: 'x' }))).toEqual(INVALID_INPUT)
+    expect(rpc).not.toHaveBeenCalled()
+    await club.pairEntries(IDLE, form({ entryId: ID, partnerEntryId: OTHER }))
+    await club.splitPair(IDLE, form({ entryId: ID }))
+    await club.addGuest(IDLE, form({ tournamentId: ID, guestName: 'Pepe', partnerEntryId: OTHER }))
+    expect(rpc.mock.calls).toEqual([
+      ['pair_tournament_entries', { p_entry_a: ID, p_entry_b: OTHER }],
+      ['split_tournament_pair', { p_entry_id: ID }],
+      ['add_tournament_guest', { p_tournament_id: ID, p_name: 'Pepe', p_partner_entry_id: OTHER }],
+    ])
   })
 })

@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 // FK hints: tournament_games also points at tournament_entries, and profiles is reached through
 // three columns of tournament_entries.
 const TOURNAMENT_SELECT =
-  'id, name, starts_at, ends_at, court_ids, max_players, points_per_game, round_minutes, rounds, category_min, category_max, match_type, price, status, entries:tournament_entries!tournament_entries_tournament_in_club(id, player_id, guest_name, removed_at, created_at, player:profiles!tournament_entries_player_id_fkey(display_name), payments!payments_entry_in_club(status, amount, rejection_reason, created_at)), games:tournament_games!tournament_games_tournament_in_club(id, round, wave, court_id, starts_at, a1_entry_id, a2_entry_id, b1_entry_id, b2_entry_id, score_a)'
+  'id, name, starts_at, ends_at, court_ids, max_players, points_per_game, round_minutes, rounds, category_min, category_max, match_type, price, status, format, entries:tournament_entries!tournament_entries_tournament_in_club(id, player_id, pair_id, guest_name, removed_at, created_at, player:profiles!tournament_entries_player_id_fkey(display_name), payments!payments_entry_in_club(status, amount, rejection_reason, created_at)), games:tournament_games!tournament_games_tournament_in_club(id, round, wave, court_id, starts_at, a1_entry_id, a2_entry_id, b1_entry_id, b2_entry_id, score_a)'
 
 async function courtNames(club: Club): Promise<Map<string, string>> {
   const supabase = await createClient()

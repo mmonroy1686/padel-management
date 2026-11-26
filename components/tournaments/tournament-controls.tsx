@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button, type ButtonVariant } from '@/components/ui/button'
-import { missingScores, type Tournament } from '@/lib/domain/tournaments'
+import { missingScores, tournamentPairs, type Tournament } from '@/lib/domain/tournaments'
 
 export type TournamentStepActions = { close: FormAction; reopen: FormAction; start: FormAction; finish: FormAction; cancel: FormAction }
 
@@ -34,6 +34,7 @@ export function TournamentControls({ tournament, actions }: { tournament: Tourna
   const [confirmCancel, setConfirmCancel] = useState(false)
   const { status, id } = tournament
   const missing = missingScores(tournament.games)
+  const seeking = tournament.format === 'fixed_pairs' ? tournamentPairs(tournament).seeking.length : 0
 
   return (
     <section aria-label="Acciones del torneo" className="flex flex-col gap-3">
@@ -45,6 +46,11 @@ export function TournamentControls({ tournament, actions }: { tournament: Tourna
           <p className="text-sm text-fg-muted">
             El fixture se arma con 8, 12 o 16 anotados. Hay {tournament.entries.length}.
           </p>
+          {seeking > 0 ? (
+            <p role="note" className="rounded-xl border border-accent p-3 text-sm">
+              {seeking === 1 ? '1 anotado busca pareja' : `${seeking} anotados buscan pareja`}: juntalos en Anotados antes de armar el fixture.
+            </p>
+          ) : null}
           <Step action={actions.start} tournamentId={id} label="Armar fixture" pendingLabel="Armando…" />
           <Step action={actions.reopen} tournamentId={id} label="Reabrir inscripción" pendingLabel="Abriendo…" variant="secondary" />
         </>

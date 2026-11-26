@@ -2,7 +2,7 @@ import { isUuid, readEnum, readInt, readLocalDate, readText, readTime } from './
 import { MATCH_TYPES, overlaps, type MatchType, type Period } from './matches'
 import type { ParseResult } from './settings'
 import { localDateOf, parseTime, zonedTime } from './time'
-import { TOURNAMENT_SIZES, tournamentMinutes } from './tournaments'
+import { maxRounds, TOURNAMENT_FORMATS, TOURNAMENT_SIZES, tournamentMinutes, type TournamentFormat } from './tournaments'
 
 export type TournamentInput = {
   name: string
@@ -16,6 +16,7 @@ export type TournamentInput = {
   categoryMax: number
   type: MatchType
   price: number
+  format: TournamentFormat
 }
 
 export type TakenPeriod = { courtId: string; startsAt: Date; endsAt: Date }
@@ -47,8 +48,16 @@ export function parseTournamentForm(form: FormData, timezone: string): ParseResu
   if (pointsPerGame === null) return fail('Los puntos por partido van de 1 a 99.')
   const roundMinutes = readInt(form, 'roundMinutes', { min: 5, max: 90 })
   if (roundMinutes === null) return fail('Los minutos por ronda van de 5 a 90.')
-  const rounds = readInt(form, 'rounds', { min: 1, max: maxPlayers - 1 })
-  if (rounds === null) return fail(`Con ${maxPlayers} jugadores se juegan de 1 a ${maxPlayers - 1} rondas.`)
+  const format = readEnum(form, 'format', TOURNAMENT_FORMATS) ?? 'rotating'
+  const most = maxRounds(format, maxPlayers)
+  const rounds = readInt(form, 'rounds', { min: 1, max: most })
+  if (rounds === null) {
+    return fail(
+      format === 'fixed_pairs'
+        ? `Con ${maxPlayers / 2} parejas se juegan de 1 a ${most} rondas.`
+        : `Con ${maxPlayers} jugadores se juegan de 1 a ${most} rondas.`,
+    )
+  }
 
   const categoryMin = readInt(form, 'categoryMin', { min: 1, max: 8 })
   const categoryMax = readInt(form, 'categoryMax', { min: 1, max: 8 })
@@ -74,6 +83,7 @@ export function parseTournamentForm(form: FormData, timezone: string): ParseResu
       categoryMax,
       type,
       price,
+      format,
     },
   }
 }

@@ -5,6 +5,9 @@ import {
   entryNames,
   entryStatus,
   formatText,
+  maxRounds,
+  partnerOf,
+  tournamentPairs,
   gamesByRound,
   missingScores,
   myEntry,
@@ -35,11 +38,12 @@ const ROW: TournamentRow = {
   match_type: 'mixed',
   price: 400,
   status: 'in_progress',
+  format: 'rotating',
   entries: [
-    { id: 'e2', player_id: null, guest_name: 'Pepe', removed_at: null, created_at: '2026-09-30T12:00:02Z', player: null, payments: [] },
-    { id: 'e1', player_id: 'p1', guest_name: null, removed_at: null, created_at: '2026-09-30T12:00:01Z', player: { display_name: 'Ana Pérez' }, payments: [] },
-    { id: 'e3', player_id: 'p3', guest_name: null, removed_at: null, created_at: '2026-09-30T12:00:03Z', player: null, payments: [] },
-    { id: 'e4', player_id: 'p4', guest_name: null, removed_at: '2026-09-30T13:00:00Z', created_at: '2026-09-30T12:00:04Z', player: { display_name: 'Se fue' }, payments: [] },
+    { id: 'e2', player_id: null, pair_id: null, guest_name: 'Pepe', removed_at: null, created_at: '2026-09-30T12:00:02Z', player: null, payments: [] },
+    { id: 'e1', player_id: 'p1', pair_id: null, guest_name: null, removed_at: null, created_at: '2026-09-30T12:00:01Z', player: { display_name: 'Ana Pérez' }, payments: [] },
+    { id: 'e3', player_id: 'p3', pair_id: null, guest_name: null, removed_at: null, created_at: '2026-09-30T12:00:03Z', player: null, payments: [] },
+    { id: 'e4', player_id: 'p4', pair_id: null, guest_name: null, removed_at: '2026-09-30T13:00:00Z', created_at: '2026-09-30T12:00:04Z', player: { display_name: 'Se fue' }, payments: [] },
   ],
   games: [
     { id: 'g2', round: 1, wave: 1, court_id: 'court-1', starts_at: '2026-10-01T21:00:00+00:00', a1_entry_id: 'e1', a2_entry_id: 'e2', b1_entry_id: 'e3', b2_entry_id: 'e5', score_a: null },
@@ -109,7 +113,7 @@ describe('entryStatus', () => {
   })
 
   it('says why not, in the same order as join_tournament', () => {
-    const entered = makeTournament({ entries: [...makeEntries(2), { id: 'eb', playerId: 'bruno', name: 'Bruno', isGuest: false, payments: [] }] })
+    const entered = makeTournament({ entries: [...makeEntries(2), { id: 'eb', playerId: 'bruno', name: 'Bruno', isGuest: false, payments: [], pairId: null }] })
     expect(entryStatus(entered, BRUNO, CONTEXT).text).toBe('Ya estás anotado.')
     expect(entryStatus(makeTournament({ status: 'closed' }), BRUNO, CONTEXT).text).toBe('La inscripción está cerrada.')
     expect(entryStatus(makeTournament(), BRUNO, { ...CONTEXT, now: at('18:00') }).text).toBe('La inscripción está cerrada.')
@@ -125,7 +129,7 @@ describe('entryStatus', () => {
 
 describe('tournamentLeaveStatus', () => {
   it('lets a player leave only while registration is open', () => {
-    const entries = [...makeEntries(2), { id: 'eb', playerId: 'bruno', name: 'Bruno', isGuest: false, payments: [] }]
+    const entries = [...makeEntries(2), { id: 'eb', playerId: 'bruno', name: 'Bruno', isGuest: false, payments: [], pairId: null }]
     expect(tournamentLeaveStatus(makeTournament({ entries }), 'bruno')).toEqual({ allowed: true })
     expect(tournamentLeaveStatus(makeTournament({ entries, status: 'closed' }), 'bruno')).toEqual({
       allowed: false,
@@ -169,5 +173,27 @@ describe('currentRound', () => {
     expect(currentRound(games)).toBe(2)
     expect(currentRound(games.map((game) => ({ ...game, scoreA: 12 })))).toBe(3)
     expect(currentRound([])).toBeNull()
+  })
+})
+
+describe('fixed pairs', () => {
+  const entry = (id: string, name: string, pairId: string | null) => ({ id, playerId: id, name, isGuest: false, payments: [], pairId })
+  const tournament = makeTournament({
+    format: 'fixed_pairs',
+    entries: [entry('a', 'Ana', 'p1'), entry('c', 'Carla', null), entry('b', 'Bruno', 'p1'), entry('d', 'Dani', null)],
+  })
+
+  it('groups the pairs and who looks for a partner', () => {
+    const { pairs, seeking } = tournamentPairs(tournament)
+    expect(pairs.map((pair) => pair.name)).toEqual(['Ana y Bruno'])
+    expect(seeking.map((one) => one.name)).toEqual(['Carla', 'Dani'])
+    expect(partnerOf(tournament, tournament.entries[0])?.name).toBe('Bruno')
+    expect(partnerOf(tournament, tournament.entries[1])).toBeNull()
+  })
+
+  it('counts rounds over pairs, and says so in the format', () => {
+    expect(maxRounds('fixed_pairs', 8)).toBe(3)
+    expect(maxRounds('rotating', 8)).toBe(7)
+    expect(formatText({ format: 'fixed_pairs', rounds: 3, roundMinutes: 20, pointsPerGame: 24 })).toBe('Parejas fijas, 3 rondas de 20 min, a 24 puntos')
   })
 })
