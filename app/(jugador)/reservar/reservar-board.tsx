@@ -1,9 +1,9 @@
 'use client'
 
 import { BookingNextSteps } from '@/components/booking/booking-next-steps'
+import { FullDayNotice } from '@/components/booking/full-day-notice'
 import { Notice } from '@/components/ui/notice'
-import Link from 'next/link'
-import { buttonClasses } from '@/components/ui/button'
+import { SELECTED } from '@/components/ui/button'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BookingSheet, type BookingChoice } from '@/components/booking/booking-sheet'
 import { Legend } from '@/components/booking/legend'
@@ -34,7 +34,7 @@ export function ReservarBoard({
   dayWaits,
   waitAction,
   cancelWaitAction,
-  full = null,
+  full,
 }: {
   courts: Court[]
   rows: GridRow[]
@@ -121,7 +121,7 @@ export function ReservarBoard({
           onClick={() => setOnlyFree((value) => !value)}
           className={cn(
             'min-h-11 rounded-full border px-4 text-sm font-semibold',
-            onlyFree ? 'border-accent bg-accent text-on-accent' : 'border-border text-fg',
+            onlyFree ? SELECTED : 'border-border text-fg',
           )}
         >
           Solo libres
@@ -139,16 +139,7 @@ export function ReservarBoard({
           </button>
         </p>
       ) : null}
-      {full !== undefined ? (
-        <div className="flex flex-col gap-2 rounded-xl border border-border p-4">
-          <p className="font-semibold">{full ? 'Este día está lleno.' : 'No quedan turnos libres esta semana.'}</p>
-          {full ? (
-            <Link href={full.href} className={buttonClasses({ variant: 'secondary', fullWidth: true })}>
-              {full.label}
-            </Link>
-          ) : null}
-        </div>
-      ) : null}
+      {full !== undefined ? <FullDayNotice full={full} /> : null}
       {shown.length > 0 ? (
         <SlotGrid
           courts={courts}

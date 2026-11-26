@@ -1,5 +1,6 @@
 'use client'
 
+import { SELECTED } from '@/components/ui/button'
 import Link from 'next/link'
 import { useEdgeFade } from '@/components/ui/use-edge-fade'
 import { cn } from '@/lib/cn'
@@ -28,7 +29,7 @@ export function DayStrip({ days, selected, basePath }: DayStripProps) {
                 aria-current={current ? 'date' : undefined}
                 className={cn(
                   'inline-flex min-h-11 items-center whitespace-nowrap rounded-full border px-4 font-semibold',
-                  current ? 'border-accent bg-accent text-on-accent' : 'border-border bg-surface text-fg',
+                  current ? SELECTED : 'border-border bg-surface text-fg',
                   closed && 'line-through',
                 )}
               >

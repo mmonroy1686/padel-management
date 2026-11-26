@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { RowLink, RowList } from '@/components/ui/row-list'
 import { requireAdmin } from '@/lib/auth/viewer'
-import { SETTINGS_SECTIONS } from '@/lib/club/settings-sections'
+import { visibleSections } from '@/lib/club/settings-sections'
+import { isPlatformAdmin } from '@/lib/data/platform'
 
 export const metadata: Metadata = { title: 'Ajustes · Club' }
 
@@ -9,10 +10,11 @@ export const metadata: Metadata = { title: 'Ajustes · Club' }
 // guessing from a grid of tiles. Each section opens on its own screen.
 export default async function SettingsIndexPage() {
   await requireAdmin('/club/ajustes')
+  const sections = visibleSections(await isPlatformAdmin())
   return (
     <nav aria-label="Secciones de ajustes">
       <RowList>
-        {SETTINGS_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <RowLink key={section.href} href={section.href} icon={section.icon} title={section.label} detail={section.description} />
         ))}
       </RowList>

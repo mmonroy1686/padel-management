@@ -1,11 +1,11 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ButtonHTMLAttributes, Ref } from 'react'
 import { cn } from '@/lib/cn'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 // md: the screen's actions, in the display font. sm: actions inside a row or a card, in body text; still 44px tall.
 export type ButtonSize = 'md' | 'sm'
 type ButtonStyle = { variant?: ButtonVariant; size?: ButtonSize; fullWidth?: boolean; className?: string }
-export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & ButtonStyle
+export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & ButtonStyle & { ref?: Ref<HTMLButtonElement> }
 
 const BASE =
   'inline-flex min-h-11 items-center justify-center rounded-xl transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50'
@@ -34,3 +34,7 @@ export function buttonClasses({ variant = 'primary', size = 'md', fullWidth = fa
 export function Button({ variant, size, fullWidth, className, type = 'button', ...props }: ButtonProps) {
   return <button type={type} className={buttonClasses({ variant, size, fullWidth, className })} {...props} />
 }
+
+// A chosen option in a set (day chips, filters, toggles, tabs): ink inverted, not the club's color. Solid amber is
+// kept for the one action of a screen, so a selected filter never competes with it.
+export const SELECTED = 'border-fg bg-fg text-bg'

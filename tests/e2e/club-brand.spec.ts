@@ -33,8 +33,8 @@ test('marca del club: the admin picks a red, saves, and the grid and the public 
     const primary = page.getByLabel('Color principal', { exact: true })
     await primary.fill('#e11d48')
     await expect(page.getByRole('region', { name: 'Vista previa en modo oscuro' })).toHaveAttribute('style', /--accent: ?#E11D48/)
-    await page.getByRole('button', { name: 'Guardar marca' }).click()
-    await expect(page.getByRole('status')).toContainText('Marca guardada.')
+    // It saves itself a moment after the color changes.
+    await expect(page.getByRole('status').filter({ hasText: 'Guardado' })).toBeVisible()
 
     await page.goto('/club/grilla')
     expect(await accentOf(page)).toBe('#E11D48')

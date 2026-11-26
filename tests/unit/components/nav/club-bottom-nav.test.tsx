@@ -19,7 +19,7 @@ describe('ClubBottomNav', () => {
   it('has the four sections of the day and «Más», marking where you are', () => {
     renderNav()
     const nav = screen.getByRole('navigation', { name: 'Panel' })
-    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Inicio', 'Grilla', 'Cobros', 'Jugadores'])
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Inicio', 'Grilla', 'Cobros', 'Day use'])
     expect(within(nav).getByRole('link', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page')
     expect(within(nav).getByRole('button', { name: 'Más' })).toBeInTheDocument()
   })

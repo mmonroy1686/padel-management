@@ -10,7 +10,8 @@ describe('SettingsFrame', () => {
     nav.pathname = '/club/ajustes/pagos'
     render(<SettingsFrame>Pagos</SettingsFrame>)
     const menu = screen.getByRole('navigation', { name: 'Secciones de ajustes', hidden: true })
-    expect(menu.querySelectorAll('a')).toHaveLength(9)
+    // Monitoreo is for the platform admin only.
+    expect(menu.querySelectorAll('a')).toHaveLength(8)
     expect(screen.getByRole('link', { name: 'Pagos', hidden: true })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Club', hidden: true })).toHaveAttribute('href', '/club/ajustes/club')
     expect(screen.getByRole('link', { name: 'Ajustes' })).toHaveAttribute('href', '/club/ajustes')

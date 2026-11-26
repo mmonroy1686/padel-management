@@ -58,22 +58,23 @@ describe('BrandForm', () => {
     expect(screen.queryByRole('note')).not.toBeInTheDocument()
   })
 
-  it('goes back to the original colors without saving', async () => {
+  it('goes back to the original colors and saves them', async () => {
     const action = renderForm({ brand_primary: '#E11D48', brand_background: '#1A1A2E', color_mode: 'dark' })
     await userEvent.click(screen.getByRole('button', { name: 'Volver a los colores originales' }))
     expect(screen.getByLabelText('Color principal')).toHaveValue('#FCB021')
     expect(screen.getByLabelText('Color de fondo')).toHaveValue('#021716')
     expect(screen.getByRole('radio', { name: 'Según el dispositivo' })).toBeChecked()
-    expect(action).not.toHaveBeenCalled()
+    await waitFor(() => expect(action).toHaveBeenCalled())
+    expect(Object.fromEntries(action.mock.calls[0][1].entries())).toEqual({ primary: '#FCB021', background: '#021716', mode: 'system' })
   })
 
-  it('saves the colors and the mode', async () => {
+  it('saves itself: the mode as soon as it is picked, with no save button', async () => {
     const action = renderForm()
+    expect(screen.queryByRole('button', { name: 'Guardar marca' })).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('radio', { name: 'Siempre claro' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar marca' }))
     await waitFor(() => expect(action).toHaveBeenCalled())
     const sent = action.mock.calls[0][1]
     expect(Object.fromEntries(sent.entries())).toEqual({ primary: '#FCB021', background: '#021716', mode: 'light' })
-    expect(await screen.findByRole('status')).toHaveTextContent('Marca guardada.')
+    expect(await screen.findByRole('status')).toHaveTextContent('Guardado')
   })
 })

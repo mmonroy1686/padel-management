@@ -20,14 +20,14 @@ describe('clubTabs', () => {
 })
 
 describe('the phone bar and «Más»', () => {
-  it('keeps Inicio, Grilla and Cobros in the bar; Ajustes for the admin, Jugadores for reception', () => {
+  it('keeps Inicio, Grilla and Cobros in the bar; Ajustes for the admin, Day use for reception', () => {
     expect(clubBarTabs('admin').map((tab) => tab.label)).toEqual(['Inicio', 'Grilla', 'Cobros', 'Ajustes'])
-    expect(clubBarTabs('reception').map((tab) => tab.label)).toEqual(['Inicio', 'Grilla', 'Cobros', 'Jugadores'])
+    expect(clubBarTabs('reception').map((tab) => tab.label)).toEqual(['Inicio', 'Grilla', 'Cobros', 'Day use'])
   })
 
   it('puts every other section in «Más», each with what it is for', () => {
     expect(clubMoreTabs('admin').map((tab) => tab.label)).toEqual(['Asistente', 'Calendario', 'Torneos', 'Day use', 'Jugadores'])
-    expect(clubMoreTabs('reception').map((tab) => tab.label)).toEqual(['Asistente', 'Calendario', 'Torneos', 'Day use'])
+    expect(clubMoreTabs('reception').map((tab) => tab.label)).toEqual(['Asistente', 'Calendario', 'Torneos', 'Jugadores'])
     expect(clubMoreTabs('admin').every((tab) => tab.description.length > 0)).toBe(true)
   })
 })

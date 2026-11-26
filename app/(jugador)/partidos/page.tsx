@@ -1,3 +1,4 @@
+import { SELECTED } from '@/components/ui/button'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
@@ -20,7 +21,7 @@ type SearchParams = Promise<{ ver?: string }>
 const filterClasses = (current: boolean) =>
   cn(
     'inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold',
-    current ? 'border-accent bg-accent text-on-accent' : 'border-border text-fg',
+    current ? SELECTED : 'border-border text-fg',
   )
 
 export default async function MatchesPage({ searchParams }: { searchParams: SearchParams }) {
