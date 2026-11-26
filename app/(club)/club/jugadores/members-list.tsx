@@ -95,6 +95,7 @@ export function MembersList({
           },
         ]}
         emptyText="Todavía no hay jugadores en el club."
+        phone="rows"
       />
       <BottomSheet open={editing !== null} onClose={() => setEditing(null)} title={editing?.name ?? ''}>
         {editing ? (

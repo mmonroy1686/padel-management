@@ -93,4 +93,14 @@ describe('DataTable', () => {
     expect(screen.queryByRole('button', { name: 'Página siguiente' })).not.toBeInTheDocument()
     expect(names()).toHaveLength(3)
   })
+
+  it('phone="rows": plain rows without the column names next to each cell; cards keep them', () => {
+    const { unmount } = render(<DataTable caption="Jugadores" columns={COLUMNS} rows={rows.slice(0, 2)} emptyText="Nadie." />)
+    expect(within(screen.getAllByRole('row')[1]).getByText('Nombre')).toBeInTheDocument()
+    unmount()
+    render(<DataTable caption="Jugadores" columns={COLUMNS} rows={rows.slice(0, 2)} emptyText="Nadie." phone="rows" />)
+    const row = screen.getAllByRole('row')[1]
+    expect(within(row).queryByText('Nombre')).not.toBeInTheDocument()
+    expect(row).toHaveTextContent('Ángel Núñez')
+  })
 })

@@ -5,7 +5,7 @@ export type SettingsSection = { href: string; label: string; icon: IconName; des
 // Ajustes, one screen per group so an admin finds a setting without scrolling through all of them. The order goes from
 // who the club is to how it runs and what it charges.
 export const SETTINGS_SECTIONS: SettingsSection[] = [
-  { href: '/club/ajustes', label: 'Club', icon: 'palette', description: 'Nombre, logo y colores.' },
+  { href: '/club/ajustes/club', label: 'Club', icon: 'palette', description: 'Nombre, logo y colores.' },
   {
     href: '/club/ajustes/datos',
     label: 'Datos del club',
@@ -26,11 +26,9 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   { href: '/club/ajustes/monitoreo', label: 'Monitoreo', icon: 'alert', description: 'Probar que los errores llegan a Sentry.' },
 ]
 
-// The section of a path: exact for the first one (/club/ajustes), so it does not light up on every other section.
+// The section of a path (none on /club/ajustes itself: the index).
 export function currentSection(pathname: string): SettingsSection | undefined {
-  return SETTINGS_SECTIONS.find((section) =>
-    section.href === '/club/ajustes' ? pathname === section.href : pathname === section.href || pathname.startsWith(`${section.href}/`),
-  )
+  return SETTINGS_SECTIONS.find((section) => pathname === section.href || pathname.startsWith(`${section.href}/`))
 }
 
 export function sectionOf(href: string): SettingsSection {

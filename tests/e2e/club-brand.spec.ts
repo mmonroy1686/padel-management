@@ -26,7 +26,7 @@ test('marca del club: the admin picks a red, saves, and the grid and the public 
   if (coded.error) throw coded.error
 
   try {
-    await signInWithMagicLink(page, admin.email, '/club/ajustes')
+    await signInWithMagicLink(page, admin.email, '/club/ajustes/club')
     await expect(page.getByRole('heading', { name: 'Marca del club' })).toBeVisible()
     expect(await accentOf(page)).toBe('#FCB021')
 

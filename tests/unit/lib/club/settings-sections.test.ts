@@ -16,8 +16,9 @@ describe('settings sections', () => {
     ])
   })
 
-  it('knows where you are, with the first one only on its own page', () => {
-    expect(currentSection('/club/ajustes')?.label).toBe('Club')
+  it('knows where you are; the index itself is no section', () => {
+    expect(currentSection('/club/ajustes')).toBeUndefined()
+    expect(currentSection('/club/ajustes/club')?.label).toBe('Club')
     expect(currentSection('/club/ajustes/pagos')?.label).toBe('Pagos')
     expect(currentSection('/club/ajustes/otra')).toBeUndefined()
   })

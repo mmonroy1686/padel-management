@@ -7,7 +7,7 @@ export function SettingsHeader({ href }: { href: string }) {
   const section = sectionOf(href)
   return (
     <div className="flex flex-col gap-1">
-      <h2 className="font-display text-3xl font-bold uppercase">{section.label}</h2>
+      <h2 className="text-2xl font-semibold">{section.label}</h2>
       <p className="text-fg-muted">{section.description}</p>
     </div>
   )
@@ -31,7 +31,7 @@ export function SettingsBlock({
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <h3 id={id} className="font-display text-xl font-bold uppercase">
+        <h3 id={id} className="text-lg font-semibold">
           {title}
         </h3>
         {description ? <p className="max-w-prose text-sm text-fg-muted">{description}</p> : null}

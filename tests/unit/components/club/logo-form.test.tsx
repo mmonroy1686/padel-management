@@ -21,21 +21,19 @@ function renderForm(overrides: Partial<LogoFormProps> = {}) {
 }
 
 describe('LogoForm', () => {
-  it('uploads the file and saves it as the club logo', async () => {
+  it('uploads the file as soon as it is picked and saves it as the club logo', async () => {
     const props = renderForm()
+    expect(screen.queryByRole('button', { name: 'Guardar logo' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Elegir logo' })).toBeInTheDocument()
     await userEvent.upload(screen.getByLabelText('Archivo del logo'), PNG)
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar logo' }))
     await waitFor(() => expect(props.saveAction).toHaveBeenCalledWith('c1/logo-1.png'))
     expect(props.upload).toHaveBeenCalledWith('c1', PNG)
     expect(await screen.findByRole('status')).toHaveTextContent('Logo guardado.')
   })
 
-  it('asks for a file first and explains an upload that failed', async () => {
+  it('explains an upload that failed', async () => {
     const props = renderForm({ upload: vi.fn(async () => ({ error: 'Subí una imagen PNG, JPG, WebP o SVG.' })) })
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar logo' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Elegí el archivo del logo.')
     await userEvent.upload(screen.getByLabelText('Archivo del logo'), PNG)
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar logo' }))
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Subí una imagen PNG, JPG, WebP o SVG.'))
     expect(props.saveAction).not.toHaveBeenCalled()
   })
@@ -44,6 +42,7 @@ describe('LogoForm', () => {
     renderForm()
     expect(screen.queryByRole('button', { name: 'Quitar logo' })).not.toBeInTheDocument()
     const props = renderForm({ club: { ...CLUB, logo_path: 'c1/logo-1.png' } })
+    expect(screen.getByRole('button', { name: 'Cambiar logo' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Quitar logo' }))
     await waitFor(() => expect(props.removeAction).toHaveBeenCalled())
   })
