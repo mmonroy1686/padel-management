@@ -21,6 +21,8 @@ function renderBoard(overrides: Partial<TournamentBoardProps> = {}) {
     transfer: { details: 'Banco Ejemplo', receiptRequired: true },
     shareText: 'Americano',
     ranking: [],
+    highlightKey: overrides.myEntryId ?? null,
+    members: [],
     initialJoin: false,
     joinAction: vi.fn<FormAction>(),
     leaveAction: vi.fn<FormAction>(),
@@ -89,5 +91,41 @@ describe('TournamentBoard', () => {
     renderBoard()
     await userEvent.click(screen.getByRole('button', { name: 'Compartir en WhatsApp' }))
     expect(screen.getByRole('dialog', { name: 'Compartir en el grupo' })).toBeInTheDocument()
+  })
+})
+
+describe('TournamentBoard with fixed pairs', () => {
+  const entry = (id: string, name: string, pairId: string | null) => ({ id, playerId: id, name, isGuest: false, payments: [], pairId })
+  const fixed = makeTournament({
+    format: 'fixed_pairs',
+    rounds: 3,
+    entries: [entry('a', 'Ana', 'p1'), entry('b', 'Bruno', 'p1'), entry('c', 'Carla', null)],
+  })
+
+  it('shows the pairs and who looks for a partner', () => {
+    renderBoard({ tournament: fixed })
+    expect(screen.getByText(/Parejas fijas: jugás todo el torneo con tu compañero/)).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Parejas' })).toHaveTextContent('Ana y Bruno')
+    expect(screen.getByRole('list', { name: 'Buscan pareja' })).toHaveTextContent('Carla')
+  })
+
+  it('signs up with a partner from the club, or looking for one', async () => {
+    const props = renderBoard({ tournament: fixed, members: [{ userId: '11111111-1111-1111-1111-111111111111', name: 'Dani Paz' }] })
+    await userEvent.click(screen.getByRole('button', { name: 'Inscribirme, $400' }))
+    expect(screen.getByRole('radio', { name: 'Con mi compañero' })).toBeChecked()
+    expect(screen.getByLabelText('Compañero')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('radio', { name: 'Busco pareja' }))
+    expect(screen.getByText(/el club te junta con alguien antes de empezar/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar inscripción' }))
+    expect(vi.mocked(props.joinAction).mock.calls[0][1].get('pairing')).toBe('seeking')
+  })
+
+  it('tells her who her partner is', () => {
+    renderBoard({
+      tournament: fixed,
+      myEntryId: 'a',
+      payment: { state: 'pending', due: 400, canReportTransfer: false, rejectionReason: null },
+    })
+    expect(screen.getByText('Tu pareja: Bruno.')).toBeInTheDocument()
   })
 })

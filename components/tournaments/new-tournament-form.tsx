@@ -9,7 +9,15 @@ import { MATCH_TYPE_LABELS, MATCH_TYPES } from '@/lib/domain/matches'
 import { CATEGORIES } from '@/lib/domain/profile'
 import { parseTime, zonedTime, type LocalDate } from '@/lib/domain/time'
 import { busyCourtIds, fitsOpeningHours, tournamentPeriod, type TakenPeriod } from '@/lib/domain/tournament-form'
-import { courtsText, TOURNAMENT_DEFAULTS, TOURNAMENT_SIZES } from '@/lib/domain/tournaments'
+import {
+  courtsText,
+  maxRounds,
+  TOURNAMENT_DEFAULTS,
+  TOURNAMENT_FORMAT_LABELS,
+  TOURNAMENT_FORMATS,
+  TOURNAMENT_SIZES,
+  type TournamentFormat,
+} from '@/lib/domain/tournaments'
 
 export type NewTournamentFormProps = {
   courts: { id: string; name: string }[]
@@ -30,6 +38,10 @@ export function NewTournamentForm({ courts, times, today, timezone, opensAt, clo
   const [maxPlayers, setMaxPlayers] = useState<number>(TOURNAMENT_DEFAULTS.maxPlayers)
   const [courtIds, setCourtIds] = useState(courts.slice(0, TOURNAMENT_DEFAULTS.maxPlayers / 4).map((court) => court.id))
   const [rounds, setRounds] = useState<number>(TOURNAMENT_DEFAULTS.rounds)
+  const [format, setFormat] = useState<TournamentFormat>('rotating')
+  // With fixed pairs it proposes every pair against every other; rotating keeps what was chosen, within the limit.
+  const fitRounds = (nextFormat: TournamentFormat, players: number) =>
+    setRounds((current) => (nextFormat === 'fixed_pairs' ? maxRounds(nextFormat, players) : Math.min(current, maxRounds(nextFormat, players))))
   const [roundMinutes, setRoundMinutes] = useState<number>(TOURNAMENT_DEFAULTS.roundMinutes)
 
   const period =
@@ -50,6 +62,31 @@ export function NewTournamentForm({ courts, times, today, timezone, opensAt, clo
       <Field label="Nombre" htmlFor="name">
         <input id="name" name="name" required maxLength={60} placeholder="Americano de los jueves" className={inputClasses} />
       </Field>
+      <Field label="Formato" htmlFor="format">
+        <select
+          id="format"
+          name="format"
+          value={format}
+          onChange={(event) => {
+            const next = event.target.value as TournamentFormat
+            setFormat(next)
+            fitRounds(next, maxPlayers)
+          }}
+          className={inputClasses}
+        >
+          {TOURNAMENT_FORMATS.map((option) => (
+            <option key={option} value={option}>
+              {TOURNAMENT_FORMAT_LABELS[option]}
+            </option>
+          ))}
+        </select>
+      </Field>
+      {format === 'fixed_pairs' ? (
+        <p className="text-sm text-fg-muted">
+          Cada pareja juega todo el torneo junta, contra todas las demás. Se anotan con su compañero o buscando pareja, y el club junta a
+          los que buscan antes de armar el fixture.
+        </p>
+      ) : null}
       <div className="grid gap-3 md:grid-cols-2">
         <Field label="Fecha" htmlFor="date">
           <input id="date" name="date" type="date" min={today} required value={date} onChange={(event) => setDate(event.target.value)} className={inputClasses} />
@@ -71,19 +108,19 @@ export function NewTournamentForm({ courts, times, today, timezone, opensAt, clo
             onChange={(event) => {
               const players = Number(event.target.value)
               setMaxPlayers(players)
-              setRounds((current) => Math.min(current, players - 1))
+              fitRounds(format, players)
             }}
             className={inputClasses}
           >
             {TOURNAMENT_SIZES.map((size) => (
               <option key={size} value={size}>
-                {size} jugadores
+                {format === 'fixed_pairs' ? `${size} jugadores (${size / 2} parejas)` : `${size} jugadores`}
               </option>
             ))}
           </select>
         </Field>
         <Field label="Rondas" htmlFor="rounds">
-          <input id="rounds" name="rounds" type="number" inputMode="numeric" min={1} max={maxPlayers - 1} required value={rounds}
+          <input id="rounds" name="rounds" type="number" inputMode="numeric" min={1} max={maxRounds(format, maxPlayers)} required value={rounds}
             onChange={(event) => setRounds(Number(event.target.value))} className={inputClasses} />
         </Field>
         <Field label="Minutos por ronda" htmlFor="roundMinutes">

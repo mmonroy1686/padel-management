@@ -5,6 +5,13 @@ import { toDate } from './time'
 
 export const TOURNAMENT_SIZES = [8, 12, 16] as const
 export type TournamentStatus = 'registration' | 'closed' | 'in_progress' | 'finished' | 'cancelled'
+// Partners rotate every round, or each pair plays the whole americano together (every pair against every other).
+export type TournamentFormat = 'rotating' | 'fixed_pairs'
+export const TOURNAMENT_FORMATS: readonly TournamentFormat[] = ['rotating', 'fixed_pairs']
+export const TOURNAMENT_FORMAT_LABELS: Record<TournamentFormat, string> = {
+  rotating: 'Cada ronda cambia la pareja',
+  fixed_pairs: 'Parejas fijas',
+}
 
 // What "Nuevo americano" proposes (design, open question: Rustic's real numbers).
 export const TOURNAMENT_DEFAULTS = { maxPlayers: 8, pointsPerGame: 24, roundMinutes: 20, rounds: 7, price: 400 } as const
@@ -18,7 +25,15 @@ export const TOURNAMENT_STATUS_LABELS: Record<TournamentStatus, string> = {
 }
 
 export type EntryPayment = { status: PaymentStatus; amount: number; rejection_reason: string | null; created_at: string }
-export type TournamentEntry = { id: string; playerId: string | null; name: string; isGuest: boolean; payments: EntryPayment[] }
+// pairId: with fixed pairs, the two entries of a pair share it; null is someone looking for a partner.
+export type TournamentEntry = {
+  id: string
+  playerId: string | null
+  name: string
+  isGuest: boolean
+  payments: EntryPayment[]
+  pairId: string | null
+}
 // Team A is teamA[0] + teamA[1]; scoreA is their points, team B has the rest (tournament-ranking.ts).
 export type TournamentGame = {
   id: string
@@ -45,6 +60,7 @@ export type Tournament = Period & {
   type: MatchType
   price: number
   status: TournamentStatus
+  format: TournamentFormat
   // Only the ones still in; payments come back only to their payer and to staff (RLS).
   entries: TournamentEntry[]
   games: TournamentGame[]
@@ -67,9 +83,11 @@ export type TournamentRow = {
   match_type: MatchType
   price: number
   status: TournamentStatus
+  format: TournamentFormat
   entries: {
     id: string
     player_id: string | null
+    pair_id: string | null
     guest_name: string | null
     removed_at: string | null
     created_at: string
@@ -109,6 +127,7 @@ export function toTournament(row: TournamentRow, courtNames: Map<string, string>
     type: row.match_type,
     price: row.price,
     status: row.status,
+    format: row.format,
     entries: row.entries
       .filter((entry) => entry.removed_at === null)
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -119,6 +138,7 @@ export function toTournament(row: TournamentRow, courtNames: Map<string, string>
         name: entry.guest_name ?? entry.player?.display_name ?? 'Jugador',
         isGuest: entry.player_id === null,
         payments: entry.payments,
+        pairId: entry.pair_id,
       })),
     games: row.games
       .map((game) => ({
@@ -145,6 +165,35 @@ export function tournamentMinutes(shape: { players: number; courts: number; roun
   return shape.rounds * wavesFor(shape.players, shape.courts) * shape.roundMinutes
 }
 
+// The most rounds: with fixed pairs every pair meets every other once (pairs − 1); rotating, every player partners
+// every other once (players − 1).
+export function maxRounds(format: TournamentFormat, players: number): number {
+  return (format === 'fixed_pairs' ? players / 2 : players) - 1
+}
+
+export type TournamentPair = { id: string; entries: [TournamentEntry, TournamentEntry]; name: string }
+
+// With fixed pairs: the pairs (in sign-up order) and who is still looking for a partner.
+export function tournamentPairs(tournament: Pick<Tournament, 'entries'>): { pairs: TournamentPair[]; seeking: TournamentEntry[] } {
+  const byPair = new Map<string, TournamentEntry[]>()
+  const seeking: TournamentEntry[] = []
+  for (const entry of tournament.entries) {
+    if (entry.pairId === null) seeking.push(entry)
+    else byPair.set(entry.pairId, [...(byPair.get(entry.pairId) ?? []), entry])
+  }
+  const pairs: TournamentPair[] = []
+  for (const [id, members] of byPair) {
+    if (members.length === 2) pairs.push({ id, entries: [members[0], members[1]], name: `${members[0].name} y ${members[1].name}` })
+    else seeking.push(...members)
+  }
+  return { pairs, seeking }
+}
+
+export function partnerOf(tournament: Pick<Tournament, 'entries'>, entry: TournamentEntry): TournamentEntry | null {
+  if (entry.pairId === null) return null
+  return tournament.entries.find((other) => other.pairId === entry.pairId && other.id !== entry.id) ?? null
+}
+
 export function spotsLabel(tournament: Pick<Tournament, 'status' | 'entries' | 'maxPlayers'>): string {
   if (tournament.status === 'registration' || tournament.status === 'closed') {
     return `${tournament.entries.length} de ${tournament.maxPlayers}`
@@ -157,8 +206,9 @@ export function courtsText(names: string[]): string {
   return `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`
 }
 
-export function formatText(tournament: Pick<Tournament, 'rounds' | 'roundMinutes' | 'pointsPerGame'>): string {
-  return `${tournament.rounds} rondas de ${tournament.roundMinutes} min, a ${tournament.pointsPerGame} puntos`
+export function formatText(tournament: Pick<Tournament, 'rounds' | 'roundMinutes' | 'pointsPerGame'> & { format?: TournamentFormat }): string {
+  const rounds = `${tournament.rounds} rondas de ${tournament.roundMinutes} min, a ${tournament.pointsPerGame} puntos`
+  return tournament.format === 'fixed_pairs' ? `Parejas fijas, ${rounds}` : rounds
 }
 
 export function openTournamentsText(count: number): string {

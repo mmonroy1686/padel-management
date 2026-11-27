@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { requirePlayer } from '@/lib/auth/viewer'
+import { loadMemberDirectory } from '@/lib/data/championships'
 import { loadPlayerContext } from '@/lib/data/matches'
 import { loadTournament } from '@/lib/data/tournaments'
 import { dayLongLabel, timeIn } from '@/lib/domain/format'
@@ -10,7 +11,7 @@ import { isUuid } from '@/lib/domain/input'
 import { paymentMethodsNote } from '@/lib/domain/payments'
 import { localDateOf } from '@/lib/domain/time'
 import { entryPaymentView } from '@/lib/domain/tournament-payments'
-import { ranking } from '@/lib/domain/tournament-ranking'
+import { rankingKey, tournamentRanking } from '@/lib/domain/tournament-ranking'
 import { tournamentShareText } from '@/lib/domain/tournament-share'
 import { entryStatus, myEntry, tournamentLeaveStatus } from '@/lib/domain/tournaments'
 import { joinTournament, leaveTournament, reportTournamentTransfer } from '../actions'
@@ -33,6 +34,8 @@ export default async function TournamentPage({ params, searchParams }: { params:
   const now = new Date()
   const { anotarme } = await searchParams
   const context = await loadPlayerContext(viewer, now)
+  // A partner to pick only while she can still sign up to a fixed-pairs americano.
+  const members = tournament.format === 'fixed_pairs' && tournament.status === 'registration' ? await loadMemberDirectory(club) : []
   const entry = myEntry(tournament, viewer.userId)
   const dayText = dayLongLabel(localDateOf(tournament.startsAt, club.timezone))
   const timeText = `${timeIn(tournament.startsAt, club.timezone)} a ${timeIn(tournament.endsAt, club.timezone)}`
@@ -52,7 +55,9 @@ export default async function TournamentPage({ params, searchParams }: { params:
         paymentNote={paymentMethodsNote(club)}
         transfer={{ details: club.transfer_details, receiptRequired: club.transfer_receipt_required }}
         shareText={tournamentShareText({ tournament, clubName: club.name, dayText, timeText, url: `${(await requestOrigin())}/torneos/${tournament.id}` })}
-        ranking={ranking(tournament.entries, tournament.games, tournament.pointsPerGame)}
+        ranking={tournamentRanking(tournament)}
+        highlightKey={rankingKey(tournament, entry?.id ?? null)}
+        members={members}
         initialJoin={anotarme === '1'}
         joinAction={joinTournament}
         leaveAction={leaveTournament}

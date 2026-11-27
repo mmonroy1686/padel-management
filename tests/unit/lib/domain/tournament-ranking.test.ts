@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ranking, scoreB } from '@/lib/domain/tournament-ranking'
+import { pairRanking, ranking, rankingKey, scoreB, tournamentRanking } from '@/lib/domain/tournament-ranking'
 import { makeGame } from '../../fixtures/tournaments'
 
 const entry = (id: string, name: string) => ({ id, name })
@@ -57,5 +57,33 @@ describe('ranking', () => {
       ['Carla', 1, 0],
       ['Dani', 1, 0],
     ])
+  })
+})
+
+describe('pairRanking', () => {
+  const entries = [
+    { id: 'a', name: 'Ana', pairId: 'p1' },
+    { id: 'b', name: 'Bruno', pairId: 'p1' },
+    { id: 'c', name: 'Carla', pairId: 'p2' },
+    { id: 'd', name: 'Dani', pairId: 'p2' },
+    { id: 'e', name: 'Eva', pairId: 'p3' },
+    { id: 'f', name: 'Fede', pairId: 'p3' },
+  ]
+
+  it('one row per pair, under both names', () => {
+    const rows = pairRanking(entries, [makeGame('g1', ['a', 'b'], ['c', 'd'], 16), makeGame('g2', ['e', 'f'], ['a', 'b'], 10)], 24)
+    expect(rows.map((row) => [row.position, row.entryId, row.name, row.points, row.won])).toEqual([
+      [1, 'p1', 'Ana y Bruno', 30, 2],
+      [2, 'p3', 'Eva y Fede', 10, 0],
+      [3, 'p2', 'Carla y Dani', 8, 0],
+    ])
+  })
+
+  it('tournamentRanking picks per pair with fixed pairs, and rankingKey finds the pair of an entry', () => {
+    const tournament = { format: 'fixed_pairs' as const, entries: entries.map((entry) => ({ ...entry, playerId: null, isGuest: true, payments: [] })), games: [], pointsPerGame: 24 }
+    expect(tournamentRanking(tournament)).toHaveLength(3)
+    expect(tournamentRanking({ ...tournament, format: 'rotating' })).toHaveLength(6)
+    expect(rankingKey(tournament, 'c')).toBe('p2')
+    expect(rankingKey({ ...tournament, format: 'rotating' }, 'c')).toBe('c')
   })
 })

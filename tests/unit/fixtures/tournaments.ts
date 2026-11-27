@@ -9,6 +9,7 @@ export function makeEntries(count: number): TournamentEntry[] {
     name: `Jugador ${index + 1}`,
     isGuest: false,
     payments: [],
+    pairId: null,
   }))
 }
 
@@ -31,6 +32,7 @@ export function makeTournament(overrides: Partial<Tournament> = {}): Tournament 
     type: 'mixed',
     price: 400,
     status: 'registration',
+    format: 'rotating',
     entries: makeEntries(5),
     games: [],
     ...overrides,

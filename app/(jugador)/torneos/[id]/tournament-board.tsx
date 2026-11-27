@@ -9,17 +9,21 @@ import { ShareSheet } from '@/components/matches/share-sheet'
 import { FixtureList } from '@/components/tournaments/fixture-list'
 import { Podium } from '@/components/tournaments/podium'
 import { RankingTable } from '@/components/tournaments/ranking-table'
+import { PairingFields } from '@/components/tournaments/pairing-fields'
 import { ActionForm, type FormAction } from '@/components/ui/action-form'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Button } from '@/components/ui/button'
 import { formatPrice } from '@/lib/domain/format'
 import { categoryRangeLabel, MATCH_TYPE_LABELS } from '@/lib/domain/matches'
+import type { MemberOption } from '@/lib/domain/members'
 import type { RankingRow } from '@/lib/domain/tournament-ranking'
 import type { EntryPaymentView } from '@/lib/domain/tournament-payments'
 import {
   courtsText,
   formatText,
+  partnerOf,
   TOURNAMENT_STATUS_LABELS,
+  tournamentPairs,
   type EntryStatus,
   type Tournament,
   type TournamentLeaveStatus,
@@ -38,6 +42,10 @@ export type TournamentBoardProps = {
   transfer: { details: string | null; receiptRequired: boolean }
   shareText: string
   ranking: RankingRow[]
+  // The viewer's row in the ranking: her entry, or her pair with fixed pairs.
+  highlightKey: string | null
+  // To pick a partner in a fixed-pairs americano.
+  members: MemberOption[]
   initialJoin: boolean
   joinAction: FormAction
   leaveAction: FormAction
@@ -61,6 +69,10 @@ export function TournamentBoard(props: TournamentBoardProps) {
   const signingUp = tournament.status === 'registration' || tournament.status === 'closed'
   const played = tournament.status === 'in_progress' || tournament.status === 'finished'
   const entered = props.myEntryId !== null
+  const fixedPairs = tournament.format === 'fixed_pairs'
+  const { pairs, seeking } = tournamentPairs(tournament)
+  const myEntry = tournament.entries.find((entry) => entry.id === props.myEntryId) ?? null
+  const partner = fixedPairs && myEntry ? partnerOf(tournament, myEntry) : null
   const price = tournament.price > 0 ? `${formatPrice(tournament.price)} por persona. ${props.paymentNote}` : 'Sin costo.'
 
   return (
@@ -84,7 +96,11 @@ export function TournamentBoard(props: TournamentBoardProps) {
           {categoryRangeLabel(tournament.categoryMin, tournament.categoryMax)}, {MATCH_TYPE_LABELS[tournament.type].toLowerCase()}
         </dd>
         <dt className="text-fg-muted">Formato</dt>
-        <dd>Americano: cada ronda cambiás de pareja. {formatText(tournament)}.</dd>
+        <dd>
+          {fixedPairs
+            ? `Parejas fijas: jugás todo el torneo con tu compañero, contra las demás parejas. ${formatText({ ...tournament, format: 'rotating' })}.`
+            : `Americano: cada ronda cambiás de pareja. ${formatText(tournament)}.`}
+        </dd>
         <dt className="text-fg-muted">Precio</dt>
         <dd>{price}</dd>
       </dl>
@@ -92,6 +108,11 @@ export function TournamentBoard(props: TournamentBoardProps) {
       {payment ? (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border p-3">
           <span className="font-semibold">Tu inscripción</span>
+          {fixedPairs ? (
+            <span className="w-full">
+              {partner ? `Tu pareja: ${partner.name}.` : 'Buscás pareja: el club te junta con alguien antes de empezar.'}
+            </span>
+          ) : null}
           <PaymentBadge state={payment.state} />
           {payment.canReportTransfer ? (
             <Button variant="secondary" onClick={() => setSheet('transfer')}>
@@ -109,7 +130,31 @@ export function TournamentBoard(props: TournamentBoardProps) {
           <h2 id="anotados" className="text-lg font-semibold">
             Anotados ({tournament.entries.length} de {tournament.maxPlayers})
           </h2>
-          {tournament.entries.length > 0 ? (
+          {fixedPairs && tournament.entries.length > 0 ? (
+            <>
+              {pairs.length > 0 ? (
+                <ul aria-label="Parejas" className="flex flex-wrap gap-2">
+                  {pairs.map((pair) => (
+                    <li key={pair.id} className="rounded-full border border-border px-3 py-1 text-sm">
+                      {pair.name}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {seeking.length > 0 ? (
+                <>
+                  <h3 className="text-sm font-semibold">Buscan pareja</h3>
+                  <ul aria-label="Buscan pareja" className="flex flex-wrap gap-2">
+                    {seeking.map((entry) => (
+                      <li key={entry.id} className="rounded-full border border-dashed border-border px-3 py-1 text-sm">
+                        {entry.name}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+            </>
+          ) : tournament.entries.length > 0 ? (
             <ul className="flex flex-wrap gap-2">
               {tournament.entries.map((entry) => (
                 <li key={entry.id} className="rounded-full border border-border px-3 py-1 text-sm">
@@ -157,8 +202,8 @@ export function TournamentBoard(props: TournamentBoardProps) {
             <h2 id="ranking" className="text-lg font-semibold">
               {tournament.status === 'finished' ? 'Ranking final' : 'Ranking en vivo'}
             </h2>
-            <Podium rows={props.ranking} finished={tournament.status === 'finished'} highlightEntryId={props.myEntryId} />
-            <RankingTable rows={props.ranking} highlightEntryId={props.myEntryId} />
+            <Podium rows={props.ranking} finished={tournament.status === 'finished'} highlightEntryId={props.highlightKey} />
+            <RankingTable rows={props.ranking} highlightEntryId={props.highlightKey} />
           </section>
           <section aria-labelledby="fixture" className="flex flex-col gap-2">
             <h2 id="fixture" className="text-lg font-semibold">
@@ -175,11 +220,12 @@ export function TournamentBoard(props: TournamentBoardProps) {
         </p>
         <ActionForm action={props.joinAction} submitLabel="Confirmar inscripción" pendingLabel="Anotando…" onDone={done}>
           <input type="hidden" name="tournamentId" value={tournament.id} />
+          {fixedPairs ? <PairingFields members={props.members} /> : null}
         </ActionForm>
       </BottomSheet>
       <BottomSheet open={sheet === 'leave'} onClose={close} title="Darme de baja">
         <p className="mb-4">
-          Tu lugar queda libre para otro.{payment?.state === 'paid' && tournament.price > 0 ? ' Ya pagaste: el club te devuelve la plata.' : ''}
+          Tu lugar queda libre para otro.{partner ? ` ${partner.name} sigue anotado, buscando pareja.` : ''}{payment?.state === 'paid' && tournament.price > 0 ? ' Ya pagaste: el club te devuelve la plata.' : ''}
         </p>
         <ActionForm action={props.leaveAction} submitLabel="Sí, darme de baja" pendingLabel="Saliendo…" onDone={done}>
           <input type="hidden" name="tournamentId" value={tournament.id} />

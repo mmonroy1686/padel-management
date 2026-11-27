@@ -4,7 +4,7 @@ import { Card, CARD_LINK } from '@/components/ui/card'
 import { Icon } from '@/components/ui/icon'
 import { formatPrice } from '@/lib/domain/format'
 import { categoryRangeLabel, MATCH_TYPE_LABELS } from '@/lib/domain/matches'
-import { ranking } from '@/lib/domain/tournament-ranking'
+import { tournamentRanking } from '@/lib/domain/tournament-ranking'
 import { courtsText, formatText, spotsLabel, type EntryStatus, type Tournament } from '@/lib/domain/tournaments'
 
 // Design: "Lista /torneos". Signing up goes through the detail page, which explains the rules first. The whole card
@@ -14,7 +14,7 @@ export function TournamentCard({ tournament, whenText, status }: { tournament: T
   const signingUp = tournament.status === 'registration' || tournament.status === 'closed'
   // Once results are in, the card says who won or who leads.
   const leader = tournament.status === 'finished' || tournament.status === 'in_progress'
-    ? ranking(tournament.entries, tournament.games, tournament.pointsPerGame).find((row) => row.played > 0)
+    ? tournamentRanking(tournament).find((row) => row.played > 0)
     : undefined
   return (
     <Card className="relative flex flex-col gap-3 hover:border-accent">

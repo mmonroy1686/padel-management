@@ -49,6 +49,7 @@ describe('parseTournamentForm', () => {
         categoryMax: 6,
         type: 'mixed',
         price: 400,
+        format: 'rotating',
       },
     })
   })
@@ -91,5 +92,13 @@ describe('tournamentPeriod and the checks around it', () => {
       { courtId: C3, startsAt: at('18:00'), endsAt: at('19:30') },
     ]
     expect(busyCourtIds(taken, [C1, C2], tournamentPeriod(at('18:00'), shape))).toEqual([C1])
+  })
+})
+
+describe('parseTournamentForm with fixed pairs', () => {
+  it('reads the format; rounds go up to pairs − 1', () => {
+    const parsed = parseTournamentForm(tournamentForm({ format: 'fixed_pairs', rounds: '3' }), TIMEZONE)
+    expect(parsed.ok && parsed.value.format).toBe('fixed_pairs')
+    expect(messageOf({ format: 'fixed_pairs', rounds: '7' })).toBe('Con 4 parejas se juegan de 1 a 3 rondas.')
   })
 })

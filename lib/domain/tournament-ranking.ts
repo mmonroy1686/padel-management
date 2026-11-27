@@ -1,4 +1,4 @@
-import type { TournamentEntry, TournamentGame } from './tournaments'
+import type { Tournament, TournamentEntry, TournamentGame } from './tournaments'
 
 export type RankingRow = {
   entryId: string
@@ -51,4 +51,43 @@ export function ranking(
     row.position = tied ? previous.position : index + 1
   })
   return sorted
+}
+
+// With fixed pairs both partners score the same in every game, so the pair's row is either one's, under the pair's
+// name; its entryId is the pair's id (rankingKey finds it for an entry).
+export function pairRanking(
+  entries: Pick<TournamentEntry, 'id' | 'name' | 'pairId'>[],
+  games: TournamentGame[],
+  pointsPerGame: number,
+): RankingRow[] {
+  const byPair = new Map<string, Pick<TournamentEntry, 'id' | 'name' | 'pairId'>[]>()
+  for (const entry of entries) {
+    if (entry.pairId) byPair.set(entry.pairId, [...(byPair.get(entry.pairId) ?? []), entry])
+  }
+  const pairs = [...byPair.entries()].map(([pairId, members]) => ({ id: pairId, name: members.map((member) => member.name).join(' y '), first: members[0].id }))
+  const perEntry = new Map(ranking(entries, games, pointsPerGame).map((row) => [row.entryId, row]))
+  // Ranking again over pair-sized rows keeps the same order and shared positions as the players' ranking.
+  const rows = pairs.map((pair) => ({ ...(perEntry.get(pair.first) as RankingRow), entryId: pair.id, name: pair.name }))
+  const sorted = rows.sort((a, b) => b.points - a.points || b.won - a.won || b.diff - a.diff || a.name.localeCompare(b.name, 'es'))
+  sorted.forEach((row, index) => {
+    const previous = sorted[index - 1]
+    const tied = previous && previous.points === row.points && previous.won === row.won && previous.diff === row.diff
+    row.position = tied ? previous.position : index + 1
+  })
+  return sorted
+}
+
+type RankedTournament = Pick<Tournament, 'format' | 'entries' | 'games' | 'pointsPerGame'>
+
+// The ranking a tournament shows: per player, or per pair with fixed pairs.
+export function tournamentRanking(tournament: RankedTournament): RankingRow[] {
+  return tournament.format === 'fixed_pairs'
+    ? pairRanking(tournament.entries, tournament.games, tournament.pointsPerGame)
+    : ranking(tournament.entries, tournament.games, tournament.pointsPerGame)
+}
+
+// The ranking row of an entry: its own, or its pair's.
+export function rankingKey(tournament: Pick<Tournament, 'format' | 'entries'>, entryId: string | null): string | null {
+  if (!entryId || tournament.format !== 'fixed_pairs') return entryId
+  return tournament.entries.find((entry) => entry.id === entryId)?.pairId ?? null
 }
