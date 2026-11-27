@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { failed, fromRpc, INVALID_INPUT, ok, type ActionState } from '@/lib/actions/result'
 import { revalidateBookings } from '@/lib/actions/revalidate'
 import { requestOrigin } from '@/lib/auth/request-origin'
@@ -7,6 +8,7 @@ import { clubDomainSuffix, clubUrl } from '@/lib/club/host'
 import { errorMessage } from '@/lib/domain/errors'
 import { readUuid } from '@/lib/domain/input'
 import { parseNewClubForm, parseRenameClubForm } from '@/lib/domain/platform'
+import { parseAccountContactForm, parseAccountStatusForm } from '@/lib/domain/platform-trial'
 import { createClient } from '@/lib/supabase/server'
 
 // /plataforma. create_club and resend_admin_invitation check the platform admin. revalidateBookings refreshes the app
@@ -52,5 +54,58 @@ export async function resendAdminInvitation(_previous: ActionState, form: FormDa
   const { error } = await supabase.rpc('resend_admin_invitation', { p_club_id: clubId })
   const result = fromRpc(error, 'Reenviada: vence en 7 días.')
   if (result.status === 'ok') revalidateBookings()
+  return result
+}
+
+// The club's page: status and end of the trial. Nothing else changes: the club keeps working.
+export async function setAccountStatus(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = parseAccountStatusForm(form)
+  if (!parsed.ok) return failed(parsed.message)
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('set_club_account_status', {
+    p_club_id: parsed.value.clubId,
+    p_status: parsed.value.status,
+    p_trial_ends_on: parsed.value.trialEndsOn ?? undefined,
+  })
+  const result = fromRpc(error, 'Guardado.')
+  if (result.status === 'ok') revalidatePath('/plataforma', 'layout')
+  return result
+}
+
+export async function saveAccountContact(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const parsed = parseAccountContactForm(form)
+  if (!parsed.ok) return failed(parsed.message)
+  const { clubId, ownerName, ownerPhone, ownerEmail, notes } = parsed.value
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('save_club_account_contact', {
+    p_club_id: clubId,
+    p_owner_name: ownerName,
+    p_owner_phone: ownerPhone,
+    p_owner_email: ownerEmail,
+    p_notes: notes,
+  })
+  const result = fromRpc(error, 'Guardado.')
+  if (result.status === 'ok') revalidatePath('/plataforma', 'layout')
+  return result
+}
+
+// "Entrar como soporte": admin of the club, marked and logged; "Salir del club" puts the previous role back.
+export async function joinAsSupport(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = readUuid(form, 'clubId')
+  if (!clubId) return INVALID_INPUT
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('join_club_as_support', { p_club_id: clubId })
+  const result = fromRpc(error, 'Listo: sos admin del club como soporte.')
+  if (result.status === 'ok') revalidatePath('/plataforma', 'layout')
+  return result
+}
+
+export async function leaveSupport(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const clubId = readUuid(form, 'clubId')
+  if (!clubId) return INVALID_INPUT
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('leave_club_support', { p_club_id: clubId })
+  const result = fromRpc(error, 'Saliste del club.')
+  if (result.status === 'ok') revalidatePath('/plataforma', 'layout')
   return result
 }

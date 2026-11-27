@@ -25,6 +25,8 @@ test('the platform admin creates a club; its admin sets it up with the assistant
   await page.context().clearCookies()
   await signInWithMagicLink(page, owner.email, '/plataforma')
   await expect(page.getByRole('heading', { name: 'Plataforma', level: 1 })).toBeVisible()
+  // With clubs already there, «Nuevo club» is folded.
+  if (!(await page.getByLabel('Nombre del club').isVisible())) await page.getByText('Nuevo club', { exact: true }).click()
   await page.getByLabel('Nombre del club').fill('Club Demo E2E')
   await expect(page.getByLabel('Nombre corto')).toHaveValue('club-demo-e2e')
   await page.getByLabel('Nombre corto').fill(slug)
@@ -32,9 +34,14 @@ test('the platform admin creates a club; its admin sets it up with the assistant
   await page.getByRole('button', { name: 'Crear club' }).click()
   await expect(page.getByRole('status')).toContainText(`Club Demo E2E está en ${clubOrigin}`)
   await page.reload()
-  const card = page.getByRole('list', { name: 'Clubes' }).getByRole('listitem').filter({ hasText: 'Club Demo E2E' })
-  await expect(card).toContainText('Invitación pendiente')
-  await expect(card).toContainText('Sin canchas')
+  // Its row: a 60-day trial, and setting up courts and prices is the next step. The row opens its page.
+  const row = page.getByRole('list', { name: 'Clubes' }).getByRole('listitem').filter({ hasText: 'Club Demo E2E' })
+  await expect(row).toContainText('Prueba · quedan 60 días')
+  await expect(row).toContainText('Canchas y precios · 0 de 11')
+  await row.getByRole('link').click()
+  await expect(page.getByRole('heading', { name: 'Club Demo E2E', level: 1 })).toBeVisible()
+  await expect(page.getByText(/Invitación pendiente · Sin canchas/)).toBeVisible()
+  const clubPage = page.url()
 
   // Its admin accepts on the club's subdomain and lands in the assistant.
   const context = await browser.newContext()
@@ -71,8 +78,27 @@ test('the platform admin creates a club; its admin sets it up with the assistant
   const booked = await bookFirstFreeSlot(member, addDays(localDateOf(new Date(), club.timezone), 1), slug)
   expect(booked.courtName).toBe('Cancha Central')
 
-  // The platform shows it ready.
+  // The platform shows it ready, with its milestones.
+  await page.goto(clubPage)
+  await expect(page.getByText(/Listo · 1 cancha · 1 staff · 1 reserva en 7 días/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Hitos · \d+ de 11$/ })).toBeVisible()
+  await expect(page.getByRole('table')).toBeVisible()
+
+  // The trial: active now, with the owner's contact and a note.
+  await page.getByLabel('Estado', { exact: true }).selectOption('active')
+  await page.getByRole('button', { name: 'Guardar estado' }).click()
+  await expect(page.getByText('Guardado.')).toBeVisible()
+  await page.getByLabel('Dueño o encargado').fill('Raúl Dueño')
+  await page.getByLabel('Notas', { exact: true }).fill('Quiere arrancar con torneos.')
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
+  await expect(page.getByText('Guardado.').last()).toBeVisible()
   await page.reload()
-  await expect(card).toContainText('Listo')
-  await expect(card).toContainText('1 cancha · 1 staff · 1 reserva en 7 días')
+  await expect(page.getByText('Activo', { exact: true }).first()).toBeVisible()
+  await expect(page.getByLabel('Notas', { exact: true })).toHaveValue('Quiere arrancar con torneos.')
+
+  // Support: in as an admin of the club, and out again.
+  await page.getByRole('button', { name: 'Entrar a Club Demo E2E como soporte' }).click()
+  await expect(page.getByRole('link', { name: 'Abrir el panel del club' })).toBeVisible()
+  await page.getByRole('button', { name: 'Salir de Club Demo E2E' }).click()
+  await expect(page.getByRole('button', { name: 'Entrar a Club Demo E2E como soporte' })).toBeVisible()
 })

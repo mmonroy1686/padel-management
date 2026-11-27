@@ -90,10 +90,12 @@ export default async function StaffSettingsPage() {
                     {isYou ? <span className="font-normal text-fg-muted"> (vos)</span> : null}
                   </p>
                   <p className="break-all text-sm text-fg-muted">
-                    {STAFF_ROLE_LABELS[member.role]}
+                    {member.support ? 'Soporte de la plataforma' : STAFF_ROLE_LABELS[member.role]}
                     {name === member.email ? null : ` · ${member.email}`}
                   </p>
                 </div>
+                {/* Support comes and goes from the platform: the club does not change its role. */}
+                {member.support ? null : (
                 <div className="flex flex-wrap items-start gap-2">
                   <ActionForm action={changeStaffRole} submitLabel={`Pasar a ${STAFF_ROLE_LABELS[other].toLowerCase()}`}
                     pendingLabel="Cambiando…" variant="secondary" size="sm"
@@ -106,6 +108,7 @@ export default async function StaffSettingsPage() {
                     <input type="hidden" name="userId" value={member.userId} />
                   </ActionForm>
                 </div>
+                )}
               </li>
             )
           })}

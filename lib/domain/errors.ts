@@ -70,6 +70,8 @@ const MESSAGES = {
   slug_reserved: 'Ese nombre corto está reservado, elegí otro.',
   invalid_slug: 'Usá letras minúsculas, números y guiones, de 2 a 40 caracteres.',
   invalid_timezone: 'Elegí una zona horaria de la lista.',
+  not_support: 'No entraste a este club como soporte.',
+  invalid_status: 'Elegí un estado de la lista.',
   setup_incomplete: 'Para terminar, el club necesita al menos una cancha y un precio.',
   invalid_location: 'Marcá la ubicación de nuevo en el mapa.',
   invalid_maps_url: 'Pegá el link que da Google Maps al compartir el lugar.',

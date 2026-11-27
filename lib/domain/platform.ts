@@ -1,6 +1,7 @@
 import { errorMessage } from './errors'
 import { readUuid } from './input'
 import type { ParseResult } from './settings'
+import type { LocalDate } from './time'
 
 // The platform (/plataforma): the clubs and how far each one got, and the form that creates one.
 
@@ -85,6 +86,31 @@ export type PlatformClub = {
   // The open invitation of its first admin, if any.
   adminInvitationExpiresAt: Date | null
   bookingsLastWeek: number
+  timezone: string
+  onlineLastWeek: number
+  lastBookingAt: Date | null
+  players: number
+  status: AccountStatus
+  // The last day of the trial, in the club's time zone.
+  trialEndsOn: LocalDate
+  // The viewer is in the club as support.
+  isSupport: boolean
+  milestones: MilestoneDates
+}
+
+export type AccountStatus = 'trial' | 'active' | 'paused' | 'churned'
+
+// When the club reached each milestone (platform_clubs), null while it has not.
+export type MilestoneDates = {
+  courtsAndPrices: Date | null
+  receptionJoined: Date | null
+  firstReceptionBooking: Date | null
+  firstOnlineBooking: Date | null
+  twentiethPlayer: Date | null
+  firstPayment: Date | null
+  firstMatch: Date | null
+  firstTournament: Date | null
+  firstDayUse: Date | null
 }
 
 function count(n: number, one: string, many: string): string {
