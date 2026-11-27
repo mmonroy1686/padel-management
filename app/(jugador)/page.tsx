@@ -82,6 +82,65 @@ export default async function HomePage() {
     </li>
   )
 
+  // Yours (bookings, waits, matches) on the left on a wide screen; what to do next on the right.
+  const hasMine =
+    bookings.upcoming.length > 0 || waitlist.waits.length > 0 || myMatches.length > 0 || championshipMatches.length > 0
+  const mine = (
+    <>
+      {/* Only when there is something: with nothing booked, the button on top already says what to do. */}
+      {bookings.upcoming.length > 0 || waitlist.waits.length > 0 ? (
+        <PageSection id="tus-reservas" title="Tus reservas">
+          {bookings.upcoming.length > 0 ? (
+            <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">{bookings.upcoming.map(bookingCard)}</ul>
+          ) : null}
+          <WaitingCard waits={waitItems(waitlist.waits, waitlist.courts, today)} cancelAction={cancelSlotWait} />
+        </PageSection>
+      ) : null}
+      {myMatches.length > 0 || championshipMatches.length > 0 ? (
+        <PageSection id="tus-partidos" title="Tus partidos">
+          {myMatches.length > 0 ? (
+            <RowList label="Partidos abiertos en los que estás">
+              {myMatches.map((match) => (
+                <RowLink key={match.id} href={`/partidos/${match.id}`} title={whenText(match.startsAt)} detail={statusLabel(match)} />
+              ))}
+            </RowList>
+          ) : null}
+          {championshipMatches.length > 0 ? <MyMatches matches={championshipMatches} /> : null}
+        </PageSection>
+      ) : null}
+    </>
+  )
+  const forYou = (
+    <PageSection id="para-vos" title="Partidos para vos" more={forMe.length > 3 ? { href: '/partidos', label: 'Ver todos' } : undefined}>
+      {forMe.length > 0 ? (
+        <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
+          {forMe.slice(0, 3).map(({ match, reasons }) => (
+            <li key={match.id}>
+              <MatchCard
+                match={match}
+                viewerId={viewer.userId}
+                whenText={whenText(match.startsAt)}
+                status={joinStatus(match, context.player, { now, closeMinutes: club.match_close_minutes, busy: context.busy })}
+                risk={riskOf(match, freeCourts.get(match.id) ?? [])}
+                reasons={reasons}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <EmptyLine action={{ href: '/partidos', label: 'Armá uno' }}>Ahora no hay partidos armándose para tu categoría y lado.</EmptyLine>
+      )}
+    </PageSection>
+  )
+  const extras = (
+    <>
+      {dayUse ? <DayUseHomeCard home={dayUse} /> : null}
+      <RowList label="Torneos">
+        <RowLink href="/torneos" icon="trophy" title={openTournamentsText(openTournaments)} />
+      </RowList>
+    </>
+  )
+
   return (
     <>
       {waitlist.hold ? (
@@ -120,56 +179,13 @@ export default async function HomePage() {
           ))}
         </ul>
       ) : null}
-      {/* Two columns on wide screens: what you have on the left, what to do next on the right. */}
+      {/* Two columns on wide screens: what you have on the left, what to do next on the right. With nothing of yours
+          yet, «Partidos para vos» takes the left one, so the screen never shows half of it blank. */}
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+        <div className="flex flex-col gap-8">{hasMine ? mine : forYou}</div>
         <div className="flex flex-col gap-8">
-          {/* Only when there is something: with nothing booked, the button on top already says what to do. */}
-          {bookings.upcoming.length > 0 || waitlist.waits.length > 0 ? (
-            <PageSection id="tus-reservas" title="Tus reservas">
-              {bookings.upcoming.length > 0 ? (
-                <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">{bookings.upcoming.map(bookingCard)}</ul>
-              ) : null}
-              <WaitingCard waits={waitItems(waitlist.waits, waitlist.courts, today)} cancelAction={cancelSlotWait} />
-            </PageSection>
-          ) : null}
-          {myMatches.length > 0 || championshipMatches.length > 0 ? (
-            <PageSection id="tus-partidos" title="Tus partidos">
-              {myMatches.length > 0 ? (
-                <RowList label="Partidos abiertos en los que estás">
-                  {myMatches.map((match) => (
-                    <RowLink key={match.id} href={`/partidos/${match.id}`} title={whenText(match.startsAt)} detail={statusLabel(match)} />
-                  ))}
-                </RowList>
-              ) : null}
-              {championshipMatches.length > 0 ? <MyMatches matches={championshipMatches} /> : null}
-            </PageSection>
-          ) : null}
-        </div>
-        <div className="flex flex-col gap-8">
-          <PageSection id="para-vos" title="Partidos para vos" more={forMe.length > 3 ? { href: '/partidos', label: 'Ver todos' } : undefined}>
-            {forMe.length > 0 ? (
-              <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
-                {forMe.slice(0, 3).map(({ match, reasons }) => (
-                  <li key={match.id}>
-                    <MatchCard
-                      match={match}
-                      viewerId={viewer.userId}
-                      whenText={whenText(match.startsAt)}
-                      status={joinStatus(match, context.player, { now, closeMinutes: club.match_close_minutes, busy: context.busy })}
-                      risk={riskOf(match, freeCourts.get(match.id) ?? [])}
-                      reasons={reasons}
-                    />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <EmptyLine action={{ href: '/partidos', label: 'Armá uno' }}>Ahora no hay partidos armándose para tu categoría y lado.</EmptyLine>
-            )}
-          </PageSection>
-          {dayUse ? <DayUseHomeCard home={dayUse} /> : null}
-          <RowList label="Torneos">
-            <RowLink href="/torneos" icon="trophy" title={openTournamentsText(openTournaments)} />
-          </RowList>
+          {hasMine ? forYou : null}
+          {extras}
         </div>
       </div>
       {bookings.past.length > 0 ? (
