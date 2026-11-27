@@ -5,8 +5,8 @@ import { NotificationBell } from '@/components/waitlist/notification-bell'
 import { getClub, getViewer } from '@/lib/auth/viewer'
 import { countUnreadNotifications } from '@/lib/data/waitlist'
 import { LegalLinks } from '@/components/legal/legal-links'
-import Link from 'next/link'
-import { Avatar } from '@/components/ui/avatar'
+import { AccountMenu } from '@/components/nav/account-menu'
+import { isStaffRole } from '@/lib/domain/profile'
 
 const PLAYER_TABS: TabItem[] = [
   { href: '/', label: 'Inicio', icon: 'home' },
@@ -26,14 +26,14 @@ export default async function PlayerLayout({ children }: { children: React.React
         {viewer ? (
           <div className="flex items-center gap-1">
             <NotificationBell unread={unread} />
-            {/* The player's photo (or initials), next to the bell: their Perfil. */}
-            <Link
-              href="/perfil"
-              aria-label="Tu perfil"
-              className="inline-flex size-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              <Avatar name={viewer.profile.display_name} profile={viewer.profile} size="sm" />
-            </Link>
+            <AccountMenu
+              name={viewer.profile.display_name}
+              profile={viewer.profile}
+              links={[
+                { href: '/perfil', label: 'Tu perfil' },
+                ...(isStaffRole(viewer.membership?.role) ? [{ href: '/club/inicio', label: 'Panel del club' }] : []),
+              ]}
+            />
           </div>
         ) : null}
       </ClubHeader>
