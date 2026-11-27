@@ -10,7 +10,7 @@ export type StaffRole = Exclude<Role, 'player'>
 export const STAFF_ROLES = ['admin', 'reception'] as const satisfies readonly StaffRole[]
 export const STAFF_ROLE_LABELS: Record<StaffRole, string> = { admin: 'Admin', reception: 'Recepción' }
 
-export type StaffMember = { userId: string; role: StaffRole; displayName: string; email: string }
+export type StaffMember = { userId: string; role: StaffRole; displayName: string; email: string; support: boolean }
 export type StaffInvitation = { id: string; email: string; role: StaffRole; expiresAt: Date }
 
 // The same shape the database checks (private.normalized_email); it has the last word.

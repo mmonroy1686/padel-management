@@ -21,7 +21,7 @@ export async function loadStaff(clubId: string): Promise<{ members: StaffMember[
   if (invitations.error) throw invitations.error
   return {
     members: (staff.data ?? []).flatMap((row) =>
-      isStaffRole(row.role) ? [{ userId: row.user_id, role: row.role, displayName: row.display_name, email: row.email }] : [],
+      isStaffRole(row.role) ? [{ userId: row.user_id, role: row.role, displayName: row.display_name, email: row.email, support: row.support }] : [],
     ),
     invitations: invitations.data.flatMap((row) =>
       isStaffRole(row.role) ? [{ id: row.id, email: row.email, role: row.role, expiresAt: new Date(row.expires_at) }] : [],

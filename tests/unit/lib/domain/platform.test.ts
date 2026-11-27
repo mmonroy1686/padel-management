@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { clubSummary, isPlatformHost, parseNewClubForm, suggestSlug, TIMEZONES, type PlatformClub } from '@/lib/domain/platform'
+import { platformClub } from '../../fixtures/platform'
 
 function form(values: Record<string, string>): FormData {
   const data = new FormData()
@@ -61,17 +62,7 @@ describe('isPlatformHost', () => {
 
 describe('clubSummary', () => {
   const now = new Date('2026-11-24T12:00:00Z')
-  const club: PlatformClub = {
-    id: 'c1',
-    slug: 'rustic',
-    name: 'Rustic Pádel',
-    createdAt: new Date('2026-09-01T12:00:00Z'),
-    setupCompletedAt: new Date('2026-09-02T12:00:00Z'),
-    activeCourts: 3,
-    staff: 2,
-    adminInvitationExpiresAt: null,
-    bookingsLastWeek: 41,
-  }
+  const club: PlatformClub = platformClub()
 
   it('counts courts, staff and last week bookings, and says it is ready', () => {
     expect(clubSummary(club, now)).toEqual({ state: 'Listo', details: '3 canchas · 2 staff · 41 reservas en 7 días' })
