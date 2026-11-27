@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ClubLogo } from '@/components/brand/club-logo'
+import { AccountMenu } from '@/components/nav/account-menu'
 import { BackButton } from '@/components/nav/back-button'
 import { ClubBottomNav } from '@/components/nav/club-bottom-nav'
 import { SectionTitle } from '@/components/nav/section-title'
@@ -9,7 +10,8 @@ import { clubBarTabs, clubMoreTabs, clubTabs } from '@/lib/club/tabs'
 
 // Reception and admin only. Each page checks it again (layouts do not re-run on every navigation).
 // On a phone: the logo and the section in one line on top, and the sections at the bottom (ClubBottomNav). From a
-// tablet up: the club's name, "Ir a la app" and every section as tabs on top.
+// tablet up: the club's name, "Ir a la app" and every section as tabs on top. The viewer's photo, on the right on
+// every size, opens their account (and «Cerrar sesión»).
 export default async function ClubLayout({ children }: { children: React.ReactNode }) {
   const viewer = await requireStaff('/club/inicio')
   const role = viewer.membership.role
@@ -25,11 +27,21 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
             <SectionTitle items={tabs} fallback="Panel del club" />
           </div>
         </div>
-        <div className="hidden items-center gap-2 md:flex">
-          <BackButton />
-          <Link href="/" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink">
-            Ir a la app
-          </Link>
+        <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 md:flex">
+            <BackButton />
+            <Link href="/" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent-ink">
+              Ir a la app
+            </Link>
+          </div>
+          <AccountMenu
+            name={viewer.profile.display_name}
+            profile={viewer.profile}
+            links={[
+              { href: '/', label: 'Ir a la app de jugadores' },
+              { href: '/perfil', label: 'Tu perfil' },
+            ]}
+          />
         </div>
       </header>
       <div className="hidden md:block">

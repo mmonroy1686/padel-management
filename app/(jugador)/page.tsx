@@ -22,7 +22,7 @@ import { joinStatus } from '@/lib/domain/match-join'
 import { riskOf } from '@/lib/domain/match-risk'
 import { isInMatch, statusLabel } from '@/lib/domain/matches'
 import { matchesForMe } from '@/lib/domain/matches-for-me'
-import { firstName, incompleteHome, isProfileComplete, isStaffRole } from '@/lib/domain/profile'
+import { firstName, incompleteHome, isProfileComplete } from '@/lib/domain/profile'
 import { addDays, localDateOf, zonedTime } from '@/lib/domain/time'
 import { openTournamentsText } from '@/lib/domain/tournaments'
 import { ClubSection } from '@/components/club-info/club-section'
@@ -177,11 +177,6 @@ export default async function HomePage() {
           <summary className="min-h-11 cursor-pointer content-center text-lg font-semibold">Pasadas y canceladas</summary>
           <ul className="mt-3 grid gap-3 md:grid-cols-2">{bookings.past.map(bookingCard)}</ul>
         </details>
-      ) : null}
-      {isStaffRole(membership.role) ? (
-        <Link href="/club/inicio" className={buttonClasses({ variant: 'secondary', fullWidth: true })}>
-          Panel del club
-        </Link>
       ) : null}
       {clubInfo ? <ClubSection view={clubInfo} clubName={club.name} timezone={club.timezone} folded /> : null}
     </>
