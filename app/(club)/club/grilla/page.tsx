@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { clearBookingResult, saveBookingResult } from '@/lib/actions/booking-result'
 import { DayStrip } from '@/components/booking/day-strip'
 import { FormingMatchesPanel } from '@/components/club/forming-matches-panel'
 import { LiveOccupancy } from '@/components/live/live-occupancy'
@@ -82,6 +83,8 @@ export default async function GridPage({ searchParams }: { searchParams: SearchP
             removeFromMatch,
             release: releaseSlotHold,
             noShow: markNoShow,
+            saveResult: saveBookingResult,
+            clearResult: clearBookingResult,
           }}
         />
         <div className="flex flex-col gap-6">

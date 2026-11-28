@@ -42,6 +42,37 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"booking_results": {
+                  Row: {
+                    "booking_id": string,"club_id": string,"games_a": (number)[],"games_b": (number)[],"recorded_at": string,"recorded_by": string | null,"team_a": (number)[]
+                  }
+                  Insert: {
+                    "booking_id": string,"club_id": string,"games_a": (number)[],"games_b": (number)[],"recorded_at"?: string,"recorded_by"?: string | null,"team_a": (number)[]
+                  }
+                  Update: {
+                    "booking_id"?: string,"club_id"?: string,"games_a"?: (number)[],"games_b"?: (number)[],"recorded_at"?: string,"recorded_by"?: string | null,"team_a"?: (number)[]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "booking_results_booking_id_fkey"
+      columns: ["booking_id"]
+isOneToOne: true
+      referencedRelation: "bookings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "booking_results_club_id_fkey"
+      columns: ["club_id"]
+isOneToOne: false
+      referencedRelation: "clubs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "booking_results_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"bookings": {
                   Row: {
                     "cancelled_at": string | null,"cancelled_by": string | null,"club_id": string,"court_id": string,"created_at": string,"created_by": string | null,"ends_at": string | null,"guest_name": string | null,"id": string,"match_id": string | null,"no_show_at": string | null,"no_show_by": string | null,"occupancy_id": string | null,"period": unknown,"player_id": string | null,"price": number,"series_id": string | null,"source": Database["public"]['Enums']["booking_source"],"starts_at": string | null,"status": Database["public"]['Enums']["booking_status"]
@@ -1827,6 +1858,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"clear_booking_result":
+{ Args: { "p_booking_id": string }; Returns: undefined
+                           },
 "clear_profile_avatar":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
@@ -2474,6 +2508,11 @@ isOneToOne: false
       } },
 "move_club_photo":
 { Args: { "p_photo_id": string,"p_step": number }; Returns: undefined
+                           },
+"my_played_bookings":
+{ Args: { "p_club_id": string,"p_limit"?: number }; Returns: {
+              "booking_id": string,"court_name": string,"games_a": (number)[],"games_b": (number)[],"players": Json,"starts_at": string,"team_a": (number)[]
+            }[]
                            },
 "occupancy_notes":
 { Args: { "p_club_id": string,"p_from": string,"p_to": string }; Returns: {
@@ -3191,6 +3230,22 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "club_invitations"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"save_booking_result":
+{ Args: { "p_booking_id": string,"p_games_a": (number)[],"p_games_b": (number)[],"p_team_a": (number)[] }; Returns: {
+              "booking_id": string,
+"club_id": string,
+"games_a": (number)[],
+"games_b": (number)[],
+"recorded_at": string,
+"recorded_by": string | null,
+"team_a": (number)[]
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "booking_results"
         isOneToOne: true
         isSetofReturn: false
       } },

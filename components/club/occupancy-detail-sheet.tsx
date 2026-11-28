@@ -10,6 +10,8 @@ import { KIND_LABELS, type GridBooking, type GridCell, type Occupancy } from '@/
 import type { MemberOption } from '@/lib/domain/members'
 import type { LocalDate } from '@/lib/domain/time'
 import { BookingPlayers, type PlayersActions } from './booking-players'
+import { ResultEditor } from '@/components/history/result-editor'
+import { hasFourPlayers, type ResultPlayer } from '@/lib/domain/booking-result'
 import type { PayMethods } from './charge-choice'
 import { CancelMatchForm, RemovePlayerForm } from './match-staff-actions'
 
@@ -21,6 +23,15 @@ export type DetailActions = PlayersActions & {
   removeFromMatch: FormAction
   release: FormAction
   noShow: FormAction
+  saveResult: FormAction
+  clearResult: FormAction
+}
+
+// The turn's named players, as the result form wants them (the open match's pairs, when it is one).
+function resultPlayers(booking: GridBooking): ResultPlayer[] {
+  return (booking.turn?.players ?? []).flatMap((player) =>
+    player.name ? [{ position: player.position, name: player.name, team: booking.teams?.[player.position] ?? null, isMe: false }] : [],
+  )
 }
 
 // «No vino», once the turn started: marks it, or shows the mark with Deshacer. For the pilot's metrics.
@@ -89,6 +100,20 @@ export function OccupancyDetailSheet({
           <Link href={`/club/torneos/campeonatos/${occupancy.championshipId}`} className="font-semibold text-accent-ink underline">
             Gestionar campeonato
           </Link>
+        ) : null}
+        {booking && occupancy.startsAt <= new Date() && hasFourPlayers(resultPlayers(booking)) ? (
+          <section aria-label="Resultado" className="flex flex-col gap-1 border-b border-border pb-4">
+            <p className="text-sm font-semibold">Resultado</p>
+            <ResultEditor
+              bookingId={booking.id}
+              players={resultPlayers(booking)}
+              anchor={1}
+              result={booking.result ?? null}
+              saveAction={actions.saveResult}
+              clearAction={actions.clearResult}
+              onDone={onDone}
+            />
+          </section>
         ) : null}
         {booking?.matchId ? (
           <MatchBookingDetail booking={booking} methods={methods} members={members} actions={actions} onDone={onDone} />
