@@ -1,7 +1,7 @@
 import { amountDue, paymentState, type PaymentState, type PaymentStatus } from './payments'
 
 export type SharePayment = { payer_id: string | null; status: PaymentStatus; amount: number }
-export type SlotHolder = { position: number; player_id: string | null; player: { display_name: string } | null }
+export type SlotHolder = { position: number; player_id: string | null; player: { display_name: string } | null; team?: string | null }
 export type MatchPlayerPayment = {
   playerId: string
   name: string

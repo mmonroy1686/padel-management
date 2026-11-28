@@ -73,6 +73,8 @@ function renderDetail(cell: GridCell, methods = { cash: true, transfer: true, ca
     removeFromMatch: vi.fn<FormAction>(done),
     release: vi.fn<FormAction>(done),
     noShow: vi.fn<FormAction>(done),
+    saveResult: vi.fn<FormAction>(done),
+    clearResult: vi.fn<FormAction>(done),
   }
   const onDone = vi.fn()
   render(

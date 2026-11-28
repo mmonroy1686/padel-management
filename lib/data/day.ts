@@ -30,6 +30,7 @@ type BookingRow = {
   match: { slots: SlotHolder[] } | null
   players: ExtraPlayerRow[]
   payments: HomePayment[]
+  result?: { team_a: number[]; games_a: number[]; games_b: number[] } | null
 }
 
 function toGridBooking(row: BookingRow, occupancyId: string, viewerId: string): GridBooking {
@@ -48,6 +49,8 @@ function toGridBooking(row: BookingRow, occupancyId: string, viewerId: string): 
     matchId: row.match_id,
     noShow: row.no_show_at !== null,
     turn: turnPlayers(row),
+    result: row.result ? { teamA: row.result.team_a, gamesA: row.result.games_a, gamesB: row.result.games_b } : null,
+    teams: Object.fromEntries(slots.flatMap((slot) => (slot.team === 'a' || slot.team === 'b' ? [[slot.position, slot.team]] : []))),
   }
 }
 
@@ -82,7 +85,7 @@ export async function loadDayGrid(
     supabase
       .from('bookings')
       .select(
-        'id, occupancy_id, player_id, guest_name, price, status, source, series_id, match_id, no_show_at, player:profiles!bookings_player_id_fkey(display_name), match:open_matches!bookings_match_id_fkey(slots:match_slots(position, player_id, player:profiles(display_name))), players:booking_players(position, player_id, name, player:profiles!booking_players_player_id_fkey(display_name)), payments(status, amount, payer_id, payer_position)',
+        'id, occupancy_id, player_id, guest_name, price, status, source, series_id, match_id, no_show_at, player:profiles!bookings_player_id_fkey(display_name), match:open_matches!bookings_match_id_fkey(slots:match_slots(position, player_id, team, player:profiles(display_name))), players:booking_players(position, player_id, name, player:profiles!booking_players_player_id_fkey(display_name)), payments(status, amount, payer_id, payer_position), result:booking_results(team_a, games_a, games_b)',
       )
       .eq('club_id', club.id)
       .eq('status', 'confirmed')

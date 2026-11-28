@@ -7,6 +7,10 @@ import { PreferredCourtsForm } from '@/components/profile/preferred-courts-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { AutoSaveForm } from '@/components/ui/auto-save-form'
 import { PageSection } from '@/components/ui/page-section'
+import { PodiumShowcase } from '@/components/history/podium-showcase'
+import { RowLink, RowList } from '@/components/ui/row-list'
+import { loadMyPodiums, loadPlayedBookings } from '@/lib/data/history'
+import { historyStats } from '@/lib/domain/booking-result'
 import { removeAvatar, saveAvailability, saveAvatar, saveContact, savePreferredCourts, saveProfile, setShowInClub, signOut } from '@/lib/actions/profile'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { availabilityKey } from '@/lib/domain/availability'
@@ -19,12 +23,15 @@ export default async function ProfilePage() {
   const viewer = await requirePlayer('/perfil')
   const { profile, membership } = viewer
   const supabase = await createClient()
-  const [availability, preferred, courts, contact] = await Promise.all([
+  const [availability, preferred, courts, contact, podiums, played] = await Promise.all([
     supabase.from('player_availability').select('weekday, band').eq('user_id', viewer.userId),
     supabase.from('player_preferred_courts').select('court_id').eq('user_id', viewer.userId),
     supabase.from('courts').select('id, name').eq('club_id', viewer.club.id).eq('is_active', true).order('sort_order'),
     supabase.from('player_contacts').select('phone, whatsapp_consent').eq('user_id', viewer.userId).maybeSingle(),
+    loadMyPodiums(viewer.club, viewer.userId),
+    loadPlayedBookings(viewer.club, 50),
   ])
+  const stats = historyStats(played)
   if (availability.error) throw availability.error
   if (preferred.error) throw preferred.error
   if (courts.error) throw courts.error
@@ -37,6 +44,18 @@ export default async function ProfilePage() {
         <p className="text-fg-muted">{categoryLabel(membership.category, membership.category_validated)}</p>
         {viewer.email ? <p className="text-sm text-fg-muted">Ingresás con {viewer.email}</p> : null}
       </div>
+      {/* What the player did in the club first: their podiums and their matches. Only they see it. */}
+      <PageSection id="tus-podios" title="Tus podios">
+        <PodiumShowcase podiums={podiums} />
+      </PageSection>
+      <RowList label="Tu historial">
+        <RowLink
+          href="/perfil/partidos"
+          icon="racket"
+          title={`Partidos jugados: ${stats.played}`}
+          detail={stats.withResult > 0 ? `Ganaste ${stats.won} de ${stats.withResult} con resultado` : 'Anotá tus resultados'}
+        />
+      </RowList>
       <AvatarForm userId={viewer.userId} name={profile.display_name} profile={profile} saveAction={saveAvatar} removeAction={removeAvatar} />
       <p className="text-sm text-fg-muted">Los cambios se guardan solos.</p>
       <PageSection id="tus-datos" title="Tus datos">

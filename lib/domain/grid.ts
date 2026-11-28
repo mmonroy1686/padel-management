@@ -1,4 +1,5 @@
 import type { TurnPlayers } from './club-home'
+import type { BookingResult } from './booking-result'
 import { filledCount, type Match } from './matches'
 import type { PaymentState } from './payments'
 import { priceFor, type PricingRule, type Slot } from './slots'
@@ -37,6 +38,10 @@ export type GridBooking = {
   noShow?: boolean
   // Its players and their shares (staff only: lib/data/day.ts).
   turn?: TurnPlayers
+  // The result, once someone wrote it (staff only: lib/data/day.ts).
+  result?: BookingResult | null
+  // An open match's pairs by position.
+  teams?: Record<number, 'a' | 'b'>
 }
 // A forming match that wants this court at this time. It does not block it.
 export type FormingMatchRef = { id: string; filled: number }
