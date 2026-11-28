@@ -33,6 +33,8 @@ import { loadDayUseHome } from '@/lib/data/day-use'
 import { cancelMyBooking, reportTransfer } from './reservas/actions'
 import { HoldBanner } from '@/components/waitlist/hold-banner'
 import { WaitingCard } from '@/components/waitlist/waiting-card'
+import { RecentResults } from '@/components/history/recent-results'
+import { loadPlayedBookings } from '@/lib/data/history'
 import { cancelSlotWait, claimSlotHold, declineSlotHold } from '@/lib/actions/waitlist'
 import { loadMyWaitlist } from '@/lib/data/waitlist'
 import { paymentMethodsNote } from '@/lib/domain/payments'
@@ -50,7 +52,7 @@ export default async function HomePage() {
   const now = new Date()
   const member = { ...viewer, membership }
   const windowEnd = zonedTime(addDays(localDateOf(now, club.timezone), club.booking_window_days + 1), 0, club.timezone)
-  const [grid, bookings, matches, context, tournaments, dayUse, waitlist, championshipMatches, clubInfo] = await Promise.all([
+  const [grid, bookings, matches, context, tournaments, dayUse, waitlist, championshipMatches, clubInfo, played] = await Promise.all([
     loadDayGrid(club, localDateOf(now, club.timezone), { userId: viewer.userId, audience: 'player' }, now),
     loadMyBookings(viewer, now),
     loadMatches(club, { from: now, to: windowEnd }),
@@ -60,6 +62,7 @@ export default async function HomePage() {
     loadMyWaitlist(viewer, now),
     loadMyChampionshipMatches(club, viewer.userId, now),
     loadClubInfo(club),
+    loadPlayedBookings(club, 5),
   ])
   const freeToday = countFree(grid.rows)
   const quickSlots = nextFreeCells(grid.rows, 3)
@@ -84,7 +87,11 @@ export default async function HomePage() {
 
   // Yours (bookings, waits, matches) on the left on a wide screen; what to do next on the right.
   const hasMine =
-    bookings.upcoming.length > 0 || waitlist.waits.length > 0 || myMatches.length > 0 || championshipMatches.length > 0
+    bookings.upcoming.length > 0 ||
+    waitlist.waits.length > 0 ||
+    myMatches.length > 0 ||
+    championshipMatches.length > 0 ||
+    played.length > 0
   const mine = (
     <>
       {/* Only when there is something: with nothing booked, the button on top already says what to do. */}
@@ -108,6 +115,7 @@ export default async function HomePage() {
           {championshipMatches.length > 0 ? <MyMatches matches={championshipMatches} /> : null}
         </PageSection>
       ) : null}
+      <RecentResults played={played} timezone={club.timezone} today={today} />
     </>
   )
   const forYou = (
