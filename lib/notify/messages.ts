@@ -35,7 +35,8 @@ export type EmailUrls = { clubUrl: (slug: string) => string; supabaseUrl: string
 
 export function buildEmail(item: PendingEmail, urls: EmailUrls): EmailMessage | null {
   const content = notificationContent(item.kind, item.data, item.clubTimezone)
-  if (!item.email || !content) return null
+  // .test is reserved: the demo and e2e accounts. Their avisos stay in the app.
+  if (!item.email || item.email.toLowerCase().endsWith('.test') || !content) return null
   return brandedEmail(
     {
       to: item.email,

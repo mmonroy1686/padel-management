@@ -86,6 +86,16 @@ export async function setShowInClub(_previous: ActionState, form: FormData): Pro
   return fromRpc(error, 'Guardamos tu preferencia.')
 }
 
+// Perfil → "Avisos por mail": the booking reminders (the rest of the avisos always come).
+export async function setBookingReminders(_previous: ActionState, form: FormData): Promise<ActionState> {
+  const viewer = await getViewer()
+  if (!viewer) return failed('Tu sesión venció. Volvé a ingresar.')
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('set_booking_reminders', { p_on: readBoolean(form, 'bookingReminders') })
+  revalidateBookings()
+  return fromRpc(error, 'Guardamos tu preferencia.')
+}
+
 // Perfil → WhatsApp: the number and the consent (save_player_contact normalizes it and keeps the consent's date).
 export async function saveContact(_previous: ActionState, form: FormData): Promise<ActionState> {
   const viewer = await getViewer()

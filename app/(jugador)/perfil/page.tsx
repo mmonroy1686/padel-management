@@ -11,7 +11,17 @@ import { PodiumShowcase } from '@/components/history/podium-showcase'
 import { RowLink, RowList } from '@/components/ui/row-list'
 import { loadMyPodiums, loadPlayedBookings } from '@/lib/data/history'
 import { historyStats } from '@/lib/domain/booking-result'
-import { removeAvatar, saveAvailability, saveAvatar, saveContact, savePreferredCourts, saveProfile, setShowInClub, signOut } from '@/lib/actions/profile'
+import {
+  removeAvatar,
+  saveAvailability,
+  saveAvatar,
+  saveContact,
+  savePreferredCourts,
+  saveProfile,
+  setBookingReminders,
+  setShowInClub,
+  signOut,
+} from '@/lib/actions/profile'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { availabilityKey } from '@/lib/domain/availability'
 import { categoryLabel } from '@/lib/domain/profile'
@@ -94,6 +104,18 @@ export default async function ProfilePage() {
           </PageSection>
         </div>
       </details>
+      <PageSection id="avisos-por-mail" title="Avisos por mail">
+        <AutoSaveForm action={setBookingReminders} label="los recordatorios">
+          <label className="flex min-h-11 items-center gap-3">
+            <input type="checkbox" name="bookingReminders" defaultChecked={profile.booking_reminders} className="size-5 accent-accent" />
+            Recordatorios antes de cada turno
+          </label>
+          <p className="text-sm text-fg-muted">
+            Te avisamos por mail cuando reservás, cuando pagás tu parte y si algo cambia en tu turno. Eso llega siempre;
+            el recordatorio lo podés apagar.
+          </p>
+        </AutoSaveForm>
+      </PageSection>
       <PageSection id="en-el-club" title="Ya están en el club">
         <AutoSaveForm action={setShowInClub} label="«Ya están en el club»">
           <label className="flex min-h-11 items-center gap-3">

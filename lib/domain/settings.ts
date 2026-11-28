@@ -17,7 +17,12 @@ export type BookingSettings = {
   cancellation_notice_hours: number
   max_active_bookings: number
   match_close_minutes: number
+  // Hours before a booking its players get the reminder mail; null: no reminder.
+  reminder_hours: number | null
 }
+
+export const REMINDER_HOURS = [2, 3, 6, 12, 24, 48] as const
+export const DEFAULT_REMINDER_HOURS = 24
 
 // Ajustes → "Pagos": how players pay.
 export type PaymentSettings = {
@@ -55,6 +60,12 @@ export function parseBookingSettings(form: FormData): ParseResult<BookingSetting
   if (maxActive === null) return fail('Las reservas activas por jugador van de 1 a 10.')
   const matchCloseMinutes = readInt(form, 'match_close_minutes', { min: 0, max: 2880 })
   if (matchCloseMinutes === null) return fail('Los minutos para cerrar partidos van de 0 a 2880 (48 h).')
+  // 'none' turns it off; a form without the field keeps the default.
+  const rawReminder = form.get('reminder_hours')
+  const reminderHours = rawReminder === 'none' ? null : rawReminder === null ? DEFAULT_REMINDER_HOURS : Number(rawReminder)
+  if (reminderHours !== null && !(REMINDER_HOURS as readonly number[]).includes(reminderHours)) {
+    return fail('Elegí cuándo mandar el recordatorio.')
+  }
 
   return {
     ok: true,
@@ -66,6 +77,7 @@ export function parseBookingSettings(form: FormData): ParseResult<BookingSetting
       cancellation_notice_hours: noticeHours,
       max_active_bookings: maxActive,
       match_close_minutes: matchCloseMinutes,
+      reminder_hours: reminderHours,
     },
   }
 }

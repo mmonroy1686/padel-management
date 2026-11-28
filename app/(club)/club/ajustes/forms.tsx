@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Field, inputClasses } from '@/components/ui/field'
 import type { Club } from '@/lib/auth/viewer'
 import { WEEKDAYS_SHORT } from '@/lib/domain/format'
-import { SLOT_LENGTHS } from '@/lib/domain/settings'
+import { REMINDER_HOURS, SLOT_LENGTHS } from '@/lib/domain/settings'
 import { STAFF_ROLE_LABELS, STAFF_ROLES } from '@/lib/domain/staff'
 import {
   addCourt,
@@ -63,6 +63,20 @@ export function BookingRulesForm({ club }: { club: Club }) {
               defaultValue={club.max_active_bookings} className={inputClasses} />
           </Field>
         </div>
+        <Field label="Recordatorio por mail" htmlFor="reminder_hours">
+          <select id="reminder_hours" name="reminder_hours" defaultValue={club.reminder_hours ?? 'none'}
+            aria-describedby="reminder_help" className={`${inputClasses} sm:max-w-64`}>
+            {REMINDER_HOURS.map((hours) => (
+              <option key={hours} value={hours}>
+                {hours} h antes del turno
+              </option>
+            ))}
+            <option value="none">No mandar</option>
+          </select>
+        </Field>
+        <p id="reminder_help" className="text-sm text-fg-muted">
+          Les llega a todos los que juegan y tienen cuenta. Cada jugador puede apagarlo en su perfil.
+        </p>
       </fieldset>
       <hr className="border-border" />
       <fieldset className="flex flex-col gap-3">

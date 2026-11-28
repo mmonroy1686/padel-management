@@ -123,6 +123,7 @@ const browser = await chromium.launch()
   await shot(page, '/avisos', 'j15-avisos')
   await shot(page, '/perfil', 'j16-perfil')
   await shot(page, '/perfil', 'j16b-perfil-abajo', { before: bottom })
+  await shot(page, '/perfil', 'j16c-avisos-por-mail', { scrollTo: 'Avisos por mail' })
   await shot(page, '/perfil/partidos', 'j17-historial')
   await context.close()
 }

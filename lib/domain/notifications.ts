@@ -5,6 +5,14 @@ import {
   type ChampionshipNotificationKind,
 } from './championship-notifications'
 import { BOOKING_JOIN_KIND, bookingJoinText, readBookingJoinData, type BookingJoinKind } from './booking-join-notifications'
+import {
+  bookingNotificationMail,
+  bookingNotificationText,
+  isBookingNotificationKind,
+  isBookingNotificationStale,
+  readBookingNotificationData,
+  type BookingNotificationKind,
+} from './booking-notifications'
 import { MATCH_INVITE_KIND, matchInviteText, readMatchInviteData, type MatchInviteKind } from './match-invite-notifications'
 import { readTournamentPairData, TOURNAMENT_PAIR_KIND, tournamentPairText, type TournamentPairKind } from './tournament-pair-notifications'
 import { notificationText, readNotificationData, type NotificationKind as WaitlistNotificationKind } from './waitlist'
@@ -17,6 +25,7 @@ export type NotificationKind =
   | MatchInviteKind
   | TournamentPairKind
   | BookingJoinKind
+  | BookingNotificationKind
 export type NotificationContent = { title: string; body: string; button: string; reason: string }
 export type NotificationRow = {
   id: string
@@ -31,6 +40,11 @@ export type NotificationView = { id: string; title: string; body: string; link: 
 // The same words in /avisos and in the mail, plus the mail's button and why we wrote. null when the data
 // cannot be read.
 export function notificationContent(kind: NotificationKind, data: unknown, timezone: string): NotificationContent | null {
+  if (isBookingNotificationKind(kind)) {
+    const read = readBookingNotificationData(data)
+    const words = read ? bookingNotificationText(kind, read, timezone) : null
+    return read && words ? { ...words, ...bookingNotificationMail(kind, read) } : null
+  }
   if (kind === BOOKING_JOIN_KIND) {
     const read = readBookingJoinData(data)
     if (!read) return null
@@ -70,6 +84,10 @@ export function notificationContent(kind: NotificationKind, data: unknown, timez
 
 // Too late to mail: the hold ran out, the slot or the championship already started.
 export function isNotificationStale(kind: NotificationKind, data: unknown, now: Date): boolean {
+  if (isBookingNotificationKind(kind)) {
+    const read = readBookingNotificationData(data)
+    return !read || isBookingNotificationStale(kind, read, now)
+  }
   if (kind === BOOKING_JOIN_KIND) {
     const read = readBookingJoinData(data)
     return !read || read.startsAt.getTime() <= now.getTime()

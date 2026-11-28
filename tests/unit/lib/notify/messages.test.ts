@@ -63,6 +63,8 @@ describe('buildEmail', () => {
 
   it('builds nothing without an address or with data it cannot read', () => {
     expect(buildEmail({ ...HELD, email: null }, URLS)).toBeNull()
+    // Demo and e2e accounts (.test is reserved): their avisos stay in the app.
+    expect(buildEmail({ ...HELD, email: 'mariana@demo.rustic.test' }, URLS)).toBeNull()
     expect(buildEmail({ ...HELD, data: {} }, URLS)).toBeNull()
   })
 

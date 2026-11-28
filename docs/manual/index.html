@@ -148,7 +148,7 @@ footer { color: var(--muted); font-size: 14px; padding-top: 32px; }
     <nav class="toc" aria-label="Índice">
       <h2>Jugadores</h2>
       <div class="group">
-        <a href="#ingresar">Ingresar</a><a href="#inicio">Inicio</a><a href="#reservar">Reservar</a><a href="#completar">Completar el turno</a><a href="#pagar">Pagar</a><a href="#partidos">Partidos abiertos</a><a href="#torneos">Torneos</a><a href="#dayuse">Day use</a><a href="#perfil">Perfil y avisos</a>
+        <a href="#ingresar">Ingresar</a><a href="#inicio">Inicio</a><a href="#reservar">Reservar</a><a href="#completar">Completar el turno</a><a href="#pagar">Pagar</a><a href="#partidos">Partidos abiertos</a><a href="#torneos">Torneos</a><a href="#dayuse">Day use</a><a href="#perfil">Perfil y avisos</a><a href="#avisos-mail">Avisos por mail</a>
       </div>
       <h2>Recepción</h2>
       <div class="group">
@@ -372,21 +372,47 @@ footer { color: var(--muted); font-size: 14px; padding-top: 32px; }
                 <li><b>Partidos jugados</b>: tu historial con resultados.</li>
                 <li><b>Tus datos</b>: nombre, foto, lado, mano. Los cambios se guardan solos.</li>
                 <li><b>WhatsApp</b> (opcional) y si aceptás que el club te escriba.</li>
+                <li><b>Avisos por mail</b>: si querés recordatorios antes de cada turno.</li>
                 <li><b>Ya están en el club</b>: si aparecés en la lista del day use.</li>
                 <li><span class="ui">Cerrar sesión</span>, al final.</li>
               </ul>
               <h4>Cargar el resultado de un partido</h4>
               <p>Es opcional. Después de jugar, cualquiera de los 4 (o el club) carga las parejas y los sets. Si alguien se equivocó, se arregla con <b>Corregir resultado</b>. Los resultados solo los ven los que jugaron y el club.</p>
               <h4>Avisos</h4>
-              <p>La campana junta lo que te avisa la app: si se liberó una cancha que esperabas, si alguien se sumó a tu turno o si te anotaron como pareja en un torneo.</p>
+              <p>La campana junta todo lo que te avisa la app, lo mismo que te llega por mail: tus reservas, pagos y partidos (ver <a href="#avisos-mail">Avisos por mail</a>), si se liberó una cancha que esperabas o si te anotaron como pareja en un torneo.</p>
             </div>
             <figure class="phone"><div class="screen"><img src="img/j16-perfil.jpg" alt="Perfil con podios, partidos jugados y tus datos" loading="lazy"></div><figcaption>El perfil.</figcaption></figure>
             <figure class="phone"><div class="screen"><img src="img/j17-historial.jpg" alt="Partidos jugados con Ganaste y Perdiste y Corregir resultado" loading="lazy"></div><figcaption>Partidos jugados.</figcaption></figure>
           </div>
-          <div class="pair two" style="margin-top:24px">
+          <div class="pair" style="margin-top:24px">
             <div class="text"></div>
-            <figure class="phone"><div class="screen"><img src="img/j16b-perfil-abajo.jpg" alt="Final del perfil: WhatsApp, Ya están en el club y Cerrar sesión" loading="lazy"></div><figcaption>Final del perfil.</figcaption></figure>
-            <figure class="phone"><div class="screen"><img src="img/j15-avisos.jpg" alt="Pantalla Avisos con un aviso de torneo" loading="lazy"></div><figcaption>Avisos.</figcaption></figure>
+            <figure class="phone"><div class="screen"><img src="img/j16b-perfil-abajo.jpg" alt="Final del perfil: Avisos por mail, Ya están en el club y Cerrar sesión" loading="lazy"></div><figcaption>Final del perfil.</figcaption></figure>
+          </div>
+        </section>
+
+        <section class="s" id="avisos-mail">
+          <h3>Avisos por mail</h3>
+          <p class="where">Llegan solos al mail con el que entrás · también quedan en la campana</p>
+          <div class="pair two">
+            <div class="text">
+              <p>La app te escribe cada vez que pasa algo con tus turnos y partidos. Le llega a cada jugador del turno que tenga cuenta, y también a quien hizo la acción, como comprobante.</p>
+              <div class="tbl"><table>
+                <thead><tr><th>Cuándo</th><th>Qué dice</th></tr></thead>
+                <tbody>
+                  <tr><td>Reservás, o el club te carga un turno</td><td>«Reservaste la Cancha 2» con día, hora y precio por persona</td></tr>
+                  <tr><td>Te suman a un turno, o te sumás con el link</td><td>«Ana te sumó a su turno»</td></tr>
+                  <tr><td>Antes de jugar</td><td>«Jugás el miércoles a las 20:00» (el club elige cuántas horas antes)</td></tr>
+                  <tr><td>Pagás tu parte</td><td>«Registramos tu pago de $400», en efectivo, tarjeta o transferencia confirmada</td></tr>
+                  <tr><td>Rechazan tu transferencia</td><td>El motivo, y que podés volver a informarla</td></tr>
+                  <tr><td>Se cancela el turno</td><td>Quién lo canceló: vos, el club u otro jugador</td></tr>
+                  <tr><td>Partido abierto</td><td>Cuando se completa, cuando alguien se baja y si se cancela (con el motivo)</td></tr>
+                  <tr><td>Turno fijo</td><td>Un aviso cuando empieza y otro cuando termina; cada semana, solo el recordatorio</td></tr>
+                </tbody>
+              </table></div>
+              <p>Los recordatorios se pueden apagar en <b>Perfil → Avisos por mail</b>. El resto llega siempre.</p>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j15-avisos.jpg" alt="Avisos con una reserva, un recordatorio y una cancelación del club" loading="lazy"></div><figcaption>Los mismos avisos, en la campana.</figcaption></figure>
+            <figure class="phone"><div class="screen"><img src="img/j16c-avisos-por-mail.jpg" alt="Perfil: Avisos por mail con el interruptor de recordatorios" loading="lazy"></div><figcaption>Perfil → Avisos por mail.</figcaption></figure>
           </div>
         </section>
       </div>
@@ -418,6 +444,7 @@ footer { color: var(--muted); font-size: 14px; padding-top: 32px; }
             <li><span>Elegí qué cargás: <b>Reserva</b>, <b>Turno fijo</b> (se repite cada semana) o <b>Bloqueo</b> (cancha fuera de uso).</span></li>
             <li><span>Elegí al titular (un socio o el nombre de un invitado) y confirmá.</span></li>
           </ol>
+          <div class="tip"><b>El jugador se entera solo</b>Si el titular tiene cuenta, le llega un mail con la reserva. Lo mismo cuando cobrás su parte, rechazás una transferencia o cancelás el turno. Los invitados sin cuenta no reciben nada.</div>
           <figure class="desk"><div class="screen"><img src="img/c02-grilla.jpg" alt="Grilla de canchas con reservas, day use y partidos armándose" loading="lazy"></div></figure>
           <h4>Cobrar una reserva</h4>
           <p>Tocá la reserva. La ficha muestra el total y una fila por jugador:</p>
@@ -541,7 +568,7 @@ footer { color: var(--muted); font-size: 14px; padding-top: 32px; }
           <div class="settings">
             <div><b>Club</b><span>Nombre, logo y colores. La app entera toma el color del club.</span></div>
             <div><b>Datos del club</b><span>Ubicación, contacto, servicios y fotos que ven los jugadores en Inicio.</span></div>
-            <div><b>Reservas y partidos</b><span>Horario, duración de los turnos, plazo para cancelar y reglas de partidos abiertos.</span></div>
+            <div><b>Reservas y partidos</b><span>Horario, duración de los turnos, plazo para cancelar, cuántas horas antes sale el recordatorio por mail y reglas de partidos abiertos.</span></div>
             <div><b>Canchas y precios</b><span>Las canchas y cuánto sale cada franja horaria.</span></div>
             <div><b>Pagos</b><span>Efectivo, POS y transferencia, con los datos de la cuenta y si pedís comprobante.</span></div>
             <div><b>Sellos</b><span>La recompensa por venir al day use.</span></div>
@@ -567,6 +594,8 @@ footer { color: var(--muted); font-size: 14px; padding-top: 32px; }
         <details class="faq"><summary>Armé un partido abierto y no se llenó.</summary><p>Si no están los 4 a la hora de cierre, se cancela solo y la cancha queda libre. No hay que hacer nada.</p></details>
         <details class="faq"><summary>Transferí y sigue «Transferencia informada».</summary><p>Recepción tiene que verla en la cuenta y confirmarla. Cuando la confirma, pasa a pagada (o queda pendiente lo que deban los demás).</p></details>
         <details class="faq"><summary>No me deja sumarme a un partido.</summary><p>La página dice por qué: otra categoría o tipo, el lado ya está lleno, ya tenés algo a esa hora o el partido ya cerró.</p></details>
+        <details class="faq"><summary>¿Qué mails me manda la app?</summary><p>Uno por cada cosa que pasa con tus turnos y partidos: cuando reservás, el recordatorio antes de jugar, cuando pagás tu parte, si rechazan una transferencia y si algo se cancela. La lista completa está en <a href="#avisos-mail">Avisos por mail</a>. Los recordatorios se apagan en tu perfil.</p></details>
+        <details class="faq"><summary>El club, ¿cómo cambia la hora del recordatorio?</summary><p>En <b>Ajustes → Reservas y partidos → Recordatorio por mail</b>: de 2 a 48 h antes, o «No mandar». Solo les llega a quienes reservaron antes de esa ventana: si alguien reserva 2 h antes, no hace falta recordarle.</p></details>
         <details class="faq"><summary>¿Cómo instalo la app en el celular?</summary><p>Abrí la app en el navegador. En Android: menú ⋮ → <b>Instalar app</b>. En iPhone: Compartir → <b>Agregar a inicio</b>.</p></details>
       </div>
 
