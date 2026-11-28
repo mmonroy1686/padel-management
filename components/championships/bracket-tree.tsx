@@ -65,7 +65,7 @@ function DrawMatch({ match }: { match: MatchView }) {
         <div className="border-t border-border" />
         <DrawSide match={match} side="b" />
       </div>
-      <p className="h-4 truncate px-1 text-xs leading-4 text-accent-ink">{when}</p>
+      <p className="h-4 truncate px-1 text-xs leading-4 text-court-ink">{when}</p>
     </article>
   )
 }
@@ -92,7 +92,7 @@ function DrawSide({ match, side }: { match: MatchView; side: 'a' | 'b' }) {
           key={index}
           className={cn(
             'grid w-8 shrink-0 place-items-center font-display text-lg font-bold tabular-nums',
-            won ? 'bg-accent text-on-accent' : 'bg-bg text-fg-muted',
+            won ? 'bg-court text-on-court' : 'bg-bg text-fg-muted',
           )}
         >
           {side === 'a' ? set.a : set.b}

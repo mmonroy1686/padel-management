@@ -26,16 +26,29 @@ export function TvBoard({ club, name, screens, seconds = 20 }: TvBoardProps) {
     return () => clearInterval(timer)
   }, [seconds])
 
-  // Whatever a screen holds fits the monitor: when it is taller than the space left, it shrinks (never grows).
+  // Whatever a screen holds fits the monitor: when it is taller than the room left, it shrinks (never grows). Shrunk,
+  // it also gets wider in proportion, so it fills the width and its text wraps less, which makes it shorter: so it
+  // measures again at each width until it fits. The room is the area without its padding. Written straight to the
+  // element, before paint: no frame shows it cut.
   const area = useRef<HTMLDivElement>(null)
   const content = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(1)
   useLayoutEffect(() => {
     const fit = () => {
-      if (!area.current || !content.current) return
-      const needed = content.current.scrollHeight
-      const room = area.current.clientHeight
-      setScale(needed > room && needed > 0 ? room / needed : 1)
+      const box = area.current
+      const element = content.current
+      if (!box || !element) return
+      const style = getComputedStyle(box)
+      const room = box.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)
+      let scale = 1
+      element.style.transform = ''
+      element.style.width = ''
+      for (let step = 0; step < 6; step++) {
+        const needed = element.scrollHeight
+        if (needed === 0 || needed * scale <= room + 0.5) break
+        scale = room / needed
+        element.style.width = `${100 / scale}%`
+        element.style.transform = `scale(${scale})`
+      }
     }
     fit()
     window.addEventListener('resize', fit)
@@ -82,7 +95,6 @@ export function TvBoard({ club, name, screens, seconds = 20 }: TvBoardProps) {
       <div
         ref={content}
         className="flex origin-top-left flex-col gap-8"
-        style={scale < 1 ? { transform: `scale(${scale})`, width: `${100 / scale}%` } : undefined}
       >
         {screen === null ? <p className="text-4xl">Todavía no hay partidos.</p> : null}
         {screen ? <h1 className="font-display text-6xl font-bold uppercase text-accent-ink">{screen.title}</h1> : null}
