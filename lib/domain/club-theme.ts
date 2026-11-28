@@ -56,6 +56,35 @@ function derive(base: Oklch, from: Oklch, to: Oklch, lightness: 'relative' | 'ab
   })
 }
 
+// The support color (court: courts, teams, what is not the club's own action). Rustic's blue works next to almost any
+// primary, but not next to a blue one: the whole app would be one color. So it moves to the hue farthest from the
+// primary (and from the danger red), among a few that work as a court: blue, green, teal and violet, at Rustic's
+// lightness and chroma. A primary with almost no color (gray, black, white) keeps the blue.
+const SUPPORT_HUES = [250, 150, 195, 300]
+const DANGER_HUE = 25
+const GRAY_CHROMA = 0.04
+
+function hueDistance(a: number, b: number): number {
+  const d = Math.abs((((a - b) % 360) + 360) % 360)
+  return Math.min(d, 360 - d)
+}
+
+export function supportHue(primary: string): number {
+  const p = lch(primary)
+  if (p.c < GRAY_CHROMA) return SUPPORT_HUES[0]
+  const score = (hue: number) => Math.min(hueDistance(hue, p.h), hueDistance(hue, DANGER_HUE) + 30)
+  // Rustic's blue wins whenever it is far enough: most clubs keep the court as it is.
+  if (hueDistance(SUPPORT_HUES[0], p.h) >= 90) return SUPPORT_HUES[0]
+  return SUPPORT_HUES.reduce((best, hue) => (score(hue) > score(best) ? hue : best))
+}
+
+// A Rustic court token turned to the support hue; Rustic's own when the hue is its blue.
+function supportTone(rusticToken: string, hue: number): string {
+  if (hue === SUPPORT_HUES[0]) return rusticToken
+  const t = lch(rusticToken)
+  return oklchToHex({ ...t, h: hue })
+}
+
 const readable = (color: string, backgrounds: string[]) =>
   backgrounds.every((background) => contrastRatio(color, background) >= MIN_CONTRAST)
 
@@ -76,7 +105,7 @@ function onColor(color: string): string {
   return contrastRatio('#000000', color) >= contrastRatio('#FFFFFF', color) ? '#000000' : '#FFFFFF'
 }
 
-function darkTokens(primary: string, background: string): { tokens: Tokens; adjusted: Adjustment[] } {
+function darkTokens(primary: string, background: string, hue: number): { tokens: Tokens; adjusted: Adjustment[] } {
   const adjusted: Adjustment[] = []
   const given = lch(background)
   const darkened = given.l > DARK_BG_MAX_L
@@ -101,15 +130,15 @@ function darkTokens(primary: string, background: string): { tokens: Tokens; adju
       accent: primary,
       'on-accent': onColor(primary),
       'accent-ink': accentInk,
-      court: D.court,
-      'on-court': D['on-court'],
-      'court-ink': ensureReadable(D['court-ink'], on, 'lighter'),
+      court: supportTone(D.court, hue),
+      'on-court': hue === SUPPORT_HUES[0] ? D['on-court'] : onColor(supportTone(D.court, hue)),
+      'court-ink': ensureReadable(supportTone(D['court-ink'], hue), on, 'lighter'),
       danger: ensureReadable(D.danger, on, 'lighter'),
     },
   }
 }
 
-function lightTokens(primary: string, background: string): { tokens: Tokens; adjusted: Adjustment[] } {
+function lightTokens(primary: string, background: string, hue: number): { tokens: Tokens; adjusted: Adjustment[] } {
   const adjusted: Adjustment[] = []
   const base = lch(background)
   const L = RUSTIC.light
@@ -142,9 +171,9 @@ function lightTokens(primary: string, background: string): { tokens: Tokens; adj
       accent: primary,
       'on-accent': onColor(primary),
       'accent-ink': accentInk,
-      court: L.court,
-      'on-court': L['on-court'],
-      'court-ink': ensureReadable(L['court-ink'], on, 'darker'),
+      court: supportTone(L.court, hue),
+      'on-court': hue === SUPPORT_HUES[0] ? L['on-court'] : onColor(supportTone(L.court, hue)),
+      'court-ink': ensureReadable(supportTone(L['court-ink'], hue), on, 'darker'),
       danger: ensureReadable(L.danger, on, 'darker'),
     },
   }
@@ -154,8 +183,9 @@ function lightTokens(primary: string, background: string): { tokens: Tokens; adj
 export function clubTheme({ primary, background }: BrandColors): ClubTheme {
   const p = HEX6.test(primary) ? primary.toUpperCase() : DEFAULT_PRIMARY
   const b = HEX6.test(background) ? background.toUpperCase() : DEFAULT_BACKGROUND
-  const dark = darkTokens(p, b)
-  const light = lightTokens(p, b)
+  const hue = supportHue(p)
+  const dark = darkTokens(p, b, hue)
+  const light = lightTokens(p, b, hue)
   return { dark: dark.tokens, light: light.tokens, adjusted: [...dark.adjusted, ...light.adjusted] }
 }
 

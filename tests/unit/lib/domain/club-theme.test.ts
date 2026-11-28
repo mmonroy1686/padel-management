@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { contrastRatio } from '@/lib/design/contrast'
-import { clubTheme, RUSTIC, THEME_TOKENS, themeCss, type Tokens } from '@/lib/domain/club-theme'
+import { clubTheme, MIN_CONTRAST, RUSTIC, supportHue, THEME_TOKENS, themeCss, type Tokens } from '@/lib/domain/club-theme'
 
 // The fallback palette in app/globals.css: the dark :root and the light one inside the media query.
 function globalsPalette(): { dark: Record<string, string>; light: Record<string, string> } {
@@ -101,5 +101,23 @@ describe('themeCss', () => {
     expect(themeCss(theme, 'dark')).toBe(`:root:root{color-scheme:dark;${THEME_TOKENS.map((t) => `--${t}:${theme.dark[t]};`).join('')}}`)
     expect(themeCss(theme, 'light')).toBe(`:root:root{color-scheme:light;${THEME_TOKENS.map((t) => `--${t}:${theme.light[t]};`).join('')}}`)
     expect(themeCss(theme, 'light')).not.toContain('@media')
+  })
+})
+
+describe('the support color', () => {
+  it('keeps Rustic blue for a primary far from blue, and for a gray one', () => {
+    expect(supportHue('#FCB021')).toBe(250)
+    expect(supportHue('#E53935')).toBe(250)
+    expect(supportHue('#6B7280')).toBe(250)
+    expect(clubTheme({ primary: '#E53935', background: '#101010' }).dark.court).toBe(RUSTIC.dark.court)
+  })
+
+  it('moves away from a blue primary, so the app is not one color', () => {
+    const theme = clubTheme({ primary: '#2563EB', background: '#374151' })
+    expect(supportHue('#2563EB')).toBe(150)
+    expect(theme.dark.court).not.toBe(RUSTIC.dark.court)
+    expect(contrastRatio(theme.dark['court-ink'], theme.dark.bg)).toBeGreaterThanOrEqual(MIN_CONTRAST)
+    expect(contrastRatio(theme.light['court-ink'], theme.light.bg)).toBeGreaterThanOrEqual(MIN_CONTRAST)
+    expect(contrastRatio(theme.dark['on-court'], theme.dark.court)).toBeGreaterThanOrEqual(MIN_CONTRAST)
   })
 })
