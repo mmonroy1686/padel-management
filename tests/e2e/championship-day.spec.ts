@@ -71,7 +71,8 @@ test('campeonato: the organizer draws, schedules and publishes, loads the group 
   // What "Programar" answered, so a match left without a court says so.
   await expect(page.getByText(/^(Listo: los \d+ partidos|Ubicamos)/)).toHaveText('Listo: los 7 partidos tienen cancha y horario.')
   await expect(page.getByRole('heading', { name: 'Siguiente paso: publicar el fixture' })).toBeVisible()
-  await expect(page.getByRole('table', { name: 'Fixture', exact: true }).getByRole('row')).toHaveCount(8)
+  // On a phone each match is a card: the 7 of them (the table is for wider screens).
+  await expect(page.getByRole('list', { name: 'Fixture', exact: true }).getByRole('listitem')).toHaveCount(7)
   await page.getByRole('button', { name: 'Publicar fixture' }).click()
   await expect(page.getByRole('heading', { name: 'Día del torneo' })).toBeVisible()
 

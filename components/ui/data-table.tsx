@@ -23,7 +23,7 @@ const PAGE_SIZES = [20, 50, 100]
 // The club's long lists as a table: search, filters, sorting by column and pages. Nothing scrolls sideways on a
 // phone: each row stacks as a small card with the column names (phone="cards"), or, for a list of people, as a plain
 // row with a line between them (phone="rows"): the first column on top, the rest in one quiet line, the actions at
-// its end.
+// its end. In a card the first column is the title; a list can also draw its own card (renderPhone).
 export function DataTable({
   caption,
   columns,
@@ -35,6 +35,7 @@ export function DataTable({
   pageSize: initialPageSize = 20,
   emptyText,
   phone = 'cards',
+  renderPhone,
 }: {
   caption: string
   columns: DataColumn[]
@@ -47,8 +48,12 @@ export function DataTable({
   pageSize?: number
   emptyText: string
   phone?: 'cards' | 'rows'
+  // A list whose rows read better as their own card on a phone (the fixture): the table stays for wider screens.
+  renderPhone?: (row: DataRow) => ReactNode
 }) {
   const rowsOnPhone = phone === 'rows'
+  // In a phone card the first column is its title, without its label.
+  const titleKey = columns[0]?.key
   // Where each column sits among the ones a phone shows: the first on top, a dot before the rest of the line.
   const phonePlace = new Map(columns.filter((column) => !column.phoneHidden).map((column, place) => [column.key, place]))
   const id = useId()
@@ -128,7 +133,14 @@ export function DataTable({
         <p className="rounded-2xl border border-dashed border-border p-4 text-fg-muted">{emptyText}</p>
       ) : (
         <>
-          <table className="w-full border-separate border-spacing-0 text-left max-md:block">
+          {renderPhone ? (
+            <ul aria-label={caption} className="flex flex-col gap-3 md:hidden">
+              {shown.rows.map((row) => (
+                <li key={row.id}>{renderPhone(row)}</li>
+              ))}
+            </ul>
+          ) : null}
+          <table className={cn('w-full border-separate border-spacing-0 text-left max-md:block', renderPhone && 'max-md:hidden')}>
             <caption className="sr-only">{caption}</caption>
             <thead className="max-md:sr-only">
               <tr>
@@ -183,7 +195,9 @@ export function DataTable({
                         column.align === 'end' && 'text-right tabular-nums',
                         rowsOnPhone && column.phoneHidden && 'max-md:hidden',
                         !rowsOnPhone
-                          ? 'max-md:flex max-md:items-center max-md:justify-between max-md:gap-3'
+                          ? column.key === titleKey
+                            ? 'max-md:mb-1 max-md:border-b max-md:border-border max-md:pb-2 max-md:text-lg max-md:font-semibold'
+                            : 'max-md:flex max-md:items-center max-md:justify-between max-md:gap-3'
                           : phonePlace.get(column.key) === 0
                             ? 'max-md:basis-full'
                             : column.hideLabel
@@ -193,7 +207,7 @@ export function DataTable({
                                 : 'max-md:text-sm max-md:text-fg-muted',
                       )}
                     >
-                      {column.hideLabel || rowsOnPhone ? null : (
+                      {column.hideLabel || rowsOnPhone || column.key === titleKey ? null : (
                         <span aria-hidden="true" className="text-xs font-semibold uppercase tracking-wide text-fg-muted md:hidden">
                           {column.label}
                         </span>

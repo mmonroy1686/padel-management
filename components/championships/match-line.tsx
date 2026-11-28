@@ -137,5 +137,5 @@ export function StatusBadge({ match, large }: { match: MatchView; large: boolean
   if (match.status === 'finished' || match.status === 'walkover') {
     return <span className={cn(base, 'border border-court-ink text-court-ink')}>{match.statusLabel}</span>
   }
-  return <span className={cn(base, 'border border-border text-fg-muted')}>{match.statusLabel}</span>
+  return <span className={cn(base, 'bg-court/10 text-court-ink ring-1 ring-court/30')}>{match.statusLabel}</span>
 }
