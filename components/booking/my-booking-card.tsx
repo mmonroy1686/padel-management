@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { WhatsappShareLink } from './whatsapp-share-link'
 import { useCallback, useState } from 'react'
 import { PaymentBadge } from '@/components/booking/payment-badge'
 import { TransferSheet, type ReportTransfer } from '@/components/booking/transfer-sheet'
@@ -17,12 +18,15 @@ export function MyBookingCard({
   transfer,
   cancelAction,
   reportAction,
+  shareText,
 }: {
   booking: MyBookingView
   userId: string
   transfer: { details: string | null; receiptRequired: boolean }
   cancelAction: FormAction
   reportAction: ReportTransfer
+  // The WhatsApp message that fills it (/turno/<id>); open matches share from their own page.
+  shareText?: string
 }) {
   const [sheet, setSheet] = useState<'cancel' | 'transfer' | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
@@ -72,6 +76,7 @@ export function MyBookingCard({
           ) : (
             <p className="text-sm text-fg-muted">{booking.cancel.reason}</p>
           )}
+          {!booking.matchId && shareText ? <WhatsappShareLink text={shareText} label="Buscar jugadores" size="md" /> : null}
         </div>
       ) : null}
 
