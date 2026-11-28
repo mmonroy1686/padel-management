@@ -15,7 +15,7 @@ select is(
   array['accepts_card', 'accepts_cash', 'accepts_transfer', 'booking_window_days', 'cancellation_notice_hours',
         'closes_at', 'flyer_background_path', 'logo_path', 'loyalty_discount_percent', 'loyalty_enabled',
         'loyalty_every', 'loyalty_expiry_months', 'match_close_minutes', 'max_active_bookings', 'name', 'opens_at',
-        'phone', 'slot_minutes', 'transfer_details', 'transfer_receipt_required'],
+        'phone', 'reminder_hours', 'slot_minutes', 'transfer_details', 'transfer_receipt_required'],
   'the API updates only the columns Ajustes writes');
 select ok(
   not exists (select 1 from pg_catalog.pg_attribute

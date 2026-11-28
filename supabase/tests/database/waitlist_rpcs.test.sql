@@ -226,7 +226,8 @@ select results_eq(
 -- Avisos read
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a5", "role": "authenticated"}';
-select is(public.mark_notifications_read(), 1, 'opening Avisos marks Juli''s aviso read');
+-- Two: the waitlist's and the receipt of the booking she made from it.
+select is(public.mark_notifications_read(), 2, 'opening Avisos marks Juli''s avisos read');
 select is((select count(*)::int from public.notifications where read_at is null), 0, 'none left unread');
 set local role anon;
 select throws_ok($$ select public.mark_notifications_read() $$, '42501', null, 'anon cannot call mark_notifications_read');

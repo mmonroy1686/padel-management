@@ -18,7 +18,7 @@ export default async function AvisosPage() {
       {notifications.some((item) => item.unread) ? <MarkRead action={markNotificationsRead} /> : null}
       <div>
         <h1 className="font-display text-4xl font-bold uppercase">Avisos</h1>
-        <p className="text-fg-muted">Lo que te avisamos de la lista de espera.</p>
+        <p className="text-fg-muted">Tus reservas, pagos, partidos y torneos. También te llegan por mail.</p>
       </div>
       <NotificationList items={notifications} timezone={viewer.club.timezone} today={today} />
     </>

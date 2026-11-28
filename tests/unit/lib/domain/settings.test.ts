@@ -40,8 +40,19 @@ describe('parseBookingSettings', () => {
         cancellation_notice_hours: 24,
         max_active_bookings: 2,
         match_close_minutes: 180,
+        reminder_hours: 24,
       },
     })
+  })
+
+  it('reads the reminder: some hours before, or none', () => {
+    const read = (value: string) => {
+      const parsed = parseBookingSettings(form(replacing(BOOKING, 'reminder_hours', value)))
+      return parsed.ok ? parsed.value.reminder_hours : parsed.message
+    }
+    expect(read('2')).toBe(2)
+    expect(read('none')).toBeNull()
+    expect(read('5')).toBe('Elegí cuándo mandar el recordatorio.')
   })
 
   it('rejects closing before opening', () => {
