@@ -59,7 +59,7 @@ test('campeonato: the organizer opens it, a member signs up with a partner from 
   await signInWithMagicLink(page, admin.email, `/club/torneos/campeonatos/${championshipId}`)
   const libre = page.getByRole('region', { name: '6ta Libre' })
   const anaRow = libre.getByRole('row', { name: /Ana Campeonato y Pedro Afuera/ })
-  await anaRow.getByRole('button', { name: 'Cobrar $2.000' }).click()
+  await anaRow.getByRole('button', { name: 'Cobrar $2.000 en efectivo' }).click()
   await expect(anaRow).toContainText('Pagada')
 
   // Two more pairs through the API: the first fills the category, the second waits in line.

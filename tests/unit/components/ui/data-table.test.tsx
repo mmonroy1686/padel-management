@@ -94,13 +94,25 @@ describe('DataTable', () => {
     expect(names()).toHaveLength(3)
   })
 
-  it('phone="rows": plain rows without the column names next to each cell; cards keep them', () => {
+  it('phone="rows": plain rows without the column names next to each cell; cards keep them (but the first column, their title)', () => {
     const { unmount } = render(<DataTable caption="Jugadores" columns={COLUMNS} rows={rows.slice(0, 2)} emptyText="Nadie." />)
-    expect(within(screen.getAllByRole('row')[1]).getByText('Nombre')).toBeInTheDocument()
+    const card = screen.getAllByRole('row')[1]
+    expect(within(card).getByText('Categoría')).toBeInTheDocument()
+    expect(within(card).queryByText('Nombre')).not.toBeInTheDocument()
     unmount()
     render(<DataTable caption="Jugadores" columns={COLUMNS} rows={rows.slice(0, 2)} emptyText="Nadie." phone="rows" />)
     const row = screen.getAllByRole('row')[1]
     expect(within(row).queryByText('Nombre')).not.toBeInTheDocument()
     expect(row).toHaveTextContent('Ángel Núñez')
+  })
+
+  it('renderPhone: the shown rows as their own cards in a list named like the table', () => {
+    render(
+      <DataTable caption="Fixture" columns={COLUMNS} rows={rows.slice(0, 3)} emptyText="Nadie."
+        renderPhone={(row) => <article>Tarjeta {row.id}</article>} />,
+    )
+    const list = screen.getByRole('list', { name: 'Fixture' })
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3)
+    expect(within(list).getByText(`Tarjeta ${rows[0].id}`)).toBeInTheDocument()
   })
 })
