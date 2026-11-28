@@ -58,7 +58,7 @@ export function MatchLine({
               {side.name}
             </span>
             {side.won ? (
-              <span className={cn('flex shrink-0 items-center gap-1 font-semibold text-accent-ink', s.label)}>
+              <span className={cn('flex shrink-0 items-center gap-1 font-semibold text-court-ink', s.label)}>
                 <Icon name="check-circle" className={s.icon} />
                 Ganó
               </span>
