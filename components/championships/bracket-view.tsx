@@ -19,7 +19,7 @@ export function BracketView({ bracket, large = false, showTitle = true }: { brac
           >
             <h4
               className={cn(
-                'self-start rounded-full bg-bg px-3 py-1 text-xs font-bold uppercase tracking-wide text-accent-ink ring-1 ring-border',
+                'self-start rounded-full bg-bg px-3 py-1 text-xs font-bold uppercase tracking-wide text-court-ink ring-1 ring-border',
                 large && 'px-5 py-2 text-2xl',
               )}
             >

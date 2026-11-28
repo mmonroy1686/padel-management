@@ -118,7 +118,7 @@ export function PublicBoard({
             </h2>
             {category.phases.map((phase) => (
               <div key={phase.key} className="flex flex-col gap-3">
-                <h3 className="border-l-4 border-accent pl-3 font-bold">{phase.title}</h3>
+                <h3 className="font-bold text-court-ink">{phase.title}</h3>
                 <ul className="grid gap-3 md:grid-cols-2">
                   {phase.matches.map((match) => (
                     <li key={match.id}>{card(match)}</li>

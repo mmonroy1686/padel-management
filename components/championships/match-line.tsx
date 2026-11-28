@@ -42,7 +42,7 @@ export function MatchLine({
             data-winner={side.won}
             className={cn(
               'flex items-center gap-3 rounded-xl border-l-4 py-1.5 pl-3 pr-1',
-              side.won ? 'border-accent bg-bg' : 'border-transparent',
+              side.won ? 'border-court-ink bg-bg' : 'border-transparent',
               s.row,
             )}
           >
@@ -78,7 +78,7 @@ export function MatchLine({
                     live
                       ? 'bg-bg text-fg ring-2 ring-accent'
                       : games > side.rival[index]
-                        ? 'bg-accent text-on-accent'
+                        ? 'bg-court text-on-court'
                         : 'bg-surface text-fg-muted ring-1 ring-border',
                   )}
                 >

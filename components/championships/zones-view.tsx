@@ -63,7 +63,7 @@ export function ZonesView({
                     <span
                       className={cn(
                         'grid size-7 place-items-center rounded-full font-display text-sm font-bold tabular-nums',
-                        index === 0 ? 'bg-accent text-on-accent' : 'bg-bg text-fg-muted ring-1 ring-border',
+                        index === 0 ? 'bg-court text-on-court' : 'bg-bg text-fg-muted ring-1 ring-border',
                       )}
                     >
                       {index + 1}

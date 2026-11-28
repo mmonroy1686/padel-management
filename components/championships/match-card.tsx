@@ -99,7 +99,7 @@ function Side({ match, side }: { match: MatchView; side: 'a' | 'b' }) {
             aria-label={set.inProgress ? `${games} (set en juego)` : undefined}
             className={cn(
               'grid w-6 shrink-0 place-items-center font-display text-2xl font-bold tabular-nums',
-              won ? 'text-accent-ink' : lost ? 'text-fg-muted' : 'text-fg',
+              won ? 'text-court-ink' : lost ? 'text-fg-muted' : 'text-fg',
               set.inProgress && 'rounded-md ring-2 ring-accent',
             )}
           >
