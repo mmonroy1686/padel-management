@@ -7,6 +7,10 @@ import { localDateOf, type LocalDate } from '@/lib/domain/time'
 import { cn } from '@/lib/cn'
 
 const SHOWN = 3
+// Entrance steps (ms): each a little shorter than the last, so the group settles together (globals.css, .rise-in).
+const DOT_DELAYS = [0, 30, 55, 75, 90]
+const CARD_DELAYS = [40, 85, 120]
+const delay = (ms: number) => ({ '--delay': `${ms}ms` }) as React.CSSProperties
 
 // Inicio → "Tus últimos partidos": the run of the last results as dots, then the last played bookings, each with its
 // stamp (won in the support color with a trophy, lost in ink), the sets as boxes and who played. Without a result, a
@@ -25,8 +29,9 @@ export function RecentResults({ played, timezone, today }: { played: PlayedBooki
             {run.map((win, index) => (
               <li
                 key={index}
+                style={delay(DOT_DELAYS[index] ?? 90)}
                 className={cn(
-                  'grid size-7 place-items-center rounded-full text-xs font-bold',
+                  'dot-in grid size-7 place-items-center rounded-full text-xs font-bold',
                   win ? 'bg-court text-on-court' : 'border-2 border-border text-fg-muted',
                 )}
               >
@@ -41,8 +46,8 @@ export function RecentResults({ played, timezone, today }: { played: PlayedBooki
         </div>
       ) : null}
       <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
-        {played.slice(0, SHOWN).map((booking) => (
-          <li key={booking.bookingId} className="min-w-0">
+        {played.slice(0, SHOWN).map((booking, index) => (
+          <li key={booking.bookingId} className="rise-in min-w-0" style={delay(CARD_DELAYS[index] ?? 120)}>
             <ResultCard booking={booking} timezone={timezone} today={today} />
           </li>
         ))}

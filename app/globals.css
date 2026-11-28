@@ -236,6 +236,37 @@ body {
   }
 }
 
+/* Inicio → "Tus últimos partidos" (components/history/recent-results.tsx): the section is seen many times a day, so
+   one short entrance and nothing else. The run's dots grow in from 0.9 and the cards rise 6px, one after another
+   (--delay, non-uniform steps), all done in under 300ms. Less motion: only the fade. */
+.dot-in,
+.rise-in {
+  transition:
+    opacity 200ms var(--ease-out) var(--delay, 0ms),
+    transform 220ms var(--ease-out) var(--delay, 0ms);
+}
+.dot-in {
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+.rise-in {
+  @starting-style {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot-in,
+  .rise-in {
+    transform: none;
+    @starting-style {
+      transform: none;
+    }
+  }
+}
+
 /* Modo TV: how long until the next screen. */
 @keyframes tv-progress {
   from {
