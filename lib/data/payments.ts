@@ -27,7 +27,7 @@ const CHAMPIONSHIP_SELECT =
 // A payment with what it was for (a booking, a tournament entry, a day use pass or a championship pair): the
 // transfers to confirm and the payments done today.
 const PAYMENT_SELECT =
-  'id, amount, method, status, confirmed_at, rejection_reason, receipt_path, payer:profiles!payments_payer_id_fkey(display_name), booking:bookings(starts_at, guest_name, court:courts(name), player:profiles!bookings_player_id_fkey(display_name)), entry:tournament_entries!payments_entry_in_club(tournament:tournaments!tournament_entries_tournament_in_club(name, starts_at)), pass:day_use_passes!payments_pass_in_club(on_date, product:day_use_products!day_use_passes_product_in_club(name, from_time)), pair:championship_entries!payments_championship_entry_in_club(category:championship_categories!championship_entries_category_in_club(name, championship:championships!championship_categories_championship_in_club(name, windows:championship_windows!championship_windows_championship_in_club(on_date, from_time))))'
+  'id, amount, method, status, confirmed_at, rejection_reason, receipt_path, payer_position, payer:profiles!payments_payer_id_fkey(display_name), reporter:profiles!payments_reported_by_fkey(display_name), booking:bookings(starts_at, guest_name, court:courts(name), player:profiles!bookings_player_id_fkey(display_name)), entry:tournament_entries!payments_entry_in_club(tournament:tournaments!tournament_entries_tournament_in_club(name, starts_at)), pass:day_use_passes!payments_pass_in_club(on_date, product:day_use_products!day_use_passes_product_in_club(name, from_time)), pair:championship_entries!payments_championship_entry_in_club(category:championship_categories!championship_entries_category_in_club(name, championship:championships!championship_categories_championship_in_club(name, windows:championship_windows!championship_windows_championship_in_club(on_date, from_time))))'
 
 // Everything the Cobros screen needs, read with the staff session.
 export async function loadPaymentsOverview(club: Club, now = new Date()): Promise<PaymentsOverview> {
@@ -125,7 +125,11 @@ export async function loadPaymentsOverview(club: Club, now = new Date()): Promis
       id: payment.id,
       kind: kindOf(payment),
       amount: payment.amount,
-      holder: payment.payer?.display_name ?? (payment.booking ? holderLabel(payment.booking) : 'Sin nombre'),
+      // A share of a booking (payer_position) is paid by whoever reported it, not by the holder.
+      holder:
+        payment.payer?.display_name ??
+        (payment.payer_position !== null && payment.status === 'reported' ? payment.reporter?.display_name : null) ??
+        (payment.booking ? holderLabel(payment.booking) : 'Sin nombre'),
       startsAt: payment.booking
         ? toDate(payment.booking.starts_at)
         : tournament

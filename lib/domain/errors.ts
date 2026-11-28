@@ -73,6 +73,8 @@ const MESSAGES = {
   not_played_yet: 'Ese turno todavía no se jugó.',
   incomplete_players: 'Faltan jugadores en el turno: cargá los 4 para anotar el resultado.',
   invalid_sets: 'Revisá los sets: cada uno con un ganador, y el partido también.',
+  already_in_booking: 'Ya estás en este turno.',
+  booking_full: 'El turno ya está completo.',
   not_support: 'No entraste a este club como soporte.',
   invalid_status: 'Elegí un estado de la lista.',
   setup_incomplete: 'Para terminar, el club necesita al menos una cancha y un precio.',

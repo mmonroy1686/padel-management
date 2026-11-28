@@ -41,11 +41,11 @@ describe('SlotGrid for players', () => {
     expect(onWait).toHaveBeenCalledWith(grid.rows[2].cells[0])
   })
 
-  it('offers free slots with court, time and price', async () => {
+  it('offers free slots with court, time and the price per person', async () => {
     const grid = makeGrid()
     const onSelect = vi.fn()
     render(<SlotGrid courts={COURTS} rows={grid.rows} variant="player" onSelect={onSelect} />)
-    await userEvent.click(screen.getByRole('button', { name: 'Reservar Cancha 1 a las 08:00, $1.200' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Reservar Cancha 1 a las 08:00, $300 por persona' }))
     expect(onSelect).toHaveBeenCalledWith(grid.rows[0].cells[0])
   })
 

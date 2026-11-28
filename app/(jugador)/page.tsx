@@ -15,7 +15,7 @@ import { loadFreeCourts, loadMatches, loadPlayerContext } from '@/lib/data/match
 import { loadMyBookings } from '@/lib/data/my-bookings'
 import { loadMyChampionshipMatches } from '@/lib/data/championship-fixture'
 import { loadTournaments } from '@/lib/data/tournaments'
-import { dayLabel, timeIn } from '@/lib/domain/format'
+import { capitalize, dayLabel, timeIn } from '@/lib/domain/format'
 import { countFree, nextFreeCells, slotParam } from '@/lib/domain/grid'
 import { freeTodayText } from '@/lib/domain/next-free'
 import { joinStatus } from '@/lib/domain/match-join'
@@ -33,6 +33,8 @@ import { loadDayUseHome } from '@/lib/data/day-use'
 import { cancelMyBooking, reportTransfer } from './reservas/actions'
 import { HoldBanner } from '@/components/waitlist/hold-banner'
 import { WaitingCard } from '@/components/waitlist/waiting-card'
+import { bookingShareText, bookingShareUrl } from '@/lib/domain/booking-share'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { RecentResults } from '@/components/history/recent-results'
 import { loadPlayedBookings } from '@/lib/data/history'
 import { cancelSlotWait, claimSlotHold, declineSlotHold } from '@/lib/actions/waitlist'
@@ -50,6 +52,7 @@ export default async function HomePage() {
   if (!membership || !isProfileComplete(profile, membership)) redirect(incompleteHome(membership))
 
   const now = new Date()
+  const origin = await requestOrigin()
   const member = { ...viewer, membership }
   const windowEnd = zonedTime(addDays(localDateOf(now, club.timezone), club.booking_window_days + 1), 0, club.timezone)
   const [grid, bookings, matches, context, tournaments, dayUse, waitlist, championshipMatches, clubInfo, played] = await Promise.all([
@@ -81,7 +84,21 @@ export default async function HomePage() {
   const transfer = { details: club.transfer_details, receiptRequired: club.transfer_receipt_required }
   const bookingCard = (booking: (typeof bookings.upcoming)[number]) => (
     <li key={booking.id}>
-      <MyBookingCard booking={booking} userId={viewer.userId} transfer={transfer} cancelAction={cancelMyBooking} reportAction={reportTransfer} />
+      <MyBookingCard
+        booking={booking}
+        userId={viewer.userId}
+        transfer={transfer}
+        cancelAction={cancelMyBooking}
+        reportAction={reportTransfer}
+        shareText={bookingShareText({
+          clubName: club.name,
+          dayText: capitalize(booking.dateText),
+          time: booking.timeText.split(' a ')[0],
+          courtName: booking.courtName,
+          free: null,
+          url: bookingShareUrl(origin, booking.id),
+        })}
+      />
     </li>
   )
 

@@ -41,7 +41,9 @@ test('reception confirms a transfer, loads a block and a recurring slot, and can
 
   await page.goto(`/club/grilla?dia=${day}`)
   await showCourt(page, booked.courtName)
-  await expect(bookedCell).toContainText('Pagada')
+  // Her transfer paid her share (a quarter of the court): the other three still pay theirs at the club.
+  await expect(bookedCell).toContainText('Pendiente de pago')
+  await expect(bookedCell).not.toContainText('Transferencia informada')
 
   // Block the first free slot.
   const load = page.getByRole('dialog', { name: 'Cargar turno' })
