@@ -1,0 +1,576 @@
+<title>Manual Rustic Pádel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: a field guide. Sticky index on the left, chapters on the right; each step pairs short text with the real screen. */
+:root {
+  --bg: #fbfaf7;
+  --surface: #f0f2f1;
+  --fg: #10201d;
+  --muted: #56625f;
+  --line: #dcdfdc;
+  --accent: #f6ad1f;      /* the club's color: the one action on each screen */
+  --accent-ink: #7a5200;
+  --accent-soft: #fdf1d6;
+  --court: #0b5694;       /* support color: courts, players, wins */
+  --court-soft: #e3eef8;
+  --frame: #ffffff;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1716; --surface: #18221f; --fg: #e8eeec; --muted: #9eaba7; --line: #2a3633;
+    --accent: #f6ad1f; --accent-ink: #f7c55e; --accent-soft: #2e2512; --court: #6fb2ec; --court-soft: #13283a; --frame: #1d2724;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1716; --surface: #18221f; --fg: #e8eeec; --muted: #9eaba7; --line: #2a3633;
+  --accent: #f6ad1f; --accent-ink: #f7c55e; --accent-soft: #2e2512; --court: #6fb2ec; --court-soft: #13283a; --frame: #1d2724;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { background: var(--bg); color: var(--fg); font: 400 17px/1.6 var(--body); }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+
+/* Cover */
+.cover { padding-block: 48px 36px; border-bottom: 1px solid var(--line); display: grid; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.badge { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #10201d; display: grid; place-items: center; font: 700 22px/1 var(--display); flex: none; }
+.eyebrow { font: 600 14px/1.2 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 700 clamp(44px, 8vw, 84px)/.92 var(--display); text-transform: uppercase; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+.lede { font-size: 19px; max-width: 62ch; margin: 0; color: var(--fg); }
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 8px; }
+.role { display: block; text-decoration: none; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+.role:hover { border-color: var(--accent); }
+.role b { display: block; font: 700 24px/1.1 var(--display); text-transform: uppercase; }
+.role span { color: var(--muted); font-size: 15px; }
+.role i { font-style: normal; font-size: 13px; color: var(--accent-ink); font-weight: 600; }
+
+/* Body grid */
+.layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 48px; padding-top: 32px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); align-self: start; max-height: calc(100vh - 32px); overflow: auto; font-size: 15px; }
+.toc h2 { font: 700 15px/1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 18px 0 6px; }
+.toc h2:first-child { margin-top: 0; }
+.toc a { display: block; color: var(--fg); text-decoration: none; padding: 4px 0 4px 10px; border-left: 2px solid var(--line); }
+.toc a:hover { border-left-color: var(--accent); color: var(--accent-ink); }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  nav.toc { position: static; max-height: none; background: var(--surface); border-radius: 16px; padding: 14px 16px; }
+  .toc .group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .toc a { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; background: var(--bg); }
+}
+
+/* Parts and sections */
+.part { padding-top: 8px; }
+.part-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; border-top: 4px solid var(--fg); padding-top: 14px; margin: 40px 0 8px; }
+.part:first-child .part-head { margin-top: 0; }
+.part-head h2 { font: 700 clamp(34px, 5vw, 52px)/1 var(--display); text-transform: uppercase; margin: 0; }
+.part-head p { margin: 0; color: var(--muted); }
+section.s { padding-block: 28px; border-bottom: 1px solid var(--line); scroll-margin-top: 16px; }
+section.s > h3 { font: 700 30px/1.05 var(--display); text-transform: uppercase; margin: 0 0 6px; text-wrap: balance; }
+.where { font-size: 14px; color: var(--muted); margin: 0 0 16px; }
+.where code { font: 500 13px/1 ui-monospace, "Cascadia Mono", Consolas, monospace; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
+p { margin: 0 0 12px; max-width: 66ch; }
+h4 { font: 600 18px/1.3 var(--body); margin: 18px 0 6px; }
+
+/* Text + screen pair */
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 32px; align-items: start; }
+.pair.two { grid-template-columns: minmax(0, 1fr) 300px 300px; }
+@media (max-width: 1100px) { .pair.two { grid-template-columns: minmax(0, 1fr) 260px; } .pair.two figure:last-child { grid-column: 2; } }
+@media (max-width: 720px) { .pair, .pair.two { grid-template-columns: minmax(0, 1fr); } .pair.two figure:last-child { grid-column: auto; } .pair figure.phone { max-width: 320px; } }
+.text { min-width: 0; }
+
+figure { margin: 0; min-width: 0; }
+figure img { display: block; width: 100%; height: auto; }
+figure.phone .screen { border-radius: 26px; border: 8px solid var(--fg); overflow: hidden; background: var(--frame); box-shadow: 0 10px 30px -18px rgba(0,0,0,.5); }
+figure.desk { margin-top: 18px; }
+figure.desk .screen { border-radius: 12px; border: 1px solid var(--line); overflow: hidden; background: var(--frame); box-shadow: 0 14px 34px -24px rgba(0,0,0,.45); }
+figure.desk .screen.tall { max-height: 620px; overflow-y: auto; }
+figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+/* Steps */
+ol.steps { list-style: none; counter-reset: st; padding: 0; margin: 8px 0 14px; display: grid; gap: 10px; max-width: 66ch; }
+ol.steps li { counter-increment: st; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; }
+ol.steps li::before { content: counter(st); width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #10201d; font: 700 16px/28px var(--display); text-align: center; }
+ul.dots { padding-left: 20px; margin: 6px 0 14px; max-width: 66ch; }
+ul.dots li { margin-bottom: 6px; }
+.ui { font: 700 .92em/1 var(--display); letter-spacing: .02em; text-transform: uppercase; background: var(--accent-soft); color: var(--fg); border: 1px solid var(--accent); border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+.chip { font-size: .85em; border: 1px solid currentColor; border-radius: 999px; padding: 0 8px; white-space: nowrap; }
+
+.tip, .warn { border-radius: 14px; padding: 12px 16px; margin: 14px 0; max-width: 66ch; font-size: 16px; }
+.tip { background: var(--court-soft); border-left: 4px solid var(--court); }
+.warn { background: var(--accent-soft); border-left: 4px solid var(--accent); }
+.tip b, .warn b { display: block; font: 700 15px/1.3 var(--display); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+
+.tbl { overflow-x: auto; margin: 12px 0 16px; border: 1px solid var(--line); border-radius: 14px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 15px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+thead th { background: var(--surface); font: 700 15px/1.2 var(--display); text-transform: uppercase; letter-spacing: .04em; }
+tbody tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; }
+
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 16px; font-size: 15px; }
+.flow span { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+.flow em { font-style: normal; color: var(--muted); }
+
+.settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 14px 0; }
+.settings div { background: var(--surface); border-radius: 14px; padding: 14px 16px; }
+.settings b { display: block; font-weight: 600; }
+.settings span { font-size: 15px; color: var(--muted); }
+
+details.faq { border-bottom: 1px solid var(--line); padding: 12px 0; max-width: 72ch; }
+details.faq summary { cursor: pointer; font-weight: 600; font-size: 18px; }
+details.faq p { margin-top: 8px; }
+footer { color: var(--muted); font-size: 14px; padding-top: 32px; }
+</style>
+
+<div class="wrap">
+  <header class="cover">
+    <div class="brand"><div class="badge" aria-hidden="true">RP</div><div class="eyebrow">Rustic Pádel · Manual de uso</div></div>
+    <h1>Cómo se usa la app del club</h1>
+    <p class="lede">Una sola app con dos caras: la de los <b>jugadores</b>, pensada para el celular, y el <b>Panel del club</b>, para la compu o la tablet de recepción. Este manual recorre las dos, pantalla por pantalla, con capturas reales.</p>
+    <div class="roles">
+      <a class="role" href="#jugadores"><i>Parte 1 · celular</i><b>Jugadores</b><span>Reservar, sumar gente, partidos abiertos, torneos, day use y perfil.</span></a>
+      <a class="role" href="#recepcion"><i>Parte 2 · compu o tablet</i><b>Recepción</b><span>El día a día: grilla, cobros, day use y jugadores.</span></a>
+      <a class="role" href="#admin"><i>Parte 3 · solo admin</i><b>Administración</b><span>Asistente, torneos, pantalla TV y ajustes del club.</span></a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Índice">
+      <h2>Jugadores</h2>
+      <div class="group">
+        <a href="#ingresar">Ingresar</a><a href="#inicio">Inicio</a><a href="#reservar">Reservar</a><a href="#completar">Completar el turno</a><a href="#pagar">Pagar</a><a href="#partidos">Partidos abiertos</a><a href="#torneos">Torneos</a><a href="#dayuse">Day use</a><a href="#perfil">Perfil y avisos</a>
+      </div>
+      <h2>Recepción</h2>
+      <div class="group">
+        <a href="#panel">Inicio del panel</a><a href="#grilla">Grilla</a><a href="#cobros">Cobros</a><a href="#calendario">Calendario</a><a href="#dayuse-club">Day use</a><a href="#jugadores-club">Jugadores</a><a href="#americano-club">Americano en juego</a>
+      </div>
+      <h2>Administración</h2>
+      <div class="group">
+        <a href="#asistente">Asistente</a><a href="#torneos-club">Torneos</a><a href="#tv">Pantalla TV</a><a href="#ajustes">Ajustes</a>
+      </div>
+      <h2>Más</h2>
+      <div class="group"><a href="#faq">Preguntas frecuentes</a></div>
+    </nav>
+
+    <main>
+      <!-- PARTE 1 -->
+      <div class="part" id="jugadores">
+        <div class="part-head"><h2>Jugadores</h2><p>Todo desde el celular. Se puede instalar como app desde el navegador.</p></div>
+
+        <section class="s" id="ingresar">
+          <h3>Ingresar</h3>
+          <p class="where">Pantalla de ingreso</p>
+          <div class="pair">
+            <div class="text">
+              <p>No hay contraseñas. Se entra de una de estas dos formas:</p>
+              <ol class="steps">
+                <li><span>Tocá <span class="ui">Seguir con Google</span> y elegí tu cuenta.</span></li>
+                <li><span>O escribí tu email, tocá <span class="ui">Mandarme un código</span> y copiá el código de 6 números que te llega por mail.</span></li>
+              </ol>
+              <p>La primera vez la app te pide tus datos de juego (nombre, lado, mano y categoría) para mostrarte partidos y torneos que te sirvan.</p>
+              <div class="tip"><b>Consejo</b>Si el código no llega, revisá spam o promociones. Cada código sirve una sola vez.</div>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j01-ingreso.jpg" alt="Pantalla Ingresar con el botón Seguir con Google y el campo de email" loading="lazy"></div></figure>
+          </div>
+        </section>
+
+        <section class="s" id="inicio">
+          <h3>Inicio</h3>
+          <p class="where">Pestaña <b>Inicio</b> · barra de abajo</p>
+          <div class="pair two">
+            <div class="text">
+              <p>Es la pantalla principal. De arriba hacia abajo:</p>
+              <ul class="dots">
+                <li><b>Reservar cancha</b>: el botón grande, con cuántos turnos quedan libres hoy y los próximos horarios para tocar directo.</li>
+                <li><b>Tus reservas</b>: tus turnos que vienen, con su estado de pago y lo que podés hacer con cada uno.</li>
+                <li><b>Tus últimos partidos</b>: resultados recientes con un resumen (G = ganaste, P = perdiste).</li>
+                <li><b>Partidos para vos</b>: partidos abiertos de tu categoría y lado que buscan gente.</li>
+                <li><b>Day use</b>, <b>Torneos</b> con inscripción abierta y <b>El club</b> (contacto, cómo llegar, horarios y servicios).</li>
+              </ul>
+              <h4>La barra de arriba</h4>
+              <p>La campana abre tus <a href="#perfil">avisos</a>. Tu círculo con iniciales abre el menú de cuenta: <b>Tu perfil</b> y <b>Cerrar sesión</b>.</p>
+              <h4>La barra de abajo</h4>
+              <p>Inicio, Reservar, Partidos, Torneos y Perfil. Siempre está a mano, en cualquier pantalla.</p>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j02-inicio.jpg" alt="Inicio del jugador: botón Reservar cancha, horarios libres y la lista Tus reservas" loading="lazy"></div><figcaption>Arriba: reservar y tus reservas.</figcaption></figure>
+            <figure class="phone"><div class="screen"><img src="img/j06-ultimos-partidos.jpg" alt="Tus últimos partidos con sets ganados y perdidos" loading="lazy"></div><figcaption>Más abajo: tus últimos partidos.</figcaption></figure>
+          </div>
+          <div class="pair two" style="margin-top:24px">
+            <div class="text">
+              <p>Al final del Inicio están el day use con tus sellos, los torneos abiertos, las reservas pasadas y canceladas, y la ficha del club.</p>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j06b-inicio-abajo.jpg" alt="Parte baja del Inicio: day use, torneos y el club" loading="lazy"></div></figure>
+            <figure class="phone"><div class="screen"><img src="img/j03-menu-cuenta.jpg" alt="Menú de cuenta abierto con Tu perfil y Cerrar sesión" loading="lazy"></div><figcaption>El menú de cuenta.</figcaption></figure>
+          </div>
+        </section>
+
+        <section class="s" id="reservar">
+          <h3>Reservar una cancha</h3>
+          <p class="where">Pestaña <b>Reservar</b> · o el botón amarillo del Inicio</p>
+          <div class="pair two">
+            <div class="text">
+              <ol class="steps">
+                <li><span>Elegí el día arriba: <b>Hoy</b>, <b>Mañana</b> o una fecha.</span></li>
+                <li><span>Buscá un horario con borde azul: dice el precio y <b>Libre</b>. Gris es <b>Ocupada</b>; relleno azul es <b>Tuya</b>. <b>Solo libres</b> esconde el resto.</span></li>
+                <li><span>Tocalo. Se abre la hoja con cancha, horario y precio.</span></li>
+                <li><span>Tocá <span class="ui">Reservar</span>. Listo: aparece en tu Inicio.</span></li>
+              </ol>
+              <div class="warn"><b>El precio es por persona</b>La cancha siempre se divide entre los 4 jugadores. «$300 c/u» quiere decir que cada uno paga $300.</div>
+              <p>En la misma hoja está <span class="ui">Armar partido abierto</span>: sirve cuando no tenés con quién jugar. Lo explicamos en <a href="#partidos">Partidos abiertos</a>.</p>
+              <p>La hoja también dice hasta cuándo podés cancelar desde la app. Pasado ese plazo hay que avisar al club.</p>
+              <div class="tip"><b>¿Está todo ocupado?</b>Tocá un horario ocupado y pedí <b>Avisame si se libera</b>. Si alguien cancela, te llega un aviso.</div>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j04-reservar.jpg" alt="Grilla de Reservar con horarios libres a $300 c/u" loading="lazy"></div><figcaption>La grilla del día.</figcaption></figure>
+            <figure class="phone"><div class="screen"><img src="img/j05-hoja-reserva.jpg" alt="Hoja de reserva con el precio $300 por persona y los botones Reservar y Armar partido abierto" loading="lazy"></div><figcaption>La hoja para confirmar.</figcaption></figure>
+          </div>
+        </section>
+
+        <section class="s" id="completar">
+          <h3>Completar el turno por WhatsApp</h3>
+          <p class="where">Tarjeta de tu reserva → <b>Buscar jugadores</b></p>
+          <div class="pair">
+            <div class="text">
+              <p>¿Se bajó alguien o te falta gente? Cualquiera de los 4 del turno puede compartirlo.</p>
+              <ol class="steps">
+                <li><span>En tu reserva tocá <span class="ui">Buscar jugadores</span>. Se abre WhatsApp con un mensaje listo: cuántos faltan, día, hora, cancha y un link.</span></li>
+                <li><span>Mandalo al grupo que quieras.</span></li>
+                <li><span>Quien toca el link ve el turno («Faltan 3»), quién juega y los lugares libres. Toca <span class="ui">Me sumo</span> y queda adentro.</span></li>
+                <li><span>Al titular le llega un aviso: «Bruno se sumó a tu turno».</span></li>
+              </ol>
+              <p>El que se sumó también puede compartir el turno y pagar su parte desde esa misma página.</p>
+              <div class="tip"><b>Quién puede sumarse</b>Cualquier socio del club con el link, mientras queden lugares y el turno no haya empezado. Para sumarse hay que tener cuenta en el club.</div>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j07-turno.jpg" alt="Página del turno compartido: Faltan 3, Mariana Gómez y tres lugares libres, botón Compartir por WhatsApp" loading="lazy"></div><figcaption>La página del turno que abre el link.</figcaption></figure>
+          </div>
+        </section>
+
+        <section class="s" id="pagar">
+          <h3>Pagar tu parte</h3>
+          <p class="where">Tarjeta de tu reserva · o la página del turno</p>
+          <p>La mayoría paga en el club, en efectivo o con tarjeta. Si preferís transferir, cada uno transfiere <b>solo su parte</b>:</p>
+          <ol class="steps">
+            <li><span>Hacé la transferencia a la cuenta del club.</span></li>
+            <li><span>El titular toca <span class="ui">Ya transferí</span> en su reserva; los demás tocan <span class="ui">Transferir mi parte</span> en la página del turno.</span></li>
+            <li><span>Subí la foto del comprobante si el club la pide.</span></li>
+            <li><span>Recepción lo revisa y lo confirma. Mientras tanto figura <span class="chip">Transferencia informada</span>.</span></li>
+          </ol>
+          <div class="tbl"><table>
+            <thead><tr><th>Estado</th><th>Qué quiere decir</th></tr></thead>
+            <tbody>
+              <tr><td>Pendiente de pago</td><td>Todavía falta pagar al menos una parte.</td></tr>
+              <tr><td>Transferencia informada</td><td>Avisaste que transferiste; recepción tiene que confirmarla.</td></tr>
+              <tr><td>Pagada</td><td>El club ya cobró la cancha entera.</td></tr>
+            </tbody>
+          </table></div>
+          <div class="tip"><b>Si rechazan la transferencia</b>Recepción escribe el motivo (por ejemplo «No llegó»). Podés volver a informarla cuando esté resuelto.</div>
+        </section>
+
+        <section class="s" id="partidos">
+          <h3>Partidos abiertos</h3>
+          <p class="where">Pestaña <b>Partidos</b></p>
+          <div class="pair two">
+            <div class="text">
+              <p>Para cuando querés jugar y no tenés con quién. Alguien arma el partido y el resto se suma en el lado que falta.</p>
+              <h4>Sumarte</h4>
+              <ol class="steps">
+                <li><span>En <b>Dónde puedo sumarme</b> aparecen los partidos de tu categoría y tipo (masculino, femenino o mixto).</span></li>
+                <li><span>El dibujo de la cancha muestra quién juega y qué lado falta, por ejemplo «Falta 1 de revés».</span></li>
+                <li><span>Tocá <span class="ui">Sumarme de revés</span> (o de drive).</span></li>
+              </ol>
+              <h4>Armar uno</h4>
+              <p>Tocá <span class="ui">Armar partido</span>: elegí día, hora, cancha, categorías y tipo, y después compartilo por WhatsApp.</p>
+              <div class="warn"><b>Importante</b>La cancha recién se reserva cuando están los 4. Si no se llena antes de la hora de cierre, el partido se cancela solo y libera la cancha.</div>
+              <p>Si no podés sumarte, la página dice por qué; por ejemplo, que ya tenés otra reserva a esa hora.</p>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j08-partidos.jpg" alt="Lista de partidos abiertos con el dibujo de cancha y el botón Sumarme de revés" loading="lazy"></div><figcaption>La lista.</figcaption></figure>
+            <figure class="phone"><div class="screen"><img src="img/j09-partido.jpg" alt="Detalle de un partido: falta 1 de revés, pareja 1 y pareja 2" loading="lazy"></div><figcaption>El detalle de un partido.</figcaption></figure>
+          </div>
+          <h4>¿Turno o partido abierto?</h4>
+          <div class="tbl"><table>
+            <thead><tr><th></th><th>Reservar un turno</th><th>Partido abierto</th></tr></thead>
+            <tbody>
+              <tr><td>Cancha</td><td>Queda reservada al instante</td><td>Se reserva sola cuando entra el 4.º</td></tr>
+              <tr><td>Si no se llena</td><td>El turno sigue: la cancha es del titular</td><td>Se cancela solo a la hora de cierre</td></tr>
+              <tr><td>Quién entra</td><td>Cualquier socio con el link</td><td>Quien cumpla categoría, tipo y lado</td></tr>
+              <tr><td>Dónde se ve</td><td>Solo con el link</td><td>En Partidos y en «Partidos para vos»</td></tr>
+              <tr><td>Para qué sirve</td><td>«Tengo cancha, me falta gente»</td><td>«Quiero jugar y no tengo con quién»</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <section class="s" id="torneos">
+          <h3>Torneos</h3>
+          <p class="where">Pestaña <b>Torneos</b></p>
+          <div class="pair two">
+            <div class="text">
+              <p>Hay dos tipos:</p>
+              <ul class="dots">
+                <li><b>Americanos</b>: te anotás solo y en cada ronda cambiás de pareja. Suman los puntos de cada uno. (También hay americanos de parejas fijas: te anotás con tu compañero.)</li>
+                <li><b>Campeonatos</b>: por parejas y por categoría, con zonas y llave.</li>
+              </ul>
+              <h4>Anotarte a un americano</h4>
+              <ol class="steps">
+                <li><span>Abrí el americano: cuándo, canchas, categoría, formato y precio.</span></li>
+                <li><span>Tocá <span class="ui">Anotarme</span>. Tu inscripción aparece con su estado de pago; podés transferir con <span class="ui">Ya transferí</span>.</span></li>
+                <li><span>Mientras la inscripción está abierta podés <b>darte de baja</b>. Después, avisale al club.</span></li>
+              </ol>
+              <p>Cuando el americano está <b>en juego</b>, la página muestra el <b>ranking en vivo</b> con el podio y tu lugar marcado como «(vos)».</p>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j10-torneos.jpg" alt="Lista de torneos: campeonato Copa de Verano y americano en juego" loading="lazy"></div><figcaption>La lista de torneos.</figcaption></figure>
+            <figure class="phone"><div class="screen"><img src="img/j12-americano-en-juego.jpg" alt="Americano en juego con el podio del ranking en vivo" loading="lazy"></div><figcaption>Ranking en vivo.</figcaption></figure>
+          </div>
+          <div class="pair two" style="margin-top:24px">
+            <div class="text">
+              <h4>Anotarte a un campeonato</h4>
+              <ol class="steps">
+                <li><span>Tocá <span class="ui">Ver categorías y anotarme</span>. Ves fechas, cierre de inscripción, reglamento y categorías.</span></li>
+                <li><span>En tu categoría tocá <span class="ui">Anotarme</span> y elegí a tu compañero (socio del club, o nombre y teléfono si no tiene cuenta).</span></li>
+                <li><span>Si la categoría está llena, quedan <b>en espera</b> y entran por orden si se libera un lugar.</span></li>
+              </ol>
+              <p>El pago es <b>uno por pareja</b>. Cuando arranca, el cuadro, las zonas y los resultados se ven en la página pública del campeonato, que también se puede compartir.</p>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j11-americano.jpg" alt="Americano con inscripción abierta, tu inscripción pendiente de pago y los anotados" loading="lazy"></div><figcaption>Un americano con inscripción abierta.</figcaption></figure>
+            <figure class="phone"><div class="screen"><img src="img/j13-campeonato.jpg" alt="Campeonato Copa de Verano con reglamento y categorías" loading="lazy"></div><figcaption>Un campeonato y sus categorías.</figcaption></figure>
+          </div>
+        </section>
+
+        <section class="s" id="dayuse">
+          <h3>Day use</h3>
+          <p class="where">Inicio → <b>Day use</b></p>
+          <div class="pair">
+            <div class="text">
+              <p>Para disfrutar el club por el día: pileta, vestuarios, cancha libre, según el pase.</p>
+              <ol class="steps">
+                <li><span>Elegí el día y el pase. Se ve el horario, qué incluye y cuántos lugares quedan.</span></li>
+                <li><span>Tocá <span class="ui">Comprar pase</span>. Te queda un código (por ejemplo DU-482193).</span></li>
+                <li><span>Al llegar, mostralo en recepción.</span></li>
+              </ol>
+              <p><b>Sellos:</b> cada day use suma un sello. Con 5, el siguiente es gratis. Los sellos vencen a los 6 meses.</p>
+              <p><b>Ya están en el club</b> muestra quién vino hoy. Si no querés aparecer, lo apagás en tu perfil.</p>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j14-day-use.jpg" alt="Day use con los sellos y el pase Day use completo a $450" loading="lazy"></div></figure>
+          </div>
+        </section>
+
+        <section class="s" id="perfil">
+          <h3>Perfil, historial y avisos</h3>
+          <p class="where">Pestaña <b>Perfil</b> · campana de arriba</p>
+          <div class="pair two">
+            <div class="text">
+              <ul class="dots">
+                <li><b>Tus podios</b>: los campeonatos y americanos donde subiste al podio. Solo los tuyos.</li>
+                <li><b>Partidos jugados</b>: tu historial con resultados.</li>
+                <li><b>Tus datos</b>: nombre, foto, lado, mano. Los cambios se guardan solos.</li>
+                <li><b>WhatsApp</b> (opcional) y si aceptás que el club te escriba.</li>
+                <li><b>Ya están en el club</b>: si aparecés en la lista del day use.</li>
+                <li><span class="ui">Cerrar sesión</span>, al final.</li>
+              </ul>
+              <h4>Cargar el resultado de un partido</h4>
+              <p>Es opcional. Después de jugar, cualquiera de los 4 (o el club) carga las parejas y los sets. Si alguien se equivocó, se arregla con <b>Corregir resultado</b>. Los resultados solo los ven los que jugaron y el club.</p>
+              <h4>Avisos</h4>
+              <p>La campana junta lo que te avisa la app: si se liberó una cancha que esperabas, si alguien se sumó a tu turno o si te anotaron como pareja en un torneo.</p>
+            </div>
+            <figure class="phone"><div class="screen"><img src="img/j16-perfil.jpg" alt="Perfil con podios, partidos jugados y tus datos" loading="lazy"></div><figcaption>El perfil.</figcaption></figure>
+            <figure class="phone"><div class="screen"><img src="img/j17-historial.jpg" alt="Partidos jugados con Ganaste y Perdiste y Corregir resultado" loading="lazy"></div><figcaption>Partidos jugados.</figcaption></figure>
+          </div>
+          <div class="pair two" style="margin-top:24px">
+            <div class="text"></div>
+            <figure class="phone"><div class="screen"><img src="img/j16b-perfil-abajo.jpg" alt="Final del perfil: WhatsApp, Ya están en el club y Cerrar sesión" loading="lazy"></div><figcaption>Final del perfil.</figcaption></figure>
+            <figure class="phone"><div class="screen"><img src="img/j15-avisos.jpg" alt="Pantalla Avisos con un aviso de torneo" loading="lazy"></div><figcaption>Avisos.</figcaption></figure>
+          </div>
+        </section>
+      </div>
+
+      <!-- PARTE 2 -->
+      <div class="part" id="recepcion">
+        <div class="part-head"><h2>Recepción</h2><p>Panel del club. Entrás con tu cuenta; si sos staff, el menú de cuenta muestra <b>Panel del club</b>.</p></div>
+
+        <section class="s" id="panel">
+          <h3>Inicio del panel</h3>
+          <p class="where">Panel del club → <b>Inicio</b></p>
+          <p>Lo que hay que mirar ahora, en orden:</p>
+          <ul class="dots">
+            <li><b>Cobrar a…</b>: buscá por nombre o cancha y cobrá sin moverte de pantalla.</li>
+            <li><b>En cancha ahora</b> y <b>Próximos</b>: quién juega, a qué hora y si debe algo (<span class="ui">Cobrar</span> directo).</li>
+            <li><b>Pendientes de cobro</b>: transferencias por confirmar y turnos que terminaron sin pagar.</li>
+            <li><b>El día</b>: ocupación, turnos libres, avisos (partidos armándose, torneos en juego, gente en el day use) y cancelaciones.</li>
+          </ul>
+          <figure class="desk"><div class="screen tall"><img src="img/c01-inicio-recepcion.jpg" alt="Inicio del panel del club: cobrar a, en cancha ahora, próximos, pendientes de cobro y el día" loading="lazy"></div></figure>
+        </section>
+
+        <section class="s" id="grilla">
+          <h3>Grilla</h3>
+          <p class="where">Panel del club → <b>Grilla</b></p>
+          <p>Todas las canchas del día en columnas. Arriba, la ocupación y los ingresos por canchas. Los colores dicen qué es cada cosa: reserva, turno fijo, bloqueo, torneo, day use, retenido y campeonato. A la derecha, los <b>partidos armándose</b> y si les queda cancha.</p>
+          <h4>Cargar una reserva (por teléfono o en el mostrador)</h4>
+          <ol class="steps">
+            <li><span>Tocá un hueco libre con <b>+ Cargar</b>.</span></li>
+            <li><span>Elegí qué cargás: <b>Reserva</b>, <b>Turno fijo</b> (se repite cada semana) o <b>Bloqueo</b> (cancha fuera de uso).</span></li>
+            <li><span>Elegí al titular (un socio o el nombre de un invitado) y confirmá.</span></li>
+          </ol>
+          <figure class="desk"><div class="screen"><img src="img/c02-grilla.jpg" alt="Grilla de canchas con reservas, day use y partidos armándose" loading="lazy"></div></figure>
+          <h4>Cobrar una reserva</h4>
+          <p>Tocá la reserva. La ficha muestra el total y una fila por jugador:</p>
+          <ul class="dots">
+            <li><span class="ui">Cobrar $300</span> en cada fila: cobra la parte de ese jugador (en efectivo o POS).</li>
+            <li><span class="ui">Cobrar todo lo que falta</span>: cuando uno paga por los 4.</li>
+            <li><b>No vino</b>: marca la falta. <b>Cancelar reserva</b>: libera la cancha.</li>
+          </ul>
+          <div class="tip"><b>Recepción ve el total</b>Los jugadores ven el precio por persona; vos ves el total y cuánto falta. Si el titular transfirió su parte, la reserva sigue «Pendiente de pago» hasta que paguen los otros 3.</div>
+          <figure class="desk"><div class="screen"><img src="img/c03-grilla-detalle.jpg" alt="Ficha de una reserva con Cobrar $300 por jugador y Cobrar todo lo que falta" loading="lazy"></div></figure>
+        </section>
+
+        <section class="s" id="cobros">
+          <h3>Cobros</h3>
+          <p class="where">Panel del club → <b>Cobros</b></p>
+          <p>La caja del club en cuatro columnas:</p>
+          <div class="tbl"><table>
+            <thead><tr><th>Columna</th><th>Qué hay</th><th>Qué hacés</th></tr></thead>
+            <tbody>
+              <tr><td>Sin cobrar</td><td>Personas con deudas (reservas, day use, torneos)</td><td><span class="ui">Cobrar</span>, o la flecha para ver el detalle</td></tr>
+              <tr><td>Por confirmar</td><td>Transferencias informadas</td><td>Mirá el comprobante y confirmá o rechazá con un motivo</td></tr>
+              <tr><td>Cobrado hoy</td><td>Lo cobrado, con método y hora</td><td><b>Anular</b> si te equivocaste</td></tr>
+              <tr><td>Rechazado hoy</td><td>Transferencias rechazadas</td><td>Solo consulta</td></tr>
+            </tbody>
+          </table></div>
+          <p>La pestaña <b>Devolver</b> junta lo que hay que reintegrar, por ejemplo un partido que se canceló con pagos hechos.</p>
+          <figure class="desk"><div class="screen tall"><img src="img/c04-cobros.jpg" alt="Cobros: sin cobrar, por confirmar, cobrado hoy y rechazado hoy" loading="lazy"></div></figure>
+        </section>
+
+        <section class="s" id="calendario">
+          <h3>Calendario</h3>
+          <p class="where">Panel del club → <b>Calendario</b></p>
+          <p>El mes (o la semana) con el porcentaje de ocupación de cada día y los turnos fijos. Sirve para ver de un vistazo qué días flojean. Tocá un día para abrir su grilla.</p>
+          <figure class="desk"><div class="screen"><img src="img/c05-calendario.jpg" alt="Calendario mensual con la ocupación de cada día" loading="lazy"></div></figure>
+        </section>
+
+        <section class="s" id="dayuse-club">
+          <h3>Day use</h3>
+          <p class="where">Panel del club → <b>Day use</b></p>
+          <ul class="dots">
+            <li><span class="ui">Vender pase</span>: para quien llega sin haberlo comprado (con cuenta o sin cuenta).</li>
+            <li><b>Pases de hoy</b>: buscá por nombre o código (DU-…). Cada pase dice si la persona está <b>Comprado</b> o <b>Adentro</b> y si pagó.</li>
+            <li><span class="ui">Gestionar</span>: <b>Registrar ingreso</b> cuando llega, cobrar o <b>Cancelar pase</b>.</li>
+          </ul>
+          <figure class="desk"><div class="screen"><img src="img/c07-day-use.jpg" alt="Day use del club: vender pase y la tabla de pases de hoy" loading="lazy"></div></figure>
+        </section>
+
+        <section class="s" id="jugadores-club">
+          <h3>Jugadores</h3>
+          <p class="where">Panel del club → <b>Jugadores</b></p>
+          <p>Todos los socios del club. Filtrá por rol, categoría o validación. Con <b>Editar</b> validás o corregís la categoría que puso el jugador. Si sos admin, también cambiás su rol (jugador, recepción o admin).</p>
+          <div class="tip"><b>Por qué validar</b>La categoría decide a qué partidos abiertos y torneos puede sumarse cada uno. Validada quiere decir que el club la revisó.</div>
+          <figure class="desk"><div class="screen"><img src="img/c06-jugadores.jpg" alt="Lista de jugadores con rol, categoría validada y botón Editar" loading="lazy"></div></figure>
+        </section>
+
+        <section class="s" id="americano-club">
+          <h3>Americano en juego</h3>
+          <p class="where">Panel del club → <b>Torneos</b> → el americano</p>
+          <ol class="steps">
+            <li><span>Abrí la ronda en curso (resaltada). Cada cancha tiene su partido.</span></li>
+            <li><span>Cargá los puntos de una pareja con − y +; la otra se completa sola. Tocá <span class="ui">Guardar</span>.</span></li>
+            <li><span>El ranking se actualiza al instante, también en el celular de los jugadores.</span></li>
+            <li><span>Al final, <span class="ui">Finalizar torneo</span>. Los podios aparecen en el perfil de cada jugador.</span></li>
+          </ol>
+          <p>Abajo están los anotados con su pago: se cobra a cada uno en efectivo o POS.</p>
+          <figure class="desk"><div class="screen tall"><img src="img/a04-americano-admin.jpg" alt="Americano en juego: rondas, carga de puntos, ranking y anotados" loading="lazy"></div></figure>
+        </section>
+      </div>
+
+      <!-- PARTE 3 -->
+      <div class="part" id="admin">
+        <div class="part-head"><h2>Administración</h2><p>Lo mismo que recepción, más el asistente, los torneos y los ajustes.</p></div>
+
+        <section class="s" id="asistente">
+          <h3>Asistente</h3>
+          <p class="where">Panel del club → <b>Asistente</b></p>
+          <p>Para llenar los huecos del día:</p>
+          <ul class="dots">
+            <li><b>Tablero de libres</b>: los turnos que quedan libres en cada cancha. Los tachados ya están ocupados o pasaron. «Cierra 3 h antes» avisa cuánto falta para que deje de aceptar partidos.</li>
+            <li>Tocá un libre para <b>armar un partido</b> e invitar a jugadores que suelen jugar a esa hora.</li>
+            <li><b>Difundir libres</b>: arma un flyer con los turnos libres del día y el WhatsApp del club. <span class="ui">Compartir imagen</span>, <span class="ui">Copiar texto</span> o <span class="ui">Abrir WhatsApp</span>.</li>
+          </ul>
+          <figure class="desk"><div class="screen"><img src="img/a02-asistente.jpg" alt="Asistente: tablero de libres y flyer Turnos libres" loading="lazy"></div></figure>
+        </section>
+
+        <section class="s" id="torneos-club">
+          <h3>Torneos</h3>
+          <p class="where">Panel del club → <b>Torneos</b></p>
+          <p>Campeonatos y americanos agrupados por estado. Cada tarjeta dice el <b>siguiente paso</b>, así nunca hay que adivinar qué falta.</p>
+          <figure class="desk"><div class="screen"><img src="img/a03-torneos.jpg" alt="Torneos del club agrupados en inscripción abierta, borradores y en juego" loading="lazy"></div></figure>
+          <h4>Un campeonato, de punta a punta</h4>
+          <div class="flow"><span>Borrador</span><em>→</em><span>Inscripción abierta</span><em>→</em><span>Inscripción cerrada</span><em>→</em><span>Cuadro publicado</span><em>→</em><span>En juego</span><em>→</em><span>Terminado</span></div>
+          <ol class="steps">
+            <li><span><span class="ui">Nuevo campeonato</span>: nombre, fechas, horarios, reglamento y categorías (género, niveles, cupo, precio por pareja y formato).</span></li>
+            <li><span>Abrí la inscripción. Las parejas se anotan solas desde la app; también podés <span class="ui">Cargar pareja</span> a mano.</span></li>
+            <li><span>En <b>Parejas</b> ves cada categoría con estado, pago y horarios que pueden jugar. Cobrás desde ahí.</span></li>
+            <li><span>Cerrá la inscripción y seguí los pasos hasta publicar zonas, llave y horarios.</span></li>
+            <li><span>Durante el campeonato cargás los resultados; el cuadro público y la pantalla TV se actualizan solos.</span></li>
+          </ol>
+          <figure class="desk"><div class="screen tall"><img src="img/a05-campeonato-admin.jpg" alt="Campeonato Copa de Verano en el panel: parejas por categoría con estado y pago" loading="lazy"></div></figure>
+          <h4>Un americano</h4>
+          <p><span class="ui">Nuevo americano</span>: día, horario, canchas, categorías, rondas, puntos y precio. Elegí si es de parejas rotativas o fijas. El día del torneo se juega como se explica en <a href="#americano-club">Americano en juego</a>.</p>
+        </section>
+
+        <section class="s" id="tv">
+          <h3>Pantalla TV y cuadro público</h3>
+          <p class="where">Campeonato → link público · <code>/c/código/tv</code></p>
+          <div class="pair">
+            <div class="text">
+              <p>Cada campeonato publicado tiene un <b>link público</b>: cualquiera ve el cuadro, las zonas y los resultados sin entrar a la app. Ideal para el grupo de WhatsApp.</p>
+              <p>La <b>versión TV</b> es para el televisor del club: pasa sola entre «En juego ahora», las zonas y la llave, y se actualiza cada pocos segundos. Se abre desde el campeonato, con una cuenta de staff en esa pantalla.</p>
+            </div>
+            <figure class="phone"><div class="screen" style="max-height:620px;overflow-y:auto"><img src="img/a16-cuadro-publico.png" alt="Cuadro público de un campeonato en el celular" loading="lazy"></div><figcaption>El cuadro público en el celular.</figcaption></figure>
+          </div>
+          <figure class="desk"><div class="screen"><img src="img/a15-tv.png" alt="Pantalla TV con partidos en juego y sus marcadores" loading="lazy"></div><figcaption>La pantalla TV del club.</figcaption></figure>
+        </section>
+
+        <section class="s" id="ajustes">
+          <h3>Ajustes</h3>
+          <p class="where">Panel del club → <b>Ajustes</b></p>
+          <div class="settings">
+            <div><b>Club</b><span>Nombre, logo y colores. La app entera toma el color del club.</span></div>
+            <div><b>Datos del club</b><span>Ubicación, contacto, servicios y fotos que ven los jugadores en Inicio.</span></div>
+            <div><b>Reservas y partidos</b><span>Horario, duración de los turnos, plazo para cancelar y reglas de partidos abiertos.</span></div>
+            <div><b>Canchas y precios</b><span>Las canchas y cuánto sale cada franja horaria.</span></div>
+            <div><b>Pagos</b><span>Efectivo, POS y transferencia, con los datos de la cuenta y si pedís comprobante.</span></div>
+            <div><b>Sellos</b><span>La recompensa por venir al day use.</span></div>
+            <div><b>Flyer</b><span>WhatsApp y fondo del flyer de turnos libres.</span></div>
+            <div><b>Staff</b><span>Quién maneja el club: invitar, roles y accesos.</span></div>
+          </div>
+          <p>La configuración del day use (pases, horarios, cupos y precios) está en <b>Day use → Configuración</b>.</p>
+          <figure class="desk"><div class="screen"><img src="img/a06-ajustes.jpg" alt="Lista de ajustes del club" loading="lazy"></div></figure>
+          <div class="pair two" style="margin-top:20px">
+            <div class="text"><p>Algunos ajustes por dentro:</p></div>
+            <figure class="desk" style="margin-top:0"><div class="screen tall" style="max-height:420px"><img src="img/a08-ajustes-reservas.jpg" alt="Ajustes de reservas y partidos" loading="lazy"></div><figcaption>Reservas y partidos.</figcaption></figure>
+            <figure class="desk" style="margin-top:0"><div class="screen tall" style="max-height:420px"><img src="img/a10-ajustes-pagos.jpg" alt="Ajustes de pagos" loading="lazy"></div><figcaption>Pagos.</figcaption></figure>
+          </div>
+        </section>
+      </div>
+
+      <!-- FAQ -->
+      <div class="part" id="faq">
+        <div class="part-head"><h2>Preguntas frecuentes</h2></div>
+        <details class="faq"><summary>¿Por qué el jugador ve $300 y la grilla dice $1.200?</summary><p>La cancha se divide entre 4. El jugador ve lo que paga él; recepción ve el total de la cancha.</p></details>
+        <details class="faq"><summary>Se bajó uno de mi turno, ¿qué hago?</summary><p>Tocá <b>Buscar jugadores</b> en tu reserva y mandá el link al grupo. El primero que toque <b>Me sumo</b> entra, y te llega un aviso.</p></details>
+        <details class="faq"><summary>¿Hasta cuándo puedo cancelar?</summary><p>Hasta el plazo que fija el club (la hoja de reserva lo dice, por ejemplo 24 h antes). Después hay que avisar al club.</p></details>
+        <details class="faq"><summary>Armé un partido abierto y no se llenó.</summary><p>Si no están los 4 a la hora de cierre, se cancela solo y la cancha queda libre. No hay que hacer nada.</p></details>
+        <details class="faq"><summary>Transferí y sigue «Transferencia informada».</summary><p>Recepción tiene que verla en la cuenta y confirmarla. Cuando la confirma, pasa a pagada (o queda pendiente lo que deban los demás).</p></details>
+        <details class="faq"><summary>No me deja sumarme a un partido.</summary><p>La página dice por qué: otra categoría o tipo, el lado ya está lleno, ya tenés algo a esa hora o el partido ya cerró.</p></details>
+        <details class="faq"><summary>¿Cómo instalo la app en el celular?</summary><p>Abrí la app en el navegador. En Android: menú ⋮ → <b>Instalar app</b>. En iPhone: Compartir → <b>Agregar a inicio</b>.</p></details>
+      </div>
+
+      <footer>Capturas tomadas de la app con datos de demostración del club. Nombres y montos son de ejemplo.</footer>
+    </main>
+  </div>
+</div>
