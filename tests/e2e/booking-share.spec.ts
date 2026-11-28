@@ -6,8 +6,12 @@ test('a player shares her booking by WhatsApp and another member joins from the 
   const stamp = Date.now().toString().slice(-5)
   const ana = await createMember({ name: `Ana Comparte${stamp}`, prefix: 'comparte-ana' })
   const bruno = await createMember({ name: `Bruno Sesuma${stamp}`, prefix: 'comparte-bruno' })
-  // Two days ahead, an odd hour, so it does not meet the other flows.
-  const { bookingId } = await insertBookingSoon(ana, 48 + (Number(stamp) % 20))
+  // Two to five days ahead, at the first hour with a free court (the local demo data books many).
+  let bookingId = ''
+  for (let hours = 48 + (Number(stamp) % 20); !bookingId && hours < 120; hours += 7) {
+    bookingId = await insertBookingSoon(ana, hours).then((booked) => booked.bookingId).catch(() => '')
+  }
+  expect(bookingId).not.toBe('')
 
   // Ana's booking on Inicio: «Buscar jugadores» opens WhatsApp with the link to the booking.
   await signInWithMagicLink(page, ana.email, '/')
@@ -27,8 +31,10 @@ test('a player shares her booking by WhatsApp and another member joins from the 
   await brunoPage.reload()
   await expect(brunoPage.getByRole('heading', { name: 'Faltan 2', level: 1 })).toBeVisible()
   await expect(brunoPage.getByRole('list', { name: 'Jugadores' })).toContainText(`Bruno Sesuma${stamp}`)
-  // He is in: now he can share it too.
+  // He is in: now he can share it too, and pay his share (never the whole court) by transfer.
   await expect(brunoPage.getByRole('link', { name: 'Compartir por WhatsApp' })).toBeVisible()
+  await expect(brunoPage.getByText(/por persona/)).toBeVisible()
+  await expect(brunoPage.getByRole('button', { name: /^Transferir mi parte, \$/ })).toBeVisible()
   await other.close()
 
   // Ana got the aviso.

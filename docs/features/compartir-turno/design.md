@@ -46,3 +46,20 @@ que lo recibe toca el link y se suma. Aprobado por Miguel el 28/11:
 
 - Bajarse del turno desde el link: lo hace el titular o recepción.
 - Compartir desde la grilla del club.
+
+## Precio por persona (pedido de Miguel, 28/11)
+
+La cancha siempre se divide entre los 4 jugadores, así que el jugador nunca ve el precio total.
+
+- **Qué ve:**
+  - En Reservar, la grilla y la hoja muestran «$400 c/u» o «$400 por persona».
+  - La tarjeta de la reserva y la página del turno también muestran el precio por persona.
+- **Cómo paga:**
+  - Cada uno puede transferir su parte; la mayoría paga en el club.
+  - `report_transfer`, en un turno común, registra la parte de la posición del jugador (`payer_position`). Es la
+    misma regla con la que cobra recepción: precio ÷ 4, y lo que no da exacto lo paga el titular.
+  - En los partidos abiertos no cambia nada.
+- **Recepción:**
+  - Sigue viendo el precio total.
+  - En Cobros, la transferencia de una parte figura a nombre de quien la informó.
+  - Confirmar la transferencia del titular ya no deja la reserva pagada: los otros 3 pagan la suya.

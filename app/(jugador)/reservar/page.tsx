@@ -47,7 +47,7 @@ export default async function ReservarPage({ searchParams }: { searchParams: Sea
       <div>
         <h1 className="font-display text-4xl font-bold uppercase">Reservar cancha</h1>
         <p className="text-fg-muted">
-          Elegí el día y tocá un horario libre. Turnos de {club.slot_minutes} minutos, precio por cancha completa.
+          Elegí el día y tocá un horario libre. Turnos de {club.slot_minutes} minutos, precio por persona: la cancha se divide entre 4.
         </p>
       </div>
       {lleno === '1' ? <p role="status" className="rounded-xl border border-border p-3">Hoy está lleno: te mostramos el próximo día con lugar.</p> : null}

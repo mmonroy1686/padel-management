@@ -36,10 +36,10 @@ select lives_ok(
   $$ select public.report_transfer('b0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a1/r1.png') $$,
   'a player reports her transfer with the receipt');
 select results_eq(
-  $$ select method::text, amount, status::text, receipt_path from public.payments
+  $$ select method::text, amount, status::text, receipt_path, payer_position::int from public.payments
      where booking_id = 'b0000000-0000-0000-0000-000000000001' $$,
-  $$ values ('transfer', 1600, 'reported', '00000000-0000-0000-0000-0000000000a1/r1.png') $$,
-  'the transfer is reported for the whole amount due');
+  $$ values ('transfer', 400, 'reported', '00000000-0000-0000-0000-0000000000a1/r1.png', 1) $$,
+  'the transfer is reported for her share: the court split among four');
 select throws_ok(
   $$ select public.report_transfer('b0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a1/r1.png') $$,
   'P0001', 'invalid_state', 'one reported transfer at a time');

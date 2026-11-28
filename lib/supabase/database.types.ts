@@ -1463,7 +1463,7 @@ isOneToOne: false
       } },
 "booking_invite":
 { Args: { "p_booking_id": string }; Returns: {
-              "booking_id": string,"court_name": string,"ends_at": string,"free": number,"is_participant": boolean,"match_id": string,"players": Json,"starts_at": string,"status": Database["public"]['Enums']["booking_status"]
+              "accepts_transfer": boolean,"booking_id": string,"court_name": string,"ends_at": string,"free": number,"is_participant": boolean,"match_id": string,"my_left": number,"my_position": number,"players": Json,"share": number,"starts_at": string,"status": Database["public"]['Enums']["booking_status"]
             }[]
                            },
 "buy_day_use":

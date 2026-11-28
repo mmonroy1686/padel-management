@@ -45,7 +45,11 @@ export function MyBookingCard({
             {booking.timeText}, {booking.courtName}
           </p>
           {booking.matchId ? <p className="text-sm font-semibold">Partido abierto, tu parte</p> : null}
-          <p className="text-fg-muted">{formatPrice(booking.price)}</p>
+          {/* The court is split among the 4: the player sees his share, never the whole price. */}
+          <p className="text-fg-muted">
+            {formatPrice(booking.price)}
+            {booking.matchId ? null : ' por persona'}
+          </p>
         </div>
         <PaymentBadge state={booking.paymentState} />
       </div>

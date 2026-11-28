@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { splitMyBookings, toMyBookingView, toMyMatchBookingView, type MyBookingRow } from '@/lib/domain/my-bookings'
+import { splitMyBookings, toMyBookingView, toMyHolderBookingView, toMyMatchBookingView, type MyBookingRow } from '@/lib/domain/my-bookings'
 
 const CLUB = { timezone: 'America/Montevideo', cancellation_notice_hours: 24, accepts_transfer: true }
 const NOW = new Date('2026-10-01T12:00:00Z')
@@ -95,5 +95,35 @@ describe('toMyMatchBookingView', () => {
     )
     expect(view).toMatchObject({ price: 402, amountDue: 0, paymentState: 'paid', matchId: 'm1' })
     expect(view.cancel).toEqual({ allowed: false, reason: 'Para bajarte, entrá al partido.' })
+  })
+})
+
+describe('toMyHolderBookingView', () => {
+  const pay = (amount: number, status: 'confirmed' | 'reported', payer_position: number | null) => ({
+    status,
+    amount,
+    rejection_reason: null,
+    created_at: '2026-10-01T10:00:00Z',
+    payer_position,
+  })
+
+  it('the holder sees and transfers his share, the court split among four', () => {
+    const view = toMyHolderBookingView(row({ price: 1600 }), CLUB, NOW)
+    expect(view).toMatchObject({ price: 400, amountDue: 400, paymentState: 'pending', canReportTransfer: true })
+  })
+
+  it('his own reported transfer is his share reported', () => {
+    const view = toMyHolderBookingView(row({ price: 1600, payments: [pay(400, 'reported', 1)] }), CLUB, NOW)
+    expect(view).toMatchObject({ paymentState: 'reported', canReportTransfer: false })
+  })
+
+  it('others paying their share does not pay his', () => {
+    const view = toMyHolderBookingView(row({ price: 1600, payments: [pay(400, 'confirmed', 2)] }), CLUB, NOW)
+    expect(view).toMatchObject({ paymentState: 'pending', amountDue: 400 })
+  })
+
+  it('the whole court paid at the desk is paid', () => {
+    const view = toMyHolderBookingView(row({ price: 1600, payments: [pay(1600, 'confirmed', null)] }), CLUB, NOW)
+    expect(view).toMatchObject({ price: 400, paymentState: 'paid', canReportTransfer: false })
   })
 })

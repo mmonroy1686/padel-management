@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/cn'
 import { formatPrice, timeIn } from '@/lib/domain/format'
+import { perPlayerPrice } from '@/lib/domain/matches'
 import {
   blockEnd,
   continuesAbove,
@@ -146,16 +147,17 @@ function PlayerCell({
     )
   }
   if (cell.state === 'free' && cell.price !== null) {
-    const price = formatPrice(cell.price)
+    // Per person: the court is always split among the 4.
+    const price = formatPrice(perPlayerPrice(cell.price))
     return (
       <button
         type="button"
-        aria-label={`Reservar ${cell.court.name} a las ${cell.slot.label}, ${price}`}
+        aria-label={`Reservar ${cell.court.name} a las ${cell.slot.label}, ${price} por persona`}
         onClick={() => onSelect(cell)}
         className={cn(CELL, CELL_STYLES.free, FOCUS, 'hover:bg-surface')}
       >
         <b className="font-display text-lg">{price}</b>
-        <span>Libre</span>
+        <span>c/u · Libre</span>
       </button>
     )
   }

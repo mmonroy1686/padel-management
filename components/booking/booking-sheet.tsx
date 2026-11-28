@@ -33,7 +33,9 @@ export function BookingSheet({ choice, dayText, paymentNote, cancellationRule, a
               {dayText}, {choice.timeLabel}
             </dd>
             <dt className="text-fg-muted">Precio</dt>
-            <dd className="font-display text-2xl font-bold">{formatPrice(choice.price)}</dd>
+            <dd>
+              <span className="font-display text-2xl font-bold">{formatPrice(perPlayerPrice(choice.price))}</span> por persona
+            </dd>
           </dl>
           <p>{paymentNote}</p>
           <p className="text-sm text-fg-muted">{cancellationRule}</p>

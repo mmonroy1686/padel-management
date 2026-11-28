@@ -1,6 +1,6 @@
 import 'server-only'
 import type { Club } from '@/lib/auth/viewer'
-import { splitMyBookings, toMyBookingView, toMyMatchBookingView, type MyBookingView } from '@/lib/domain/my-bookings'
+import { splitMyBookings, toMyHolderBookingView, toMyMatchBookingView, type MyBookingView } from '@/lib/domain/my-bookings'
 import { createClient } from '@/lib/supabase/server'
 
 // The player's bookings and his share of each match booking in this club, what Inicio lists (fase 3a moved
@@ -15,7 +15,7 @@ export async function loadMyBookings(
   const [own, spots] = await Promise.all([
     supabase
       .from('bookings')
-      .select('id, starts_at, ends_at, price, status, court:courts(name), payments(status, amount, rejection_reason, created_at)')
+      .select('id, starts_at, ends_at, price, status, court:courts(name), payments(status, amount, rejection_reason, created_at, payer_position)')
       .eq('club_id', club.id)
       .eq('player_id', viewer.userId)
       .order('starts_at', { ascending: true }),
@@ -43,7 +43,7 @@ export async function loadMyBookings(
   if (matchBookings.error) throw matchBookings.error
 
   const rows = [
-    ...own.data.map((row) => ({ startsAt: row.starts_at ?? '', view: toMyBookingView(row, club, now) })),
+    ...own.data.map((row) => ({ startsAt: row.starts_at ?? '', view: toMyHolderBookingView(row, club, now) })),
     ...matchBookings.data.flatMap((row) =>
       row.match_id
         ? [

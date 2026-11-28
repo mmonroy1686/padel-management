@@ -11,7 +11,14 @@ export type MyBookingRow = {
   price: number
   status: 'confirmed' | 'cancelled'
   court: { name: string } | null
-  payments: { status: PaymentStatus; amount: number; rejection_reason: string | null; created_at: string }[]
+  payments: {
+    status: PaymentStatus
+    amount: number
+    rejection_reason: string | null
+    created_at: string
+    // Whose share a payment of a booking pays (1 the holder); null for the booking as a whole.
+    payer_position?: number | null
+  }[]
 }
 
 export type MyBookingView = {
@@ -31,6 +38,17 @@ export type MyBookingView = {
 }
 
 type ClubRules = { timezone: string; cancellation_notice_hours: number; accepts_transfer: boolean }
+
+// The holder's own booking: the court is always split among 4, so the holder sees and pays his share (position 1,
+// with the remainder), counting his own payments; a payment of the whole booking at the desk still makes it paid.
+export function toMyHolderBookingView(row: MyBookingRow, club: ClubRules, now: Date): MyBookingView {
+  const whole = toMyBookingView(row, club, now)
+  // Paid at the desk, cancelled, or a transfer of the whole booking reported before shares existed: as it is.
+  const wholeReported = row.payments.some((payment) => payment.status === 'reported' && payment.payer_position == null)
+  if (whole.paymentState === 'paid' || whole.cancelled || wholeReported) return { ...whole, price: shareFor(row.price, 1) }
+  const own = { ...row, price: shareFor(row.price, 1), payments: row.payments.filter((payment) => payment.payer_position === 1) }
+  return { ...toMyBookingView(own, club, now), cancel: whole.cancel }
+}
 
 export function toMyBookingView(row: MyBookingRow, club: ClubRules, now: Date): MyBookingView {
   const startsAt = toDate(row.starts_at)

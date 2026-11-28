@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 \ir helpers/slot.psql
 \ir helpers/club.psql
-select plan(14);
+select plan(18);
 
 -- Ana (a1) booked tomorrow with a guest; Bruno (b1) is a player of the club; Zoe (e9) is not a member.
 call test_helpers.make_booking('b6000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
@@ -37,7 +37,7 @@ select throws_ok($$ select public.join_booking('b6000000-0000-0000-0000-00000000
 reset role;
 select results_eq(
   $$ select user_id, kind::text, data ->> 'joiner_name', (data ->> 'free')::int, link from public.notifications
-     where kind = 'booking_join' $$,
+     where kind = 'booking_join' and link = '/turno/b6000000-0000-0000-0000-000000000001' $$,
   $$ values ('00000000-0000-0000-0000-0000000000a1'::uuid, 'booking_join', 'bruno', 1,
              '/turno/b6000000-0000-0000-0000-000000000001') $$,
   'the holder gets an aviso with who joined and how many are missing');
@@ -65,7 +65,26 @@ select results_eq(
 select throws_ok($$ select public.join_booking('b6000000-0000-0000-0000-000000000001') $$,
   'P0001', 'already_in_booking', 'and does not join twice');
 reset role;
-select is((select count(*)::int from public.notifications where kind = 'booking_join'), 2, 'one aviso per join');
+select is((select count(*)::int from public.notifications
+           where kind = 'booking_join' and link = '/turno/b6000000-0000-0000-0000-000000000001'), 2, 'one aviso per join');
+
+-- Bruno (position 3) transfers his share from the booking's page: a quarter of the court, his position.
+insert into storage.objects (bucket_id, name) values ('receipts', '00000000-0000-0000-0000-0000000000b1/turno.png');
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000b1", "role": "authenticated"}';
+select results_eq(
+  $$ select share, my_position::int, my_left from public.booking_invite('b6000000-0000-0000-0000-000000000001') $$,
+  $$ values (300, 3, 300) $$, 'his share and what it still owes');
+select results_eq(
+  $$ select amount, payer_position::int, payer_id from public.report_transfer('b6000000-0000-0000-0000-000000000001',
+       '00000000-0000-0000-0000-0000000000b1/turno.png') $$,
+  $$ values (300, 3, null::uuid) $$, 'he reports his share, for his position');
+select results_eq(
+  $$ select my_left from public.booking_invite('b6000000-0000-0000-0000-000000000001') $$,
+  $$ values (0) $$, 'nothing left to transfer');
+select throws_ok(
+  $$ select public.report_transfer('b6000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000b1/turno.png') $$,
+  'P0001', 'invalid_state', 'not twice');
 
 select finish();
 rollback;

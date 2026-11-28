@@ -1,13 +1,15 @@
 import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
+import { ShareTransfer } from '@/components/booking/share-transfer'
 import { WhatsappShareLink } from '@/components/booking/whatsapp-share-link'
+import { reportTransfer } from '@/app/(jugador)/reservas/actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { Card } from '@/components/ui/card'
 import { Icon } from '@/components/ui/icon'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { requirePlayer } from '@/lib/auth/viewer'
 import { bookingShareText, bookingShareUrl } from '@/lib/domain/booking-share'
-import { dayLongLabel, timeIn, capitalize } from '@/lib/domain/format'
+import { capitalize, dayLongLabel, formatPrice, timeIn } from '@/lib/domain/format'
 import { isUuid } from '@/lib/domain/input'
 import { localDateOf } from '@/lib/domain/time'
 import { createClient } from '@/lib/supabase/server'
@@ -57,7 +59,7 @@ export default async function SharedBookingPage({ params }: { params: Params }) 
           {day}, {time} a {timeIn(new Date(booking.ends_at), club.timezone)}
         </p>
         <p className="text-fg-muted">
-          {club.name}, {booking.court_name}
+          {club.name}, {booking.court_name} · {formatPrice(booking.share)} por persona
         </p>
       </div>
 
@@ -88,6 +90,17 @@ export default async function SharedBookingPage({ params }: { params: Params }) 
         <div className="flex flex-col gap-2">
           <p>Estás en este turno.{booking.free > 0 ? ' Compartilo para completarlo.' : ''}</p>
           {booking.free > 0 ? <WhatsappShareLink text={text} size="md" /> : null}
+          {/* Most pay at the club; a transfer of their own share is there for whoever prefers it. */}
+          {booking.accepts_transfer && booking.my_left !== null && booking.my_left > 0 ? (
+            <ShareTransfer
+              bookingId={id}
+              userId={viewer.userId}
+              amount={booking.my_left}
+              details={club.transfer_details}
+              receiptRequired={club.transfer_receipt_required}
+              reportAction={reportTransfer}
+            />
+          ) : null}
         </div>
       ) : booking.free > 0 ? (
         <ActionForm action={joinBooking} submitLabel="Me sumo" pendingLabel="Sumándote…">
